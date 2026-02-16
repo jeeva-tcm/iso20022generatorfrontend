@@ -1,0 +1,115 @@
+<div class="dashboard-container">
+    <div class="welcome-banner">
+        <div class="banner-content">
+            <h1>Welcome to the ISO 20022 Enterprise Validator</h1>
+            <p>Secure, fast, and standard-compliant message validation for the modern banking industry.</p>
+            <div class="banner-actions">
+                <button mat-raised-button color="primary" routerLink="/validate">
+                    <mat-icon>play_circle</mat-icon> START VALIDATION
+                </button>
+                <button mat-stroked-button routerLink="/help">
+                    <mat-icon>menu_book</mat-icon> DOCUMENTATION
+                </button>
+            </div>
+        </div>
+        <div class="banner-graphic">
+            <mat-icon>analytics</mat-icon>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <mat-card class="stat-card">
+            <mat-card-content>
+                <div class="stat-icon total"><mat-icon>assessment</mat-icon></div>
+                <div class="stat-info">
+                    <span class="label">Total Audits</span>
+                    <h2 class="value">{{stats.total}}</h2>
+                </div>
+            </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+            <mat-card-content>
+                <div class="stat-icon pass"><mat-icon>check_circle</mat-icon></div>
+                <div class="stat-info">
+                    <span class="label">Passed Messages</span>
+                    <h2 class="value">{{stats.passed}}</h2>
+                </div>
+            </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+            <mat-card-content>
+                <div class="stat-icon fail"><mat-icon>error</mat-icon></div>
+                <div class="stat-info">
+                    <span class="label">Rejected Messages</span>
+                    <h2 class="value">{{stats.failed}}</h2>
+                </div>
+            </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+            <mat-card-content>
+                <div class="stat-icon speed"><mat-icon>bolt</mat-icon></div>
+                <div class="stat-info">
+                    <span class="label">Validation Quality</span>
+                    <h2 class="value">{{stats.efficiency}}</h2>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="main-column">
+            <mat-card class="recent-card">
+                <mat-card-header>
+                    <mat-card-title>Recent Validation Activity</mat-card-title>
+                    <div style="display: flex; gap: 8px;">
+                        <button mat-icon-button (click)="refresh()" matTooltip="Refresh data">
+                            <mat-icon>refresh</mat-icon>
+                        </button>
+                        <button mat-button color="primary" routerLink="/history">View All</button>
+                    </div>
+                </mat-card-header>
+                <mat-card-content>
+                    <div class="activity-list" *ngIf="recentActivity.length > 0">
+                        <div class="activity-item" *ngFor="let item of recentActivity">
+                            <div class="status-indicator" [class.passed]="item.status === 'PASS'"
+                                [class.failed]="item.status === 'FAIL'"></div>
+                            <div class="activity-info">
+                                <span class="activity-id">{{item.validation_id}}</span>
+                                <span class="activity-type">{{item.message_type}}</span>
+                            </div>
+                            <span class="activity-time">{{item.timestamp | date:'MMM d, h:mm a'}}</span>
+                            <button mat-icon-button [routerLink]="['/validate']"
+                                [queryParams]="{reportId: item.validation_id}">
+                                <mat-icon>chevron_right</mat-icon>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="empty-state" *ngIf="recentActivity.length === 0">
+                        <mat-icon>history</mat-icon>
+                        <p>No recent activity found. Start your first validation to see data here.</p>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </div>
+
+        <div class="side-column">
+
+            <mat-card class="info-card">
+                <mat-card-header>
+                    <mat-card-title>Supported Standards</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                    <p>Current library includes pacs, camt, pain, and head message formats for ISO 20022 compliance.</p>
+                    <div class="standard-chips">
+                        <span class="chip">SR2025</span>
+                        <span class="chip">CBPR+</span>
+                        <span class="chip">T2/RTGS</span>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,102 @@
+<div class="help-container animate-fade-in">
+    <div class="page-header">
+        <h1>Support & Knowledge Center</h1>
+        <p>Everything you need to master the ISO 20022 Enterprise Validator.</p>
+    </div>
+
+    <div class="help-grid">
+        <div class="main-content">
+            <mat-card class="guide-card">
+                <mat-card-header>
+                    <mat-card-title>Quick Start Guide</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                    <div class="step">
+                        <div class="step-num">1</div>
+                        <div class="step-text">
+                            <h3>Upload or Paste</h3>
+                            <p>Drag an ISO 20022 XML file into the editor or paste your XML content directly into the
+                                text area.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-num">2</div>
+                        <div class="step-text">
+                            <h3>Configuration</h3>
+                            <p>Select your specific message type or leave it on 'Auto-detect' for our AI engine to
+                                identify it.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-num">3</div>
+                        <div class="step-text">
+                            <h3>Execute Validation</h3>
+                            <p>Click the 'Run Validation' button. Our 5-layer engine will perform technical, structural,
+                                and business checks.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-num">4</div>
+                        <div class="step-text">
+                            <h3>Review & Fix</h3>
+                            <p>If errors are found, click on the error message to highlight the exact line in the editor
+                                for immediate fixing.</p>
+                        </div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+            <mat-card class="faq-card">
+                <mat-card-header>
+                    <mat-card-title>Frequently Asked Questions</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                    <div class="faq-group">
+                        <div class="faq-item">
+                            <h3>Which message versions are supported?</h3>
+                            <p>The validator is version-blind. It uses the message family (e.g., pacs.008) to find the
+                                most compatible structural blueprint, ensuring maximum support for all SR releases.</p>
+                        </div>
+                        <div class="faq-item">
+                            <h3>Is my data secure?</h3>
+                            <p>All validations are processed in a high-security environment. If 'Store History' is
+                                toggled off, no record of your message will be saved in our audit trail.</p>
+                        </div>
+                        <div class="faq-item">
+                            <h3>What does Layer 5 validation check?</h3>
+                            <p>Layer 5 checks dynamic reference data, such as verifying BIC codes against the global
+                                directory and validating currency codes against ISO 4217 standards.</p>
+                        </div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </div>
+
+        <div class="side-content">
+            <mat-card class="contact-card">
+                <mat-card-content>
+                    <mat-icon class="contact-icon" color="primary">contact_support</mat-icon>
+                    <h2>Need Help?</h2>
+                    <p>Our engineering team is ready to assist you with complex validation scenarios.</p>
+                    <button mat-raised-button color="primary" class="full-width">CONTACT SUPPORT</button>
+                    <div class="contact-alt">
+                        <span>Email: info&#64;iso20022.validator.com</span>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+            <mat-card class="resource-card">
+                <mat-card-header>
+                    <mat-card-title>Standard Resources</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                    <ul class="resource-links">
+                        <li><a href="#"><mat-icon>launch</mat-icon> ISO 20022 Official Data Dictionary</a></li>
+                        <li><a href="#"><mat-icon>launch</mat-icon> SWIFT MyStandards Portal</a></li>
+                        <li><a href="#"><mat-icon>launch</mat-icon> CBPR+ Usage Guidelines</a></li>
+                    </ul>
+                </mat-card-content>
+            </mat-card>
+        </div>
+    </div>
+</div>

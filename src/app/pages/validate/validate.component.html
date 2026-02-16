@@ -1,0 +1,245 @@
+<div class="validate-container">
+    <div class="page-header">
+        <h1>Validate Message</h1>
+        <p>Upload or paste an ISO 20022 MX XML message (pacs / camt / pain / etc.)</p>
+    </div>
+
+    <div class="grid-layout">
+        <!-- Input Section -->
+        <div class="input-section">
+            <mat-card id="editor-card">
+                <mat-card-header>
+                    <mat-card-title>Input Message</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                    <div class="upload-area" (click)="fileInput.click()">
+                        <mat-icon>cloud_upload</mat-icon>
+                        <p>Drag & Drop XML file here or <span>Browse File</span></p>
+                        <input #fileInput type="file" (change)="onFileSelected($event)" style="display:none">
+                    </div>
+
+                    <div class="editor-container">
+                        <div class="highlight-bar" [style.top.px]="highlightTop" *ngIf="showHighlight"></div>
+                        <div class="line-numbers" id="line-gutter">
+                            <div *ngFor="let n of lineNumbers">{{n}}</div>
+                        </div>
+                        <textarea class="xml-editor" [(ngModel)]="xmlContent" (input)="updateLineNumbers()"
+                            (scroll)="onTextareaScroll($event)" (keydown)="handleTabKey($event)"
+                            placeholder="Paste XML here..."></textarea>
+
+                        <button mat-icon-button class="clear-editor-btn" (click)="clearAll()"
+                            matTooltip="Clear XML Content" *ngIf="xmlContent">
+                            <mat-icon>close</mat-icon>
+                        </button>
+                    </div>
+
+                    <div class="input-actions">
+                        <span>Character Count: {{xmlContent.length}}</span>
+                        <button mat-button color="primary" (click)="formatXML()">
+                            <mat-icon>format_indent_increase</mat-icon> Format
+                        </button>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </div>
+
+        <!-- Options Section -->
+        <div class="options-section">
+            <mat-card>
+                <mat-card-header>
+                    <mat-card-title>Message Type</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                    <!-- Validation Mode removed as per request - default Full 1-5 is used -->
+
+                    <div class="message-type-selector">
+                        <mat-form-field appearance="outline" class="full-width modern-search">
+                            <mat-icon matPrefix>search</mat-icon>
+                            <input type="text" placeholder="Search message type (Default: Auto-detect)"
+                                aria-label="Message Type" matInput [formControl]="messageControl"
+                                [matAutocomplete]="auto">
+                            <mat-autocomplete #auto="matAutocomplete" class="premium-autocomplete"
+                                [autoActiveFirstOption]="false">
+                                <mat-option *ngFor="let option of filteredOptions | async" [value]="option">
+                                    <div class="option-content">
+                                        <div class="family-icon"
+                                            [style.background-color]="getMessageFamily(option).color + '20'"
+                                            [style.color]="getMessageFamily(option).color">
+                                            <mat-icon>{{getMessageFamily(option).icon}}</mat-icon>
+                                        </div>
+                                        <div class="message-info">
+                                            <span class="m-code">{{option.split(' ')[0]}}</span>
+                                            <span class="m-desc">{{option.includes('(') ?
+                                                option.split('(')[1].replace(')', '') : 'Auto-detect Message
+                                                Type'}}</span>
+                                        </div>
+                                        <mat-icon class="selected-check"
+                                            *ngIf="messageControl.value === option">check</mat-icon>
+                                    </div>
+                                </mat-option>
+                            </mat-autocomplete>
+                        </mat-form-field>
+                    </div>
+
+                    <div class="option-group">
+                        <mat-checkbox [(ngModel)]="storeHistory">Store Result in History</mat-checkbox>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button mat-raised-button color="primary" class="run-btn" [disabled]="isLoading || !xmlContent"
+                            (click)="runValidation()">
+                            <mat-icon *ngIf="!isLoading">play_arrow</mat-icon>
+                            {{isLoading ? 'VALIDATING...' : 'RUN VALIDATION'}}
+                        </button>
+                    </div>
+
+                    <mat-divider></mat-divider>
+
+                </mat-card-content>
+            </mat-card>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="results-section" id="results-section" *ngIf="report || isLoading">
+        <mat-progress-bar mode="indeterminate" *ngIf="isLoading"></mat-progress-bar>
+
+        <div *ngIf="report" class="report-container animate-fade-in">
+            <mat-card class="validation-report-card">
+                <mat-card-content>
+                    <div class="report-header">
+                        <div class="report-title-row">
+                            <div class="title-section">
+                                <h2>Validation Report</h2>
+                                <div class="status-badge" [class.badge-pass]="report.status === 'PASS'"
+                                    [class.badge-fail]="report.status === 'FAIL'"
+                                    [class.badge-warn]="report.status === 'WARNING'">
+                                    <mat-icon>{{report.status === 'PASS' ? 'check_circle' : (report.status === 'FAIL' ?
+                                        'cancel' : 'warning')}}</mat-icon>
+                                    <span>{{report.status}}</span>
+                                </div>
+                            </div>
+                            <div class="report-meta">
+                                <span class="meta-item">
+                                    <mat-icon>fingerprint</mat-icon>
+                                    <span class="meta-label">Report ID:</span>
+                                    <span class="meta-value">{{report.validation_id}}</span>
+                                </span>
+                                <span class="meta-item">
+                                    <mat-icon>schedule</mat-icon>
+                                    <span class="meta-label">Timestamp:</span>
+                                    <span class="meta-value">{{report.timestamp}}</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="report-summary-pills">
+                            <div class="summary-pill pill-message-type"
+                                *ngIf="report.message && report.message !== 'Unknown'">
+                                <span class="pill-label">MESSAGE TYPE</span>
+                                <span class="pill-value">{{report.message}}</span>
+                            </div>
+                            <div class="summary-pill pill-metric">
+                                <span class="pill-label">ERRORS</span>
+                                <span class="pill-value pill-error">{{report.errors}}</span>
+                            </div>
+                            <div class="summary-pill pill-metric">
+                                <span class="pill-label">WARNINGS</span>
+                                <span class="pill-value pill-warning">{{report.warnings}}</span>
+                            </div>
+                            <div class="summary-pill pill-metric">
+                                <span class="pill-label">PROCESSING TIME</span>
+                                <span class="pill-value">{{report.total_time_ms}}ms</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="layer-pills">
+                        <!-- Dynamic keys from report -->
+                        <div *ngFor="let layer of getReportLayers()" class="layer-pill"
+                            [class.skipped]="!report.layer_status[layer]">
+                            <span class="l-name">L{{layer}}</span>
+                            <div class="l-status">{{report.layer_status[layer]?.status || '⏭'}}</div>
+                            <span class="l-time">{{report.layer_status[layer]?.time | number:'1.0-0'}}ms</span>
+                        </div>
+                    </div>
+
+                    <div class="issues-table-container">
+                        <table class="issues-table">
+                            <thead>
+                                <tr>
+                                    <th>Severity</th>
+                                    <th>Line Number</th>
+                                    <th>Message</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <ng-container *ngFor="let issue of report.details">
+                                    <tr (click)="selectIssue(issue)" [class.selected]="selectedIssue === issue"
+                                        class="issue-row">
+                                        <td><span
+                                                [class]="'sev-badge ' + issue.severity.toLowerCase()">{{issue.severity}}</span>
+                                        </td>
+                                        <td class="path-cell clickable"
+                                            (click)="scrollToLine(issue.path); $event.stopPropagation()">
+                                            <code
+                                                matTooltip="Click to view in editor">{{getLineNumber(issue.path)}}</code>
+                                        </td>
+                                        <td>{{issue.message}}</td>
+                                        <td>
+                                            <button mat-button color="primary" class="detail-btn">
+                                                {{selectedIssue === issue ? 'HIDE' : 'DETAILS'}}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <!-- Inline Detail Row -->
+                                    <tr *ngIf="selectedIssue === issue" class="detail-expanded-row">
+                                        <td colspan="4">
+                                            <div class="inline-details">
+                                                <div class="detail-grid">
+                                                    <div class="detail-item">
+                                                        <label>Location</label>
+                                                        <div class="line-jump" (click)="scrollToLine(issue.path)">
+                                                            <mat-icon>vertical_align_center</mat-icon> Line
+                                                            {{issue.path}}
+                                                        </div>
+                                                    </div>
+                                                    <div class="detail-item full-width">
+                                                        <label>Description</label>
+                                                        <p class="readable-desc">{{issue.message}}</p>
+                                                    </div>
+                                                    <div class="detail-item full-width fix-suggestion"
+                                                        *ngIf="issue.fix_suggestion">
+                                                        <label class="fix-label">
+                                                            <mat-icon>auto_fix_high</mat-icon> SMART FIX SUGGESTION
+                                                        </label>
+                                                        <div class="fix-box premium-fix">
+                                                            <div class="fix-content">
+                                                                <p>{{issue.fix_suggestion}}</p>
+                                                            </div>
+                                                            <button mat-raised-button color="primary"
+                                                                class="copy-fix-btn"
+                                                                (click)="copyToClipboard(issue.fix_suggestion); $event.stopPropagation()">
+                                                                <mat-icon>content_copy</mat-icon> COPY FIX
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </ng-container>
+                                <tr *ngIf="report.details.length === 0">
+                                    <td colspan="4" class="empty-state">No issues found. Message is compliant!</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </mat-card-content>
+            </mat-card>
+
+        </div>
+    </div>
+</div>

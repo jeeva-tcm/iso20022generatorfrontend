@@ -1,0 +1,163 @@
+<div class="history-container">
+    <div class="page-header">
+        <h1>Validation History</h1>
+        <p>Audit trail of all previous MX message validations</p>
+    </div>
+
+    <mat-card>
+        <mat-progress-bar mode="indeterminate" *ngIf="isLoading"></mat-progress-bar>
+        <mat-card-content>
+            <div class="filter-bar">
+                <mat-form-field appearance="outline" class="search-field">
+                    <mat-label>Search Validation ID or Type</mat-label>
+                    <input matInput [(ngModel)]="searchTerm" (input)="applyFilter()" placeholder="e.g. VAL-2026...">
+                    <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+
+                <div class="header-actions">
+                    <button mat-stroked-button (click)="loadHistory()">
+                        <mat-icon>refresh</mat-icon> REFRESH
+                    </button>
+                    <button mat-stroked-button color="warn" (click)="deleteAllHistory()">
+                        <mat-icon>delete_forever</mat-icon> DELETE ALL
+                    </button>
+                    <button mat-stroked-button color="accent" (click)="exportAudit()"
+                        matTooltip="Download all history as CSV">
+                        <mat-icon>file_download</mat-icon> EXPORT AUDIT
+                    </button>
+                </div>
+            </div>
+
+            <table mat-table [dataSource]="dataSource" multiTemplateDataRows class="full-width">
+                <!-- Timestamp Column -->
+                <ng-container matColumnDef="timestamp">
+                    <th mat-header-cell *matHeaderCellDef> Time </th>
+                    <td mat-cell *matCellDef="let element"> {{element.timestamp | date:'yyyy-MM-dd HH:mm'}} </td>
+                </ng-container>
+
+                <!-- ID Column -->
+                <ng-container matColumnDef="validation_id">
+                    <th mat-header-cell *matHeaderCellDef> Validation ID </th>
+                    <td mat-cell *matCellDef="let element">
+                        <code class="val-id">{{element.validation_id}}</code>
+                    </td>
+                </ng-container>
+
+                <!-- Type Column -->
+                <ng-container matColumnDef="type">
+                    <th mat-header-cell *matHeaderCellDef> Message Type </th>
+                    <td mat-cell *matCellDef="let element"> {{element.message_type}} </td>
+                </ng-container>
+
+                <!-- Status Column -->
+                <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef> Status </th>
+                    <td mat-cell *matCellDef="let element">
+                        <span [class]="'status-badge ' + getStatusClass(element.status)">
+                            {{element.status}}
+                        </span>
+                    </td>
+                </ng-container>
+
+                <!-- Metrics Column -->
+                <ng-container matColumnDef="metrics">
+                    <th mat-header-cell *matHeaderCellDef> Issues </th>
+                    <td mat-cell *matCellDef="let element">
+                        <span class="metrics">
+                            <span class="err-count" *ngIf="element.total_errors > 0">
+                                <mat-icon>error_outline</mat-icon> {{element.total_errors}}
+                            </span>
+                            <span class="warn-count" *ngIf="element.total_warnings > 0">
+                                <mat-icon>warning_amber</mat-icon> {{element.total_warnings}}
+                            </span>
+                            <span class="no-issues" *ngIf="element.total_errors === 0 && element.total_warnings === 0">
+                                <mat-icon>check</mat-icon> Clean
+                            </span>
+                        </span>
+                    </td>
+                </ng-container>
+
+                <!-- Actions Column -->
+                <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef> </th>
+                    <td mat-cell *matCellDef="let element">
+                        <div class="action-buttons">
+                            <button mat-button color="primary" class="detail-btn"
+                                (click)="onViewDetails(element); $event.stopPropagation()">
+                                {{expandedElement === element ? 'HIDE' : 'VIEW DETAILS'}}
+                            </button>
+                            <button mat-icon-button class="delete-btn" matTooltip="Delete Record"
+                                (click)="onDelete(element); $event.stopPropagation()">
+                                <mat-icon>delete_outline</mat-icon>
+                            </button>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- Expanded Content Column -->
+                <ng-container matColumnDef="expandedDetail">
+                    <td mat-cell *matCellDef="let element" [attr.colspan]="displayedColumns.length">
+                        <div class="inline-history-details" *ngIf="element === expandedElement">
+                            <div class="detail-grid-container" *ngIf="expandedDetail">
+                                <div class="result-summary">
+                                    <h3>Validation Audit</h3>
+                                    <div class="audit-meta">
+                                        <span><strong>Schema:</strong> {{expandedDetail.report.schema || 'N/A'}}</span>
+                                        <span><strong>Perf:</strong> {{expandedDetail.report.total_time_ms}}ms</span>
+                                    </div>
+                                    <div class="layer-badges">
+                                        <div *ngFor="let layer of $any(expandedDetail.report.layer_status) | keyvalue"
+                                            class="layer-status-tag"
+                                            [class]="$any(layer.value).status === '✅' ? 'PASSED' : ($any(layer.value).status === '❌' ? 'FAILED' : 'WARNING')">
+                                            L{{layer.key}}: {{$any(layer.value).status}}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="issue-list-compact" *ngIf="expandedDetail.report.details.length > 0">
+                                    <h3>Issues Found</h3>
+                                    <div class="mini-issue"
+                                        *ngFor="let issue of $any(expandedDetail.report.details) | slice:0:5">
+                                        <span
+                                            [class]="'sev-mini ' + $any(issue).severity.toLowerCase()">{{$any(issue).severity}}</span>
+                                        <span class="issue-path">Line {{$any(issue).path}}:</span>
+                                        <span class="issue-msg">{{$any(issue).message}}</span>
+                                    </div>
+                                    <p class="more-issues" *ngIf="expandedDetail.report.details.length > 5">
+                                        ... and {{expandedDetail.report.details.length - 5}} more issues.
+                                    </p>
+                                </div>
+
+                                <div class="xml-preview">
+                                    <h3>Original Message</h3>
+                                    <div class="full-xml-container">
+                                        <pre class="preview-box">{{expandedDetail.original_message}}</pre>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="loading-mini" *ngIf="isLoading && !expandedDetail">
+                                <mat-progress-bar mode="query"></mat-progress-bar>
+                            </div>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let element; columns: displayedColumns;" class="history-row"
+                    [class.expanded-row]="expandedElement === element" (click)="onViewDetails(element)"></tr>
+                <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></tr>
+
+                <tr class="mat-row" *matNoDataRow>
+                    <td class="mat-cell empty-cell" colspan="6">
+                        <div class="empty-state">
+                            <mat-icon>history_toggle_off</mat-icon>
+                            <p>No history records found matching your search.</p>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+            <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]" showFirstLastButtons></mat-paginator>
+        </mat-card-content>
+    </mat-card>
+</div>

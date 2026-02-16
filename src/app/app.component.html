@@ -1,0 +1,30 @@
+<mat-toolbar color="primary" class="header">
+    <span class="logo-container">
+        <mat-icon class="logo-icon">verified_user</mat-icon>
+        <span>ISO 20022 Validator</span>
+    </span>
+
+    <span class="spacer"></span>
+
+    <nav class="nav-links">
+        <a mat-button routerLink="/" routerLinkActive="active-link"
+            [routerLinkActiveOptions]="{exact: true}">DASHBOARD</a>
+        <a mat-button routerLink="/validate" routerLinkActive="active-link">VALIDATE</a>
+        <a mat-button routerLink="/history" routerLinkActive="active-link">HISTORY</a>
+        <a mat-button routerLink="/rules" routerLinkActive="active-link">RULES</a>
+        <a mat-button routerLink="/help" routerLinkActive="active-link">HELP</a>
+    </nav>
+
+    <span class="spacer"></span>
+
+    <div class="user-info">
+
+        <button mat-icon-button>
+            <mat-icon>account_circle</mat-icon>
+        </button>
+    </div>
+</mat-toolbar>
+
+<div class="main-content">
+    <router-outlet></router-outlet>
+</div>

@@ -1,0 +1,219 @@
+<!-- <div class="rules-container animate-fade-in">
+    <div class="page-header">
+        <h1>Validation Rule Engine</h1>
+        <p>A multi-layered defense system ensuring 100% compliance with ISO 20022 standards.</p>
+    </div>
+
+    <div class="rules-stack">
+        <mat-card class="layer-card">
+            <div class="layer-badge">LAYER 1</div>
+            <mat-card-header>
+                <mat-card-title>Technical & Payload Security</mat-card-title>
+                <mat-card-subtitle>Foundational Integrity Check</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+                <p>Verifies the physical properties of the incoming XML message before processing begins.</p>
+                <ul class="rule-list">
+                    <li><mat-icon>check</mat-icon> Well-formedness check (XML syntax)</li>
+                    <li><mat-icon>check</mat-icon> UTF-8 Encoding verification</li>
+                    <li><mat-icon>check</mat-icon> Illegal control character detection (ASCII 0-31)</li>
+                    <li><mat-icon>check</mat-icon> Payload size and presence validation</li>
+                </ul>
+            </mat-card-content>
+        </mat-card>
+
+        <mat-card class="layer-card">
+            <div class="layer-badge">LAYER 2</div>
+            <mat-card-header>
+                <mat-card-title>Structural ISO Standard (XSD)</mat-card-title>
+                <mat-card-subtitle>Blueprint Matcher</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+                <p>Enforces strict adherence to the official ISO 20022 XML Schema Definitions (XSD).</p>
+                <ul class="rule-list">
+                    <li><mat-icon>check</mat-icon> Mandatory tag presence and sequencing</li>
+                    <li><mat-icon>check</mat-icon> Field data type constraints (Decimal, Date, String)</li>
+                    <li><mat-icon>check</mat-icon> Namespace and root element verification</li>
+                    <li><mat-icon>check</mat-icon> Pattern-based string length restrictions</li>
+                </ul>
+            </mat-card-content>
+        </mat-card>
+
+        <mat-card class="layer-card gradient">
+            <div class="layer-badge highlight">LAYER 3 & 4</div>
+            <mat-card-header>
+                <mat-card-title>Dynamic Business Logic</mat-card-title>
+                <mat-card-subtitle>Enterprise Financial Rules</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+                <p>Advanced cross-field logic and conditional rules specific to banking transactions.</p>
+                <ul class="rule-list">
+                    <li><mat-icon>bolt</mat-icon> IBAN Modulo 97 checksum validation</li>
+                    <li><mat-icon>bolt</mat-icon> Amount summation (Header vs Individual transactions)</li>
+                    <li><mat-icon>bolt</mat-icon> Conditional mandatory fields (e.g. Agent BIC requirement)</li>
+                    <li><mat-icon>bolt</mat-icon> Interbank settlement date & time-stamping rules</li>
+                </ul>
+            </mat-card-content>
+        </mat-card>
+
+        <mat-card class="layer-card">
+            <div class="layer-badge">LAYER 5</div>
+            <mat-card-header>
+                <mat-card-title>Reference Master Data</mat-card-title>
+                <mat-card-subtitle>Global Lookup Checks</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+                <p>Validation against real-time global master data directories.</p>
+                <ul class="rule-list">
+                    <li><mat-icon>language</mat-icon> BIC code verification (SWIFT Directory)</li>
+                    <li><mat-icon>language</mat-icon> Currency code validation (ISO 4217)</li>
+                    <li><mat-icon>language</mat-icon> Country code and ISO 3166 compliance</li>
+                    <li><mat-icon>language</mat-icon> Externalized purpose and charge codes</li>
+                </ul>
+            </mat-card-content>
+        </mat-card>
+    </div>
+</div> -->
+
+<div class="rules-container animate-fade-in">
+  <div class="page-header">
+    <h1>Validation Rule Engine</h1>
+    <p>
+      A multi-layered defense system ensuring 100% compliance with ISO 20022
+      standards.
+    </p>
+  </div>
+
+  <div class="rules-stack">
+    <mat-card class="layer-card">
+      <div class="layer-badge">LAYER 1</div>
+      <mat-card-header>
+        <mat-card-title>Syntax & XML Well-Formedness</mat-card-title>
+        <mat-card-subtitle>Foundational Validation</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p>
+          Performs foundational technical validation of the incoming ISO 20022
+          XML message before schema or business rule processing begins.
+        </p>
+
+        <h4 class="validation-section-title">Validates:</h4>
+        <ul class="rule-list">
+          <li>
+            <mat-icon>check</mat-icon>
+            <strong>UTF-8 Encoding Compliance</strong> - Ensures proper character encoding
+          </li>
+          <li>
+            <mat-icon>check</mat-icon>
+            <strong>XML Parse-ability</strong> - Validates no malformed or unclosed tags
+          </li>
+          <li>
+            <mat-icon>check</mat-icon>
+            <strong>Namespace Declarations</strong> - Verifies URN format (e.g.,
+            urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08)
+          </li>
+        </ul>
+
+        <h4 class="fast-fail-title">
+          <mat-icon color="warn">warning</mat-icon>
+          Fast-Fail Rejection Conditions:
+        </h4>
+        <ul class="fast-fail-list">
+          <li>
+            <mat-icon color="warn">cancel</mat-icon>
+            <strong>Invalid XML Structure</strong> → IMMEDIATE REJECTION
+            <div class="error-detail">Malformed tags, missing closing elements, or syntax errors</div>
+          </li>
+          <li>
+            <mat-icon color="warn">cancel</mat-icon>
+            <strong>Wrong Encoding</strong> → IMMEDIATE REJECTION
+            <div class="error-detail">Non-UTF-8 encoding or missing XML declaration</div>
+          </li>
+        </ul>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="layer-card">
+      <div class="layer-badge">LAYER 2</div>
+      <mat-card-header>
+        <mat-card-title>Schema Validation (Structural)</mat-card-title>
+        <mat-card-subtitle>SR2025 XSD & BAH Compliance </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p>
+          Validates the message structure against official SR2025 ISO 20022 XML
+          Schema Definitions (XSD) and Business Application Header (BAH) schema.
+        </p>
+        <ul class="rule-list">
+          <li>
+            <mat-icon>check</mat-icon>
+            SR2025 schema validation (pacs.008.001.08, pacs.009.001.08, etc.)
+          </li>
+          <li>
+            <mat-icon>check</mat-icon>
+            Business Application Header (BAH) mandatory field validations
+          </li>
+          <li>
+            <mat-icon>check</mat-icon>
+            Mandatory vs Optional element presence enforcement
+          </li>
+          <li>
+            <mat-icon>check</mat-icon>
+            Data type compliance (Amount)
+          </li>
+          <li>
+            <mat-icon>check</mat-icon>
+            Cardinality validation (minOccurs / maxOccurs rules)
+          </li>
+          <li>
+            <mat-icon>check</mat-icon>
+            BIC format validation (8 or 11 characters – ISO 9362)
+          </li>
+          <!-- <li>
+                <mat-icon>check</mat-icon>
+                ISO 8601 date-time format compliance (YYYY-MM-DDThh:mm:ssZ)
+            </li> -->
+          <!-- <li>
+                <mat-icon>check</mat-icon>
+                Business Service code validation (e.g., swift.cbprplus.02)
+            </li> -->
+        </ul>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="layer-card">
+      <div class="layer-badge">LAYER 3</div>
+      <mat-card-header>
+        <mat-card-title>ISO 20022 Business Rules (Semantic)</mat-card-title>
+        <mat-card-subtitle>SWIFT CBPR+ & UAT Validation </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p>
+          Applies semantic-level validation and cross-field business rules based
+          on SWIFT ISO 20022 guidelines and UAT regulatory scenarios.
+        </p>
+        <ul class="rule-list">
+          <!-- <li>
+                <mat-icon>bolt</mat-icon>
+                Progressive Address Enforcement (Hybrid allowed until Nov 2026, 
+                Structured mandatory post Nov 2026 – Town & Country required)
+            </li> -->
+          <li>
+            <mat-icon style="width: 2rem;">check</mat-icon>
+            <a></a>Purpose Code validation against ISO External Code Sets with amount cross-check
+          </li>
+          <li>
+            <mat-icon style="width: 2rem;">check</mat-icon>
+            Charge Bearer validation (SLEV, SHAR, CRED, DEBT) including
+            bilateral agreement rules
+          </li>
+          <!-- <li>
+                <mat-icon>bolt</mat-icon>
+                Amount & Currency rules (Decimal precision per currency, 
+                Amount > 0, Cross-border limit validation)
+            </li> -->
+        </ul>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
