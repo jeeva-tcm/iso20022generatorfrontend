@@ -34,7 +34,7 @@ export class ConfigService {
 
   private readonly localUrl = 'http://127.0.0.1:8001';
   // private readonly productionUrl = 'https://backend-python-production-0cc8.up.railway.app';
-  private readonly productionUrl = 'https://backend-hgdv.onrender.com';
+  private readonly productionUrl = 'https://iso20022generatorbackend.onrender.com';
 
   getApiUrl(path: string): string {
 

@@ -15,6 +15,7 @@
     z-index: 1000;
 }
 
+
 .logo-container {
     display: flex;
     align-items: center;
@@ -88,4 +89,14 @@
     max-width: 1400px;
     margin-left: auto;
     margin-right: auto;
+}
+
+.user-info img {
+    height: 60px;
+    width: 130px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: white;
+    padding: 2px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
