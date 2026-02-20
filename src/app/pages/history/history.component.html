@@ -106,7 +106,7 @@
                                         <span><strong>Perf:</strong> {{expandedDetail.report.total_time_ms}}ms</span>
                                     </div>
                                     <div class="layer-badges">
-                                        <div *ngFor="let layer of $any(expandedDetail.report.layer_status) | keyvalue"
+                                        <div *ngFor="let layer of ($any(expandedDetail.report.layer_status) | keyvalue) | slice:0:3"
                                             class="layer-status-tag"
                                             [class]="$any(layer.value).status === '✅' ? 'PASSED' : ($any(layer.value).status === '❌' ? 'FAILED' : 'WARNING')">
                                             L{{layer.key}}: {{$any(layer.value).status}}

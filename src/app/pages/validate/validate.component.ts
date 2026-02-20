@@ -50,7 +50,7 @@ export class ValidateComponent implements OnInit {
     @ViewChild('auto') autocomplete!: MatAutocomplete;
 
     xmlContent: string = '';
-    validationMode: string = 'Full 1-5';
+    validationMode: string = 'Full 1-3';
     messageType: string = 'Auto-detect';
     storeHistory: boolean = true;
     isLoading: boolean = false;
@@ -369,7 +369,7 @@ export class ValidateComponent implements OnInit {
                 validation_id: "VAL-DEMO-" + Math.floor(Math.random() * 10000),
                 timestamp: new Date().toISOString(),
                 status: "FAIL",
-                schema: "SR2025",
+                mode: "Full 1-3",
                 message: "pacs.008.001.08",
                 errors: 3,
                 warnings: 2,
@@ -377,9 +377,7 @@ export class ValidateComponent implements OnInit {
                 layer_status: {
                     1: { status: "✅", time: 6 },
                     2: { status: "✅", time: 43 },
-                    3: { status: "❌", time: 120 },
-                    4: { status: "⏭", time: 0 },
-                    5: { status: "⏭", time: 0 }
+                    3: { status: "❌", time: 120 }
                 },
                 details: [
                     {
@@ -402,7 +400,7 @@ export class ValidateComponent implements OnInit {
                     },
                     {
                         severity: "WARNING",
-                        layer: 4,
+                        layer: 3,
                         code: "W005",
                         path: "PmtId.InstrId",
                         message: "Instruction ID is unusually long",
@@ -504,7 +502,7 @@ export class ValidateComponent implements OnInit {
 
     getReportLayers(): string[] {
         if (!this.report?.layer_status) return [];
-        return Object.keys(this.report.layer_status).sort();
+        return Object.keys(this.report.layer_status).sort().slice(0, 3);
     }
 
     getLayerIcon(layer: any) {
