@@ -1,5 +1,8 @@
 .dashboard-container {
+    width: 100%;
     padding: 10px;
+    box-sizing: border-box;
+    overflow-x: hidden;
     animation: fadeIn 0.8s ease;
 }
 
@@ -297,4 +300,132 @@
     height: 64px;
     margin-bottom: 16px;
     opacity: 0.5;
+}
+
+/* ========================================= */
+/* ELITE RESPONSIVENESS (MOBILE-FIRST)       */
+/* ========================================= */
+
+@media (max-width: 992px) {
+    .dashboard-container {
+        padding: 0 4px;
+    }
+
+    .welcome-banner {
+        padding: 32px 24px;
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+        gap: 24px;
+        border-radius: 28px;
+        margin: 0 12px 32px;
+    }
+
+    .banner-content h1 {
+        font-size: 2.25rem !important;
+        line-height: 1.1;
+        letter-spacing: -2px !important;
+        margin-bottom: 20px;
+    }
+
+    .banner-graphic {
+        display: none;
+    }
+
+    .banner-content p {
+        font-size: 1.15rem !important;
+        margin-left: 0;
+        margin-right: 0;
+        max-width: 100%;
+        margin-bottom: 32px;
+    }
+
+    .banner-actions {
+        width: 100%;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .banner-actions button {
+        width: 100%;
+        height: 56px !important;
+        border-radius: 16px !important;
+        font-size: 1rem !important;
+        font-weight: 800 !important;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        padding: 0 12px;
+    }
+
+    .stat-card {
+        border-radius: 24px !important;
+        padding: 0 !important;
+    }
+
+    .stat-card mat-card-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 20px !important;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+    }
+
+    .stat-info .value {
+        font-size: 1.5rem !important;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        padding: 0 12px;
+    }
+
+    .recent-card {
+        border-radius: 28px !important;
+    }
+
+    .recent-card mat-card-header {
+        padding: 24px 20px;
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .activity-item {
+        padding: 20px;
+    }
+
+    .activity-time {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .welcome-banner {
+        padding: 28px 20px;
+    }
+
+    .banner-content h1 {
+        font-size: 2rem !important;
+    }
+
+    .recent-card mat-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .recent-card mat-card-header div {
+        width: 100%;
+    }
 }

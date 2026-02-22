@@ -1,6 +1,9 @@
 .history-container {
+    width: 100%;
     max-width: 1200px;
     margin: 0 auto;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 .page-header h1 {
@@ -251,6 +254,25 @@
     color: #334155;
 }
 
+.more-issues.clickable-hint {
+    font-size: 13px;
+    font-weight: 600;
+    color: #4f46e5;
+    cursor: pointer;
+    padding: 8px 12px;
+    background: #f1f5f9;
+    border-radius: 6px;
+    display: inline-block;
+    transition: all 0.2s ease;
+    margin-top: 10px;
+}
+
+.more-issues.clickable-hint:hover {
+    background: #e0e7ff;
+    color: #3730a3;
+    text-decoration: underline;
+}
+
 .preview-box {
     background: #1e293b;
     color: #e2e8f0;
@@ -265,6 +287,25 @@
     white-space: pre-wrap;
     word-break: break-all;
     line-height: 1.5;
+}
+
+.preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.preview-header h3 {
+    margin-bottom: 0 !important;
+}
+
+.preview-header button {
+    height: 36px !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    font-size: 0.8rem !important;
+    padding: 0 16px !important;
 }
 
 .full-xml-container {
@@ -302,4 +343,312 @@
 .header-actions {
     display: flex;
     gap: 12px;
+}
+
+/* ========================================= */
+/* ELITE RESPONSIVENESS (MOBILE-FIRST)       */
+/* ========================================= */
+
+.mobile-only {
+    display: none;
+}
+
+.desktop-only {
+    display: block;
+}
+
+@media (max-width: 900px) {
+    .desktop-only {
+        display: none;
+    }
+
+    .mobile-only {
+        display: block;
+    }
+
+    .history-container {
+        padding: 0 4px 40px;
+    }
+
+    .page-header {
+        text-align: left !important;
+        margin-bottom: 32px;
+        padding: 0 16px;
+    }
+
+    .page-header h1 {
+        font-size: 2.25rem !important;
+        line-height: 1.1;
+        letter-spacing: -2px !important;
+        background: linear-gradient(to bottom right, #111827, #374151);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 12px;
+    }
+
+    .page-header p {
+        font-size: 1.1rem !important;
+        line-height: 1.4;
+        color: #64748b;
+        max-width: 90%;
+    }
+
+    /* Modern Filter Bar */
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+        padding: 0 16px;
+        margin-bottom: 24px;
+    }
+
+    .search-field {
+        width: 100%;
+    }
+
+    .search-field ::ng-deep .mat-mdc-text-field-wrapper {
+        border-radius: 16px !important;
+        height: 56px !important;
+        background: #f8fafc !important;
+    }
+
+    .header-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .header-actions button {
+        height: 52px !important;
+        border-radius: 14px !important;
+        font-weight: 800;
+        font-size: 0.85rem;
+    }
+
+    .header-actions button:last-child {
+        grid-column: span 2;
+        background: #f8fafc;
+    }
+
+    /* ELITE MOBILE CARD LIST */
+    .mobile-history-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 0 12px;
+    }
+
+    .history-mobile-card {
+        background: white;
+        border-radius: 20px;
+        border: 1px solid #eef2f6;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+        overflow: hidden;
+        transition: all 0.2s ease;
+    }
+
+    .history-mobile-card.is-expanded {
+        border-color: #4f46e5;
+        box-shadow: 0 20px 25px -5px rgba(79, 70, 229, 0.1);
+    }
+
+    .card-main-info {
+        padding: 20px;
+    }
+
+    .card-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    .m-time {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .card-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+
+    .m-type {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #1e293b;
+    }
+
+    .m-metrics {
+        display: flex;
+        gap: 10px;
+    }
+
+    .m-metrics span {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.9rem;
+        font-weight: 700;
+    }
+
+    .m-metrics mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+    }
+
+    .card-footer-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 16px;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    .m-id {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.75rem;
+        color: #64748b;
+        background: #f8fafc;
+        padding: 4px 8px;
+        border-radius: 6px;
+    }
+
+    .m-actions {
+        display: flex;
+        gap: 4px;
+    }
+
+    /* Card Expansion */
+    .mobile-expansion-content {
+        background: #f8fafc;
+        border-top: 1px dashed #e2e8f0;
+        padding: 20px;
+    }
+
+    .mobile-audit-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .audit-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .audit-item .label {
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: #94a3b8;
+    }
+
+    .audit-item .val {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .sec-title {
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: #334155;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+    }
+
+    .m-issue-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: white;
+        padding: 8px 12px;
+        border-radius: 10px;
+        margin-bottom: 8px;
+        border: 1px solid #eef2f6;
+    }
+
+    .sev-tag {
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 2px 6px;
+        border-radius: 4px;
+        text-transform: uppercase;
+    }
+
+    .sev-tag.error {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .sev-tag.warning {
+        background: #fef9c3;
+        color: #854d0e;
+    }
+
+    .msg {
+        font-size: 0.85rem;
+        color: #475569;
+        flex: 1;
+    }
+
+    .more-issues-hint {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #4f46e5;
+        background: #eff6ff;
+        padding: 10px 14px;
+        border-radius: 10px;
+        text-align: center;
+        margin-top: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px dashed #bfdbfe;
+    }
+
+    .more-issues-hint:active {
+        background: #dbeafe;
+        transform: scale(0.98);
+    }
+
+    .full-report-btn {
+        width: 100%;
+        margin-top: 16px;
+        height: 48px;
+        border-radius: 12px;
+        font-weight: 800;
+    }
+
+    /* Hide Desktop mat-card container */
+    mat-card {
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+        margin: 0 !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-header h1 {
+        font-size: 2rem !important;
+    }
+
+    .header-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .header-actions button:last-child {
+        grid-column: span 1;
+    }
 }

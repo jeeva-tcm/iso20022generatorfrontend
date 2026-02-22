@@ -1,7 +1,10 @@
 .rules-container {
+    width: 100%;
     max-width: 1000px;
     margin: 0 auto;
     padding-bottom: 60px;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 .page-header {
@@ -141,65 +144,129 @@ mat-card-content p {
     gap: 8px;
 }
 
-.fast-fail-title {
-    color: #dc2626;
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin-top: 32px;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
 
-.fast-fail-title mat-icon {
-    font-size: 24px;
-    width: 24px;
-    height: 24px;
-}
-
-.fast-fail-list {
-    list-style: none;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.fast-fail-list li {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    font-size: 0.95rem;
-    color: #334155;
-    background: #fef2f2;
-    padding: 16px;
-    border-radius: 12px;
-    border-left: 4px solid #dc2626;
-}
-
-.fast-fail-list mat-icon {
-    font-size: 22px;
-    width: 22px;
-    height: 22px;
-    margin-top: 2px;
-    flex-shrink: 0;
-}
-
-.fast-fail-list strong {
-    color: #991b1b;
-    display: block;
-}
-
-.error-detail {
-    color: #6b7280;
-    font-size: 0.875rem;
-    margin-top: 6px;
-    padding-left: 34px;
-    font-style: italic;
-}
 
 .rule-list li strong {
     color: #1e293b;
     margin-right: 4px;
+}
+
+/* ========================================= */
+/* RULES PAGE RESPONSIVENESS                 */
+/* ========================================= */
+
+/* ========================================= */
+/* ELITE RESPONSIVENESS (MOBILE-FIRST)       */
+/* ========================================= */
+
+@media (max-width: 768px) {
+    .rules-container {
+        padding: 0 4px;
+    }
+
+    .page-header {
+        text-align: left !important;
+        margin-bottom: 40px;
+        padding: 0 16px;
+    }
+
+    .page-header h1 {
+        font-size: 2.25rem !important;
+        line-height: 1.1;
+        letter-spacing: -2px !important;
+        word-spacing: 2px;
+        background: linear-gradient(to bottom right, #111827, #374151);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 16px;
+    }
+
+    .page-header p {
+        font-size: 1.15rem !important;
+        line-height: 1.4;
+        color: #64748b;
+        max-width: 90%;
+    }
+
+    .rules-stack {
+        gap: 20px;
+    }
+
+    .layer-card {
+        padding: 24px 20px !important;
+        border-radius: 24px !important;
+        margin: 0 8px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04) !important;
+        width: calc(100% - 16px);
+    }
+
+    .layer-badge {
+        position: static;
+        display: inline-flex;
+        margin-bottom: 20px;
+        padding: 8px 14px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+    }
+
+    mat-card-title {
+        font-size: 1.6rem !important;
+        line-height: 1.2;
+        margin-bottom: 8px !important;
+    }
+
+    mat-card-subtitle {
+        font-size: 0.8rem !important;
+        letter-spacing: 0.1em;
+    }
+
+    mat-card-content p {
+        font-size: 1.05rem !important;
+        line-height: 1.6;
+        margin: 12px 0 24px !important;
+    }
+
+    .rule-list {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .rule-list li {
+        padding: 16px !important;
+        font-size: 0.95rem !important;
+        border: 1px solid rgba(0, 0, 0, 0.03);
+        flex-direction: row;
+        align-items: flex-start;
+        word-break: break-all;
+        overflow-wrap: break-word;
+    }
+
+    .rule-list li strong {
+        display: block;
+        margin-bottom: 2px;
+    }
+
+
+}
+
+@media (max-width: 480px) {
+    .page-header h1 {
+        font-size: 1.85rem !important;
+    }
+
+    .layer-card {
+        padding: 20px 12px !important;
+        margin: 0 4px;
+        width: calc(100% - 8px);
+    }
+
+    .rule-list li {
+        padding: 12px 14px !important;
+        font-size: 0.9rem !important;
+    }
+
+    mat-card-title {
+        font-size: 1.4rem !important;
+    }
 }

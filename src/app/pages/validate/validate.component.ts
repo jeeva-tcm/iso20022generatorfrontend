@@ -101,8 +101,9 @@ export class ValidateComponent implements OnInit {
         // 1. Check for reportId in query params (passed from History page)
         this.route.queryParams.subscribe(params => {
             const reportId = params['reportId'];
+            const autoRun = params['autoRun'] === 'true';
             if (reportId) {
-                this.loadHistoricalReport(reportId);
+                this.loadHistoricalReport(reportId, autoRun);
             }
         });
 
@@ -135,19 +136,31 @@ export class ValidateComponent implements OnInit {
         });
     }
 
-    loadHistoricalReport(id: string) {
+    loadHistoricalReport(id: string, autoRun: boolean = false) {
         this.isLoading = true;
         this.http.get<any>(this.config.getApiUrl(`/history/${id}`)).subscribe({
             next: (data) => {
-                this.report = data.report;
                 this.xmlContent = data.original_message;
+                // Pre-populate the message type selector
+                if (data.message_type) {
+                    this.messageControl.setValue(data.message_type);
+                    this.messageType = data.message_type.split(' ')[0];
+                }
+
                 this.updateLineNumbers();
-                this.isLoading = false;
-                this.scrollToResults();
+
+                if (autoRun) {
+                    this.runValidation();
+                } else {
+                    this.report = data.report;
+                    this.isLoading = false;
+                    this.scrollToResults();
+                }
             },
             error: (err) => {
                 console.error("Failed to load historical report:", err);
                 this.isLoading = false;
+                this.snackBar.open('Failed to load record.', 'Dismiss', { duration: 3000 });
             }
         });
     }
@@ -328,6 +341,29 @@ export class ValidateComponent implements OnInit {
 
     runValidation() {
         if (!this.xmlContent.trim()) return;
+
+        // FAST-FAIL PROTOCOL: Client-side Pre-checks
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(this.xmlContent, 'text/xml');
+        const parserError = xmlDoc.querySelector('parsererror');
+
+        if (parserError) {
+            this.snackBar.open('❌ FAST-FAIL REJECTION: Invalid XML Structure (Malformed tags or syntax errors)', 'VIEW ERROR', {
+                duration: 6000,
+                panelClass: ['error-snackbar']
+            });
+            this.report = null;
+            return;
+        }
+
+        // Encoding Pre-check: Check for common non-UTF-8 chars or null bytes
+        if (/[\x00-\x08\x0B\x0C\x0E-\x1F\uFFFD]/.test(this.xmlContent)) {
+            this.snackBar.open('❌ FAST-FAIL REJECTION: Illegal encoding detected. Only UTF-8 is supported.', 'RETRY', {
+                duration: 6000,
+                panelClass: ['error-snackbar']
+            });
+            return;
+        }
 
         this.isLoading = true;
         this.report = null;

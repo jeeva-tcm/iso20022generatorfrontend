@@ -13,6 +13,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { RouterModule } from '@angular/router';
 import { ConfigService } from '../../services/config.service';
 
 @Component({
@@ -31,7 +32,8 @@ import { ConfigService } from '../../services/config.service';
         MatTooltipModule,
         MatPaginatorModule,
         MatProgressBarModule,
-        MatSnackBarModule
+        MatSnackBarModule,
+        RouterModule
     ],
     templateUrl: './history.component.html',
     styleUrls: ['./history.component.css']
@@ -43,6 +45,7 @@ export class HistoryComponent implements OnInit {
     searchTerm: string = '';
     expandedElement: any | null = null;
     expandedDetail: any = null;
+    showAllMobileIssues: boolean = false;
 
     @ViewChild(MatPaginator) paginator!: MatPaginator;
 
@@ -100,6 +103,7 @@ export class HistoryComponent implements OnInit {
 
         this.expandedElement = element;
         this.isLoading = true;
+        this.showAllMobileIssues = false;
         this.http.get<any>(this.config.getApiUrl(`/history/${element.validation_id}`)).subscribe({
             next: (data) => {
                 this.expandedDetail = data;

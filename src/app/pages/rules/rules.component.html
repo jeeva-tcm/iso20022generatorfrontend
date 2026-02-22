@@ -114,22 +114,7 @@
           </li>
         </ul>
 
-        <h4 class="fast-fail-title">
-          <mat-icon color="warn">warning</mat-icon>
-          Fast-Fail Rejection Conditions:
-        </h4>
-        <ul class="fast-fail-list">
-          <li>
-            <mat-icon color="warn">cancel</mat-icon>
-            <strong>Invalid XML Structure</strong> → IMMEDIATE REJECTION
-            <div class="error-detail">Malformed tags, missing closing elements, or syntax errors</div>
-          </li>
-          <li>
-            <mat-icon color="warn">cancel</mat-icon>
-            <strong>Wrong Encoding</strong> → IMMEDIATE REJECTION
-            <div class="error-detail">Non-UTF-8 encoding or missing XML declaration</div>
-          </li>
-        </ul>
+
       </mat-card-content>
     </mat-card>
 
@@ -184,34 +169,31 @@
     <mat-card class="layer-card">
       <div class="layer-badge">LAYER 3</div>
       <mat-card-header>
-        <mat-card-title>ISO 20022 Business Rules (Semantic)</mat-card-title>
-        <mat-card-subtitle>SWIFT CBPR+ & UAT Validation </mat-card-subtitle>
+        <mat-card-title>Business Rules & Reference Data</mat-card-title>
+        <mat-card-subtitle>Semantic & SWIFT Compliance</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <p>
-          Applies semantic-level validation and cross-field business rules based
-          on SWIFT ISO 20022 guidelines and UAT regulatory scenarios.
+          Applies semantic-level validation, cross-field business rules, and
+          reference data verification (BIC/Currency) based on SWIFT CBPR+ guidelines.
         </p>
         <ul class="rule-list">
-          <!-- <li>
-                <mat-icon>bolt</mat-icon>
-                Progressive Address Enforcement (Hybrid allowed until Nov 2026, 
-                Structured mandatory post Nov 2026 – Town & Country required)
-            </li> -->
           <li>
             <mat-icon style="width: 2rem;">check</mat-icon>
-            <a></a>Purpose Code validation against ISO External Code Sets with amount cross-check
+            Purpose Code validation against ISO Code Sets (SALA/RENT/SUPP)
           </li>
           <li>
             <mat-icon style="width: 2rem;">check</mat-icon>
-            Charge Bearer validation (SLEV, SHAR, CRED, DEBT) including
-            bilateral agreement rules
+            BIC code verification (SWIFT Directory) & Currency code validation (ISO 4217)
           </li>
-          <!-- <li>
-                <mat-icon>bolt</mat-icon>
-                Amount & Currency rules (Decimal precision per currency, 
-                Amount > 0, Cross-border limit validation)
-            </li> -->
+          <li>
+            <mat-icon style="width: 2rem;">check</mat-icon>
+            Charge Bearer validation (SLEV, SHAR, CRED, DEBT) logic
+          </li>
+          <li>
+            <mat-icon style="width: 2rem;">check</mat-icon>
+            Conditional Amount Limits and High-Value payment flagging
+          </li>
         </ul>
       </mat-card-content>
     </mat-card>
