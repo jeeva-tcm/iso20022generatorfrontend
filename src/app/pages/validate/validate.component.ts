@@ -208,6 +208,24 @@ export class ValidateComponent implements OnInit {
                 return;
             }
 
+            // Validate file size (max 100 KB)
+            const maxSizeKB = 100;
+            const maxSizeBytes = maxSizeKB * 1024;
+            if (file.size > maxSizeBytes) {
+                const fileSizeKB = (file.size / 1024).toFixed(1);
+                this.snackBar.open(
+                    `⚠️ File too large (${fileSizeKB} KB). Please upload a file below ${maxSizeKB} KB.`,
+                    'Close',
+                    {
+                        duration: 5000,
+                        panelClass: ['warning-snackbar']
+                    }
+                );
+                // Clear the file input
+                event.target.value = '';
+                return;
+            }
+
             const reader = new FileReader();
             reader.onload = (e: any) => {
                 this.xmlContent = e.target.result;
