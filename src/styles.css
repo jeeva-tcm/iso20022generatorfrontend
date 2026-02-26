@@ -7,22 +7,22 @@
 
 :root {
     /* Premium Corporate Palette */
-    --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+    --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
     --secondary-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
     --error-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
     --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 
-    --bg-app: #f3f4f6;
-    --bg-card: #ffffff;
-    --text-main: #1f2937;
-    --text-muted: #6b7280;
-    --border-light: #e5e7eb;
+    --bg-app: #0d0f1a;
+    --bg-card: rgba(255, 255, 255, 0.03);
+    --text-main: #e2e8f0;
+    --text-muted: #94a3b8;
+    --border-light: rgba(255, 255, 255, 0.06);
 
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
 }
 
 * {
@@ -46,6 +46,11 @@ body {
     background-color: var(--bg-app);
     color: var(--text-main);
     -webkit-font-smoothing: antialiased;
+}
+
+/* Body background override for validate dark page */
+body.validate-dark {
+    background-color: #0d0f1a !important;
 }
 
 /* Material Overrides for Glass/Premium Feel */

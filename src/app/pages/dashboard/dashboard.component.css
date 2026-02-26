@@ -94,13 +94,15 @@
 
 .stat-card {
     border-radius: 16px;
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.03);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .stat-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.12);
 }
 
 .stat-card mat-card-content {
@@ -126,28 +128,28 @@
 }
 
 .stat-icon.total {
-    background: #eff6ff;
-    color: #1e40af;
+    background: rgba(99,102,241,0.15);
+    color: #818cf8;
 }
 
 .stat-icon.pass {
-    background: #ecfdf5;
-    color: #065f46;
+    background: rgba(34,197,94,0.15);
+    color: #4ade80;
 }
 
 .stat-icon.fail {
-    background: #fef2f2;
-    color: #991b1b;
+    background: rgba(239,68,68,0.15);
+    color: #f87171;
 }
 
 .stat-icon.speed {
-    background: #fdfaf1;
-    color: #92400e;
+    background: rgba(245,158,11,0.15);
+    color: #fbbf24;
 }
 
 .stat-info .label {
     display: block;
-    color: #64748b;
+    color: #94a3b8;
     font-size: 0.875rem;
     font-weight: 500;
     margin-bottom: 4px;
@@ -157,7 +159,7 @@
     margin: 0;
     font-size: 1.75rem;
     font-weight: 800;
-    color: #1e293b;
+    color: #f1f5f9;
 }
 
 /* Dashboard Grid Layout */
@@ -170,6 +172,9 @@
 /* Recent Activity Card */
 .recent-card {
     border-radius: 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: #e2e8f0;
 }
 
 .recent-card mat-card-header {
@@ -177,7 +182,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 24px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .activity-list {
@@ -188,12 +193,12 @@
     display: flex;
     align-items: center;
     padding: 18px 24px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
     transition: background 0.2s ease;
 }
 
 .activity-item:hover {
-    background: #f8fafc;
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .status-indicator {
@@ -221,18 +226,18 @@
 
 .activity-id {
     font-weight: 600;
-    color: #1e293b;
+    color: #e2e8f0;
     font-size: 0.95rem;
 }
 
 .activity-type {
     font-size: 0.8rem;
-    color: #64748b;
+    color: #94a3b8;
 }
 
 .activity-time {
     font-size: 0.85rem;
-    color: #94a3b8;
+    color: #64748b;
     margin-right: 20px;
 }
 
@@ -246,6 +251,9 @@
 .platform-card,
 .info-card {
     border-radius: 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: #e2e8f0;
 }
 
 .status-item {
@@ -256,7 +264,7 @@
 }
 
 .status-label {
-    color: #475569;
+    color: #94a3b8;
     font-size: 0.9rem;
 }
 
@@ -268,8 +276,8 @@
 }
 
 .status-tag.online {
-    background: #dcfce7;
-    color: #166534;
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
 }
 
 .standard-chips {
@@ -280,8 +288,9 @@
 }
 
 .chip {
-    background: #f1f5f9;
-    color: #475569;
+    background: rgba(255, 255, 255, 0.05);
+    color: #cbd5e1;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     font-size: 0.75rem;
     font-weight: 600;
     padding: 6px 12px;
