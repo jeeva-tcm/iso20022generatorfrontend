@@ -139,14 +139,54 @@ textarea {
     left: 48px;
     right: 0;
     height: 24px;
-    background: rgba(79, 70, 229, 0.3);
-    /* Stronger indicator */
-    border-left: 4px solid #4f46e5;
-    border-top: 1px solid rgba(79, 70, 229, 0.1);
-    border-bottom: 1px solid rgba(79, 70, 229, 0.1);
     z-index: 10;
     pointer-events: none;
     transition: none;
+}
+
+.highlight-error {
+    background: rgba(239, 68, 68, 0.2);
+    border-left: 4px solid #ef4444;
+    border-top: 1px solid rgba(239, 68, 68, 0.1);
+    border-bottom: 1px solid rgba(239, 68, 68, 0.1);
+}
+
+.highlight-warning {
+    background: rgba(245, 158, 11, 0.2);
+    border-left: 4px solid #f59e0b;
+    border-top: 1px solid rgba(245, 158, 11, 0.1);
+    border-bottom: 1px solid rgba(245, 158, 11, 0.1);
+}
+
+.markers-layer {
+    position: absolute;
+    left: 48px;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.persistent-marker {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 24px;
+    transition: background 0.3s ease;
+}
+
+.marker-error {
+    background: rgba(239, 68, 68, 0.08);
+    /* Very light red */
+    border-left: 2px solid rgba(239, 68, 68, 0.3);
+}
+
+.marker-warning {
+    background: rgba(245, 158, 11, 0.08);
+    /* Very light yellow */
+    border-left: 2px solid rgba(245, 158, 11, 0.3);
 }
 
 .editor-container:focus-within {
@@ -172,6 +212,18 @@ textarea {
     box-sizing: border-box;
 }
 
+.line-numbers div.active-line-error {
+    color: #ef4444;
+    font-weight: 800;
+    transition: all 0.2s ease;
+}
+
+.line-numbers div.active-line-warning {
+    color: #f59e0b;
+    font-weight: 800;
+    transition: all 0.2s ease;
+}
+
 .xml-editor {
     flex: 1;
     font-family: 'JetBrains Mono', 'Fira Code', monospace;
@@ -191,6 +243,10 @@ textarea {
     /* Maintain formatting */
     box-sizing: border-box;
     z-index: 2;
+}
+
+.xml-editor::selection {
+    background: rgba(99, 102, 241, 0.2);
 }
 
 /* Options Panel */
@@ -522,8 +578,8 @@ textarea {
 }
 
 .issues-table tr.selected {
-    background: #eff6ff;
-    border-left: 4px solid #3b82f6;
+    background: #fef2f2;
+    border-left: 4px solid #ef4444;
 }
 
 /* Detail Drawer */
@@ -596,8 +652,8 @@ textarea {
 }
 
 .issue-row.selected {
-    background: #f1f5f9;
-    border-left: 4px solid #4f46e5;
+    background: #fef2f2;
+    border-left: 4px solid #ef4444;
 }
 
 .detail-expanded-row {
@@ -675,7 +731,7 @@ textarea {
 /* Highlight Animation for Editor */
 @keyframes highlightLine {
     0% {
-        background-color: rgba(79, 70, 229, 0.2);
+        background-color: rgba(239, 68, 68, 0.2);
     }
 
     100% {

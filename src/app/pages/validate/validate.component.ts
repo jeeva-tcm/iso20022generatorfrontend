@@ -57,8 +57,11 @@ export class ValidateComponent implements OnInit {
     report: any = null;
     selectedIssue: any = null;
     lineNumbers: number[] = [1];
+    highlightedLineNum: number | null = null;
+    highlightSeverity: string = 'ERROR';
     highlightTop: number = 0;
     showHighlight: boolean = false;
+    issueLocations: Map<number, string> = new Map(); // line -> severity
 
     messageControl = new FormControl('');
     filteredOptions: Observable<string[]> | undefined;
@@ -155,6 +158,7 @@ export class ValidateComponent implements OnInit {
                     this.report = data.report;
                     this.isLoading = false;
                     this.scrollToResults();
+                    this.mapIssuesToLines();
                 }
             },
             error: (err) => {
@@ -240,6 +244,54 @@ export class ValidateComponent implements OnInit {
         this.lineNumbers = Array.from({ length: Math.max(lines, 1) }, (_, i) => i + 1);
     }
 
+    /** Called on every keystroke — clears/shifts markers as the XML changes */
+    onXmlInput() {
+        const textarea = document.querySelector('.xml-editor') as HTMLTextAreaElement;
+
+        if (textarea) {
+            const cursorPos = textarea.selectionStart;
+            const textBeforeCursor = this.xmlContent.substring(0, cursorPos);
+            const currentLine = textBeforeCursor.split('\n').length;
+
+            // Compare old line count vs new line count
+            const prevLineCount = this.lineNumbers.length;
+            const newLineCount = this.xmlContent.split('\n').length;
+            const lineDelta = newLineCount - prevLineCount;
+
+            if (lineDelta !== 0) {
+                const newLocations = new Map<number, string>();
+                this.issueLocations.forEach((severity, lineNum) => {
+                    if (lineNum < currentLine) {
+                        // ✅ Above the edit — keep as-is
+                        newLocations.set(lineNum, severity);
+                    } else if (lineDelta < 0 && lineNum < currentLine + Math.abs(lineDelta)) {
+                        // ❌ This line was REMOVED (cut/deleted) — drop its marker entirely
+                    } else {
+                        // ⬆️/⬇️ Below the changed section — shift up (cut) or down (paste)
+                        const newLineNum = lineNum + lineDelta;
+                        if (newLineNum > 0) {
+                            newLocations.set(newLineNum, severity);
+                        }
+                    }
+                });
+                this.issueLocations = newLocations;
+            } else {
+                // Same line count — just clear the edited line's marker
+                this.issueLocations.delete(currentLine);
+            }
+
+            // Clear floating highlight bar if it was on the edited line
+            if (this.highlightedLineNum !== null &&
+                this.highlightedLineNum >= currentLine &&
+                (lineDelta >= 0 || this.highlightedLineNum < currentLine + Math.abs(lineDelta))) {
+                this.showHighlight = false;
+                this.highlightedLineNum = null;
+            }
+        }
+
+        this.updateLineNumbers();
+    }
+
     handleTabKey(event: KeyboardEvent) {
         if (event.key === 'Tab') {
             event.preventDefault();
@@ -263,9 +315,22 @@ export class ValidateComponent implements OnInit {
     }
 
     onTextareaScroll(event: any) {
+        const scrollPos = event.target.scrollTop;
         const gutter = document.getElementById('line-gutter');
         if (gutter) {
-            gutter.scrollTop = event.target.scrollTop;
+            gutter.scrollTop = scrollPos;
+        }
+
+        const markers = document.getElementById('markers-layer');
+        if (markers) {
+            markers.scrollTop = scrollPos;
+        }
+
+        // Sync focal highlight if active
+        if (this.showHighlight && this.highlightedLineNum) {
+            const lineHeight = 24;
+            const paddingTop = 20;
+            this.highlightTop = paddingTop + (this.highlightedLineNum - 1) * lineHeight - scrollPos;
         }
     }
 
@@ -386,6 +451,9 @@ export class ValidateComponent implements OnInit {
         this.isLoading = true;
         this.report = null;
         this.selectedIssue = null;
+        this.showHighlight = false;
+        this.highlightedLineNum = null;
+        this.issueLocations.clear();
 
         // Use the control value if set, otherwise default
         const selectedType = this.messageControl.value || this.messageType;
@@ -403,6 +471,7 @@ export class ValidateComponent implements OnInit {
                 this.isLoading = false;
                 this.snackBar.open('Validation Complete', 'Close', { duration: 3000 });
                 this.scrollToResults();
+                this.mapIssuesToLines();
             },
 
             error: (err) => {
@@ -465,6 +534,7 @@ export class ValidateComponent implements OnInit {
             };
             this.isLoading = false;
             this.scrollToResults();
+            this.mapIssuesToLines();
             console.warn("⚠️ Backend not connected. Running in DEMO MODE with sample data.");
             // alert("⚠️ Backend not connected. Running in DEMO MODE with sample data.");
         }, 1500);
@@ -473,9 +543,16 @@ export class ValidateComponent implements OnInit {
     selectIssue(issue: any) {
         if (this.selectedIssue === issue) {
             this.selectedIssue = null;
+            this.showHighlight = false;
+            this.highlightedLineNum = null;
         } else {
             this.selectedIssue = issue;
         }
+    }
+
+    clearHighlight() {
+        this.showHighlight = false;
+        this.highlightedLineNum = null;
     }
 
     copyToClipboard(text: string) {
@@ -492,7 +569,7 @@ export class ValidateComponent implements OnInit {
         return match ? match[0] : path;
     }
 
-    scrollToLine(lineInfo: any) {
+    scrollToLine(lineInfo: any, severity: string = 'ERROR') {
         // Extract first sequence of digits from the string (e.g. "Line 5" -> 5)
         const match = String(lineInfo).match(/\d+/);
         const lineNum = match ? parseInt(match[0], 10) : NaN;
@@ -502,21 +579,8 @@ export class ValidateComponent implements OnInit {
         const textarea = document.querySelector('.xml-editor') as HTMLTextAreaElement;
 
         if (textarea) {
-            // Calculate character position for selection
-            const lines = this.xmlContent.split('\n');
-            if (lineNum >= 1 && lineNum <= lines.length) {
-                let startChar = 0;
-                for (let i = 0; i < lineNum - 1; i++) {
-                    startChar += lines[i].length + 1; // +1 for \n
-                }
-                const endChar = startChar + lines[lineNum - 1].length;
-
-                // Focus and select the line
-                textarea.focus();
-                textarea.setSelectionRange(startChar, endChar);
-            } else {
-                textarea.focus();
-            }
+            // Focus but do not select (to avoid blue highlight clashing with our red highlight)
+            textarea.focus();
 
             const lineHeight = 24;
             const paddingTop = 20;
@@ -528,7 +592,7 @@ export class ValidateComponent implements OnInit {
                 card.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
 
-            // 2. Center the line inside the editor: Editor is 500px high, so 250px is middle.
+            // 2. Center the line inside the editor: Editor is 500px high, so 220px offset is middle.
             const targetScroll = Math.max(0, scrollPos - 220);
 
             // Use immediate scroll first to prevent fighting with focus(), then smooth correction
@@ -536,23 +600,11 @@ export class ValidateComponent implements OnInit {
 
             // 3. Trigger Highlight Bar
             this.showHighlight = true;
-
-            // Continuous sync for smooth animations
-            const updateHighlight = () => {
-                this.highlightTop = paddingTop + (lineNum - 1) * lineHeight - textarea.scrollTop;
-            };
-
-            const syncTimer = setInterval(updateHighlight, 10);
-
-            setTimeout(() => {
-                clearInterval(syncTimer);
-                setTimeout(() => {
-                    this.showHighlight = false;
-                }, 3000);
-            }, 2000);
+            this.highlightedLineNum = lineNum;
+            this.highlightSeverity = severity || 'ERROR';
+            this.highlightTop = paddingTop + (lineNum - 1) * lineHeight - targetScroll;
         }
     }
-
 
     getReportLayers(): string[] {
         if (!this.report?.layer_status) return [];
@@ -583,5 +635,29 @@ export class ValidateComponent implements OnInit {
         this.xmlContent = '';
         this.report = null;
         this.selectedIssue = null;
+        this.showHighlight = false;
+        this.highlightedLineNum = null;
+        this.issueLocations.clear();
+    }
+
+    private mapIssuesToLines() {
+        this.issueLocations.clear();
+        if (!this.report || !this.report.details) return;
+
+        this.report.details.forEach((issue: any) => {
+            const match = String(issue.path).match(/\d+/);
+            const lineNum = match ? parseInt(match[0], 10) : NaN;
+            if (!isNaN(lineNum)) {
+                const currentSev = this.issueLocations.get(lineNum);
+                // ERROR takes precedence over WARNING for color
+                if (issue.severity === 'ERROR' || !currentSev) {
+                    this.issueLocations.set(lineNum, issue.severity);
+                }
+            }
+        });
+    }
+
+    getLineSeverity(lineNum: number): string | null {
+        return this.issueLocations.get(lineNum) || null;
     }
 }

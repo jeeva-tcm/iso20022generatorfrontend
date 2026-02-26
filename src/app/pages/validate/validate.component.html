@@ -19,13 +19,28 @@
                     </div>
 
                     <div class="editor-container">
-                        <div class="highlight-bar" [style.top.px]="highlightTop" *ngIf="showHighlight"></div>
-                        <div class="line-numbers" id="line-gutter">
-                            <div *ngFor="let n of lineNumbers">{{n}}</div>
+                        <div class="markers-layer" id="markers-layer">
+                            <!-- Scroll Spacer to match textarea height for perfect sync -->
+                            <div class="markers-spacer" [style.height.px]="lineNumbers.length * 24 + 40"></div>
+                            <div *ngFor="let loc of issueLocations | keyvalue" class="persistent-marker"
+                                [class.marker-error]="loc.value === 'ERROR'"
+                                [class.marker-warning]="loc.value === 'WARNING'"
+                                [style.top.px]="20 + ((loc.key - 1) * 24)">
+                            </div>
                         </div>
-                        <textarea class="xml-editor" [(ngModel)]="xmlContent" (input)="updateLineNumbers()"
+
+                        <div class="highlight-bar" [style.top.px]="highlightTop"
+                            [class.highlight-error]="highlightSeverity === 'ERROR'"
+                            [class.highlight-warning]="highlightSeverity === 'WARNING'" *ngIf="showHighlight"></div>
+                        <div class="line-numbers" id="line-gutter">
+                            <div *ngFor="let n of lineNumbers"
+                                [class.active-line-error]="getLineSeverity(n) === 'ERROR'"
+                                [class.active-line-warning]="getLineSeverity(n) === 'WARNING'">
+                                {{n}}</div>
+                        </div>
+                        <textarea class="xml-editor" [(ngModel)]="xmlContent" (input)="onXmlInput()"
                             (scroll)="onTextareaScroll($event)" (keydown)="handleTabKey($event)"
-                            placeholder="Paste XML here..."></textarea>
+                            (click)="clearHighlight()" placeholder="Paste XML here..."></textarea>
 
                         <button mat-icon-button class="clear-editor-btn" (click)="clearAll()"
                             matTooltip="Clear XML Content" *ngIf="xmlContent">
@@ -181,7 +196,7 @@
                                                 [class]="'sev-badge ' + issue.severity.toLowerCase()">{{issue.severity}}</span>
                                         </td>
                                         <td class="path-cell clickable"
-                                            (click)="scrollToLine(issue.path); $event.stopPropagation()">
+                                            (click)="scrollToLine(issue.path, issue.severity); $event.stopPropagation()">
                                             <code
                                                 matTooltip="Click to view in editor">{{getLineNumber(issue.path)}}</code>
                                         </td>
@@ -199,7 +214,8 @@
                                                 <div class="detail-grid">
                                                     <div class="detail-item">
                                                         <label>Location</label>
-                                                        <div class="line-jump" (click)="scrollToLine(issue.path)">
+                                                        <div class="line-jump"
+                                                            (click)="scrollToLine(issue.path, issue.severity)">
                                                             <mat-icon>vertical_align_center</mat-icon> Line
                                                             {{issue.path}}
                                                         </div>
