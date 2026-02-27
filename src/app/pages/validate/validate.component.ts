@@ -50,6 +50,11 @@ export class ValidateComponent implements OnInit {
   // ── Drag state ─────────────────────────────────────────────────────────────
   isDragging = false;
 
+  // ── UI State ─────────────────────────────────────────────────────────────
+  searchQuery = '';
+  filterStatus: 'All' | 'Passed' | 'Failed' | 'Warnings' = 'All';
+  expandedFile: FileEntry | null = null;
+
   // ── Global options ─────────────────────────────────────────────────────────
   validationMode = 'Full 1-3';
   messageControl = new FormControl('Auto-detect');
@@ -84,7 +89,74 @@ export class ValidateComponent implements OnInit {
     };
   }
 
-  get selectedReport() { return this.selectedFile?.report ?? null; }
+  get filteredFiles() {
+    return this.files.filter(f => {
+      if (this.filterStatus !== 'All') {
+        if (this.filterStatus === 'Passed' && f.status !== 'passed') return false;
+        if (this.filterStatus === 'Failed' && f.status !== 'failed') return false;
+        if (this.filterStatus === 'Warnings' && f.status !== 'warnings') return false;
+      }
+      if (this.searchQuery && !f.name.toLowerCase().includes(this.searchQuery.toLowerCase())) {
+        return false;
+      }
+      return true;
+    });
+  }
+
+  get overallPassRate() {
+    if (this.files.length === 0) return 0;
+    const validated = this.files.filter(f => f.status !== 'pending' && f.status !== 'validating');
+    if (validated.length === 0) return 0;
+    const passed = validated.filter(f => f.status === 'passed').length;
+    return Math.round((passed / validated.length) * 100);
+  }
+
+  getFilePassRate(f: FileEntry) {
+    if (f.status === 'passed') return 100;
+    if (f.status === 'pending' || f.status === 'validating' || !f.report) return 0;
+
+    let totalLayers = 0;
+    let passedLayers = 0;
+    if (f.report.layer_status) {
+      Object.keys(f.report.layer_status).forEach(k => {
+        totalLayers++;
+        if (f.report.layer_status[k].status.includes('✅') || f.report.layer_status[k].status.includes('⚠')) {
+          passedLayers++;
+        }
+      });
+    }
+    if (totalLayers === 0) return 0;
+    return Math.round((passedLayers / totalLayers) * 100);
+  }
+
+  toggleFileRow(f: FileEntry) {
+    this.expandedFile = this.expandedFile === f ? null : f;
+  }
+
+  setFilter(status: 'All' | 'Passed' | 'Failed' | 'Warnings') {
+    this.filterStatus = status;
+  }
+
+  getGroupedIssues(report: any) {
+    if (!report?.details) return [];
+    const layers = [...new Set(report.details.map((x: any) => x.layer))].sort();
+    return layers.map(l => {
+      return {
+        layer: l,
+        name: this.getLayerName(String(l)),
+        issues: report.details.filter((x: any) => x.layer === l)
+      };
+    });
+  }
+
+  get filesToDisplay(): FileEntry[] {
+    return this.selectedFile ? [this.selectedFile] : this.files;
+  }
+
+  selectAllFiles() {
+    this.selectedFile = null;
+    this.expandedFile = null;
+  }
 
   constructor(
     private http: HttpClient,
@@ -159,6 +231,18 @@ export class ValidateComponent implements OnInit {
 
     if (validFiles.length === 0) return;
 
+    if (this.files.length > 0) {
+      const replace = confirm("You already have files loaded.\n\nClick 'OK' to REMOVE existing files and only validate the new ones.\n\nClick 'Cancel' to KEEP ALL existing files (their previous validation results will be cleared/refreshed).");
+      if (replace) {
+        this.clearAll();
+      } else {
+        this.files.forEach(f => {
+          f.status = 'pending';
+          f.report = null;
+        });
+      }
+    }
+
     try {
       const newEntries: FileEntry[] = await Promise.all(
         validFiles.map(async (file) => {
@@ -177,8 +261,10 @@ export class ValidateComponent implements OnInit {
       );
 
       this.files = [...this.files, ...newEntries];
-      if (!this.selectedFile && newEntries.length > 0) {
-        this.selectedFile = newEntries[0];
+      if (this.files.length === 1) {
+        this.selectedFile = this.files[0];
+      } else {
+        this.selectedFile = null;
       }
       // Ensure UI updates immediately after all files are parsed
       this.cdr.detectChanges();
@@ -218,19 +304,13 @@ export class ValidateComponent implements OnInit {
     this.expandedIssue = null;
   }
 
-  // ── Validation ─────────────────────────────────────────────────────────────
-  validateSelected() {
-    if (!this.selectedFile) return;
-    this.validateFile(this.selectedFile);
-  }
-
   validateAll() {
     for (const f of this.files) {
       this.validateFile(f);
     }
   }
 
-  private validateFile(entry: FileEntry) {
+  validateFile(entry: FileEntry) {
     if (!entry.content?.trim()) return;
 
     // Client-side well-formedness pre-check
@@ -284,40 +364,38 @@ export class ValidateComponent implements OnInit {
   }
 
   // ── Report helpers ─────────────────────────────────────────────────────────
-  getReportLayers(): string[] {
-    if (!this.selectedReport?.layer_status) return [];
-    return Object.keys(this.selectedReport.layer_status).sort();
+  getReportLayers(report: any): string[] {
+    if (!report?.layer_status) return [];
+    return Object.keys(report.layer_status).sort();
   }
 
   getLayerName(k: string): string {
     const names: Record<string, string> = {
       '1': 'Syntax & Format',
       '2': 'Schema Validation',
-      '3': 'Business Rules',
-      '4': 'SWIFT Network Rules',
-      '5': 'Business Context'
+      '3': 'Business Rules'
     };
     return names[k] ?? `Layer ${k}`;
   }
 
-  getLayerStatus(k: string): string {
-    return this.selectedReport?.layer_status?.[k]?.status ?? '';
+  getLayerStatus(report: any, k: string): string {
+    return report?.layer_status?.[k]?.status ?? '';
   }
 
-  getLayerTime(k: string): number {
-    return this.selectedReport?.layer_status?.[k]?.time ?? 0;
+  getLayerTime(report: any, k: string): number {
+    return report?.layer_status?.[k]?.time ?? 0;
   }
 
-  isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
-  isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
-  isLayerWarn(k: string) {
-    const s = this.getLayerStatus(k);
+  isLayerPass(report: any, k: string) { return this.getLayerStatus(report, k).includes('✅'); }
+  isLayerFail(report: any, k: string) { return this.getLayerStatus(report, k).includes('❌'); }
+  isLayerWarn(report: any, k: string) {
+    const s = this.getLayerStatus(report, k);
     return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
   }
 
-  getIssues(): any[] { return this.selectedReport?.details ?? []; }
-  getErrors(): any[] { return this.getIssues().filter(i => i.severity === 'ERROR'); }
-  getWarnings(): any[] { return this.getIssues().filter(i => i.severity === 'WARNING'); }
+  getIssues(report: any): any[] { return report?.details ?? []; }
+  getErrors(report: any): any[] { return this.getIssues(report).filter(i => i.severity === 'ERROR'); }
+  getWarnings(report: any): any[] { return this.getIssues(report).filter(i => i.severity === 'WARNING'); }
 
   toggleIssue(issue: any) {
     this.expandedIssue = this.expandedIssue === issue ? null : issue;

@@ -19,8 +19,6 @@
       <span class="layer-pill"><span class="dot dot-green"></span><b>L1</b> Syntax &amp; Format</span>
       <span class="layer-pill"><span class="dot dot-purple"></span><b>L2</b> Schema Validation</span>
       <span class="layer-pill"><span class="dot dot-blue"></span><b>L3</b> Business Rules</span>
-      <span class="layer-pill"><span class="dot dot-amber"></span><b>L4</b> SWIFT Network Rules</span>
-      <span class="layer-pill"><span class="dot dot-red"></span><b>L5</b> Business Context</span>
     </div>
   </header>
 
@@ -31,84 +29,47 @@
     <aside class="vp-left">
 
       <!-- Drop Zone -->
-      <div class="drop-zone" [class.dragging]="isDragging"
-           (click)="fileInput.click()">
+      <div class="drop-zone" [class.dragging]="isDragging" (click)="fileInput.click()">
         <div class="drop-icon">
           <mat-icon>add_circle_outline</mat-icon>
         </div>
         <p class="drop-title">Drop XML Files Here</p>
         <p class="drop-sub">or click to browse · ISO 20022 .xml files only</p>
         <p class="drop-limit">MAX 3MB PER FILE · NO FILE LIMIT</p>
-        <input #fileInput type="file" multiple accept=".xml,.xsd,.txt"
-               (change)="onFileSelected($event)" style="display:none">
-      </div>
-
-      <!-- Summary Row -->
-      <div class="summary-row" *ngIf="files.length > 0">
-        <div class="sum-chip sum-pass">
-          <mat-icon>check_circle</mat-icon>
-          <span class="sum-num">{{summary.passed}}</span>
-          <span class="sum-lbl">PASSED</span>
-        </div>
-        <div class="sum-chip sum-fail">
-          <mat-icon>cancel</mat-icon>
-          <span class="sum-num">{{summary.failed}}</span>
-          <span class="sum-lbl">FAILED</span>
-        </div>
-        <div class="sum-chip sum-warn">
-          <mat-icon>warning</mat-icon>
-          <span class="sum-num">{{summary.warnings}}</span>
-          <span class="sum-lbl">WARNINGS</span>
-        </div>
-      </div>
-
-      <!-- Message Type + Actions -->
-      <div class="left-actions" *ngIf="files.length > 0">
-        <mat-form-field appearance="outline" class="msg-type-field">
-          <mat-icon matPrefix class="prefix-icon">search</mat-icon>
-          <input matInput placeholder="Message type…" [formControl]="messageControl"
-                 [matAutocomplete]="auto">
-          <mat-autocomplete #auto="matAutocomplete">
-            <mat-option *ngFor="let o of filteredOptions | async" [value]="o">{{o}}</mat-option>
-          </mat-autocomplete>
-        </mat-form-field>
-
-        <div class="action-btns">
-          <button class="btn-validate-all" (click)="validateAll()"
-                  matTooltip="Validate all files">
-            <mat-icon>play_circle_filled</mat-icon> Validate All
-          </button>
-          <button class="btn-clear-all" (click)="clearAll()" matTooltip="Remove all files">
-            <mat-icon>delete_sweep</mat-icon>
-          </button>
-        </div>
+        <input #fileInput type="file" multiple accept=".xml,.xsd,.txt" (change)="onFileSelected($event)"
+          style="position: absolute; width: 0; height: 0; opacity: 0; z-index: -1;">
       </div>
 
       <!-- File List -->
-      <div class="file-list" *ngIf="files.length > 0">
-        <div class="file-item" *ngFor="let f of files"
-             [class.selected]="selectedFile === f"
-             (click)="selectFile(f)">
-          <div class="fi-top">
-            <div class="fi-name" [title]="f.name">{{f.name}}</div>
-            <div class="fi-badge" [class]="'badge-status badge-status-' + f.status">
-              <mat-icon *ngIf="f.status === 'passed'">check</mat-icon>
-              <mat-icon *ngIf="f.status === 'failed'">close</mat-icon>
-              <mat-icon *ngIf="f.status === 'warnings'">warning</mat-icon>
-              <mat-icon *ngIf="f.status === 'validating'" class="spin">sync</mat-icon>
-              <mat-icon *ngIf="f.status === 'pending'">hourglass_empty</mat-icon>
-              {{getStatusLabel(f)}}
+      <div class="file-list-wrap" *ngIf="files.length > 0">
+        <div class="file-item-new" *ngFor="let f of files" [class.selected]="selectedFile === f">
+          <div class="fi-info">
+            <mat-icon [class.doc-pass]="f.status === 'passed'" [class.doc-fail]="f.status === 'failed'"
+              [class.doc-warn]="f.status === 'warnings'">
+              {{ f.status === 'passed' ? 'task' : (f.status === 'failed' ? 'error' : (f.status === 'warnings' ?
+              'warning' : 'description')) }}
+            </mat-icon>
+            <div class="fi-text">
+              <div class="fi-name" [title]="f.name">{{f.name}}</div>
+              <div class="fi-substatus" [ngClass]="f.status">
+                Status: {{ f.status === 'pending' ? 'Not Validated' : (f.status === 'validating' ? 'Validating...' :
+                (f.status === 'passed' ? 'Passed (' + getFilePassRate(f) + '%)' : 'Failed (Errors: ' + (f.report?.errors
+                || 0) + ')')) }}
+              </div>
             </div>
           </div>
-          <div class="fi-bottom">
-            <span class="fi-msg" *ngIf="f.messageType">{{f.messageType}}</span>
-            <span class="fi-msg" *ngIf="!f.messageType">Awaiting validation</span>
-            <span class="fi-size">{{f.sizeLabel}}</span>
+          <div class="fi-action">
+            <button *ngIf="f.status === 'pending'" class="btn-run" (click)="validateFile(f)">Run Validation</button>
+            <button *ngIf="f.status === 'passed'" class="btn-passed"><mat-icon>check_circle</mat-icon> Passed
+              ({{getFilePassRate(f)}}%)</button>
+            <button *ngIf="f.status === 'failed'" class="btn-failed">Failed (Errors: {{f.report?.errors}})</button>
+            <button *ngIf="f.status === 'warnings'" class="btn-warn">Warnings ({{f.report?.warnings}})</button>
+            <button *ngIf="f.status === 'validating'" class="btn-validating"><mat-icon
+                class="spin">sync</mat-icon></button>
           </div>
-          <button class="fi-remove" (click)="removeFile(f, $event)" matTooltip="Remove">
-            <mat-icon>close</mat-icon>
-          </button>
         </div>
+
+        <button class="btn-run-all" (click)="validateAll()">Run Validation - All Files</button>
       </div>
 
       <!-- Empty State -->
@@ -117,161 +78,138 @@
         <p>No files loaded yet.<br>Drop or browse to begin.</p>
       </div>
 
+      <!-- Left Panel Bottom Summary -->
+      <div class="validation-summary-box" *ngIf="files.length > 0">
+        <h4>Validation Summary</h4>
+        <div class="vs-row"><span>Total Files:</span> <span>{{files.length}}</span></div>
+        <div class="vs-row vs-pass"><span>Passed:</span> <span>{{summary.passed}}</span></div>
+        <div class="vs-row vs-fail"><span>Failed:</span> <span>{{summary.failed}}</span></div>
+        <div class="vs-prog-row">
+          <span class="vs-lbl">Overall Pass Rate:</span>
+          <div class="vs-prog-bar-wrap">
+            <div class="vs-prog-bar" [style.width.%]="overallPassRate"></div>
+          </div>
+          <span class="vs-val">{{overallPassRate}}%</span>
+        </div>
+      </div>
+
     </aside>
 
     <!-- ══ RIGHT PANEL ══ -->
     <main class="vp-right">
 
+      <div class="vp-table-filters" *ngIf="files.length > 0">
+        <div class="filter-chips">
+          <button class="chip chip-all" [class.active]="filterStatus === 'All'" (click)="setFilter('All')">All</button>
+          <button class="chip chip-passed" [class.active]="filterStatus === 'Passed'"
+            (click)="setFilter('Passed')">Passed</button>
+          <button class="chip chip-failed" [class.active]="filterStatus === 'Failed'"
+            (click)="setFilter('Failed')">Failed <span class="chip-badge"
+              *ngIf="summary.failed > 0">{{summary.failed}}</span></button>
+          <button class="chip chip-warn" [class.active]="filterStatus === 'Warnings'"
+            (click)="setFilter('Warnings')">Warnings <span class="chip-badge"
+              *ngIf="summary.warnings > 0">{{summary.warnings}}</span></button>
+        </div>
+        <button class="btn-download"><mat-icon>file_download</mat-icon> Download Report</button>
+      </div>
+
+      <div class="vp-search" *ngIf="files.length > 0">
+        <mat-icon>search</mat-icon>
+        <input type="text" placeholder="Search file..." [(ngModel)]="searchQuery">
+      </div>
+
       <!-- No Selection -->
-      <div class="no-selection" *ngIf="!selectedFile">
+      <div class="no-selection" *ngIf="files.length === 0">
         <mat-icon>upload_file</mat-icon>
         <h2>Upload XML Files to Begin</h2>
         <p>Drag and drop ISO 20022 MX message files onto the left panel,<br>
-           or click the upload area to browse your filesystem.</p>
+          or click the upload area to browse your filesystem.</p>
         <p class="no-sel-hint">Supports pacs · camt · pain · sese · acmt · and 200+ more message types</p>
       </div>
 
-      <!-- Pending / No Report Yet -->
-      <div class="pending-state" *ngIf="selectedFile && !selectedFile.report && selectedFile.status !== 'validating'">
-        <div class="pending-file-info">
-          <mat-icon class="pending-icon">description</mat-icon>
-          <div>
-            <h3>{{selectedFile.name}}</h3>
-            <p>{{selectedFile.sizeLabel}} · Ready to validate</p>
-          </div>
+      <div class="vp-table" *ngIf="files.length > 0">
+        <div class="table-header">
+          <div class="th-col th-check"><input type="checkbox"></div>
+          <div class="th-col th-name">File Name</div>
+          <div class="th-col th-status">Status</div>
+          <div class="th-col th-err">Errors</div>
+          <div class="th-col th-warn">Warnings</div>
+          <div class="th-col th-pass">Pass %</div>
         </div>
-        <button class="btn-validate-big" (click)="validateSelected()">
-          <mat-icon>play_arrow</mat-icon>
-          Run Validation
-        </button>
-      </div>
-
-      <!-- Validating Spinner -->
-      <div class="validating-state" *ngIf="selectedFile?.status === 'validating'">
-        <div class="pulse-ring"></div>
-        <mat-icon class="spin-big">sync</mat-icon>
-        <p>Validating <strong>{{selectedFile?.name}}</strong>…</p>
-      </div>
-
-      <!-- ── REPORT ── -->
-      <ng-container *ngIf="selectedFile?.report as r">
-
-        <!-- File Header -->
-        <div class="report-header">
-          <div class="rh-left">
-            <h2 class="rh-name">{{selectedFile!.name}}</h2>
-            <span class="rh-meta">
-              {{selectedFile!.sizeLabel}} &nbsp;·&nbsp;
-              {{r.errors}} error{{r.errors !== 1 ? 's' : ''}} &nbsp;·&nbsp;
-              {{r.warnings}} warning{{r.warnings !== 1 ? 's' : ''}}
-            </span>
-          </div>
-          <div class="rh-status" [class]="'rh-status-' + selectedFile!.status">
-            <mat-icon *ngIf="selectedFile!.status === 'passed'">check_circle</mat-icon>
-            <mat-icon *ngIf="selectedFile!.status === 'failed'">cancel</mat-icon>
-            <mat-icon *ngIf="selectedFile!.status === 'warnings'">warning</mat-icon>
-            {{selectedFile!.status === 'passed' ? 'ALL PASSED' :
-              selectedFile!.status === 'warnings' ? 'WITH WARNINGS' : 'FAILED'}}
-          </div>
-        </div>
-
-        <!-- Message + Timing Strip -->
-        <div class="meta-strip">
-          <div class="ms-item">
-            <span class="ms-label">MESSAGE TYPE</span>
-            <span class="ms-val msg-type-chip family-{{getMessageFamily(r.message)}}">{{r.message}}</span>
-          </div>
-          <div class="ms-item">
-            <span class="ms-label">ERRORS</span>
-            <span class="ms-val ms-err">{{r.errors}}</span>
-          </div>
-          <div class="ms-item">
-            <span class="ms-label">WARNINGS</span>
-            <span class="ms-val ms-warn">{{r.warnings}}</span>
-          </div>
-          <div class="ms-item">
-            <span class="ms-label">PROCESSING TIME</span>
-            <span class="ms-val">{{r.total_time_ms | number:'1.0-2'}}ms</span>
-          </div>
-        </div>
-
-        <!-- Layer Cards -->
-        <div class="layer-grid">
-          <div class="layer-card"
-               *ngFor="let k of getReportLayers()"
-               [class.lc-pass]="isLayerPass(k)"
-               [class.lc-fail]="isLayerFail(k)"
-               [class.lc-warn]="isLayerWarn(k)">
-            <div class="lc-header">
-              <span class="lc-label">L{{k}}</span>
-              <mat-icon class="lc-icon" *ngIf="isLayerPass(k)">check</mat-icon>
-              <mat-icon class="lc-icon" *ngIf="isLayerFail(k)">close</mat-icon>
-              <mat-icon class="lc-icon" *ngIf="isLayerWarn(k)">warning</mat-icon>
-            </div>
-            <div class="lc-name">{{getLayerName(k)}}</div>
-            <div class="lc-time" [class.lc-time-pass]="isLayerPass(k)"
-                 [class.lc-time-fail]="isLayerFail(k)"
-                 [class.lc-time-warn]="isLayerWarn(k)">
-              <span *ngIf="isLayerPass(k)">All checks passed</span>
-              <span *ngIf="isLayerFail(k)">{{getErrors().length}} error{{getErrors().length !== 1 ? 's' : ''}}</span>
-              <span *ngIf="isLayerWarn(k)">{{getWarnings().length}} warning{{getWarnings().length !== 1 ? 's' : ''}}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Issues List -->
-        <div class="issues-section" *ngIf="getIssues().length > 0">
-          <div class="issues-title">
-            VALIDATION ISSUES ({{getIssues().length}})
-          </div>
-
-          <div class="issue-card" *ngFor="let issue of getIssues()"
-               [class.issue-error]="issue.severity === 'ERROR'"
-               [class.issue-warn]="issue.severity === 'WARNING'"
-               (click)="toggleIssue(issue)">
-
-            <div class="issue-row">
-              <mat-icon class="issue-sev-icon">
-                {{issue.severity === 'ERROR' ? 'error' : 'warning'}}
-              </mat-icon>
-              <div class="issue-center">
-                <span class="issue-code">L{{issue.layer}} &nbsp; {{issue.code}}</span>
-                <span class="issue-msg">{{issue.message}}</span>
-              </div>
-              <div class="issue-right">
-                <span class="issue-sev-badge" [class]="'isb-' + issue.severity">
-                  {{issue.severity}}
-                </span>
-                <span class="issue-line" *ngIf="issue.path">Line {{issue.path}}</span>
-                <mat-icon class="issue-chevron"
-                          [class.rotated]="expandedIssue === issue">
-                  expand_more
+        <div class="table-body">
+          <ng-container *ngFor="let f of filteredFiles">
+            <div class="table-row" (click)="toggleFileRow(f)">
+              <div class="td-col td-check"><input type="checkbox" (click)="$event.stopPropagation()"></div>
+              <div class="td-col td-name">
+                <mat-icon class="file-ic" [ngClass]="f.status">
+                  description
                 </mat-icon>
+                {{f.name}}
+              </div>
+              <div class="td-col td-status">
+                <span class="status-badge" [ngClass]="f.status"
+                  *ngIf="f.status !== 'validating' && f.status !== 'pending'">
+                  <mat-icon *ngIf="f.status === 'passed'">check_circle</mat-icon>
+                  <mat-icon *ngIf="f.status === 'failed'">cancel</mat-icon>
+                  {{ f.status === 'passed' ? 'Passed ('+getFilePassRate(f)+'%)' : (f.status === 'failed' ? 'Failed ' +
+                  f.report?.errors : f.status) }}
+                </span>
+                <span class="status-badge validating" *ngIf="f.status === 'validating'"><mat-icon
+                    class="spin">sync</mat-icon> Validating...</span>
+                <span class="status-badge pending" *ngIf="f.status === 'pending'">Pending</span>
+              </div>
+              <div class="td-col td-err">{{f.report?.errors || 0}}</div>
+              <div class="td-col td-warn">{{f.report?.warnings || 0}}</div>
+              <div class="td-col td-pass">
+                <div class="pass-bar-wrap">
+                  <div class="pass-bar" [style.width.%]="getFilePassRate(f)"></div>
+                </div>
+                <span>{{getFilePassRate(f)}}%</span>
               </div>
             </div>
 
-            <!-- Expanded Fix -->
-            <div class="issue-fix" *ngIf="expandedIssue === issue && issue.fix_suggestion">
-              <div class="fix-label">SMART FIX SUGGESTION</div>
-              <div class="fix-body">
-                <span>{{issue.fix_suggestion}}</span>
-                <button class="fix-copy-btn" (click)="copyFix(issue.fix_suggestion, $event)">
-                  <mat-icon>content_copy</mat-icon> COPY FIX
-                </button>
-              </div>
-            </div>
+            <!-- Expanded Row Details -->
+            <div class="row-details" *ngIf="expandedFile === f">
+              <div class="details-inner" *ngIf="f.report; else noReport">
 
+                <!-- Layer details -->
+                <div class="layer-detail-item" *ngFor="let l of getGroupedIssues(f.report)">
+                  <div class="layer-title"><mat-icon>chevron_right</mat-icon> {{l.name}}</div>
+                  <div class="layer-issues">
+                    <div class="issue-item" *ngFor="let issue of l.issues">
+                      <span class="issue-path"><mat-icon [class.success]="issue.severity !== 'ERROR'"
+                          [class.error]="issue.severity === 'ERROR'">{{issue.severity === 'ERROR' ? 'cancel' :
+                          'check_circle'}}</mat-icon> {{issue.path || 'Root'}}</span>
+                      <span class="issue-status" [class.mismatch]="issue.severity === 'ERROR'">
+                        <mat-icon *ngIf="issue.severity === 'ERROR'">close</mat-icon>
+                        {{issue.severity === 'ERROR' ? 'Mismatch' : (issue.severity === 'WARNING' ? 'Warning' :
+                        'Valid')}}
+                      </span>
+                      <span class="issue-msg">{{issue.message}}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Always show layers even if no issues for that layer to mimic Design -->
+                <div class="layer-detail-item" *ngFor="let k of getReportLayers(f.report)">
+                  <div class="layer-title" *ngIf="isLayerPass(f.report, k)">
+                    <mat-icon class="success">check_circle</mat-icon> L{{k}} {{getLayerName(k)}} &nbsp;<span
+                      class="pass-text"><mat-icon>check</mat-icon> Passed</span>
+                  </div>
+                </div>
+
+              </div>
+              <ng-template #noReport>
+                <div class="no-report-msg">Run validation to see details.</div>
+              </ng-template>
+            </div>
+          </ng-container>
+
+          <div class="empty-state" *ngIf="filteredFiles.length === 0">
+            <p>No files match your filters.</p>
           </div>
         </div>
-
-        <!-- All passed -->
-        <div class="all-passed" *ngIf="getIssues().length === 0">
-          <mat-icon>verified</mat-icon>
-          <h3>All Checks Passed</h3>
-          <p>This message is fully compliant with ISO 20022 standards.</p>
-        </div>
-
-      </ng-container>
+      </div>
     </main>
 
   </div><!-- /vp-body -->
