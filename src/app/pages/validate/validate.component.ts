@@ -46,6 +46,8 @@ export class ValidateComponent implements OnInit {
   // ── File list ──────────────────────────────────────────────────────────────
   files: FileEntry[] = [];
   selectedFile: FileEntry | null = null;
+  showReplaceModal = false;
+  pendingFilesToAdd: File[] = [];
 
   // ── Drag state ─────────────────────────────────────────────────────────────
   isDragging = false;
@@ -83,7 +85,7 @@ export class ValidateComponent implements OnInit {
   get summary() {
     const done = this.files.filter(f => f.status !== 'pending' && f.status !== 'validating');
     return {
-      passed: done.filter(f => f.status === 'passed').length,
+      passed: done.filter(f => f.status === 'passed' || f.status === 'warnings').length,
       failed: done.filter(f => f.status === 'failed').length,
       warnings: done.filter(f => f.status === 'warnings').length,
     };
@@ -92,7 +94,7 @@ export class ValidateComponent implements OnInit {
   get filteredFiles() {
     return this.files.filter(f => {
       if (this.filterStatus !== 'All') {
-        if (this.filterStatus === 'Passed' && f.status !== 'passed') return false;
+        if (this.filterStatus === 'Passed' && (f.status !== 'passed' && f.status !== 'warnings')) return false;
         if (this.filterStatus === 'Failed' && f.status !== 'failed') return false;
         if (this.filterStatus === 'Warnings' && f.status !== 'warnings') return false;
       }
@@ -107,44 +109,100 @@ export class ValidateComponent implements OnInit {
     if (this.files.length === 0) return 0;
     const validated = this.files.filter(f => f.status !== 'pending' && f.status !== 'validating');
     if (validated.length === 0) return 0;
-    const passed = validated.filter(f => f.status === 'passed').length;
+    const passed = validated.filter(f => f.status === 'passed' || f.status === 'warnings').length;
     return Math.round((passed / validated.length) * 100);
   }
 
   getFilePassRate(f: FileEntry) {
-    if (f.status === 'passed') return 100;
+    if (f.status === 'passed' || f.status === 'warnings') return 100;
     if (f.status === 'pending' || f.status === 'validating' || !f.report) return 0;
 
-    let totalLayers = 0;
+    let expectedLayers = this.validationMode === 'Layer 1 only' ? 1 :
+      this.validationMode === 'Layer 1-2' ? 2 : 3;
+
     let passedLayers = 0;
     if (f.report.layer_status) {
       Object.keys(f.report.layer_status).forEach(k => {
-        totalLayers++;
-        if (f.report.layer_status[k].status.includes('✅') || f.report.layer_status[k].status.includes('⚠')) {
+        if (f.report.layer_status[k].status.includes('✅') || f.report.layer_status[k].status.includes('⚠') || f.report.layer_status[k].status.includes('WARN')) {
           passedLayers++;
         }
       });
     }
-    if (totalLayers === 0) return 0;
-    return Math.round((passedLayers / totalLayers) * 100);
+
+    // Ensure we don't divide by 0 and max is 100%
+    if (expectedLayers === 0) return 0;
+    return Math.min(100, Math.round((passedLayers / expectedLayers) * 100));
   }
 
   toggleFileRow(f: FileEntry) {
     this.expandedFile = this.expandedFile === f ? null : f;
   }
 
+  expandedLayers: { [key: string]: boolean } = {};
+
+  toggleLayer(f: FileEntry, layerName: string) {
+    const key = f.id + '_' + layerName;
+    this.expandedLayers[key] = !this.isLayerExpanded(f, layerName);
+  }
+
+  isLayerExpanded(f: FileEntry, layerName: string): boolean {
+    const key = f.id + '_' + layerName;
+    return !!this.expandedLayers[key];
+  }
+
   setFilter(status: 'All' | 'Passed' | 'Failed' | 'Warnings') {
     this.filterStatus = status;
+  }
+
+  downloadReport() {
+    if (this.files.length === 0) return;
+
+    let csv = "File Name,Status,Pass %,Total Errors,Total Warnings,Layer,Severity,Issue Path,Message\n";
+
+    this.files.forEach(f => {
+      const name = `"${f.name.replace(/"/g, '""')}"`;
+      const status = f.status.toUpperCase();
+      const passRate = `${this.getFilePassRate(f)}%`;
+      const errs = f.report?.errors || 0;
+      const warns = f.report?.warnings || 0;
+
+      const baseRow = `${name},${status},${passRate},${errs},${warns}`;
+
+      if (f.report && f.report.details && f.report.details.length > 0) {
+        f.report.details.forEach((issue: any) => {
+          const layer = `"${(issue.layer || '').toString().replace(/"/g, '""')}"`;
+          const severity = `"${(issue.severity || '').toString().replace(/"/g, '""')}"`;
+          const issuePath = `"${(issue.path || 'Root').toString().replace(/"/g, '""')}"`;
+          const msg = `"${(issue.message || '').toString().replace(/"/g, '""')}"`;
+          csv += `${baseRow},${layer},${severity},${issuePath},${msg}\n`;
+        });
+      } else {
+        csv += `${baseRow},,,,\n`;
+      }
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "iso20022_validation_report.csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   getGroupedIssues(report: any) {
     if (!report?.details) return [];
     const layers = [...new Set(report.details.map((x: any) => x.layer))].sort();
     return layers.map(l => {
+      const issues = report.details.filter((x: any) => x.layer === l);
       return {
         layer: l,
         name: this.getLayerName(String(l)),
-        issues: report.details.filter((x: any) => x.layer === l)
+        issues: issues,
+        errors: issues.filter((x: any) => x.severity === 'ERROR').length,
+        warnings: issues.filter((x: any) => x.severity === 'WARNING').length
       };
     });
   }
@@ -232,7 +290,25 @@ export class ValidateComponent implements OnInit {
     if (validFiles.length === 0) return;
 
     if (this.files.length > 0) {
-      const replace = confirm("You already have files loaded.\n\nClick 'OK' to REMOVE existing files and only validate the new ones.\n\nClick 'Cancel' to KEEP ALL existing files (their previous validation results will be cleared/refreshed).");
+      this.pendingFilesToAdd = validFiles;
+      this.showReplaceModal = true;
+      return;
+    }
+
+    await this.processValidFiles(validFiles, false);
+  }
+
+  async confirmReplace(replace: boolean) {
+    this.showReplaceModal = false;
+    const files = this.pendingFilesToAdd;
+    this.pendingFilesToAdd = [];
+    if (files.length > 0) {
+      await this.processValidFiles(files, replace);
+    }
+  }
+
+  private async processValidFiles(validFiles: File[], replace: boolean) {
+    if (this.files.length > 0) {
       if (replace) {
         this.clearAll();
       } else {
