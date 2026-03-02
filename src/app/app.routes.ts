@@ -5,6 +5,7 @@ import { HistoryComponent } from './pages/history/history.component';
 import { RulesComponent } from './pages/rules/rules.component';
 import { HelpComponent } from './pages/help/help.component';
 import { Pacs8Component } from './pages/manual-entry/pacs8/pacs8.component';
+import { Pacs9Component } from './pages/manual-entry/pacs9/pacs9.component';
 
 export const routes: Routes = [
     { path: '', component: DashboardComponent },
@@ -13,5 +14,6 @@ export const routes: Routes = [
     { path: 'rules', component: RulesComponent },
     { path: 'help', component: HelpComponent },
     { path: 'generate/pacs8', component: Pacs8Component },
+    { path: 'generate/pacs9', component: Pacs9Component },
     { path: '**', redirectTo: '' }
 ];

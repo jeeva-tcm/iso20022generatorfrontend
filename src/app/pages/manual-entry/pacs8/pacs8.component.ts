@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,410 +12,211 @@ import { ConfigService } from '../../../services/config.service';
   templateUrl: './pacs8.component.html',
   styleUrl: './pacs8.component.css'
 })
-export class Pacs8Component {
-  form: FormGroup;
-  generatedXml: string = '';
+export class Pacs8Component implements OnInit {
+  form!: FormGroup;
+  generatedXml = '';
   currentTab: 'form' | 'preview' = 'form';
-
-  // Validation state
   isValidating = false;
   validationReport: any = null;
-  expandedIssue: any = null;
-  expandedLayers: { [key: string]: boolean } = {};
+  expandedLayers: Record<string, boolean> = {};
 
-  // Helper to create address controls
-  private createAddressControls() {
-    return {
-      AddrType: ['none'],
-      AdrLine1: [''],
-      AdrLine2: [''],
-      StrtNm: [''],
-      BldgNb: [''],
-      PstCd: [''],
-      TwnNm: [''],
-      Ctry: ['']
-    };
-  }
+  currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'SGD', 'HKD', 'INR', 'CNY', 'AED', 'SAR'];
+  sttlmMethods = ['INDA', 'INGA', 'CLRG'];
+  chargeBearers = ['SHAR', 'DEBT', 'CRED', 'SLEV'];
 
-  // Iterate over these keys to add controls dynamically
-  agentPrefixes = [
-    'dbtrAgt', 'cdtrAgt',
+  agentPrefixes = ['instgAgt', 'instdAgt', 'dbtrAgt', 'cdtrAgt',
     'prvsInstgAgt1', 'prvsInstgAgt2', 'prvsInstgAgt3',
-    'intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'
-  ];
+    'intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'];
 
-  constructor(
-    private fb: FormBuilder,
-    private http: HttpClient,
-    private config: ConfigService
-  ) {
-    // Base controls
-    const controls: any = {
-      // Application Header
-      fromBic: ['BBBBUS33XXX', Validators.required],
-      toBic: ['CCCCGB2LXXX', Validators.required],
-      bizMsgId: ['MSG-2026-B-001', Validators.required],
+  constructor(private fb: FormBuilder, private http: HttpClient, private config: ConfigService) { }
 
-      // Group Header
-      msgId: ['MSG-2026-B-001', Validators.required],
-      creDtTm: [new Date().toISOString(), Validators.required],
+  ngOnInit() {
+    this.buildForm(); this.generateXml();
+    // Auto-sync AppHdr Fr/To BICs with GrpHdr InstgAgt/InstdAgt
+    this.form.get('instgAgtBic')?.valueChanges.subscribe(v => this.form.patchValue({ fromBic: v }, { emitEvent: false }));
+    this.form.get('instdAgtBic')?.valueChanges.subscribe(v => this.form.patchValue({ toBic: v }, { emitEvent: false }));
+  }
 
-      // Transaction Info
-      instrId: ['INSTR-ID-999', Validators.required],
-      endToEndId: ['E2E-REF-777', Validators.required],
-      txId: ['TX-ID-555', Validators.required],
-      uetr: ['550e8400-e29b-41d4-a716-446655440000', Validators.required],
-
-      // Payment Type
-      svcLvlCd: ['SEPA', Validators.required],
-
-      // Amount & Date
-      amount: ['1500.00', [Validators.required, Validators.pattern(/^\d+(\.\d{1,2})?$/)]],
-      currency: ['USD', Validators.required],
-      sttlmDt: ['2026-02-02', Validators.required],
-
-      // Agents (Main)
-      instgAgtBic: ['BBBBUS33XXX', Validators.required],
-      instdAgtBic: ['CCCCGB2LXXX', Validators.required],
-
-      // Debtor
-      dbtrName: ['John Doe Corp', Validators.required],
-      dbtrIban: ['US12345678901234567890', Validators.required],
-
-      // Creditor
-      cdtrName: ['Jane Smith Ltd', Validators.required],
-      cdtrIban: ['GB98765432109876543210', Validators.required],
-
-      // Agent BICs (Optional/Required)
-      dbtrAgtBic: ['BBBBUS33XXX', Validators.required],
-      cdtrAgtBic: ['CCCCGB2LXXX', Validators.required],
-
-      prvsInstgAgt1Bic: [''],
-      prvsInstgAgt2Bic: [''],
-      prvsInstgAgt3Bic: [''],
-      intrmyAgt1Bic: [''],
-      intrmyAgt2Bic: [''],
-      intrmyAgt3Bic: [''],
+  private buildForm() {
+    const BIC = [Validators.required, Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
+    const BIC_OPT = [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
+    const c: any = {
+      fromBic: ['BBBBUS33XXX', BIC], toBic: ['CCCCGB2LXXX', BIC], bizMsgId: ['MSG-2026-B-001', Validators.required],
+      msgId: ['MSG-2026-B-001', Validators.required], creDtTm: [this.isoNow(), Validators.required],
+      nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d*$/)]], sttlmMtd: ['INDA', Validators.required],
+      instgAgtBic: ['BBBBUS33XXX', BIC], instdAgtBic: ['CCCCGB2LXXX', BIC],
+      instrId: ['INSTR-001', Validators.required], endToEndId: ['E2E-001', Validators.required],
+      txId: ['TX-001', Validators.required],
+      uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)]],
+      amount: ['1500.00', [Validators.required, Validators.pattern(/^\d+(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
+      sttlmDt: [new Date().toISOString().split('T')[0], Validators.required], svcLvlCd: [''],
+      chrgBr: ['SHAR', Validators.required],
+      dbtrName: ['John Doe Corp', Validators.required], dbtrIban: ['US33XXX12345678901234', Validators.required],
+      dbtrAgtBic: ['BBBBUS33XXX', BIC],
+      cdtrName: ['Jane Smith Ltd', Validators.required], cdtrIban: ['GB29NWBK60161331926819', Validators.required],
+      cdtrAgtBic: ['CCCCGB2LXXX', BIC],
+      prvsInstgAgt1Bic: ['', BIC_OPT], prvsInstgAgt2Bic: ['', BIC_OPT], prvsInstgAgt3Bic: ['', BIC_OPT],
+      intrmyAgt1Bic: ['', BIC_OPT], intrmyAgt2Bic: ['', BIC_OPT], intrmyAgt3Bic: ['', BIC_OPT],
+      purpCd: [''],
     };
-
-    // Add address controls for Main Entities
-    this.addAddressControlsToArray(controls, 'instgAgt');
-    this.addAddressControlsToArray(controls, 'instdAgt');
-    this.addAddressControlsToArray(controls, 'dbtr');
-    this.addAddressControlsToArray(controls, 'cdtr');
-
-    // Add address controls for all other agents
-    this.agentPrefixes.forEach(prefix => {
-      this.addAddressControlsToArray(controls, prefix);
+    [...this.agentPrefixes, 'dbtr', 'cdtr'].forEach(p => {
+      c[p + 'AddrType'] = 'none'; c[p + 'AdrLine1'] = ''; c[p + 'AdrLine2'] = '';
+      c[p + 'Dept'] = ''; c[p + 'SubDept'] = '';
+      c[p + 'StrtNm'] = ''; c[p + 'BldgNb'] = ''; c[p + 'BldgNm'] = '';
+      c[p + 'Flr'] = ''; c[p + 'PstBx'] = ''; c[p + 'Room'] = '';
+      c[p + 'PstCd'] = ''; c[p + 'TwnNm'] = ''; c[p + 'CtrySubDvsn'] = ''; c[p + 'Ctry'] = '';
     });
-
-    this.form = this.fb.group(controls);
+    this.form = this.fb.group(c);
   }
 
-  addAddressControlsToArray(controls: any, prefix: string) {
-    const addr = this.createAddressControls();
-    Object.keys(addr).forEach(key => {
-      controls[prefix + key] = (addr as any)[key];
-    });
-  }
-
-  ngOnInit(): void {
-    this.generateXml();
-  }
-
-  // Helper for CBPR DateTime format
-  getIsoDateWithOffset(): string {
-    const now = new Date();
-    const p = (n: number) => n.toString().padStart(2, '0');
-    const dateStr = `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}`;
-    const timeStr = `${p(now.getHours())}:${p(now.getMinutes())}:${p(now.getSeconds())}`;
-    return `${dateStr}T${timeStr}+00:00`;
+  isoNow(): string {
+    const d = new Date(), p = (n: number) => n.toString().padStart(2, '0');
+    const off = -d.getTimezoneOffset(), s = off >= 0 ? '+' : '-';
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}${s}${p(Math.floor(Math.abs(off) / 60))}:${p(Math.abs(off) % 60)}`;
   }
 
   generateXml() {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-    }
-
     const v = this.form.value;
-    const creDt = this.getIsoDateWithOffset();
+    let creDtTm = v.creDtTm || this.isoNow();
+    if (creDtTm.endsWith('Z')) creDtTm = creDtTm.replace('Z', '+00:00');
 
-    let grpCreDtTm = v.creDtTm;
-    if (grpCreDtTm && grpCreDtTm.endsWith('Z')) {
-      grpCreDtTm = creDt;
-    }
+    // CdtTrfTxInf — strict XSD element order
+    let tx = '';
+    tx += this.tag('PmtId', this.el('InstrId', v.instrId) + this.el('EndToEndId', v.endToEndId) + this.el('TxId', v.txId) + this.el('UETR', v.uetr), 3);
+    if (v.svcLvlCd?.trim()) tx += this.tag('PmtTpInf', this.tag('SvcLvl', this.el('Cd', v.svcLvlCd, 4), 4), 3);
+    tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${v.amount}</IntrBkSttlmAmt>\n`;
+    tx += this.el('IntrBkSttlmDt', v.sttlmDt, 3);
+    tx += this.el('ChrgBr', v.chrgBr, 3);
+    // PrvsInstgAgts
+    tx += this.agt('PrvsInstgAgt1', 'prvsInstgAgt1', v);
+    tx += this.agt('PrvsInstgAgt2', 'prvsInstgAgt2', v);
+    tx += this.agt('PrvsInstgAgt3', 'prvsInstgAgt3', v);
+    // InstgAgt/InstdAgt in CdtTrfTxInf (CBPR+ requires these at txn level, NOT GrpHdr)
+    tx += this.agt('InstgAgt', 'instgAgt', v);
+    tx += this.agt('InstdAgt', 'instdAgt', v);
+    // IntrmyAgts
+    tx += this.agt('IntrmyAgt1', 'intrmyAgt1', v);
+    tx += this.agt('IntrmyAgt2', 'intrmyAgt2', v);
+    tx += this.agt('IntrmyAgt3', 'intrmyAgt3', v);
+    // Dbtr, DbtrAcct, DbtrAgt
+    tx += this.tag('Dbtr', this.el('Nm', v.dbtrName, 4) + this.addrXml(v, 'dbtr', 4), 3);
+    tx += this.tag('DbtrAcct', this.tag('Id', this.el('IBAN', v.dbtrIban, 5), 4), 3);
+    tx += this.agt('DbtrAgt', 'dbtrAgt', v);
+    // CdtrAgt, Cdtr, CdtrAcct
+    tx += this.agt('CdtrAgt', 'cdtrAgt', v);
+    tx += this.tag('Cdtr', this.el('Nm', v.cdtrName, 4) + this.addrXml(v, 'cdtr', 4), 3);
+    tx += this.tag('CdtrAcct', this.tag('Id', this.el('IBAN', v.cdtrIban, 5), 4), 3);
+    if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 4), 3);
 
-    // Construct Optional Agents XML
-    let prvsInstgAgtsXml = '';
-    prvsInstgAgtsXml += this.buildAgentXml('PrvsInstgAgt1', 'prvsInstgAgt1', v);
-    prvsInstgAgtsXml += this.buildAgentXml('PrvsInstgAgt2', 'prvsInstgAgt2', v);
-    prvsInstgAgtsXml += this.buildAgentXml('PrvsInstgAgt3', 'prvsInstgAgt3', v);
+    // Use instgAgtBic/instdAgtBic for AppHdr Fr/To to guarantee match
+    const frBic = v.instgAgtBic || v.fromBic;
+    const toBic = v.instdAgtBic || v.toBic;
 
-    let intrmyAgtsXml = '';
-    intrmyAgtsXml += this.buildAgentXml('IntrmyAgt1', 'intrmyAgt1', v);
-    intrmyAgtsXml += this.buildAgentXml('IntrmyAgt2', 'intrmyAgt2', v);
-    intrmyAgtsXml += this.buildAgentXml('IntrmyAgt3', 'intrmyAgt3', v);
-
-    // Build Address Blocks
-    const dbtrAddr = this.buildAddressXml(v, 'dbtr');
-    const cdtrAddr = this.buildAddressXml(v, 'cdtr');
-    const instgAgtAddr = this.buildAddressXml(v, 'instgAgt');
-    const instdAgtAddr = this.buildAddressXml(v, 'instdAgt');
-
-    const dbtrAgtBlock = this.buildAgentXml('DbtrAgt', 'dbtrAgt', v);
-    const cdtrAgtBlock = this.buildAgentXml('CdtrAgt', 'cdtrAgt', v);
-
-    // Build the full XML
-    this.generatedXml = `<?xml version="1.0" encoding="UTF-8"?>
+    this.generatedXml =
+      `<?xml version="1.0" encoding="UTF-8"?>
 <BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
-	<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
-		<Fr>
-			<FIId>
-				<FinInstnId>
-					<BICFI>${v.fromBic}</BICFI>
-				</FinInstnId>
-			</FIId>
-		</Fr>
-		<To>
-			<FIId>
-				<FinInstnId>
-					<BICFI>${v.toBic}</BICFI>
-				</FinInstnId>
-			</FIId>
-		</To>
-		<BizMsgIdr>${v.bizMsgId}</BizMsgIdr>
-		<MsgDefIdr>pacs.008.001.08</MsgDefIdr>
-		<BizSvc>swift.cbprplus.01</BizSvc>
-		<CreDt>${creDt}</CreDt>
-	</AppHdr>
-	<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08">
-		<FIToFICstmrCdtTrf>
-			<GrpHdr>
-				<MsgId>${v.msgId}</MsgId>
-				<CreDtTm>${grpCreDtTm}</CreDtTm>
-				<NbOfTxs>1</NbOfTxs>
-				<SttlmInf>
-					<SttlmMtd>INDA</SttlmMtd>
-				</SttlmInf>
-			</GrpHdr>
-			<CdtTrfTxInf>
-				<PmtId>
-					<InstrId>${v.instrId}</InstrId>
-					<EndToEndId>${v.endToEndId}</EndToEndId>
-					<TxId>${v.txId}</TxId>
-					<UETR>${v.uetr}</UETR>
-				</PmtId>
-				<PmtTpInf>
-					<SvcLvl>
-						<Cd>${v.svcLvlCd}</Cd>
-					</SvcLvl>
-				</PmtTpInf>
-				<IntrBkSttlmAmt Ccy="${v.currency}">${v.amount}</IntrBkSttlmAmt>
-				<IntrBkSttlmDt>${v.sttlmDt}</IntrBkSttlmDt>
-				<ChrgBr>SHAR</ChrgBr>
-				${prvsInstgAgtsXml}<InstgAgt>
-					<FinInstnId>
-						<BICFI>${v.instgAgtBic}</BICFI>
-            ${instgAgtAddr}
-					</FinInstnId>
-				</InstgAgt>
-				<InstdAgt>
-					<FinInstnId>
-						<BICFI>${v.instdAgtBic}</BICFI>
-            ${instdAgtAddr}
-					</FinInstnId>
-				</InstdAgt>
-				${intrmyAgtsXml}<Dbtr>
-					<Nm>${v.dbtrName}</Nm>
-          ${dbtrAddr}
-				</Dbtr>
-				<DbtrAcct>
-					<Id>
-						<IBAN>${v.dbtrIban}</IBAN>
-					</Id>
-				</DbtrAcct>
-				${dbtrAgtBlock}
-				${cdtrAgtBlock}
-				<Cdtr>
-					<Nm>${v.cdtrName}</Nm>
-          ${cdtrAddr}
-				</Cdtr>
-				<CdtrAcct>
-					<Id>
-						<IBAN>${v.cdtrIban}</IBAN>
-					</Id>
-				</CdtrAcct>
-				<Purp>
-					<Cd>CASH</Cd>
-				</Purp>
-			</CdtTrfTxInf>
-		</FIToFICstmrCdtTrf>
-	</Document>
+\t<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
+\t\t<Fr><FIId><FinInstnId><BICFI>${this.e(frBic)}</BICFI></FinInstnId></FIId></Fr>
+\t\t<To><FIId><FinInstnId><BICFI>${this.e(toBic)}</BICFI></FinInstnId></FIId></To>
+\t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>
+\t\t<MsgDefIdr>pacs.008.001.08</MsgDefIdr>
+\t\t<BizSvc>swift.cbprplus.01</BizSvc>
+\t\t<CreDt>${creDtTm}</CreDt>
+\t</AppHdr>
+\t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08">
+\t\t<FIToFICstmrCdtTrf>
+\t\t\t<GrpHdr>
+\t\t\t\t<MsgId>${this.e(v.msgId)}</MsgId>
+\t\t\t\t<CreDtTm>${creDtTm}</CreDtTm>
+\t\t\t\t<NbOfTxs>${v.nbOfTxs}</NbOfTxs>
+\t\t\t\t<SttlmInf>
+\t\t\t\t\t<SttlmMtd>${this.e(v.sttlmMtd)}</SttlmMtd>
+\t\t\t\t</SttlmInf>
+\t\t\t</GrpHdr>
+\t\t\t<CdtTrfTxInf>
+${tx}\t\t\t</CdtTrfTxInf>
+\t\t</FIToFICstmrCdtTrf>
+\t</Document>
 </BusMsgEnvlp>`;
   }
 
-  buildAgentXml(tagName: string, prefix: string, v: any): string {
-    const bic = v[prefix + 'Bic'];
-    if (!bic) return '';
+  // XML helpers
+  private e(v: string) { return (v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  private tabs(n: number) { return '\t'.repeat(n); }
+  private el(tag: string, val: string, indent = 3) { return val?.trim() ? `${this.tabs(indent)}<${tag}>${this.e(val)}</${tag}>\n` : ''; }
+  private tag(tag: string, content: string, indent = 3) { return content?.trim() ? `${this.tabs(indent)}<${tag}>\n${content}${this.tabs(indent)}</${tag}>\n` : ''; }
 
-    const addrXml = this.buildAddressXml(v, prefix);
-
-    return `<${tagName}>
-					<FinInstnId>
-						<BICFI>${bic}</BICFI>
-            ${addrXml}
-					</FinInstnId>
-				</${tagName}>
-				`;
+  grpAgt(tag: string, prefix: string, v: any) {
+    const bic = v[prefix + 'Bic']; if (!bic) return '';
+    return `\t\t\t\t<${tag}>\n\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n${this.addrXml(v, prefix, 6)}\t\t\t\t\t</FinInstnId>\n\t\t\t\t</${tag}>\n`;
   }
-
-  buildAddressXml(v: any, prefix: string): string {
-    const type = v[prefix + 'AddrType'];
-    if (!type || type === 'none') return '';
-
-    let content = '';
-
+  agt(tag: string, prefix: string, v: any) {
+    const bic = v[prefix + 'Bic']; if (!bic) return '';
+    return `\t\t\t<${tag}>\n\t\t\t\t<FinInstnId>\n\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n${this.addrXml(v, prefix, 5)}\t\t\t\t</FinInstnId>\n\t\t\t</${tag}>\n`;
+  }
+  addrXml(v: any, p: string, indent = 4): string {
+    const type = v[p + 'AddrType']; if (!type || type === 'none') return '';
+    const lines: string[] = []; const t = this.tabs(indent + 1);
     if (type === 'structured' || type === 'hybrid') {
-      if (v[prefix + 'StrtNm']) content += `<StrtNm>${v[prefix + 'StrtNm']}</StrtNm>\n`;
-      if (v[prefix + 'BldgNb']) content += `<BldgNb>${v[prefix + 'BldgNb']}</BldgNb>\n`;
-      if (v[prefix + 'PstCd']) content += `<PstCd>${v[prefix + 'PstCd']}</PstCd>\n`;
-      if (v[prefix + 'TwnNm']) content += `<TwnNm>${v[prefix + 'TwnNm']}</TwnNm>\n`;
-      if (v[prefix + 'Ctry']) content += `<Ctry>${v[prefix + 'Ctry']}</Ctry>\n`;
+      // PostalAddress27 XSD element order
+      if (v[p + 'Dept']) lines.push(`${t}<Dept>${this.e(v[p + 'Dept'])}</Dept>`);
+      if (v[p + 'SubDept']) lines.push(`${t}<SubDept>${this.e(v[p + 'SubDept'])}</SubDept>`);
+      if (v[p + 'StrtNm']) lines.push(`${t}<StrtNm>${this.e(v[p + 'StrtNm'])}</StrtNm>`);
+      if (v[p + 'BldgNb']) lines.push(`${t}<BldgNb>${this.e(v[p + 'BldgNb'])}</BldgNb>`);
+      if (v[p + 'BldgNm']) lines.push(`${t}<BldgNm>${this.e(v[p + 'BldgNm'])}</BldgNm>`);
+      if (v[p + 'Flr']) lines.push(`${t}<Flr>${this.e(v[p + 'Flr'])}</Flr>`);
+      if (v[p + 'PstBx']) lines.push(`${t}<PstBx>${this.e(v[p + 'PstBx'])}</PstBx>`);
+      if (v[p + 'Room']) lines.push(`${t}<Room>${this.e(v[p + 'Room'])}</Room>`);
+      if (v[p + 'PstCd']) lines.push(`${t}<PstCd>${this.e(v[p + 'PstCd'])}</PstCd>`);
+      if (v[p + 'TwnNm']) lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'])}</TwnNm>`);
+      if (v[p + 'CtrySubDvsn']) lines.push(`${t}<CtrySubDvsn>${this.e(v[p + 'CtrySubDvsn'])}</CtrySubDvsn>`);
+      if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
     }
-
+    // AdrLine: allowed in unstructured/hybrid, FORBIDDEN in structured
     if (type === 'unstructured' || type === 'hybrid') {
-      if (v[prefix + 'AdrLine1']) content += `<AdrLine>${v[prefix + 'AdrLine1']}</AdrLine>\n`;
-      if (v[prefix + 'AdrLine2']) content += `<AdrLine>${v[prefix + 'AdrLine2']}</AdrLine>\n`;
+      if (v[p + 'AdrLine1']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine1'])}</AdrLine>`);
+      if (v[p + 'AdrLine2']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine2'])}</AdrLine>`);
     }
-
-    if (!content) return '';
-
-    return `<PstlAdr>
-              ${content}
-            </PstlAdr>`;
+    if (!lines.length) return '';
+    return `${this.tabs(indent)}<PstlAdr>\n${lines.join('\n')}\n${this.tabs(indent)}</PstlAdr>\n`;
   }
 
-  // ===== Validation Report Helpers (same as Validate page) =====
-  getReportLayers(report: any): string[] {
-    if (!report?.layer_status) return [];
-    return Object.keys(report.layer_status).sort();
-  }
-
-  getLayerName(k: string): string {
-    const names: Record<string, string> = {
-      '1': 'Syntax & Format',
-      '2': 'Schema Validation',
-      '3': 'Business Rules'
-    };
-    return names[k] ?? `Layer ${k}`;
-  }
-
-  getLayerStatus(report: any, k: string): string {
-    return report?.layer_status?.[k]?.status ?? '';
-  }
-
-  isLayerPass(report: any, k: string) { return this.getLayerStatus(report, k).includes('✅'); }
-  isLayerFail(report: any, k: string) { return this.getLayerStatus(report, k).includes('❌'); }
-  isLayerWarn(report: any, k: string) {
-    const s = this.getLayerStatus(report, k);
-    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
-  }
-
-  getGroupedIssues(report: any) {
-    if (!report?.details) return [];
-    const layers = [...new Set(report.details.map((x: any) => x.layer))].sort();
-    return layers.map(l => {
-      const issues = report.details.filter((x: any) => x.layer === l);
-      return {
-        layer: l,
-        name: this.getLayerName(String(l)),
-        issues: issues,
-        errors: issues.filter((x: any) => x.severity === 'ERROR').length,
-        warnings: issues.filter((x: any) => x.severity === 'WARNING').length
-      };
-    });
-  }
-
-  toggleLayer(layerName: string) {
-    this.expandedLayers[layerName] = !this.isLayerExpanded(layerName);
-  }
-
-  isLayerExpanded(layerName: string): boolean {
-    return !!this.expandedLayers[layerName];
-  }
-
-  // ===== Validate Message =====
+  // Validation
   validateMessage() {
-    this.generateXml();
-
-    if (!this.generatedXml?.trim()) return;
-
-    this.isValidating = true;
-    this.validationReport = null;
-    this.expandedIssue = null;
-    this.expandedLayers = {};
-
+    this.generateXml(); if (!this.generatedXml?.trim()) return;
+    this.isValidating = true; this.validationReport = null; this.expandedLayers = {};
     this.http.post(this.config.getApiUrl('/validate'), {
-      xml_content: this.generatedXml,
-      mode: 'Full 1-3',
-      message_type: 'pacs.008.001.08',
-      store_in_history: true
+      xml_content: this.generatedXml, mode: 'Full 1-3', message_type: 'pacs.008.001.08', store_in_history: true
     }).subscribe({
-      next: (data: any) => {
-        this.validationReport = data;
-        this.isValidating = false;
-        // Auto-expand layers with issues
-        if (data?.details) {
-          const layers = [...new Set(data.details.map((x: any) => x.layer))];
-          layers.forEach(l => {
-            this.expandedLayers[this.getLayerName(String(l))] = true;
-          });
-        }
+      next: (d: any) => {
+        this.validationReport = d; this.isValidating = false;
+        if (d?.details) [...new Set(d.details.map((x: any) => x.layer))].forEach(l => this.expandedLayers[this.layerName(String(l))] = true);
       },
-      error: (err) => {
+      error: () => {
         this.isValidating = false;
         this.validationReport = {
-          status: 'FAIL',
-          errors: 1,
-          warnings: 0,
-          message: 'pacs.008.001.08',
-          total_time_ms: 0,
+          status: 'FAIL', errors: 1, warnings: 0, message: 'pacs.008.001.08', total_time_ms: 0,
           layer_status: { '1': { status: '❌', time: 0 } },
-          details: [{
-            severity: 'ERROR',
-            layer: 1,
-            code: 'BACKEND_ERROR',
-            path: '',
-            message: 'Could not reach the validation backend. Please ensure the server is running.',
-            fix_suggestion: 'Check if the backend is running on the expected port.'
-          }]
+          details: [{ severity: 'ERROR', layer: 1, code: 'BACKEND_ERROR', path: '', message: 'Could not reach backend.', fix_suggestion: 'Check server.' }]
         };
       }
     });
   }
 
-  downloadXml() {
-    this.generateXml();
-    const blob = new Blob([this.generatedXml], { type: 'application/xml' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `pacs.008-${new Date().getTime()}.xml`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  }
-
-  copyToClipboard() {
-    this.generateXml();
-    navigator.clipboard.writeText(this.generatedXml).then(() => {
-      alert('XML copied to clipboard!');
-    }, (err) => {
-      console.error('Could not copy text: ', err);
+  reportLayers(r: any): string[] { return r?.layer_status ? Object.keys(r.layer_status).sort() : []; }
+  layerName(k: string) { return ({ '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' } as any)[k] ?? `Layer ${k}`; }
+  isLayerFail(r: any, k: string) { return (r?.layer_status?.[k]?.status ?? '').includes('❌'); }
+  groupedIssues(r: any) {
+    if (!r?.details) return [];
+    return [...new Set(r.details.map((x: any) => x.layer))].sort().map(l => {
+      const issues = r.details.filter((x: any) => x.layer === l);
+      return { layer: l, name: this.layerName(String(l)), issues, errors: issues.filter((x: any) => x.severity === 'ERROR').length, warnings: issues.filter((x: any) => x.severity === 'WARNING').length };
     });
   }
+  toggleLayer(n: string) { this.expandedLayers[n] = !this.expandedLayers[n]; }
+  isLayerExpanded(n: string) { return !!this.expandedLayers[n]; }
 
-  switchToPreview() {
-    this.generateXml();
-    this.currentTab = 'preview';
-  }
+  downloadXml() { this.generateXml(); const b = new Blob([this.generatedXml], { type: 'application/xml' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `pacs008-${Date.now()}.xml`; a.click(); URL.revokeObjectURL(a.href); }
+  copyToClipboard() { this.generateXml(); navigator.clipboard.writeText(this.generatedXml).then(() => alert('Copied!')); }
+  switchToPreview() { this.generateXml(); this.currentTab = 'preview'; }
 }

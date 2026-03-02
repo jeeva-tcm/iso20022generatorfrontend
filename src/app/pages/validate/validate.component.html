@@ -40,6 +40,11 @@
           style="position: absolute; width: 0; height: 0; opacity: 0; z-index: -1;">
       </div>
 
+      <!-- Paste XML Button -->
+      <button class="btn-paste-xml" (click)="showPasteModal = true">
+        <mat-icon>content_paste</mat-icon> Paste XML
+      </button>
+
       <!-- File List -->
       <div class="file-list-wrap" *ngIf="files.length > 0">
         <div class="file-item-new" *ngFor="let f of files" [class.selected]="selectedFile === f">
@@ -53,9 +58,9 @@
               <div class="fi-name" [title]="f.name">{{f.name}}</div>
               <div class="fi-substatus" [ngClass]="f.status">
                 Status: {{ f.status === 'pending' ? 'Not Validated' : (f.status === 'validating' ? 'Validating...' :
-                (f.status === 'passed' ? 'Passed (' + getFilePassRate(f) + '%)' : (f.status === 'warnings' ? 'Warnings
-                (' + f.report?.warnings + ')' : 'Failed (' + (f.report?.errors
-                || 0) + ')'))) }}
+                (f.status === 'passed' || f.status === 'warnings' ? 'Passed (' + getFilePassRate(f) + '%)' : 'Failed ('
+                + (f.report?.errors
+                || 0) + ')')) }}
               </div>
             </div>
           </div>
@@ -64,7 +69,7 @@
               (click)="validateFile(f)"><mat-icon>play_arrow</mat-icon> Play</button>
             <button *ngIf="f.status === 'passed'" class="btn-passed">Passed ({{getFilePassRate(f)}}%)</button>
             <button *ngIf="f.status === 'failed'" class="btn-failed">Failed ({{f.report?.errors}})</button>
-            <button *ngIf="f.status === 'warnings'" class="btn-warn">Warnings ({{f.report?.warnings}})</button>
+            <button *ngIf="f.status === 'warnings'" class="btn-passed">Passed ({{getFilePassRate(f)}}%)</button>
             <button *ngIf="f.status === 'validating'" class="btn-validating"><mat-icon
                 class="spin">sync</mat-icon></button>
           </div>
@@ -111,9 +116,6 @@
               <button class="chip chip-failed" [class.active]="filterStatus === 'Failed'"
                 (click)="setFilter('Failed')">Failed <span class="chip-badge"
                   *ngIf="summary.failed > 0">{{summary.failed}}</span></button>
-              <button class="chip chip-warn" [class.active]="filterStatus === 'Warnings'"
-                (click)="setFilter('Warnings')">Warnings <span class="chip-badge"
-                  *ngIf="summary.warnings > 0">{{summary.warnings}}</span></button>
             </div>
             <button class="btn-download" (click)="downloadReport()"><mat-icon>file_download</mat-icon> Download
               Report</button>
@@ -128,9 +130,7 @@
                 style="font-weight: 600; color:#fff;">{{files.length}}</span></div>
             <div class="vs-row vs-pass"><span>Passed:</span> <span>{{summary.passed}}</span></div>
             <div class="vs-row vs-fail"><span>Failed:</span> <span>{{summary.failed}}</span></div>
-            <div class="vs-row vs-warn" *ngIf="summary.warnings > 0"><span>Warnings:</span>
-              <span style="color: #fbbf24; font-weight: 600;">{{summary.warnings}}</span>
-            </div>
+
             <div class="vs-prog-row" style="margin-top: 10px;">
               <span class="vs-lbl">Overall Rate:</span>
               <div class="vs-prog-bar-wrap">
@@ -157,7 +157,6 @@
           <div class="th-col th-name">File Name</div>
           <div class="th-col th-status">Status</div>
           <div class="th-col th-err">Errors</div>
-          <div class="th-col th-warn">Warnings</div>
           <div class="th-col th-pass">Pass %</div>
           <div class="th-col th-action">XML</div>
         </div>
@@ -174,14 +173,14 @@
               <div class="td-col td-status">
                 <span class="status-badge" [ngClass]="f.status"
                   *ngIf="f.status !== 'validating' && f.status !== 'pending'">
-                  {{ f.status === 'passed' ? 'Passed ('+getFilePassRate(f)+'%)' : (f.status === 'failed' ? 'Failed ' +
-                  f.report?.errors : (f.status === 'warnings' ? 'Warnings (' + f.report?.warnings + ')' : f.status)) }}
+                  {{ f.status === 'passed' || f.status === 'warnings' ? 'Passed ('+getFilePassRate(f)+'%)' : (f.status
+                  === 'failed' ? 'Failed ' +
+                  f.report?.errors : f.status) }}
                 </span>
                 <span class="status-badge validating" *ngIf="f.status === 'validating'">Validating...</span>
                 <span class="status-badge pending" *ngIf="f.status === 'pending'">Pending</span>
               </div>
               <div class="td-col td-err">{{f.report?.errors || 0}}</div>
-              <div class="td-col td-warn">{{f.report?.warnings || 0}}</div>
               <div class="td-col td-pass">
                 <div class="pass-bar-wrap">
                   <div class="pass-bar" [style.width.%]="getFilePassRate(f)"></div>
@@ -303,6 +302,30 @@
       <textarea class="editor-textarea" [(ngModel)]="editingEntry.content" (ngModelChange)="onEditorChange($event)"
         (scroll)="syncScroll(xmlEditor, lineNumbers)" (keydown)="handleKeyDown($event)" #xmlEditor wrap="off"
         spellcheck="false"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Paste XML -->
+<div class="custom-modal-overlay" *ngIf="showPasteModal">
+  <div class="custom-modal paste-modal">
+    <div class="modal-header">
+      <mat-icon style="color: #6366f1;">content_paste</mat-icon>
+      <h3>Paste XML Content</h3>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom: 8px; color: #94a3b8; font-size: 12px;">Paste your ISO 20022 XML message below and click
+        Validate.</p>
+      <textarea class="paste-textarea" [(ngModel)]="pastedXmlContent"
+        placeholder="<?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?>&#10;<BusMsgEnvlp xmlns=&quot;urn:swift:xsd:envelope&quot;>&#10;  ...&#10;</BusMsgEnvlp>"
+        spellcheck="false"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" (click)="showPasteModal = false; pastedXmlContent = ''">Cancel</button>
+      <button class="btn-replace" (click)="validatePastedXml()">
+        <mat-icon style="font-size: 16px; width: 16px; height: 16px; margin-right: 4px;">play_arrow</mat-icon>
+        Validate
+      </button>
     </div>
   </div>
 </div>

@@ -38,7 +38,6 @@ header p {
     margin-top: .15rem;
 }
 
-/* Tabs */
 .tabs {
     display: flex;
     justify-content: center;
@@ -70,7 +69,6 @@ header p {
     border-color: #6366f1;
 }
 
-/* Content box */
 .content-box {
     background: #fff;
     border: 1px solid #e2e8f0;
@@ -79,14 +77,12 @@ header p {
     box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
 }
 
-/* Grid */
 .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: .6rem .9rem;
 }
 
-/* Section title */
 .section-title {
     grid-column: 1/-1;
     font-size: .75rem;
@@ -104,7 +100,6 @@ header p {
     gap: 6px;
 }
 
-/* Form elements */
 .form-group {
     margin-bottom: .1rem;
 }
@@ -167,7 +162,6 @@ select {
     padding-right: 28px;
 }
 
-/* Address */
 .addr-type-row {
     grid-column: 1/-1;
     margin-top: .25rem;
@@ -216,7 +210,54 @@ select {
     color: #d97706;
 }
 
-/* Preview */
+/* COV toggle */
+.cov-title {
+    justify-content: space-between;
+}
+
+.cov-switch {
+    position: relative;
+    display: inline-block;
+    width: 38px;
+    height: 20px;
+    cursor: pointer;
+    margin-left: auto;
+}
+
+.cov-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    inset: 0;
+    background: #cbd5e1;
+    border-radius: 20px;
+    transition: .3s;
+}
+
+.slider::before {
+    content: '';
+    position: absolute;
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: .3s;
+}
+
+.cov-switch input:checked+.slider {
+    background: #6366f1;
+}
+
+.cov-switch input:checked+.slider::before {
+    transform: translateX(18px);
+}
+
 .preview-actions {
     display: flex;
     justify-content: flex-end;
@@ -286,7 +327,6 @@ textarea.code-editor {
     resize: vertical;
 }
 
-/* Bottom bar */
 .bottom-actions {
     display: flex;
     justify-content: center;
@@ -298,7 +338,6 @@ textarea.code-editor {
     border-radius: 10px;
 }
 
-/* Spinner */
 .spinner-row {
     display: flex;
     align-items: center;
@@ -324,7 +363,7 @@ textarea.code-editor {
     }
 }
 
-/* ═══ Validation ═══ */
+/* Validation */
 .validation-result-panel {
     margin-top: 1rem;
     padding: 1.25rem;

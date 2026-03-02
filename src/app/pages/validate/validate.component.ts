@@ -53,9 +53,14 @@ export class ValidateComponent implements OnInit {
   // ── Drag state ─────────────────────────────────────────────────────────────
   isDragging = false;
 
+  // ── Paste XML state ─────────────────────────────────────────────────────────
+  showPasteModal = false;
+  pastedXmlContent = '';
+  pendingPastedXml = '';
+
   // ── UI State ─────────────────────────────────────────────────────────────
   searchQuery = '';
-  filterStatus: 'All' | 'Passed' | 'Failed' | 'Warnings' = 'All';
+  filterStatus: 'All' | 'Passed' | 'Failed' = 'All';
   expandedFile: FileEntry | null = null;
 
   // ── XML Editor state ─────────────────────────────────────────────────────────────
@@ -85,7 +90,6 @@ export class ValidateComponent implements OnInit {
     return {
       passed: done.filter(f => f.status === 'passed' || f.status === 'warnings').length,
       failed: done.filter(f => f.status === 'failed').length,
-      warnings: done.filter(f => f.status === 'warnings').length,
     };
   }
 
@@ -94,7 +98,6 @@ export class ValidateComponent implements OnInit {
       if (this.filterStatus !== 'All') {
         if (this.filterStatus === 'Passed' && (f.status !== 'passed' && f.status !== 'warnings')) return false;
         if (this.filterStatus === 'Failed' && f.status !== 'failed') return false;
-        if (this.filterStatus === 'Warnings' && f.status !== 'warnings') return false;
       }
       if (this.searchQuery && !f.name.toLowerCase().includes(this.searchQuery.toLowerCase())) {
         return false;
@@ -148,7 +151,7 @@ export class ValidateComponent implements OnInit {
     return !!this.expandedLayers[key];
   }
 
-  setFilter(status: 'All' | 'Passed' | 'Failed' | 'Warnings') {
+  setFilter(status: 'All' | 'Passed' | 'Failed') {
     this.filterStatus = status;
   }
 
@@ -354,10 +357,22 @@ export class ValidateComponent implements OnInit {
 
   async confirmReplace(replace: boolean) {
     this.showReplaceModal = false;
+
+    // Handle pending file uploads
     const files = this.pendingFilesToAdd;
     this.pendingFilesToAdd = [];
     if (files.length > 0) {
       await this.processValidFiles(files, replace);
+    }
+
+    // Handle pending pasted XML
+    const pastedXml = this.pendingPastedXml;
+    this.pendingPastedXml = '';
+    if (pastedXml) {
+      if (replace) {
+        this.clearAll();
+      }
+      this.addPastedEntry(pastedXml);
     }
   }
 
@@ -414,6 +429,46 @@ export class ValidateComponent implements OnInit {
   private formatSize(bytes: number): string {
     if (bytes < 1024) return bytes + ' B';
     return (bytes / 1024).toFixed(1) + ' KB';
+  }
+
+  // ── Paste XML ───────────────────────────────────────────────────────────────
+  validatePastedXml() {
+    const xml = this.pastedXmlContent?.trim();
+    if (!xml) {
+      this.snackBar.open('Please paste XML content first.', 'Dismiss', { duration: 3000 });
+      return;
+    }
+    this.showPasteModal = false;
+
+    // If files already exist, show the Replace/Keep Both popup
+    if (this.files.length > 0) {
+      this.pendingPastedXml = xml;
+      this.pastedXmlContent = '';
+      this.showReplaceModal = true;
+      return;
+    }
+
+    // No existing files — add directly
+    this.pastedXmlContent = '';
+    this.addPastedEntry(xml);
+  }
+
+  private addPastedEntry(xml: string) {
+    const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const entry: FileEntry = {
+      id: crypto.randomUUID(),
+      name: `pasted-${ts}.xml`,
+      size: new Blob([xml]).size,
+      sizeLabel: this.formatSize(new Blob([xml]).size),
+      content: xml,
+      status: 'pending',
+      report: null,
+      messageType: '',
+    };
+    this.files = [...this.files, entry];
+    this.selectedFile = entry;
+    this.cdr.detectChanges();
+    this.validateFile(entry);
   }
 
   selectFile(f: FileEntry) {

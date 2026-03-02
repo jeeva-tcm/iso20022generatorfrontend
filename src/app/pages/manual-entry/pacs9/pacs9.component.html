@@ -1,7 +1,7 @@
 <div class="container">
     <header>
         <h1>ISO 20022 Generator</h1>
-        <p>Visual PACS.008 Message Builder</p>
+        <p>Visual PACS.009 Message Builder</p>
     </header>
 
     <div class="tabs">
@@ -40,7 +40,7 @@
                     formControlName="txId"></div>
             <div class="form-group"><label>UETR <span class="req">*</span></label><input formControlName="uetr"></div>
 
-            <div class="section-title">Payment Amounts</div>
+            <div class="section-title">Settlement Amounts</div>
             <div class="form-group"><label>Amount <span class="req">*</span></label><input formControlName="amount"
                     type="number" step="0.01"></div>
             <div class="form-group"><label>Currency <span class="req">*</span></label>
@@ -50,13 +50,6 @@
             </div>
             <div class="form-group"><label>Settlement Date <span class="req">*</span></label><input
                     formControlName="sttlmDt" type="date"></div>
-            <div class="form-group"><label>Service Level <span class="opt">Optional</span></label><input
-                    formControlName="svcLvlCd" placeholder="e.g. SEPA"></div>
-            <div class="form-group"><label>Charge Bearer <span class="req">*</span></label>
-                <select formControlName="chrgBr">
-                    <option *ngFor="let cb of chargeBearers" [value]="cb">{{cb}}</option>
-                </select>
-            </div>
 
             <!-- Main Agents -->
             <div class="section-title">Main Agents</div>
@@ -69,33 +62,60 @@
             <ng-container
                 *ngTemplateOutlet="addressForm; context:{prefix:'instdAgt',title:'Instructed Agent'}"></ng-container>
 
-            <!-- Debtor -->
-            <div class="section-title">Debtor (Payer)</div>
-            <div class="form-group"><label>Name <span class="req">*</span></label><input formControlName="dbtrName">
-            </div>
-            <div class="form-group"><label>IBAN <span class="req">*</span></label><input formControlName="dbtrIban">
-            </div>
-            <ng-container *ngTemplateOutlet="addressForm; context:{prefix:'dbtr',title:'Debtor'}"></ng-container>
+            <!-- Debtor FI -->
+            <div class="section-title">Debtor Financial Institution</div>
+            <div class="form-group"><label>Debtor FI BIC <span class="req">*</span></label><input
+                    formControlName="dbtrFiBic"></div>
+            <div class="form-group"><label>Debtor FI Account <span class="opt">Optional</span></label><input
+                    formControlName="dbtrFiAcct" placeholder="Account ID"></div>
 
-            <div class="section-title">Debtor Agent</div>
-            <div class="form-group"><label>Agent BIC <span class="req">*</span></label><input
-                    formControlName="dbtrAgtBic"></div>
+            <!-- Debtor Agent -->
+            <div class="section-title">Debtor Agent <span class="opt">Optional</span></div>
+            <div class="form-group"><label>Debtor Agent BIC</label><input formControlName="dbtrAgtBic"></div>
             <ng-container
                 *ngTemplateOutlet="addressForm; context:{prefix:'dbtrAgt',title:'Debtor Agent'}"></ng-container>
 
-            <!-- Creditor -->
-            <div class="section-title">Creditor Agent</div>
-            <div class="form-group"><label>Agent BIC <span class="req">*</span></label><input
-                    formControlName="cdtrAgtBic"></div>
+            <!-- Creditor Agent -->
+            <div class="section-title">Creditor Agent <span class="opt">Optional</span></div>
+            <div class="form-group"><label>Creditor Agent BIC</label><input formControlName="cdtrAgtBic"></div>
             <ng-container
                 *ngTemplateOutlet="addressForm; context:{prefix:'cdtrAgt',title:'Creditor Agent'}"></ng-container>
 
-            <div class="section-title">Creditor (Payee)</div>
-            <div class="form-group"><label>Name <span class="req">*</span></label><input formControlName="cdtrName">
+            <!-- Creditor FI -->
+            <div class="section-title">Creditor Financial Institution</div>
+            <div class="form-group"><label>Creditor FI BIC <span class="req">*</span></label><input
+                    formControlName="cdtrFiBic"></div>
+            <div class="form-group"><label>Creditor FI Account <span class="opt">Optional</span></label><input
+                    formControlName="cdtrFiAcct" placeholder="Account ID"></div>
+
+            <!-- COV Block -->
+            <div class="section-title cov-title">
+                COV — Underlying Customer Credit Transfer
+                <label class="cov-switch" (click)="$event.stopPropagation()">
+                    <input type="checkbox" [checked]="covEnabled" (change)="toggleCov()"><span class="slider"></span>
+                </label>
             </div>
-            <div class="form-group"><label>IBAN <span class="req">*</span></label><input formControlName="cdtrIban">
-            </div>
-            <ng-container *ngTemplateOutlet="addressForm; context:{prefix:'cdtr',title:'Creditor'}"></ng-container>
+            <ng-container *ngIf="covEnabled">
+                <div class="form-group"><label>COV Debtor Name <span class="opt">Optional</span></label><input
+                        formControlName="covDbtrName"></div>
+                <div class="form-group"><label>COV Debtor IBAN <span class="opt">Optional</span></label><input
+                        formControlName="covDbtrIban"></div>
+                <div class="form-group"><label>COV Debtor Agent BIC <span class="opt">Optional</span></label><input
+                        formControlName="covDbtrAgtBic"></div>
+                <div class="form-group"><label>COV Creditor Agent BIC <span class="opt">Optional</span></label><input
+                        formControlName="covCdtrAgtBic"></div>
+                <div class="form-group"><label>COV Creditor Name <span class="opt">Optional</span></label><input
+                        formControlName="covCdtrName"></div>
+                <div class="form-group"><label>COV Creditor IBAN <span class="opt">Optional</span></label><input
+                        formControlName="covCdtrIban"></div>
+                <div class="form-group"><label>COV Currency <span class="opt">Optional</span></label>
+                    <select formControlName="covCurrency">
+                        <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>COV Amount <span class="opt">Optional</span></label><input
+                        formControlName="covAmount" type="number" step="0.01"></div>
+            </ng-container>
 
             <!-- Optional Agents -->
             <div class="section-title">Previous Instructing Agents <span class="opt">Optional</span></div>
@@ -119,20 +139,15 @@
             <div class="form-group"><label>Intermediary Agent 3 BIC</label><input formControlName="intrmyAgt3Bic"></div>
             <ng-container
                 *ngTemplateOutlet="addressForm; context:{prefix:'intrmyAgt3',title:'Intermediary Agent 3'}"></ng-container>
-
-            <div class="section-title">Remittance <span class="opt">Optional</span></div>
-            <div class="form-group"><label>Purpose Code</label><input formControlName="purpCd" placeholder="e.g. CASH">
-            </div>
         </div>
     </form>
 
     <!-- XML Preview -->
     <div *ngIf="currentTab==='preview'" class="content-box">
         <div class="preview-actions">
-            <button class="action-btn copy-btn" (click)="copyToClipboard()">
-                <mat-icon>content_copy</mat-icon> Copy XML</button>
-            <button class="action-btn" (click)="downloadXml()">
-                <mat-icon>download</mat-icon> Download XML</button>
+            <button class="action-btn copy-btn" (click)="copyToClipboard()"><mat-icon>content_copy</mat-icon> Copy
+                XML</button>
+            <button class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon> Download XML</button>
         </div>
         <div class="form-group"><label>Editor</label>
             <textarea class="code-editor" [(ngModel)]="generatedXml"></textarea>
@@ -150,10 +165,9 @@
     </div>
 
     <div *ngIf="isValidating" class="spinner-row">
-        <div class="spinner"></div> Validating pacs.008.001.08...
+        <div class="spinner"></div> Validating pacs.009.001.08...
     </div>
 
-    <!-- Validation Panel -->
     <ng-container *ngTemplateOutlet="resultPanel"></ng-container>
 </div>
 
@@ -221,7 +235,7 @@
     <div *ngIf="validationReport && !isValidating" class="validation-result-panel">
         <div class="report-header">
             <div>
-                <h3 class="rh-name">pacs.008.001.08</h3><span class="rh-meta">{{validationReport.message||'N/A'}} ·
+                <h3 class="rh-name">pacs.009.001.08</h3><span class="rh-meta">{{validationReport.message||'N/A'}} ·
                     {{validationReport.total_time_ms}}ms</span>
             </div>
             <div class="rh-status" [ngClass]="validationReport.status==='PASS'?'rh-pass':'rh-fail'">
