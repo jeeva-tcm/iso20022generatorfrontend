@@ -109,3 +109,11 @@ lerna-debug.log*
 .sass-cache/
 connect.lock
 typings/
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Angular environment files with secrets (keep environment.ts as template)
+src/environments/environment.prod.ts
