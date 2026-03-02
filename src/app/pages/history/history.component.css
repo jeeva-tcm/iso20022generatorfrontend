@@ -20,11 +20,110 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+    gap: 16px;
 }
 
-.search-field {
-    width: 400px;
+.vp-search-wrap {
+    flex: 1;
+    max-width: 450px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 12px;
+    transition: 0.2s;
+}
+
+.vp-search-wrap:focus-within {
+    border-color: #6366f1;
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.vp-search-wrap mat-icon {
+    color: #64748b;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+}
+
+.vp-search-wrap input {
+    background: transparent;
+    border: none;
+    color: #e2e8f0;
+    font-size: 13px;
+    width: 100%;
+    outline: none;
+    font-weight: 500;
+}
+
+.vp-search-wrap input::placeholder {
+    color: #64748b;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-action {
+    height: 44px;
+    padding: 0 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+    color: #cbd5e1;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-family: inherit;
+}
+
+.btn-action mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+.btn-action:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.btn-action.refresh:hover {
+    color: #fbbf24;
+}
+
+.btn-action.delete {
+    color: #f87171;
+    background: rgba(239, 68, 68, 0.05);
+    border-color: rgba(239, 68, 68, 0.1);
+}
+
+.btn-action.delete:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.btn-action.export {
+    color: #818cf8;
+    background: rgba(99, 102, 241, 0.05);
+    border-color: rgba(99, 102, 241, 0.1);
+}
+
+.btn-action.export:hover {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: rgba(99, 102, 241, 0.2);
 }
 
 .full-width {
@@ -656,11 +755,12 @@
 
 /* MAT-TABLE & MAT-CARD DARK THEME OVERRIDES */
 mat-card {
-    background: rgba(255, 255, 255, 0.03) !important;
+    background: #111827 !important;
     border: 1px solid rgba(255, 255, 255, 0.06) !important;
     color: #e2e8f0 !important;
-    border-radius: 20px !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+    overflow: hidden;
 }
 
 ::ng-deep .history-container table.mat-mdc-table {

@@ -8,22 +8,21 @@
         <mat-progress-bar mode="indeterminate" *ngIf="isLoading"></mat-progress-bar>
         <mat-card-content>
             <div class="filter-bar">
-                <mat-form-field appearance="outline" class="search-field">
-                    <mat-label>Search Validation ID or Type</mat-label>
-                    <input matInput [(ngModel)]="searchTerm" (input)="applyFilter()" placeholder="e.g. VAL-2026...">
-                    <mat-icon matSuffix>search</mat-icon>
-                </mat-form-field>
+                <div class="vp-search-wrap">
+                    <mat-icon>search</mat-icon>
+                    <input type="text" [(ngModel)]="searchTerm" (input)="applyFilter()"
+                        placeholder="Search Validation ID or Type...">
+                </div>
 
                 <div class="header-actions">
-                    <button mat-stroked-button (click)="loadHistory()">
+                    <button class="btn-action refresh" (click)="loadHistory()">
                         <mat-icon>refresh</mat-icon> REFRESH
                     </button>
-                    <button mat-stroked-button color="warn" (click)="deleteAllHistory()">
-                        <mat-icon>delete_forever</mat-icon> DELETE ALL
+                    <button class="btn-action delete" (click)="deleteAllHistory()">
+                        <mat-icon>delete_sweep</mat-icon> DELETE ALL
                     </button>
-                    <button mat-stroked-button color="accent" (click)="exportAudit()"
-                        matTooltip="Download all history as CSV">
-                        <mat-icon>file_download</mat-icon> EXPORT AUDIT
+                    <button class="btn-action export" (click)="exportAudit()" matTooltip="Download CSV">
+                        <mat-icon>cloud_download</mat-icon> EXPORT AUDIT
                     </button>
                 </div>
             </div>

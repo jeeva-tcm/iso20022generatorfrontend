@@ -29,13 +29,13 @@
     <aside class="vp-left">
 
       <!-- Drop Zone -->
-      <div class="drop-zone" [class.dragging]="isDragging" (click)="fileInput.click()">
+      <div class="drop-zone" [class.dragging]="isDragging" (click)="triggerFilePicker()">
         <div class="drop-icon">
           <mat-icon>add_circle_outline</mat-icon>
         </div>
         <p class="drop-title">Drop XML Files Here</p>
         <p class="drop-sub">or click to browse · ISO 20022 .xml files only</p>
-        <p class="drop-limit">MAX 3MB PER FILE · NO FILE LIMIT</p>
+        <p class="drop-limit">MAX 100KB PER FILE · NO FILE LIMIT</p>
         <input #fileInput type="file" multiple accept=".xml,.xsd,.txt" (change)="onFileSelected($event)"
           style="position: absolute; width: 0; height: 0; opacity: 0; z-index: -1;">
       </div>
@@ -70,7 +70,13 @@
           </div>
         </div>
 
-        <button class="btn-run-all" (click)="validateAll()"><mat-icon>play_circle</mat-icon> Play All Files</button>
+        <div style="display: flex; gap: 8px; margin-top: 10px;">
+          <button class="btn-run-all" style="flex: 2;" (click)="validateAll()"><mat-icon>play_circle</mat-icon> Play
+            All</button>
+          <button class="btn-clear-all" style="flex: 1;" (click)="clearAll()" matTooltip="Empty Workspace">
+            <mat-icon>delete_sweep</mat-icon>
+          </button>
+        </div>
       </div>
 
       <!-- Empty State -->
@@ -91,7 +97,7 @@
       <div class="vp-dashboard-header" *ngIf="files.length > 0">
         <!-- Left Side: Search and Filters -->
         <div class="vp-dashboard-left">
-          <div class="vp-search" style="margin-bottom: 16px;">
+          <div class="vp-search">
             <mat-icon>search</mat-icon>
             <input type="text" placeholder="Search file..." [(ngModel)]="searchQuery">
           </div>
@@ -153,6 +159,7 @@
           <div class="th-col th-err">Errors</div>
           <div class="th-col th-warn">Warnings</div>
           <div class="th-col th-pass">Pass %</div>
+          <div class="th-col th-action">XML</div>
         </div>
         <div class="table-body">
           <ng-container *ngFor="let f of filteredFiles">
@@ -179,7 +186,12 @@
                 <div class="pass-bar-wrap">
                   <div class="pass-bar" [style.width.%]="getFilePassRate(f)"></div>
                 </div>
-                <span>{{getFilePassRate(f)}}%</span>
+                <span class="pass-val-text">{{getFilePassRate(f)}}%</span>
+              </div>
+              <div class="td-col td-action">
+                <button class="btn-table-action" (click)="openEditor(f, $event)">
+                  View XML
+                </button>
               </div>
             </div>
 
@@ -230,13 +242,6 @@
                           [class.warning]="issue.severity === 'WARNING'">{{issue.severity === 'ERROR' ? 'cancel' :
                           (issue.severity === 'WARNING' ? 'warning' : 'check_circle')}}</mat-icon> {{issue.path ||
                         'Root'}}</span>
-                      <span class="issue-status" [class.mismatch]="issue.severity === 'ERROR'"
-                        [class.yellow-warning]="issue.severity === 'WARNING'">
-                        <mat-icon *ngIf="issue.severity === 'ERROR'">close</mat-icon>
-                        <mat-icon *ngIf="issue.severity === 'WARNING'">warning</mat-icon>
-                        {{issue.severity === 'ERROR' ? 'Mismatch' : (issue.severity === 'WARNING' ? 'Warning' :
-                        'Valid')}}
-                      </span>
                       <span class="issue-msg">{{issue.message}}</span>
                     </div>
                   </div>
@@ -274,6 +279,30 @@
     <div class="modal-actions">
       <button class="btn-cancel" (click)="confirmReplace(false)">Keep Both</button>
       <button class="btn-replace" (click)="confirmReplace(true)">Replace</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: XML Editor -->
+<div class="editor-overlay" *ngIf="editingEntry">
+  <div class="editor-modal">
+    <div class="editor-header">
+      <div class="editor-title">
+        <mat-icon style="vertical-align: middle; margin-right: 8px;">code</mat-icon>
+        Editing: {{editingEntry.name}}
+      </div>
+      <div class="editor-actions">
+        <button class="btn-cancel-xml" (click)="closeEditor()">Cancel</button>
+        <button class="btn-save-xml" (click)="saveEditor()">Save & Validate</button>
+      </div>
+    </div>
+    <div class="editor-body">
+      <div class="editor-line-numbers" #lineNumbers>
+        <div *ngFor="let idx of editorLineCount; let i = index">{{i + 1}}</div>
+      </div>
+      <textarea class="editor-textarea" [(ngModel)]="editingEntry.content" (ngModelChange)="onEditorChange($event)"
+        (scroll)="syncScroll(xmlEditor, lineNumbers)" (keydown)="handleKeyDown($event)" #xmlEditor wrap="off"
+        spellcheck="false"></textarea>
     </div>
   </div>
 </div>

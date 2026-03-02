@@ -22,6 +22,7 @@ export interface FileEntry {
   status: 'pending' | 'validating' | 'passed' | 'failed' | 'warnings';
   report: any;
   messageType: string;
+  handle?: any;
 }
 
 @Component({
@@ -57,25 +58,22 @@ export class ValidateComponent implements OnInit {
   filterStatus: 'All' | 'Passed' | 'Failed' | 'Warnings' = 'All';
   expandedFile: FileEntry | null = null;
 
+  // ── XML Editor state ─────────────────────────────────────────────────────────────
+  editingEntry: FileEntry | null = null;
+  originalContent: string = '';
+  editorLineCount: number[] = [1];
+
   // ── Global options ─────────────────────────────────────────────────────────
   validationMode = 'Full 1-3';
   messageControl = new FormControl('Auto-detect');
   filteredOptions: Observable<string[]> | undefined;
   allMessageTypes: string[] = ['Auto-detect'];
   private standardMXTypes: string[] = [
-    'Auto-detect',
-    'pacs.008.001.08 (Credit Transfer)',
-    'pacs.009.001.08 (FI Credit Transfer)',
-    'pacs.002.001.10 (Payment Status)',
-    'pacs.004.001.09 (Return)',
-    'camt.053.001.08 (Statement)',
-    'camt.052.001.08 (Report)',
-    'camt.054.001.08 (Notification)',
-    'camt.029.001.09 (Investigation)',
-    'pain.001.001.09 (Initiation)',
-    'pain.002.001.10 (Status Report)',
-    'pain.008.001.08 (Direct Debit)',
-    'head.001.001.02 (AppHdr)',
+    'pacs.008.001.08',
+    'pacs.009.001.08',
+    'pacs.002.001.10',
+    'pain.001.001.09',
+    'camt.053.001.08',
   ];
 
   // ── Selected issue (detail view) ───────────────────────────────────────────
@@ -224,8 +222,9 @@ export class ValidateComponent implements OnInit {
     private cdr: ChangeDetectorRef
   ) { }
 
-  ngOnInit() {
+  async ngOnInit() {
     this.allMessageTypes = [...this.standardMXTypes];
+    await this.restoreWorkspace(); // Restore previous work before handling query params
 
     this.http.get<string[]>(this.config.getApiUrl('/messages')).subscribe({
       next: (data) => {
@@ -240,6 +239,15 @@ export class ValidateComponent implements OnInit {
       startWith(''),
       map(value => this._filter(value || '')),
     );
+
+    // Handle History Re-run
+    this.route.queryParams.subscribe(params => {
+      const reportId = params['reportId'];
+      const autoRun = params['autoRun'] === 'true';
+      if (reportId) {
+        this.loadValidationFromHistory(reportId, autoRun);
+      }
+    });
   }
 
   private _filter(value: string): string[] {
@@ -248,9 +256,12 @@ export class ValidateComponent implements OnInit {
     return this.allMessageTypes.filter(o => o.toLowerCase().includes(v));
   }
 
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+
   // ── Drag-and-drop ──────────────────────────────────────────────────────────
   @HostListener('dragover', ['$event']) onDragOver(e: DragEvent) {
     e.preventDefault();
+    if (this.editingEntry) return;
     this.isDragging = true;
   }
   @HostListener('dragleave', ['$event']) onDragLeave(e: DragEvent) {
@@ -259,8 +270,51 @@ export class ValidateComponent implements OnInit {
   @HostListener('drop', ['$event']) async onDrop(e: DragEvent) {
     e.preventDefault();
     this.isDragging = false;
-    const files = Array.from(e.dataTransfer?.files ?? []) as File[];
-    await this.loadFiles(files);
+    if (this.editingEntry) return;
+    const validFiles: File[] = [];
+    if (e.dataTransfer && e.dataTransfer.items) {
+      for (let i = 0; i < e.dataTransfer.items.length; i++) {
+        const item = e.dataTransfer.items[i];
+        if (item.kind === 'file') {
+          const handle = await (item as any).getAsFileSystemHandle?.();
+          const file = item.getAsFile();
+          if (file) {
+            if (handle) (file as any).fileHandle = handle;
+            validFiles.push(file);
+          }
+        }
+      }
+    } else if (e.dataTransfer?.files) {
+      validFiles.push(...Array.from(e.dataTransfer.files));
+    }
+    await this.loadFiles(validFiles);
+  }
+
+  async triggerFilePicker() {
+    if ('showOpenFilePicker' in window) {
+      try {
+        const handles = await (window as any).showOpenFilePicker({
+          multiple: true,
+          types: [{
+            description: 'XML Files',
+            accept: { 'text/xml': ['.xml', '.xsd', '.txt'] }
+          }]
+        });
+        const validFiles: File[] = [];
+        for (const h of handles) {
+          const file = await h.getFile();
+          (file as any).fileHandle = h;
+          validFiles.push(file);
+        }
+        await this.loadFiles(validFiles);
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          this.fileInput?.nativeElement.click(); // Fallback
+        }
+      }
+    } else {
+      this.fileInput?.nativeElement.click();
+    }
   }
 
   async onFileSelected(event: any) {
@@ -332,6 +386,7 @@ export class ValidateComponent implements OnInit {
             status: 'pending',
             report: null,
             messageType: '',
+            handle: (file as any).fileHandle
           } as FileEntry;
         })
       );
@@ -342,6 +397,7 @@ export class ValidateComponent implements OnInit {
       } else {
         this.selectedFile = null;
       }
+      this.saveWorkspace(); // PERSIST
       // Ensure UI updates immediately after all files are parsed
       this.cdr.detectChanges();
 
@@ -372,12 +428,129 @@ export class ValidateComponent implements OnInit {
     if (this.selectedFile === f) {
       this.selectedFile = this.files[idx] ?? this.files[idx - 1] ?? null;
     }
+    this.saveWorkspace(); // PERSIST
   }
 
   clearAll() {
     this.files = [];
     this.selectedFile = null;
     this.expandedIssue = null;
+    this.editingEntry = null;
+    this.saveWorkspace(); // PERSIST (Clear storage)
+  }
+
+  // ── Editor ────────────────────────────────────────────────────────────────
+  openEditor(f: FileEntry, e: MouseEvent) {
+    e.stopPropagation();
+    this.editingEntry = f;
+    this.originalContent = f.content;
+    this.updateEditorLines(f.content);
+  }
+
+  closeEditor() {
+    if (this.editingEntry) {
+      this.editingEntry.content = this.originalContent;
+    }
+    this.editingEntry = null;
+  }
+
+  onEditorChange(content: string) {
+    this.updateEditorLines(content);
+  }
+
+  updateEditorLines(content: string) {
+    const lines = (content || '').split('\n').length;
+    if (this.editorLineCount.length !== lines) {
+      this.editorLineCount = new Array(lines);
+    }
+  }
+
+  syncScroll(textarea: HTMLTextAreaElement, lineNumbers: HTMLDivElement) {
+    lineNumbers.scrollTop = textarea.scrollTop;
+  }
+
+  handleKeyDown(e: KeyboardEvent) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      e.preventDefault();
+      this.saveEditor();
+    }
+  }
+
+  async saveEditor() {
+    if (!this.editingEntry) return;
+    const entry = this.editingEntry;
+
+    // Strategy 1: Use existing FileSystemHandle (Overwrites original file)
+    if (entry.handle) {
+      try {
+        // Request explicit read-write permission (browser will prompt the user once)
+        const perm = await entry.handle.queryPermission({ mode: 'readwrite' });
+        if (perm !== 'granted') {
+          const newPerm = await entry.handle.requestPermission({ mode: 'readwrite' });
+          if (newPerm !== 'granted') {
+            throw new Error('Local write permission denied');
+          }
+        }
+
+        const writable = await entry.handle.createWritable();
+        await writable.write(entry.content);
+        await writable.close();
+
+        this.snackBar.open('Saved changes directly to original file!', 'Close', {
+          duration: 3000,
+          panelClass: ['success-snackbar']
+        });
+      } catch (err: any) {
+        console.error('Direct save failed:', err);
+        // If direct write failed (e.g. read-only file), we fall through to "Save As" fallback
+        this.snackBar.open('Direct save failed. Please select where to save.', 'Dismiss', { duration: 3000 });
+        await this.handleSaveAs(entry);
+      }
+    }
+    // Strategy 2: Missing handle (File was drag-dropped or uploaded via standard input)
+    else if ('showSaveFilePicker' in window) {
+      await this.handleSaveAs(entry);
+    }
+    // Fallback: Legacy browser support
+    else {
+      this.snackBar.open('Changes updated in memory. Local file saving not supported in this browser.', 'Close', { duration: 4000 });
+    }
+
+    this.originalContent = entry.content;
+    this.editingEntry = null;
+    this.saveWorkspace(); // PERSIST
+    this.validateFile(entry);
+  }
+
+  /**
+   * Triggers a "Save As" dialog to let the user pick/overwrite their local file.
+   * On success, we capture the new handle so future saves are direct/seamless.
+   */
+  private async handleSaveAs(entry: FileEntry) {
+    try {
+      const handle = await (window as any).showSaveFilePicker({
+        suggestedName: entry.name,
+        types: [{
+          description: 'XML File',
+          accept: { 'text/xml': ['.xml'] }
+        }]
+      });
+
+      const writable = await handle.createWritable();
+      await writable.write(entry.content);
+      await writable.close();
+
+      // Upgrade this entry with the new handle so next "Save" is seamless
+      entry.handle = handle;
+
+      this.snackBar.open('File linked and saved successfully!', 'Close', {
+        duration: 3000,
+        panelClass: ['success-snackbar']
+      });
+    } catch (err) {
+      console.warn('Save As cancelled or failed');
+      this.snackBar.open('Changes updated in memory only.', 'Close', { duration: 3000 });
+    }
   }
 
   validateAll() {
@@ -443,6 +616,120 @@ export class ValidateComponent implements OnInit {
   getReportLayers(report: any): string[] {
     if (!report?.layer_status) return [];
     return Object.keys(report.layer_status).sort();
+  }
+
+  // ── Persistence ────────────────────────────────────────────────────────────
+  private readonly DB_NAME = 'ISO_WORKSPACE_DB';
+  private readonly STORE_NAME = 'workspace_files';
+
+  private async getDB(): Promise<IDBDatabase> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(this.DB_NAME, 1);
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(this.STORE_NAME)) {
+          db.createObjectStore(this.STORE_NAME, { keyPath: 'id' });
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  private async saveWorkspace() {
+    try {
+      const db = await this.getDB();
+      const tx = db.transaction(this.STORE_NAME, 'readwrite');
+      const store = tx.objectStore(this.STORE_NAME);
+
+      // Clear existing first
+      await this.clearDBStore(store);
+
+      // Add all current files
+      for (const f of this.files) {
+        // We strip large binary data if needed, but here we store content.
+        // Handles CAN be stored in IDB.
+        store.put(f);
+      }
+    } catch (e) {
+      console.warn('Failed to persist workspace:', e);
+    }
+  }
+
+  private async restoreWorkspace(): Promise<void> {
+    return new Promise(async (resolve) => {
+      try {
+        const db = await this.getDB();
+        const tx = db.transaction(this.STORE_NAME, 'readonly');
+        const store = tx.objectStore(this.STORE_NAME);
+        const request = store.getAll();
+
+        request.onsuccess = () => {
+          if (request.result && request.result.length > 0) {
+            this.files = request.result;
+            this.cdr.detectChanges();
+          }
+          resolve();
+        };
+        request.onerror = () => resolve();
+      } catch (e) {
+        console.warn('Failed to restore workspace:', e);
+        resolve();
+      }
+    });
+  }
+
+  private loadValidationFromHistory(reportId: string, autoRun: boolean) {
+    this.http.get<any>(this.config.getApiUrl(`/history/${reportId}`)).subscribe({
+      next: (data) => {
+        if (data && data.original_message) {
+          const fileName = `re_run_${reportId.substring(0, 8)}.xml`;
+
+          // Check if file already exists in workspace
+          const existing = this.files.find(f => f.content === data.original_message);
+          if (existing) {
+            this.selectedFile = existing;
+            if (autoRun) {
+              this.validateFile(existing);
+            }
+            this.cdr.detectChanges();
+            return;
+          }
+
+          const entry: FileEntry = {
+            id: 'f' + Date.now(),
+            name: fileName,
+            size: data.original_message.length,
+            sizeLabel: (data.original_message.length / 1024).toFixed(1) + ' KB',
+            content: data.original_message,
+            status: 'pending',
+            report: null,
+            messageType: data.report?.message || 'Auto-detect',
+            handle: null
+          };
+
+          this.files.unshift(entry); // Add to top
+          this.saveWorkspace();
+          this.selectedFile = entry;
+
+          if (autoRun) {
+            this.validateFile(entry);
+          }
+          this.cdr.detectChanges();
+        }
+      },
+      error: (err) => {
+        this.snackBar.open('Failed to load validation from history.', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  private clearDBStore(store: IDBObjectStore): Promise<void> {
+    return new Promise((resolve) => {
+      const req = store.clear();
+      req.onsuccess = () => resolve();
+      req.onerror = () => resolve(); // Ignore errors
+    });
   }
 
   getLayerName(k: string): string {

@@ -77,12 +77,21 @@
 }
 
 .user-info img {
-    height: 68px;
+    height: 48px;
     width: auto;
-    max-width: 160px;
+    max-width: 140px;
     object-fit: contain;
-    border: none !important;
-    box-shadow: none !important;
+    background: white;
+    padding: 6px 12px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.user-info img:hover {
+    transform: scale(1.04) translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 .main-content {
@@ -98,7 +107,8 @@
 /* Full-screen dark override for the validate page */
 .main-content.dark-page {
     margin: 0;
-    margin-top: 80px;   /* keep below fixed header */
+    margin-top: 80px;
+    /* keep below fixed header */
     padding: 0;
     max-width: 100%;
     width: 100%;
@@ -119,7 +129,9 @@
 }
 
 /* Also kill white on body / html when dark page is shown */
-.main-content.dark-page ~ * { background: #0d0f1a; }
+.main-content.dark-page~* {
+    background: #0d0f1a;
+}
 
 
 /* Luxury Header Responsiveness */
