@@ -10,7 +10,6 @@ import { filter } from 'rxjs/operators';
 
 
 
-
 @Component({
     selector: 'app-root',
     standalone: true,
@@ -31,20 +30,21 @@ import { filter } from 'rxjs/operators';
 export class AppComponent implements OnInit {
     title = 'ISO 20022 Validator';
     isValidatePage = false;
+    isManualEntryActive = false;
 
-    constructor(private router: Router) {}
+    constructor(private router: Router) { }
 
     ngOnInit() {
         this.router.events.pipe(
             filter(e => e instanceof NavigationEnd)
         ).subscribe((e: any) => {
             this.isValidatePage = e.urlAfterRedirects?.startsWith('/validate') ?? false;
+            this.isManualEntryActive = e.urlAfterRedirects?.startsWith('/generate') ?? false;
             document.body.classList.toggle('validate-dark', this.isValidatePage);
         });
         // Set initial state
         this.isValidatePage = this.router.url?.startsWith('/validate') ?? false;
+        this.isManualEntryActive = this.router.url?.startsWith('/generate') ?? false;
         document.body.classList.toggle('validate-dark', this.isValidatePage);
     }
 }
-
-

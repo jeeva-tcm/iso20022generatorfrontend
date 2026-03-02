@@ -10,6 +10,31 @@
         <a mat-button routerLink="/" routerLinkActive="active-link"
             [routerLinkActiveOptions]="{exact: true}">DASHBOARD</a>
         <a mat-button routerLink="/validate" routerLinkActive="active-link">VALIDATE</a>
+
+        <!-- Manual Entry Dropdown -->
+        <div class="dropdown-wrapper">
+            <a mat-button class="dropdown-trigger" routerLinkActive="active-link"
+                [routerLinkActiveOptions]="{exact: false}" [class.active-link]="isManualEntryActive">
+                GENERATE
+                <mat-icon class="dropdown-arrow">expand_more</mat-icon>
+            </a>
+            <div class="dropdown-menu">
+                <a routerLink="/generate/pacs8" routerLinkActive="active-link">
+                    <span class="msg-tag pacs">PACS</span> pacs.008.001.08
+                </a>
+                <!-- Add more message types here -->
+                <!-- <a routerLink="/generate/pacs9" routerLinkActive="active-link">
+                    <span class="msg-tag pacs">PACS</span> pacs.009.001.08
+                </a> -->
+                <!-- <a routerLink="/generate/pain1" routerLinkActive="active-link">
+                    <span class="msg-tag pain">PAIN</span> pain.001.001.09
+                </a> -->
+                <!-- <a routerLink="/generate/camt53" routerLinkActive="active-link">
+                    <span class="msg-tag camt">CAMT</span> camt.053.001.08
+                </a> -->
+            </div>
+        </div>
+
         <a mat-button routerLink="/history" routerLinkActive="active-link">HISTORY</a>
         <a mat-button routerLink="/rules" routerLinkActive="active-link">RULES</a>
         <a mat-button routerLink="/help" routerLinkActive="active-link">HELP</a>
