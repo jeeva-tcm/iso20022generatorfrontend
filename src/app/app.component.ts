@@ -7,7 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { filter } from 'rxjs/operators';
-
+import { ThemeService } from './services/theme.service';
 
 
 @Component({
@@ -32,19 +32,31 @@ export class AppComponent implements OnInit {
     isValidatePage = false;
     isManualEntryActive = false;
 
-    constructor(private router: Router) { }
+    constructor(
+        private router: Router,
+        private themeService: ThemeService
+    ) { }
 
     ngOnInit() {
+        this.updateState(this.router.url);
+
         this.router.events.pipe(
             filter(e => e instanceof NavigationEnd)
         ).subscribe((e: any) => {
-            this.isValidatePage = e.urlAfterRedirects?.startsWith('/validate') ?? false;
-            this.isManualEntryActive = e.urlAfterRedirects?.startsWith('/generate') ?? false;
-            document.body.classList.toggle('validate-dark', this.isValidatePage);
+            this.updateState(e.urlAfterRedirects || e.url);
         });
-        // Set initial state
-        this.isValidatePage = this.router.url?.startsWith('/validate') ?? false;
-        this.isManualEntryActive = this.router.url?.startsWith('/generate') ?? false;
-        document.body.classList.toggle('validate-dark', this.isValidatePage);
+    }
+
+    toggleTheme() {
+        this.themeService.toggleTheme();
+    }
+
+    get isDarkMode(): boolean {
+        return this.themeService.getTheme() === 'dark';
+    }
+
+    private updateState(url: string) {
+        this.isValidatePage = url.includes('/validate');
+        this.isManualEntryActive = url.includes('/generate');
     }
 }

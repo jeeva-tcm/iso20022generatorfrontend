@@ -40,7 +40,7 @@ import { ConfigService } from '../../services/config.service';
 })
 export class HistoryComponent implements OnInit {
     dataSource = new MatTableDataSource<any>([]);
-    displayedColumns: string[] = ['timestamp', 'validation_id', 'type', 'status', 'metrics', 'actions'];
+    displayedColumns: string[] = ['timestamp', 'type', 'status', 'metrics', 'actions'];
     isLoading: boolean = false;
     searchTerm: string = '';
     expandedElement: any | null = null;

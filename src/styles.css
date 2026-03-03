@@ -6,23 +6,60 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-    /* Premium Corporate Palette */
-    --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-    --secondary-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    --error-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    /* Premium Corporate Palette - Elite Midnight Royale */
+    --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    --secondary-gradient: linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%);
+    --success-gradient: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    --error-gradient: linear-gradient(135deg, #ef4444 0%, #f43f5e 100%);
+    --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
 
-    --bg-app: #0d0f1a;
-    --bg-card: rgba(255, 255, 255, 0.03);
-    --text-main: #e2e8f0;
+    --bg-app: #020617;
+    /* Slate 950 */
+    /* Deeper Black-Navy */
+    --bg-card: #0f172a;
+    /* Slate 900 */
+    --bg-card-hover: #1e293b;
+    --text-main: #f8fafc;
     --text-muted: #94a3b8;
-    --border-light: rgba(255, 255, 255, 0.06);
+    --border-light: rgba(255, 255, 255, 0.05);
+    --header-bg: rgba(2, 6, 23, 0.85);
+    --banner-gradient: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+    --card-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6);
 
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 10px -2px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 12px 20px -8px rgba(0, 0, 0, 0.6);
+    --shadow-xl: 0 25px 40px -12px rgba(0, 0, 0, 0.7);
+
+    /* Interaction Variables - Vibrant Neon but Corporate */
+    --accent-color: #818cf8;
+    --accent-light: rgba(129, 140, 248, 0.15);
+    --accent-text: #c7d2fe;
+
+    transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease;
+}
+
+/* Light Theme Variables - Premium Silk & Quartz */
+body.light-theme {
+    --bg-app: #f1f5f9;
+    /* Soft Porcelain Gray - better for deep contrast */
+    --bg-card: #ffffff;
+    --bg-card-hover: #f1f5f9;
+    --text-main: #020617;
+    --text-muted: #64748b;
+    --border-light: #e2e8f0;
+    --header-bg: rgba(255, 255, 255, 0.85);
+    --banner-gradient: linear-gradient(135deg, #4338ca 0%, #4f46e5 50%, #6366f1 100%);
+    --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.03);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.03);
+
+    --accent-color: #4f46e5;
+    --accent-light: rgba(79, 70, 229, 0.08);
+    --accent-text: #4f46e5;
 }
 
 * {
@@ -48,23 +85,20 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-/* Body background override for validate dark page */
-body.validate-dark {
-    background-color: #0d0f1a !important;
-}
-
 /* Material Overrides for Glass/Premium Feel */
 .mat-mdc-card {
     background: var(--bg-card) !important;
     border-radius: 20px !important;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
-    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    box-shadow: var(--shadow-lg) !important;
+    border: 1px solid var(--border-light) !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    color: var(--text-main) !important;
 }
 
 .mat-mdc-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.06), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    background: var(--bg-card-hover) !important;
+    box-shadow: var(--shadow-xl) !important;
 }
 
 /* Form Fields */

@@ -1,0 +1,156 @@
+<div class="me-root light-theme">
+    <!-- Header -->
+    <header class="me-header">
+        <div class="me-header-left">
+            <h1>Dynamic Manual Entry</h1>
+            <p>Building ISO 20022 message blueprints dynamically</p>
+        </div>
+
+        <div class="me-controls">
+            <!-- Search Box -->
+            <div style="position: relative;">
+                <input type="text" class="search-msg-type" placeholder="Search Message Type (e.g. pacs.008)"
+                    [(ngModel)]="searchQuery" (input)="onSearchInput()" (focus)="showSuggestions = true"
+                    (blur)="onBlur()">
+
+                <div class="autocomplete-results" *ngIf="showSuggestions && filteredTypes.length > 0">
+                    <div class="autocomplete-item" *ngFor="let type of filteredTypes" (mousedown)="selectType(type)">
+                        {{type}}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Actions -->
+            <button class="btn-generate" [disabled]="!selectedType || loading" (click)="downloadXml()">
+                <mat-icon>download</mat-icon>
+                Export XML
+            </button>
+        </div>
+    </header>
+
+    <!-- Toggle / Breadcrumb Bar -->
+    <div class="me-toolbar">
+        <div class="view-toggle">
+            <button [class.active]="viewMode === 'form'" (click)="viewMode = 'form'">Form Editor</button>
+            <button [class.active]="viewMode === 'xml'" (click)="viewMode = 'xml'">XML Preview</button>
+        </div>
+        <div class="active-selection" *ngIf="selectedType">
+            <mat-icon>description</mat-icon>
+            <span>{{selectedType}}</span>
+            <small>/ {{schema?.label}}</small>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="me-content-container">
+
+        <!-- Case 1: No Message Selected (Explorer View) -->
+        <div *ngIf="!selectedType" class="me-explorer-center">
+            <div class="explorer-inner">
+                <mat-icon class="hero-icon">explore</mat-icon>
+                <h2>What would you like to build?</h2>
+                <p>Choose a message family to browse our dynamic catalog of {{allTypes.length}} XSDs</p>
+
+                <!-- Family Grid -->
+                <div class="family-grid" *ngIf="!selectedFamily">
+                    <div class="family-card" *ngFor="let fam of families" (click)="selectFamily(fam)">
+                        <div class="fam-num">{{groupedTypes[fam].length}}</div>
+                        <div class="fam-body">
+                            <span class="fam-name">{{fam}}</span>
+                            <span class="fam-sub">ISO 20022 Blueprint</span>
+                        </div>
+                        <mat-icon>chevron_right</mat-icon>
+                    </div>
+                </div>
+
+                <!-- Family List -->
+                <div class="family-list-view" *ngIf="selectedFamily">
+                    <div class="lv-header">
+                        <button class="btn-text" (click)="selectedFamily = null"><mat-icon>arrow_back</mat-icon>
+                            Families</button>
+                        <h3>{{selectedFamily}} Messages</h3>
+                    </div>
+                    <div class="lv-grid">
+                        <div class="lv-item" *ngFor="let m of filteredTypes" (click)="selectType(m)">{{m}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Case 2: Loading State -->
+        <div *ngIf="loading" class="loading-center">
+            <div class="pulse-loader"></div>
+            <p>Constructing dynamic form from XSD...</p>
+        </div>
+
+        <!-- Case 3: Form Mode -->
+        <div *ngIf="selectedType && !loading && schema && viewMode === 'form'" class="form-scroll-pane">
+            <div class="form-container">
+                <!-- Recursive Template Entry -->
+                <ng-container
+                    *ngTemplateOutlet="nodeTemplate; context: {node: schema, path: schema.name, depth: 0}"></ng-container>
+            </div>
+        </div>
+
+        <!-- Case 4: XML Mode -->
+        <div *ngIf="selectedType && !loading && schema && viewMode === 'xml'" class="xml-scroll-pane">
+            <div class="xml-preview-container">
+                <div class="xml-header">
+                    <h3>Live XML Preview</h3>
+                    <button class="btn-copy" (click)="copyToClipboard()"><mat-icon>content_copy</mat-icon> Copy
+                        Code</button>
+                </div>
+                <pre class="xml-code"><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;</code>
+{{previewXml}}</pre>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Recursive Template for XSD Nodes -->
+<ng-template #nodeTemplate let-node="node" let-path="path" let-depth="depth">
+
+    <!-- IF GROUP (Has Children) -->
+    <div class="form-group" *ngIf="node.children && node.children.length > 0">
+
+        <!-- Render header IF: Not root AND (Has multiple children OR is specifically important/mandatory) -->
+        <div class="group-section-header"
+            *ngIf="node.name !== 'Document' && (node.children.length > 1 || node.mandatory || depth < 2)"
+            (click)="toggleNode(path)">
+            <mat-icon class="toggle-icon" [class.open]="isExpanded(path)">expand_more</mat-icon>
+            <span class="group-title">{{node.label | uppercase}}</span>
+            <span class="mandatory-star" *ngIf="node.mandatory">*</span>
+            <span class="group-tag">&lt;{{node.name}}&gt;</span>
+        </div>
+
+        <!-- Always show content for Document, or for others if expanded -->
+        <div class="group-content" [class.collapsed]="node.name !== 'Document' && !isExpanded(path)">
+            <div class="grid-layout">
+                <ng-container *ngFor="let child of node.children">
+                    <!-- LEAF FIELD -->
+                    <ng-container *ngIf="!child.children || child.children.length === 0">
+                        <div class="field-item">
+                            <label class="field-label">
+                                {{child.label | uppercase}}
+                                <span class="mandatory-star" *ngIf="child.mandatory">*</span>
+                            </label>
+                            <div class="input-container">
+                                <input type="text" class="form-input" [placeholder]="child.type || 'Enter value'"
+                                    [(ngModel)]="formData[path + '.' + child.name]" (ngModelChange)="updatePreview()">
+                                <span class="input-tag">&lt;{{child.name}}&gt;</span>
+                            </div>
+                        </div>
+                    </ng-container>
+
+                    <!-- RECURSIVE GROUP -->
+                    <div class="group-wrapper" *ngIf="child.children && child.children.length > 0">
+                        <ng-container
+                            *ngTemplateOutlet="nodeTemplate; context: {node: child, path: path + '.' + child.name, depth: depth + 1}"></ng-container>
+                    </div>
+                </ng-container>
+            </div>
+        </div>
+    </div>
+
+</ng-template>

@@ -13,13 +13,16 @@
 
         <!-- Manual Entry Dropdown -->
         <div class="dropdown-wrapper">
-            
+
             <a mat-button class="dropdown-trigger" routerLinkActive="active-link"
                 [routerLinkActiveOptions]="{exact: false}" [class.active-link]="isManualEntryActive">
-               <mat-icon class="dropdown-arrow">expand_more</mat-icon> MANUAL ENTRY 
-                
+                <mat-icon class="dropdown-arrow">expand_more</mat-icon> MANUAL ENTRY
+
             </a>
             <div class="dropdown-menu">
+                <a routerLink="/generate" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}">
+                    <span class="msg-tag dynamic">FULL</span> MX EXPLORER (700+ TYPES)
+                </a>
                 <a routerLink="/generate/pacs8" routerLinkActive="active-link">
                     <span class="msg-tag pacs">PACS</span> pacs.008.001.08
                 </a>
@@ -38,6 +41,11 @@
         <a mat-button routerLink="/history" routerLinkActive="active-link">HISTORY</a>
         <a mat-button routerLink="/rules" routerLinkActive="active-link">RULES</a>
         <a mat-button routerLink="/help" routerLinkActive="active-link">HELP</a>
+
+        <button mat-icon-button (click)="toggleTheme()"
+            [matTooltip]="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'" class="theme-toggle">
+            <mat-icon>{{ isDarkMode ? 'wb_sunny' : 'nights_stay' }}</mat-icon>
+        </button>
     </nav>
 
     <span class="spacer"></span>
@@ -52,6 +60,6 @@
     </div>
 </mat-toolbar>
 
-<div class="main-content" [class.dark-page]="isValidatePage">
+<div class="main-content" [class.dark-page]="isValidatePage" [class.me-full-page]="isManualEntryActive">
     <router-outlet></router-outlet>
 </div>
