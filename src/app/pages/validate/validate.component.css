@@ -1260,6 +1260,24 @@
   font-size: 11px;
   color: var(--text-muted);
   margin-top: 2px;
+  font-weight: 500;
+}
+
+.fi-substatus.validating {
+  color: #818cf8;
+  animation: pulse-text 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse-text {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
 }
 
 .fi-substatus.passed {
@@ -1333,8 +1351,24 @@
 }
 
 .btn-validating {
-  background: transparent;
+  background: rgba(99, 102, 241, 0.1);
   color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .btn-run-all {
