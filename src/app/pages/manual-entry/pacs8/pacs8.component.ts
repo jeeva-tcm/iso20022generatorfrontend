@@ -120,7 +120,7 @@ export class Pacs8Component implements OnInit {
 \t\t<To><FIId><FinInstnId><BICFI>${this.e(toBic)}</BICFI></FinInstnId></FIId></To>
 \t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>
 \t\t<MsgDefIdr>pacs.008.001.08</MsgDefIdr>
-\t\t<BizSvc>swift.cbprplus.01</BizSvc>
+\t\t<BizSvc>swift.cbprplus.02</BizSvc>
 \t\t<CreDt>${creDtTm}</CreDt>
 \t</AppHdr>
 \t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08">
