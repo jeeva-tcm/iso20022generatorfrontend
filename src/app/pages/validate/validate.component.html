@@ -98,48 +98,65 @@
     <!-- ══ RIGHT PANEL ══ -->
     <main class="vp-right">
 
-      <!-- Top Header of Right Panel -->
-      <div class="vp-dashboard-header" *ngIf="files.length > 0">
-        <!-- Left Side: Search and Filters -->
-        <div class="vp-dashboard-left">
-          <div class="vp-search">
-            <mat-icon>search</mat-icon>
-            <input type="text" placeholder="Search file..." [(ngModel)]="searchQuery">
+      <!-- Top Dashboard: Metrics Row -->
+      <div class="vp-dashboard-metrics" *ngIf="files.length > 0">
+        <div class="metric-card bg-glass">
+          <div class="mc-icon">
+            <mat-icon style="color: #6366f1;">folder_open</mat-icon>
           </div>
-
-          <div class="vp-table-filters" style="margin-bottom: 0;">
-            <div class="filter-chips">
-              <button class="chip chip-all" [class.active]="filterStatus === 'All'"
-                (click)="setFilter('All')">All</button>
-              <button class="chip chip-passed" [class.active]="filterStatus === 'Passed'"
-                (click)="setFilter('Passed')">Passed</button>
-              <button class="chip chip-failed" [class.active]="filterStatus === 'Failed'"
-                (click)="setFilter('Failed')">Failed <span class="chip-badge"
-                  *ngIf="summary.failed > 0">{{summary.failed}}</span></button>
-            </div>
-            <button class="btn-download" (click)="downloadReport()"><mat-icon>file_download</mat-icon> Download
-              Report</button>
+          <div class="mc-data">
+            <span class="mc-lbl">Total Files</span>
+            <span class="mc-val">{{files.length}}</span>
           </div>
         </div>
-
-        <!-- Right Side: Validation Summary Box -->
-        <div class="vp-dashboard-right">
-          <div class="validation-summary-box">
-            <h4>Validation Summary</h4>
-            <div class="vs-row"><span>Total Files:</span> <span
-                style="font-weight: 600; color: var(--text-main);">{{files.length}}</span></div>
-            <div class="vs-row vs-pass"><span>Passed:</span> <span>{{summary.passed}}</span></div>
-            <div class="vs-row vs-fail"><span>Failed:</span> <span>{{summary.failed}}</span></div>
-
-            <div class="vs-prog-row" style="margin-top: 10px;">
-              <span class="vs-lbl">Overall Rate:</span>
-              <div class="vs-prog-bar-wrap">
-                <div class="vs-prog-bar" [style.width.%]="overallPassRate"></div>
+        <div class="metric-card bg-glass pass">
+          <div class="mc-icon"><mat-icon>check_circle</mat-icon></div>
+          <div class="mc-data">
+            <span class="mc-lbl">Passed Validation</span>
+            <span class="mc-val">{{summary.passed}}</span>
+          </div>
+        </div>
+        <div class="metric-card bg-glass fail">
+          <div class="mc-icon"><mat-icon>error</mat-icon></div>
+          <div class="mc-data">
+            <span class="mc-lbl">Failed Validation</span>
+            <span class="mc-val">{{summary.failed}}</span>
+          </div>
+        </div>
+        <div class="metric-card bg-glass rate">
+          <div class="mc-icon"><mat-icon>speed</mat-icon></div>
+          <div class="mc-data">
+            <span class="mc-lbl">Overall Pass Rate</span>
+            <div class="mc-prog-row">
+              <div class="mc-prog-wrap">
+                <div class="mc-prog-bar" [style.width.%]="overallPassRate"></div>
               </div>
-              <span class="vs-val">{{overallPassRate}}%</span>
+              <span class="mc-val-sml">{{overallPassRate}}%</span>
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Controls Row: Search, Filters, Download -->
+      <div class="vp-dashboard-controls" *ngIf="files.length > 0">
+        <div class="vp-search">
+          <mat-icon>search</mat-icon>
+          <input type="text" placeholder="Search file..." [(ngModel)]="searchQuery">
+        </div>
+
+        <div class="filter-chips">
+          <button class="chip chip-all" [class.active]="filterStatus === 'All'" (click)="setFilter('All')">All</button>
+          <button class="chip chip-passed" [class.active]="filterStatus === 'Passed'"
+            (click)="setFilter('Passed')">Passed</button>
+          <button class="chip chip-failed" [class.active]="filterStatus === 'Failed'" (click)="setFilter('Failed')">
+            Failed <span class="chip-badge" *ngIf="summary.failed > 0">{{summary.failed}}</span>
+          </button>
+        </div>
+
+        <button class="btn-download" (click)="downloadReport()">
+          <mat-icon>file_download</mat-icon>
+          Download Report
+        </button>
       </div>
 
       <!-- No Selection -->
@@ -153,7 +170,7 @@
 
       <div class="vp-table" *ngIf="files.length > 0">
         <div class="table-header">
-          <!-- <div class="th-col th-check"><input type="checkbox"></div> -->
+          <div class="th-col th-index">#</div>
           <div class="th-col th-name">File Name</div>
           <div class="th-col th-status">Status</div>
           <div class="th-col th-err">Errors</div>
@@ -161,9 +178,9 @@
           <div class="th-col th-action">XML</div>
         </div>
         <div class="table-body">
-          <ng-container *ngFor="let f of filteredFiles">
+          <ng-container *ngFor="let f of paginatedFiles; let i = index">
             <div class="table-row" (click)="toggleFileRow(f)">
-              <!-- <div class="td-col td-check"><input type="checkbox" (click)="$event.stopPropagation()"></div> -->
+              <div class="td-col td-index">{{ (currentPage - 1) * pageSize + i + 1 }}</div>
               <div class="td-col td-name">
                 <mat-icon class="file-ic" [ngClass]="f.status">
                   description
@@ -181,10 +198,7 @@
                 <span class="status-badge pending" *ngIf="f.status === 'pending'">Pending</span>
               </div>
               <div class="td-col td-err">{{f.report?.errors || 0}}</div>
-              <div class="td-col td-pass">
-                <div class="pass-bar-wrap">
-                  <div class="pass-bar" [style.width.%]="getFilePassRate(f)"></div>
-                </div>
+              <div class="td-col td-pass wrap-text-centered">
                 <span class="pass-val-text">{{getFilePassRate(f)}}%</span>
               </div>
               <div class="td-col td-action">
@@ -322,7 +336,7 @@
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" (click)="showPasteModal = false; pastedXmlContent = ''">Cancel</button>
-      <button class="btn-replace" (click)="validatePastedXml()">
+      <button class="btn-primary-action" (click)="validatePastedXml()">
         <mat-icon style="font-size: 16px; width: 16px; height: 16px; margin-right: 4px;">play_arrow</mat-icon>
         Validate
       </button>

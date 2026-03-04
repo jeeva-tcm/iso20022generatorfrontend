@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ConfigService } from '../../services/config.service';
 
 interface SchemaNode {
@@ -18,7 +19,7 @@ interface SchemaNode {
 @Component({
     selector: 'app-manual-entry',
     standalone: true,
-    imports: [CommonModule, FormsModule, MatIconModule],
+    imports: [CommonModule, FormsModule, MatIconModule, MatSnackBarModule],
     templateUrl: './manual-entry.component.html',
     styleUrl: './manual-entry.component.css'
 })
@@ -46,7 +47,7 @@ export class ManualEntryComponent implements OnInit {
 
     previewXml = '';
 
-    constructor(private http: HttpClient, private config: ConfigService) { }
+    constructor(private http: HttpClient, private config: ConfigService, private snackBar: MatSnackBar) { }
 
     ngOnInit() {
         this.fetchMessageTypes();
@@ -129,7 +130,7 @@ export class ManualEntryComponent implements OnInit {
             error: (err) => {
                 console.error('Failed to fetch schema', err);
                 this.loading = false;
-                alert(`Error loading schema for ${type}`);
+                this.snackBar.open(`Error loading schema for ${type}`, 'Close', { duration: 3000, horizontalPosition: 'center', verticalPosition: 'bottom' });
             }
         });
     }
@@ -306,7 +307,9 @@ export class ManualEntryComponent implements OnInit {
 
     copyToClipboard() {
         const fullXml = `<?xml version="1.0" encoding="UTF-8"?>\n${this.previewXml}`;
-        navigator.clipboard.writeText(fullXml).then(() => alert('XML copied to clipboard!'));
+        navigator.clipboard.writeText(fullXml).then(() => {
+            this.snackBar.open('XML copied to clipboard!', 'Close', { duration: 3000, horizontalPosition: 'center', verticalPosition: 'bottom' });
+        });
     }
 
     downloadXml() {

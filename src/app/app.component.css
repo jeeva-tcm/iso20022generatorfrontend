@@ -158,6 +158,12 @@
     transform: translateX(-50%) translateY(0);
 }
 
+.dropdown-menu.hide-menu {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
 .dropdown-menu a {
     display: flex;
     align-items: center;

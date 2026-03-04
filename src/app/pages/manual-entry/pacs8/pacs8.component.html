@@ -1,160 +1,168 @@
 <div class="container">
     <header>
-        <h1>ISO 20022 Generator</h1>
+        <h1>Customer Credit Transfer (pacs.008) <mat-icon class="title-icon">payments</mat-icon></h1>
         <p>Visual PACS.008 Message Builder</p>
     </header>
 
-    <div class="tabs">
-        <button class="tab-btn" [class.active]="currentTab==='form'" (click)="currentTab='form'">Form Editor</button>
-        <button class="tab-btn" [class.active]="currentTab==='preview'" (click)="switchToPreview()">XML Preview</button>
-    </div>
+    <div class="split-view">
+        <div class="left-panel">
+            <form [formGroup]="form" class="content-box">
+                <div class="grid">
 
-    <form [formGroup]="form" *ngIf="currentTab==='form'" class="content-box">
-        <div class="grid">
+                    <div class="section-title">Message Header</div>
+                    <div class="form-group"><label>Sender BIC (Fr) <span class="req">*</span></label><input
+                            formControlName="fromBic"><div class="validation-msg" *ngIf="err('fromBic') as e">{{e}}</div></div>
+                    <div class="form-group"><label>Receiver BIC (To) <span class="req">*</span></label><input
+                            formControlName="toBic"><div class="validation-msg" *ngIf="err('toBic') as e">{{e}}</div></div>
+                    <div class="form-group"><label>Business Msg ID <span class="req">*</span></label><input
+                            formControlName="bizMsgId"><div class="validation-msg" *ngIf="err('bizMsgId') as e">{{e}}</div></div>
+                    <div class="form-group"><label>Message ID <span class="req">*</span></label><input
+                            formControlName="msgId"><div class="validation-msg" *ngIf="err('msgId') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group"><label>Creation DateTime <span class="req">*</span></label><input
+                            formControlName="creDtTm"><div class="validation-msg" *ngIf="err('creDtTm') as e">{{e}}</div></div>
+                    <div class="form-group"><label>Number of Txns <span class="req">*</span></label><input
+                            formControlName="nbOfTxs"><div class="validation-msg" *ngIf="err('nbOfTxs') as e">{{e}}</div></div>
+                    <div class="form-group"><label>Settlement Method <span class="req">*</span></label>
+                        <select formControlName="sttlmMtd">
+                            <option *ngFor="let m of sttlmMethods" [value]="m">{{m}}</option>
+                        </select><div class="validation-msg" *ngIf="err('sttlmMtd') as e">{{e}}</div>
+                    </div>
 
-            <div class="section-title">Message Header</div>
-            <div class="form-group"><label>Sender BIC (Fr) <span class="req">*</span></label><input
-                    formControlName="fromBic"></div>
-            <div class="form-group"><label>Receiver BIC (To) <span class="req">*</span></label><input
-                    formControlName="toBic"></div>
-            <div class="form-group"><label>Business Msg ID <span class="req">*</span></label><input
-                    formControlName="bizMsgId"></div>
-            <div class="form-group"><label>Message ID <span class="req">*</span></label><input formControlName="msgId">
+                    <div class="section-title">Transaction Details</div>
+                    <div class="form-group"><label>Instruction ID <span class="req">*</span></label><input
+                            formControlName="instrId"><div class="validation-msg" *ngIf="err('instrId') as e">{{e}}</div></div>
+                    <div class="form-group"><label>End To End ID <span class="req">*</span></label><input
+                            formControlName="endToEndId"><div class="validation-msg" *ngIf="err('endToEndId') as e">{{e}}</div></div>
+                    <div class="form-group"><label>Transaction ID <span class="req">*</span></label><input
+                            formControlName="txId"><div class="validation-msg" *ngIf="err('txId') as e">{{e}}</div></div>
+                    <div class="form-group"><label>UETR <span class="req">*</span></label><input formControlName="uetr"><div class="validation-msg" *ngIf="err('uetr') as e">{{e}}</div>
+                    </div>
+
+                    <div class="section-title">Payment Amounts</div>
+                    <div class="form-group"><label>Amount <span class="req">*</span></label><input
+                            formControlName="amount" type="number" step="0.01"><div class="validation-msg" *ngIf="err('amount') as e">{{e}}</div></div>
+                    <div class="form-group"><label>Currency <span class="req">*</span></label>
+                        <select formControlName="currency">
+                            <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
+                        </select><div class="validation-msg" *ngIf="err('currency') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group"><label>Settlement Date <span class="req">*</span></label><input
+                            formControlName="sttlmDt" type="date"><div class="validation-msg" *ngIf="err('sttlmDt') as e">{{e}}</div></div>
+                    <div class="form-group"><label>Service Level <span class="opt">Optional</span></label><input
+                            formControlName="svcLvlCd" placeholder="e.g. SEPA"><div class="validation-msg" *ngIf="err('svcLvlCd') as e">{{e}}</div></div>
+                    <div class="form-group"><label>Charge Bearer <span class="req">*</span></label>
+                        <select formControlName="chrgBr">
+                            <option *ngFor="let cb of chargeBearers" [value]="cb">{{cb}}</option>
+                        </select><div class="validation-msg" *ngIf="err('chrgBr') as e">{{e}}</div>
+                    </div>
+
+                    <!-- Main Agents -->
+                    <div class="section-title">Main Agents</div>
+                    <div class="form-group"><label>Instructing Agent BIC <span class="req">*</span></label><input
+                            formControlName="instgAgtBic"><div class="validation-msg" *ngIf="err('instgAgtBic') as e">{{e}}</div></div>
+                    <ng-container
+                        *ngTemplateOutlet="addressForm; context:{prefix:'instgAgt',title:'Instructing Agent'}"></ng-container>
+                    <div class="form-group"><label>Instructed Agent BIC <span class="req">*</span></label><input
+                            formControlName="instdAgtBic"><div class="validation-msg" *ngIf="err('instdAgtBic') as e">{{e}}</div></div>
+                    <ng-container
+                        *ngTemplateOutlet="addressForm; context:{prefix:'instdAgt',title:'Instructed Agent'}"></ng-container>
+
+                    <!-- Debtor -->
+                    <div class="section-title">Debtor (Payer)</div>
+                    <div class="form-group"><label>Name <span class="req">*</span></label><input
+                            formControlName="dbtrName"><div class="validation-msg" *ngIf="err('dbtrName') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group"><label>IBAN <span class="req">*</span></label><input
+                            formControlName="dbtrIban"><div class="validation-msg" *ngIf="err('dbtrIban') as e">{{e}}</div>
+                    </div>
+                    <ng-container
+                        *ngTemplateOutlet="addressForm; context:{prefix:'dbtr',title:'Debtor'}"></ng-container>
+
+                    <div class="section-title">Debtor Agent</div>
+                    <div class="form-group"><label>Agent BIC <span class="req">*</span></label><input
+                            formControlName="dbtrAgtBic"><div class="validation-msg" *ngIf="err('dbtrAgtBic') as e">{{e}}</div></div>
+                    <ng-container
+                        *ngTemplateOutlet="addressForm; context:{prefix:'dbtrAgt',title:'Debtor Agent'}"></ng-container>
+
+                    <!-- Creditor -->
+                    <div class="section-title">Creditor Agent</div>
+                    <div class="form-group"><label>Agent BIC <span class="req">*</span></label><input
+                            formControlName="cdtrAgtBic"><div class="validation-msg" *ngIf="err('cdtrAgtBic') as e">{{e}}</div></div>
+                    <ng-container
+                        *ngTemplateOutlet="addressForm; context:{prefix:'cdtrAgt',title:'Creditor Agent'}"></ng-container>
+
+                    <div class="section-title">Creditor (Payee)</div>
+                    <div class="form-group"><label>Name <span class="req">*</span></label><input
+                            formControlName="cdtrName"><div class="validation-msg" *ngIf="err('cdtrName') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group"><label>IBAN <span class="req">*</span></label><input
+                            formControlName="cdtrIban"><div class="validation-msg" *ngIf="err('cdtrIban') as e">{{e}}</div>
+                    </div>
+                    <ng-container
+                        *ngTemplateOutlet="addressForm; context:{prefix:'cdtr',title:'Creditor'}"></ng-container>
+
+                    <!-- Optional Agents -->
+                    <div class="section-title">Previous Instructing Agents <span class="opt">Optional</span></div>
+                    <div class="form-group"><label>Prev Inst Agent 1 BIC</label><input
+                            formControlName="prvsInstgAgt1Bic"><div class="validation-msg" *ngIf="err('prvsInstgAgt1Bic') as e">{{e}}</div></div>
+                    <ng-container
+                        *ngTemplateOutlet="addressForm; context:{prefix:'prvsInstgAgt1',title:'Prev Inst Agent 1'}"></ng-container>
+                    <div class="form-group"><label>Prev Inst Agent 2 BIC</label><input
+                            formControlName="prvsInstgAgt2Bic"><div class="validation-msg" *ngIf="err('prvsInstgAgt2Bic') as e">{{e}}</div></div>
+                    <ng-container
+                        *ngTemplateOutlet="addressForm; context:{prefix:'prvsInstgAgt2',title:'Prev Inst Agent 2'}"></ng-container>
+                    <div class="form-group"><label>Prev Inst Agent 3 BIC</label><input
+                            formControlName="prvsInstgAgt3Bic"><div class="validation-msg" *ngIf="err('prvsInstgAgt3Bic') as e">{{e}}</div></div>
+                    <ng-container
+                        *ngTemplateOutlet="addressForm; context:{prefix:'prvsInstgAgt3',title:'Prev Inst Agent 3'}"></ng-container>
+
+                    <div class="section-title">Intermediary Agents <span class="opt">Optional</span></div>
+                    <div class="form-group"><label>Intermediary Agent 1 BIC</label><input
+                            formControlName="intrmyAgt1Bic"><div class="validation-msg" *ngIf="err('intrmyAgt1Bic') as e">{{e}}</div></div>
+                    <ng-container
+                        *ngTemplateOutlet="addressForm; context:{prefix:'intrmyAgt1',title:'Intermediary Agent 1'}"></ng-container>
+                    <div class="form-group"><label>Intermediary Agent 2 BIC</label><input
+                            formControlName="intrmyAgt2Bic"><div class="validation-msg" *ngIf="err('intrmyAgt2Bic') as e">{{e}}</div></div>
+                    <ng-container
+                        *ngTemplateOutlet="addressForm; context:{prefix:'intrmyAgt2',title:'Intermediary Agent 2'}"></ng-container>
+                    <div class="form-group"><label>Intermediary Agent 3 BIC</label><input
+                            formControlName="intrmyAgt3Bic"><div class="validation-msg" *ngIf="err('intrmyAgt3Bic') as e">{{e}}</div></div>
+                    <ng-container
+                        *ngTemplateOutlet="addressForm; context:{prefix:'intrmyAgt3',title:'Intermediary Agent 3'}"></ng-container>
+
+                    <div class="section-title">Remittance <span class="opt">Optional</span></div>
+                    <div class="form-group"><label>Purpose Code</label><input formControlName="purpCd"
+                            placeholder="e.g. CASH"><div class="validation-msg" *ngIf="err('purpCd') as e">{{e}}</div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="right-panel">
+            <!-- Top Actions -->
+            <div class="bottom-actions" style="margin-top: 0; margin-bottom: 1rem;">
+                <button class="action-btn copy-btn" (click)="copyToClipboard()"><mat-icon>content_copy</mat-icon> Copy
+                    XML</button>
+                <button class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon> Download XML</button>
+                <button class="action-btn validate-btn" (click)="validateMessage()">
+                    <mat-icon>verified</mat-icon> Validate Message
+                </button>
             </div>
-            <div class="form-group"><label>Creation DateTime <span class="req">*</span></label><input
-                    formControlName="creDtTm"></div>
-            <div class="form-group"><label>Number of Txns <span class="req">*</span></label><input
-                    formControlName="nbOfTxs"></div>
-            <div class="form-group"><label>Settlement Method <span class="req">*</span></label>
-                <select formControlName="sttlmMtd">
-                    <option *ngFor="let m of sttlmMethods" [value]="m">{{m}}</option>
-                </select>
-            </div>
 
-            <div class="section-title">Transaction Details</div>
-            <div class="form-group"><label>Instruction ID <span class="req">*</span></label><input
-                    formControlName="instrId"></div>
-            <div class="form-group"><label>End To End ID <span class="req">*</span></label><input
-                    formControlName="endToEndId"></div>
-            <div class="form-group"><label>Transaction ID <span class="req">*</span></label><input
-                    formControlName="txId"></div>
-            <div class="form-group"><label>UETR <span class="req">*</span></label><input formControlName="uetr"></div>
-
-            <div class="section-title">Payment Amounts</div>
-            <div class="form-group"><label>Amount <span class="req">*</span></label><input formControlName="amount"
-                    type="number" step="0.01"></div>
-            <div class="form-group"><label>Currency <span class="req">*</span></label>
-                <select formControlName="currency">
-                    <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
-                </select>
-            </div>
-            <div class="form-group"><label>Settlement Date <span class="req">*</span></label><input
-                    formControlName="sttlmDt" type="date"></div>
-            <div class="form-group"><label>Service Level <span class="opt">Optional</span></label><input
-                    formControlName="svcLvlCd" placeholder="e.g. SEPA"></div>
-            <div class="form-group"><label>Charge Bearer <span class="req">*</span></label>
-                <select formControlName="chrgBr">
-                    <option *ngFor="let cb of chargeBearers" [value]="cb">{{cb}}</option>
-                </select>
-            </div>
-
-            <!-- Main Agents -->
-            <div class="section-title">Main Agents</div>
-            <div class="form-group"><label>Instructing Agent BIC <span class="req">*</span></label><input
-                    formControlName="instgAgtBic"></div>
-            <ng-container
-                *ngTemplateOutlet="addressForm; context:{prefix:'instgAgt',title:'Instructing Agent'}"></ng-container>
-            <div class="form-group"><label>Instructed Agent BIC <span class="req">*</span></label><input
-                    formControlName="instdAgtBic"></div>
-            <ng-container
-                *ngTemplateOutlet="addressForm; context:{prefix:'instdAgt',title:'Instructed Agent'}"></ng-container>
-
-            <!-- Debtor -->
-            <div class="section-title">Debtor (Payer)</div>
-            <div class="form-group"><label>Name <span class="req">*</span></label><input formControlName="dbtrName">
-            </div>
-            <div class="form-group"><label>IBAN <span class="req">*</span></label><input formControlName="dbtrIban">
-            </div>
-            <ng-container *ngTemplateOutlet="addressForm; context:{prefix:'dbtr',title:'Debtor'}"></ng-container>
-
-            <div class="section-title">Debtor Agent</div>
-            <div class="form-group"><label>Agent BIC <span class="req">*</span></label><input
-                    formControlName="dbtrAgtBic"></div>
-            <ng-container
-                *ngTemplateOutlet="addressForm; context:{prefix:'dbtrAgt',title:'Debtor Agent'}"></ng-container>
-
-            <!-- Creditor -->
-            <div class="section-title">Creditor Agent</div>
-            <div class="form-group"><label>Agent BIC <span class="req">*</span></label><input
-                    formControlName="cdtrAgtBic"></div>
-            <ng-container
-                *ngTemplateOutlet="addressForm; context:{prefix:'cdtrAgt',title:'Creditor Agent'}"></ng-container>
-
-            <div class="section-title">Creditor (Payee)</div>
-            <div class="form-group"><label>Name <span class="req">*</span></label><input formControlName="cdtrName">
-            </div>
-            <div class="form-group"><label>IBAN <span class="req">*</span></label><input formControlName="cdtrIban">
-            </div>
-            <ng-container *ngTemplateOutlet="addressForm; context:{prefix:'cdtr',title:'Creditor'}"></ng-container>
-
-            <!-- Optional Agents -->
-            <div class="section-title">Previous Instructing Agents <span class="opt">Optional</span></div>
-            <div class="form-group"><label>Prev Inst Agent 1 BIC</label><input formControlName="prvsInstgAgt1Bic"></div>
-            <ng-container
-                *ngTemplateOutlet="addressForm; context:{prefix:'prvsInstgAgt1',title:'Prev Inst Agent 1'}"></ng-container>
-            <div class="form-group"><label>Prev Inst Agent 2 BIC</label><input formControlName="prvsInstgAgt2Bic"></div>
-            <ng-container
-                *ngTemplateOutlet="addressForm; context:{prefix:'prvsInstgAgt2',title:'Prev Inst Agent 2'}"></ng-container>
-            <div class="form-group"><label>Prev Inst Agent 3 BIC</label><input formControlName="prvsInstgAgt3Bic"></div>
-            <ng-container
-                *ngTemplateOutlet="addressForm; context:{prefix:'prvsInstgAgt3',title:'Prev Inst Agent 3'}"></ng-container>
-
-            <div class="section-title">Intermediary Agents <span class="opt">Optional</span></div>
-            <div class="form-group"><label>Intermediary Agent 1 BIC</label><input formControlName="intrmyAgt1Bic"></div>
-            <ng-container
-                *ngTemplateOutlet="addressForm; context:{prefix:'intrmyAgt1',title:'Intermediary Agent 1'}"></ng-container>
-            <div class="form-group"><label>Intermediary Agent 2 BIC</label><input formControlName="intrmyAgt2Bic"></div>
-            <ng-container
-                *ngTemplateOutlet="addressForm; context:{prefix:'intrmyAgt2',title:'Intermediary Agent 2'}"></ng-container>
-            <div class="form-group"><label>Intermediary Agent 3 BIC</label><input formControlName="intrmyAgt3Bic"></div>
-            <ng-container
-                *ngTemplateOutlet="addressForm; context:{prefix:'intrmyAgt3',title:'Intermediary Agent 3'}"></ng-container>
-
-            <div class="section-title">Remittance <span class="opt">Optional</span></div>
-            <div class="form-group"><label>Purpose Code</label><input formControlName="purpCd" placeholder="e.g. CASH">
+            <!-- XML Preview & Actions -->
+            <div class="content-box preview-box">
+                <div class="editor-wrapper">
+                    <div class="line-numbers" #lineNumbers>
+                        <div *ngFor="let idx of editorLineCount; let i = index">{{i + 1}}</div>
+                    </div>
+                    <textarea class="code-editor" [(ngModel)]="generatedXml" (ngModelChange)="onEditorChange($event)"
+                        (scroll)="syncScroll(xmlEditor, lineNumbers)" #xmlEditor spellcheck="false"
+                        wrap="off"></textarea>
+                </div>
             </div>
         </div>
-    </form>
-
-    <!-- XML Preview -->
-    <div *ngIf="currentTab==='preview'" class="content-box">
-        <div class="preview-actions">
-            <button class="action-btn copy-btn" (click)="copyToClipboard()">
-                <mat-icon>content_copy</mat-icon> Copy XML</button>
-            <button class="action-btn" (click)="downloadXml()">
-                <mat-icon>download</mat-icon> Download XML</button>
-        </div>
-        <div class="form-group"><label>Editor</label>
-            <textarea class="code-editor" [(ngModel)]="generatedXml"></textarea>
-        </div>
     </div>
-
-    <!-- Bottom Actions -->
-    <div class="bottom-actions">
-        <button class="action-btn copy-btn" (click)="copyToClipboard()"><mat-icon>content_copy</mat-icon> Copy
-            XML</button>
-        <button class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon> Download XML</button>
-        <button class="action-btn validate-btn" (click)="validateMessage()" [disabled]="isValidating">
-            <mat-icon>{{isValidating?'sync':'verified'}}</mat-icon> {{isValidating?'Validating...':'Validate
-            Message'}}</button>
-    </div>
-
-    <div *ngIf="isValidating" class="spinner-row">
-        <div class="spinner"></div> Validating pacs.008.001.08...
-    </div>
-
-    <!-- Validation Panel -->
-    <ng-container *ngTemplateOutlet="resultPanel"></ng-container>
 </div>
 
 <!-- Address Template -->
@@ -214,66 +222,4 @@
             </div>
         </div>
     </ng-container>
-</ng-template>
-
-<!-- Validation Result Panel -->
-<ng-template #resultPanel>
-    <div *ngIf="validationReport && !isValidating" class="validation-result-panel">
-        <div class="report-header">
-            <div>
-                <h3 class="rh-name">pacs.008.001.08</h3><span class="rh-meta">{{validationReport.message||'N/A'}} ·
-                    {{validationReport.total_time_ms}}ms</span>
-            </div>
-            <div class="rh-status" [ngClass]="validationReport.status==='PASS'?'rh-pass':'rh-fail'">
-                <mat-icon>{{validationReport.status==='PASS'?'check_circle':'cancel'}}</mat-icon>
-                {{validationReport.status==='PASS'?'PASSED':'FAILED'}}
-            </div>
-        </div>
-        <div class="meta-strip">
-            <div class="ms-item"><span class="ms-label">Status</span><span class="ms-val"
-                    [style.color]="validationReport.status==='PASS'?'#16a34a':'#dc2626'">{{validationReport.status}}</span>
-            </div>
-            <div class="ms-item"><span class="ms-label">Errors</span><span class="ms-val"
-                    [class.ms-err]="validationReport.errors>0">{{validationReport.errors}}</span></div>
-            <div class="ms-item"><span class="ms-label">Warnings</span><span class="ms-val"
-                    [class.ms-warn]="validationReport.warnings>0">{{validationReport.warnings}}</span></div>
-            <div class="ms-item"><span class="ms-label">Duration</span><span
-                    class="ms-val">{{validationReport.total_time_ms}}ms</span></div>
-        </div>
-        <div class="layer-row">
-            <div class="layer-pill" *ngFor="let k of reportLayers(validationReport)">
-                <span class="pill-l"><mat-icon [class.ok]="!isLayerFail(validationReport,k)"
-                        [class.err]="isLayerFail(validationReport,k)">{{isLayerFail(validationReport,k)?'cancel':'check_circle'}}</mat-icon>
-                    L{{k}} {{layerName(k)}}</span>
-                <span [class.pass-t]="!isLayerFail(validationReport,k)"
-                    [class.fail-t]="isLayerFail(validationReport,k)">{{isLayerFail(validationReport,k)?'Failed':'Passed'}}</span>
-            </div>
-        </div>
-        <div class="all-passed"
-            *ngIf="validationReport.status==='PASS'&&validationReport.errors===0&&validationReport.warnings===0">
-            <mat-icon>verified</mat-icon>
-            <h3>All Layers Passed</h3>
-            <p>Fully compliant with ISO 20022.</p>
-        </div>
-        <div *ngIf="validationReport.details?.length">
-            <div class="layer-item" *ngFor="let l of groupedIssues(validationReport)">
-                <div class="layer-hd" (click)="toggleLayer(l.name)">
-                    <mat-icon [style.transform]="isLayerExpanded(l.name)?'rotate(90deg)':''"
-                        style="transition:transform .2s">chevron_right</mat-icon>
-                    L{{l.layer}} — {{l.name}}
-                    <span *ngIf="l.errors>0" class="badge badge-err">{{l.errors}} Error{{l.errors>1?'s':''}}</span>
-                    <span *ngIf="l.warnings>0" class="badge badge-warn">{{l.warnings}}
-                        Warning{{l.warnings>1?'s':''}}</span>
-                </div>
-                <div class="layer-issues" *ngIf="isLayerExpanded(l.name)">
-                    <div class="issue" *ngFor="let i of l.issues">
-                        <span class="issue-path"><mat-icon [class.err]="i.severity==='ERROR'"
-                                [class.warn]="i.severity==='WARNING'"
-                                [class.ok]="i.severity!=='ERROR'&&i.severity!=='WARNING'">{{i.severity==='ERROR'?'cancel':(i.severity==='WARNING'?'warning':'check_circle')}}</mat-icon>{{i.path||'Root'}}</span>
-                        <span class="issue-msg">{{i.message}}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </ng-template>

@@ -1,15 +1,16 @@
-<div class="me-root light-theme">
+<div class="me-root">
     <!-- Header -->
     <header class="me-header">
         <div class="me-header-left">
-            <h1>Dynamic Manual Entry</h1>
-            <p>Building ISO 20022 message blueprints dynamically</p>
+            <h1>Manual Entry <mat-icon class="title-icon">auto_fix_high</mat-icon></h1>
+            <p>Building ISO 20022 message blueprints</p>
         </div>
 
         <div class="me-controls">
             <!-- Search Box -->
-            <div style="position: relative;">
-                <input type="text" class="search-msg-type" placeholder="Search Message Type (e.g. pacs.008)"
+            <div class="search-container">
+                <mat-icon class="search-icon">search</mat-icon>
+                <input type="text" class="search-msg-type" placeholder="Find Message Type (e.g. pacs.008)"
                     [(ngModel)]="searchQuery" (input)="onSearchInput()" (focus)="showSuggestions = true"
                     (blur)="onBlur()">
 
@@ -83,25 +84,28 @@
             <p>Constructing dynamic form from XSD...</p>
         </div>
 
-        <!-- Case 3: Form Mode -->
-        <div *ngIf="selectedType && !loading && schema && viewMode === 'form'" class="form-scroll-pane">
-            <div class="form-container">
-                <!-- Recursive Template Entry -->
-                <ng-container
-                    *ngTemplateOutlet="nodeTemplate; context: {node: schema, path: schema.name, depth: 0}"></ng-container>
-            </div>
-        </div>
-
-        <!-- Case 4: XML Mode -->
-        <div *ngIf="selectedType && !loading && schema && viewMode === 'xml'" class="xml-scroll-pane">
-            <div class="xml-preview-container">
-                <div class="xml-header">
-                    <h3>Live XML Preview</h3>
-                    <button class="btn-copy" (click)="copyToClipboard()"><mat-icon>content_copy</mat-icon> Copy
-                        Code</button>
+        <!-- Split View for Form and XML -->
+        <div *ngIf="selectedType && !loading && schema" class="split-view">
+            <!-- Left Side: Form Mode -->
+            <div class="form-scroll-pane left-panel">
+                <div class="form-container">
+                    <!-- Recursive Template Entry -->
+                    <ng-container
+                        *ngTemplateOutlet="nodeTemplate; context: {node: schema, path: schema.name, depth: 0}"></ng-container>
                 </div>
-                <pre class="xml-code"><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;</code>
+            </div>
+
+            <!-- Right Side: XML Mode -->
+            <div class="xml-scroll-pane right-panel">
+                <div class="xml-preview-container">
+                    <div class="xml-header">
+                        <h3>Live XML Preview</h3>
+                        <button class="btn-copy" (click)="copyToClipboard()"><mat-icon>content_copy</mat-icon> Copy
+                            Code</button>
+                    </div>
+                    <pre class="xml-code"><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;</code>
 {{previewXml}}</pre>
+                </div>
             </div>
         </div>
 

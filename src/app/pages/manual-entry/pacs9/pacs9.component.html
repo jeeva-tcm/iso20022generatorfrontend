@@ -1,293 +1,243 @@
 <div class="container">
-    <header>
-        <h1>ISO 20022 Generator</h1>
-        <p>Visual PACS.009 Message Builder</p>
-    </header>
+        <header>
+                <h1>Financial Institution Credit Transfer <mat-icon class="title-icon">account_balance</mat-icon></h1>
+                <p>Visual PACS.009 Message Builder</p>
+        </header>
 
-    <div class="tabs">
-        <button class="tab-btn" [class.active]="currentTab==='form'" (click)="currentTab='form'">Form Editor</button>
-        <button class="tab-btn" [class.active]="currentTab==='preview'" (click)="switchToPreview()">XML Preview</button>
-    </div>
+        <div class="split-view">
+                <div class="left-panel">
+                        <form [formGroup]="form" class="content-box">
+                                <div class="grid">
 
-    <form [formGroup]="form" *ngIf="currentTab==='form'" class="content-box">
-        <div class="grid">
+                                        <div class="section-title">Message Header</div>
+                                        <div class="form-group"><label>Sender BIC (Fr) <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="fromBic"><div class="validation-msg" *ngIf="err('fromBic') as e">{{e}}</div></div>
+                                        <div class="form-group"><label>Receiver BIC (To) <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="toBic"><div class="validation-msg" *ngIf="err('toBic') as e">{{e}}</div></div>
+                                        <div class="form-group"><label>Business Msg ID <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="bizMsgId"><div class="validation-msg" *ngIf="err('bizMsgId') as e">{{e}}</div></div>
+                                        <div class="form-group"><label>Message ID <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="msgId"><div class="validation-msg" *ngIf="err('msgId') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Creation DateTime <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="creDtTm"><div class="validation-msg" *ngIf="err('creDtTm') as e">{{e}}</div></div>
+                                        <div class="form-group"><label>Number of Txns <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="nbOfTxs"><div class="validation-msg" *ngIf="err('nbOfTxs') as e">{{e}}</div></div>
+                                        <div class="form-group"><label>Settlement Method <span
+                                                                class="req">*</span></label>
+                                                <select formControlName="sttlmMtd">
+                                                        <option *ngFor="let m of sttlmMethods" [value]="m">{{m}}
+                                                        </option>
+                                                </select><div class="validation-msg" *ngIf="err('sttlmMtd') as e">{{e}}</div>
+                                        </div>
 
-            <div class="section-title">Message Header</div>
-            <div class="form-group"><label>Sender BIC (Fr) <span class="req">*</span></label><input
-                    formControlName="fromBic"></div>
-            <div class="form-group"><label>Receiver BIC (To) <span class="req">*</span></label><input
-                    formControlName="toBic"></div>
-            <div class="form-group"><label>Business Msg ID <span class="req">*</span></label><input
-                    formControlName="bizMsgId"></div>
-            <div class="form-group"><label>Message ID <span class="req">*</span></label><input formControlName="msgId">
-            </div>
-            <div class="form-group"><label>Creation DateTime <span class="req">*</span></label><input
-                    formControlName="creDtTm"></div>
-            <div class="form-group"><label>Number of Txns <span class="req">*</span></label><input
-                    formControlName="nbOfTxs"></div>
-            <div class="form-group"><label>Settlement Method <span class="req">*</span></label>
-                <select formControlName="sttlmMtd">
-                    <option *ngFor="let m of sttlmMethods" [value]="m">{{m}}</option>
-                </select>
-            </div>
+                                        <div class="section-title">Transaction Details</div>
+                                        <div class="form-group"><label>Instruction ID <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="instrId"><div class="validation-msg" *ngIf="err('instrId') as e">{{e}}</div></div>
+                                        <div class="form-group"><label>End To End ID <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="endToEndId"><div class="validation-msg" *ngIf="err('endToEndId') as e">{{e}}</div></div>
+                                        <div class="form-group"><label>Transaction ID <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="txId"><div class="validation-msg" *ngIf="err('txId') as e">{{e}}</div></div>
+                                        <div class="form-group"><label>UETR <span class="req">*</span></label><input
+                                                        formControlName="uetr"><div class="validation-msg" *ngIf="err('uetr') as e">{{e}}</div>
+                                        </div>
 
-            <div class="section-title">Transaction Details</div>
-            <div class="form-group"><label>Instruction ID <span class="req">*</span></label><input
-                    formControlName="instrId"></div>
-            <div class="form-group"><label>End To End ID <span class="req">*</span></label><input
-                    formControlName="endToEndId"></div>
-            <div class="form-group"><label>Transaction ID <span class="req">*</span></label><input
-                    formControlName="txId"></div>
-            <div class="form-group"><label>UETR <span class="req">*</span></label><input formControlName="uetr"></div>
+                                        <div class="section-title">Settlement Amounts</div>
+                                        <div class="form-group"><label>Amount <span class="req">*</span></label><input
+                                                        formControlName="amount" type="number" step="0.01"><div class="validation-msg" *ngIf="err('amount') as e">{{e}}</div></div>
+                                        <div class="form-group"><label>Currency <span class="req">*</span></label>
+                                                <select formControlName="currency">
+                                                        <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
+                                                </select><div class="validation-msg" *ngIf="err('currency') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Settlement Date <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="sttlmDt" type="date"><div class="validation-msg" *ngIf="err('sttlmDt') as e">{{e}}</div></div>
 
-            <div class="section-title">Settlement Amounts</div>
-            <div class="form-group"><label>Amount <span class="req">*</span></label><input formControlName="amount"
-                    type="number" step="0.01"></div>
-            <div class="form-group"><label>Currency <span class="req">*</span></label>
-                <select formControlName="currency">
-                    <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
-                </select>
-            </div>
-            <div class="form-group"><label>Settlement Date <span class="req">*</span></label><input
-                    formControlName="sttlmDt" type="date"></div>
+                                        <!-- Main Agents -->
+                                        <div class="section-title">Main Agents</div>
+                                        <div class="form-group"><label>Instructing Agent BIC <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="instgAgtBic"><div class="validation-msg" *ngIf="err('instgAgtBic') as e">{{e}}</div></div>
+                                        <ng-container
+                                                *ngTemplateOutlet="addressForm; context:{prefix:'instgAgt',title:'Instructing Agent'}"></ng-container>
+                                        <div class="form-group"><label>Instructed Agent BIC <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="instdAgtBic"><div class="validation-msg" *ngIf="err('instdAgtBic') as e">{{e}}</div></div>
+                                        <ng-container
+                                                *ngTemplateOutlet="addressForm; context:{prefix:'instdAgt',title:'Instructed Agent'}"></ng-container>
 
-            <!-- Main Agents -->
-            <div class="section-title">Main Agents</div>
-            <div class="form-group"><label>Instructing Agent BIC <span class="req">*</span></label><input
-                    formControlName="instgAgtBic"></div>
-            <ng-container
-                *ngTemplateOutlet="addressForm; context:{prefix:'instgAgt',title:'Instructing Agent'}"></ng-container>
-            <div class="form-group"><label>Instructed Agent BIC <span class="req">*</span></label><input
-                    formControlName="instdAgtBic"></div>
-            <ng-container
-                *ngTemplateOutlet="addressForm; context:{prefix:'instdAgt',title:'Instructed Agent'}"></ng-container>
+                                        <!-- Debtor FI -->
+                                        <div class="section-title">Debtor Financial Institution</div>
+                                        <div class="form-group"><label>Debtor FI BIC <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="dbtrFiBic"><div class="validation-msg" *ngIf="err('dbtrFiBic') as e">{{e}}</div></div>
+                                        <div class="form-group"><label>Debtor FI Account <span
+                                                                class="opt">Optional</span></label><input
+                                                        formControlName="dbtrFiAcct" placeholder="Account ID"><div class="validation-msg" *ngIf="err('dbtrFiAcct') as e">{{e}}</div></div>
 
-            <!-- Debtor FI -->
-            <div class="section-title">Debtor Financial Institution</div>
-            <div class="form-group"><label>Debtor FI BIC <span class="req">*</span></label><input
-                    formControlName="dbtrFiBic"></div>
-            <div class="form-group"><label>Debtor FI Account <span class="opt">Optional</span></label><input
-                    formControlName="dbtrFiAcct" placeholder="Account ID"></div>
+                                        <!-- Debtor Agent -->
+                                        <div class="section-title">Debtor Agent <span class="opt">Optional</span></div>
+                                        <div class="form-group"><label>Debtor Agent BIC</label><input
+                                                        formControlName="dbtrAgtBic"><div class="validation-msg" *ngIf="err('dbtrAgtBic') as e">{{e}}</div></div>
+                                        <ng-container
+                                                *ngTemplateOutlet="addressForm; context:{prefix:'dbtrAgt',title:'Debtor Agent'}"></ng-container>
 
-            <!-- Debtor Agent -->
-            <div class="section-title">Debtor Agent <span class="opt">Optional</span></div>
-            <div class="form-group"><label>Debtor Agent BIC</label><input formControlName="dbtrAgtBic"></div>
-            <ng-container
-                *ngTemplateOutlet="addressForm; context:{prefix:'dbtrAgt',title:'Debtor Agent'}"></ng-container>
+                                        <!-- Creditor Agent -->
+                                        <div class="section-title">Creditor Agent <span class="opt">Optional</span>
+                                        </div>
+                                        <div class="form-group"><label>Creditor Agent BIC</label><input
+                                                        formControlName="cdtrAgtBic"><div class="validation-msg" *ngIf="err('cdtrAgtBic') as e">{{e}}</div></div>
+                                        <ng-container
+                                                *ngTemplateOutlet="addressForm; context:{prefix:'cdtrAgt',title:'Creditor Agent'}"></ng-container>
 
-            <!-- Creditor Agent -->
-            <div class="section-title">Creditor Agent <span class="opt">Optional</span></div>
-            <div class="form-group"><label>Creditor Agent BIC</label><input formControlName="cdtrAgtBic"></div>
-            <ng-container
-                *ngTemplateOutlet="addressForm; context:{prefix:'cdtrAgt',title:'Creditor Agent'}"></ng-container>
+                                        <!-- Creditor FI -->
+                                        <div class="section-title">Creditor Financial Institution</div>
+                                        <div class="form-group"><label>Creditor FI BIC <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="cdtrFiBic"><div class="validation-msg" *ngIf="err('cdtrFiBic') as e">{{e}}</div></div>
+                                        <div class="form-group"><label>Creditor FI Account <span
+                                                                class="opt">Optional</span></label><input
+                                                        formControlName="cdtrFiAcct" placeholder="Account ID"><div class="validation-msg" *ngIf="err('cdtrFiAcct') as e">{{e}}</div></div>
 
-            <!-- Creditor FI -->
-            <div class="section-title">Creditor Financial Institution</div>
-            <div class="form-group"><label>Creditor FI BIC <span class="req">*</span></label><input
-                    formControlName="cdtrFiBic"></div>
-            <div class="form-group"><label>Creditor FI Account <span class="opt">Optional</span></label><input
-                    formControlName="cdtrFiAcct" placeholder="Account ID"></div>
 
-            <!-- COV Block -->
-            <div class="section-title cov-title">
-                COV — Underlying Customer Credit Transfer
-                <label class="cov-switch" (click)="$event.stopPropagation()">
-                    <input type="checkbox" [checked]="covEnabled" (change)="toggleCov()"><span class="slider"></span>
-                </label>
-            </div>
-            <ng-container *ngIf="covEnabled">
-                <div class="form-group"><label>COV Debtor Name <span class="opt">Optional</span></label><input
-                        formControlName="covDbtrName"></div>
-                <div class="form-group"><label>COV Debtor IBAN <span class="opt">Optional</span></label><input
-                        formControlName="covDbtrIban"></div>
-                <div class="form-group"><label>COV Debtor Agent BIC <span class="opt">Optional</span></label><input
-                        formControlName="covDbtrAgtBic"></div>
-                <div class="form-group"><label>COV Creditor Agent BIC <span class="opt">Optional</span></label><input
-                        formControlName="covCdtrAgtBic"></div>
-                <div class="form-group"><label>COV Creditor Name <span class="opt">Optional</span></label><input
-                        formControlName="covCdtrName"></div>
-                <div class="form-group"><label>COV Creditor IBAN <span class="opt">Optional</span></label><input
-                        formControlName="covCdtrIban"></div>
-                <div class="form-group"><label>COV Currency <span class="opt">Optional</span></label>
-                    <select formControlName="covCurrency">
-                        <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
-                    </select>
+
+                                        <!-- Optional Agents -->
+                                        <div class="section-title">Previous Instructing Agents <span
+                                                        class="opt">Optional</span></div>
+                                        <div class="form-group"><label>Prev Inst Agent 1 BIC</label><input
+                                                        formControlName="prvsInstgAgt1Bic"><div class="validation-msg" *ngIf="err('prvsInstgAgt1Bic') as e">{{e}}</div></div>
+                                        <ng-container
+                                                *ngTemplateOutlet="addressForm; context:{prefix:'prvsInstgAgt1',title:'Prev Inst Agent 1'}"></ng-container>
+                                        <div class="form-group"><label>Prev Inst Agent 2 BIC</label><input
+                                                        formControlName="prvsInstgAgt2Bic"><div class="validation-msg" *ngIf="err('prvsInstgAgt2Bic') as e">{{e}}</div></div>
+                                        <ng-container
+                                                *ngTemplateOutlet="addressForm; context:{prefix:'prvsInstgAgt2',title:'Prev Inst Agent 2'}"></ng-container>
+                                        <div class="form-group"><label>Prev Inst Agent 3 BIC</label><input
+                                                        formControlName="prvsInstgAgt3Bic"><div class="validation-msg" *ngIf="err('prvsInstgAgt3Bic') as e">{{e}}</div></div>
+                                        <ng-container
+                                                *ngTemplateOutlet="addressForm; context:{prefix:'prvsInstgAgt3',title:'Prev Inst Agent 3'}"></ng-container>
+
+                                        <div class="section-title">Intermediary Agents <span class="opt">Optional</span>
+                                        </div>
+                                        <div class="form-group"><label>Intermediary Agent 1 BIC</label><input
+                                                        formControlName="intrmyAgt1Bic"><div class="validation-msg" *ngIf="err('intrmyAgt1Bic') as e">{{e}}</div></div>
+                                        <ng-container
+                                                *ngTemplateOutlet="addressForm; context:{prefix:'intrmyAgt1',title:'Intermediary Agent 1'}"></ng-container>
+                                        <div class="form-group"><label>Intermediary Agent 2 BIC</label><input
+                                                        formControlName="intrmyAgt2Bic"><div class="validation-msg" *ngIf="err('intrmyAgt2Bic') as e">{{e}}</div></div>
+                                        <ng-container
+                                                *ngTemplateOutlet="addressForm; context:{prefix:'intrmyAgt2',title:'Intermediary Agent 2'}"></ng-container>
+                                        <div class="form-group"><label>Intermediary Agent 3 BIC</label><input
+                                                        formControlName="intrmyAgt3Bic"><div class="validation-msg" *ngIf="err('intrmyAgt3Bic') as e">{{e}}</div></div>
+                                        <ng-container
+                                                *ngTemplateOutlet="addressForm; context:{prefix:'intrmyAgt3',title:'Intermediary Agent 3'}"></ng-container>
+                                </div>
+                        </form>
                 </div>
-                <div class="form-group"><label>COV Amount <span class="opt">Optional</span></label><input
-                        formControlName="covAmount" type="number" step="0.01"></div>
-            </ng-container>
 
-            <!-- Optional Agents -->
-            <div class="section-title">Previous Instructing Agents <span class="opt">Optional</span></div>
-            <div class="form-group"><label>Prev Inst Agent 1 BIC</label><input formControlName="prvsInstgAgt1Bic"></div>
-            <ng-container
-                *ngTemplateOutlet="addressForm; context:{prefix:'prvsInstgAgt1',title:'Prev Inst Agent 1'}"></ng-container>
-            <div class="form-group"><label>Prev Inst Agent 2 BIC</label><input formControlName="prvsInstgAgt2Bic"></div>
-            <ng-container
-                *ngTemplateOutlet="addressForm; context:{prefix:'prvsInstgAgt2',title:'Prev Inst Agent 2'}"></ng-container>
-            <div class="form-group"><label>Prev Inst Agent 3 BIC</label><input formControlName="prvsInstgAgt3Bic"></div>
-            <ng-container
-                *ngTemplateOutlet="addressForm; context:{prefix:'prvsInstgAgt3',title:'Prev Inst Agent 3'}"></ng-container>
+                <div class="right-panel">
+                        <!-- Top Actions -->
+                        <div class="bottom-actions" style="margin-top: 0; margin-bottom: 1rem;">
+                                <button class="action-btn copy-btn"
+                                        (click)="copyToClipboard()"><mat-icon>content_copy</mat-icon> Copy
+                                        XML</button>
+                                <button class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon>
+                                        Download XML</button>
+                                <button class="action-btn validate-btn" (click)="validateMessage()">
+                                        <mat-icon>verified</mat-icon> Validate Message
+                                </button>
+                        </div>
 
-            <div class="section-title">Intermediary Agents <span class="opt">Optional</span></div>
-            <div class="form-group"><label>Intermediary Agent 1 BIC</label><input formControlName="intrmyAgt1Bic"></div>
-            <ng-container
-                *ngTemplateOutlet="addressForm; context:{prefix:'intrmyAgt1',title:'Intermediary Agent 1'}"></ng-container>
-            <div class="form-group"><label>Intermediary Agent 2 BIC</label><input formControlName="intrmyAgt2Bic"></div>
-            <ng-container
-                *ngTemplateOutlet="addressForm; context:{prefix:'intrmyAgt2',title:'Intermediary Agent 2'}"></ng-container>
-            <div class="form-group"><label>Intermediary Agent 3 BIC</label><input formControlName="intrmyAgt3Bic"></div>
-            <ng-container
-                *ngTemplateOutlet="addressForm; context:{prefix:'intrmyAgt3',title:'Intermediary Agent 3'}"></ng-container>
+                        <!-- XML Preview & Actions -->
+                        <div class="content-box preview-box">
+                                <div class="editor-wrapper">
+                                        <div class="line-numbers" #lineNumbers>
+                                                <div *ngFor="let idx of editorLineCount; let i = index">{{i + 1}}</div>
+                                        </div>
+                                        <textarea class="code-editor" [(ngModel)]="generatedXml"
+                                                (ngModelChange)="onEditorChange($event)"
+                                                (scroll)="syncScroll(xmlEditor, lineNumbers)" #xmlEditor
+                                                spellcheck="false" wrap="off"></textarea>
+                                </div>
+                        </div>
+                </div>
         </div>
-    </form>
-
-    <!-- XML Preview -->
-    <div *ngIf="currentTab==='preview'" class="content-box">
-        <div class="preview-actions">
-            <button class="action-btn copy-btn" (click)="copyToClipboard()"><mat-icon>content_copy</mat-icon> Copy
-                XML</button>
-            <button class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon> Download XML</button>
-        </div>
-        <div class="form-group"><label>Editor</label>
-            <textarea class="code-editor" [(ngModel)]="generatedXml"></textarea>
-        </div>
-    </div>
-
-    <!-- Bottom Actions -->
-    <div class="bottom-actions">
-        <button class="action-btn copy-btn" (click)="copyToClipboard()"><mat-icon>content_copy</mat-icon> Copy
-            XML</button>
-        <button class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon> Download XML</button>
-        <button class="action-btn validate-btn" (click)="validateMessage()" [disabled]="isValidating">
-            <mat-icon>{{isValidating?'sync':'verified'}}</mat-icon> {{isValidating?'Validating...':'Validate
-            Message'}}</button>
-    </div>
-
-    <div *ngIf="isValidating" class="spinner-row">
-        <div class="spinner"></div> Validating pacs.009.001.08...
-    </div>
-
-    <ng-container *ngTemplateOutlet="resultPanel"></ng-container>
 </div>
 
 <!-- Address Template -->
 <ng-template #addressForm let-prefix="prefix" let-title="title">
-    <div class="form-group addr-type-row" [formGroup]="form">
-        <label>{{title}} Address Type</label>
-        <select [formControlName]="prefix+'AddrType'">
-            <option value="none">None (BIC Only)</option>
-            <option value="structured">Structured</option>
-            <option value="unstructured">Unstructured</option>
-            <option value="hybrid">Hybrid</option>
-        </select>
-    </div>
-    <ng-container *ngIf="form.get(prefix+'AddrType')?.value !== 'none'" [formGroup]="form">
-        <div class="subsection addr-subsection">
-            <span class="subsection-header">{{title}} Address Details</span>
+        <div class="form-group addr-type-row" [formGroup]="form">
+                <label>{{title}} Address Type</label>
+                <select [formControlName]="prefix+'AddrType'">
+                        <option value="none">None (BIC Only)</option>
+                        <option value="structured">Structured</option>
+                        <option value="unstructured">Unstructured</option>
+                        <option value="hybrid">Hybrid</option>
+                </select>
+        </div>
+        <ng-container *ngIf="form.get(prefix+'AddrType')?.value !== 'none'" [formGroup]="form">
+                <div class="subsection addr-subsection">
+                        <span class="subsection-header">{{title}} Address Details</span>
 
-            <!-- Unstructured / Hybrid: AdrLine (Forbidden in Structured) -->
-            <ng-container *ngIf="['unstructured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
-                <div class="form-group"><label>Address Line 1 <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'AdrLine1'"></div>
-                <div class="form-group"><label>Address Line 2 <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'AdrLine2'"></div>
-            </ng-container>
+                        <!-- Unstructured / Hybrid: AdrLine (Forbidden in Structured) -->
+                        <ng-container *ngIf="['unstructured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                <div class="form-group"><label>Address Line 1 <span
+                                                        class="opt">Optional</span></label><input
+                                                [formControlName]="prefix+'AdrLine1'"></div>
+                                <div class="form-group"><label>Address Line 2 <span
+                                                        class="opt">Optional</span></label><input
+                                                [formControlName]="prefix+'AdrLine2'"></div>
+                        </ng-container>
 
-            <!-- Structured / Hybrid: Full structured fields -->
-            <ng-container *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
-                <div class="form-group"><label>Country <span class="req">*</span></label><input
-                        [formControlName]="prefix+'Ctry'" maxlength="2" placeholder="US"></div>
-                <div class="form-group"><label>Town Name <span class="req">*</span></label><input
-                        [formControlName]="prefix+'TwnNm'" placeholder="e.g. New York"></div>
-                <div class="form-group"><label>Street Name <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'StrtNm'"></div>
-                <div class="form-group"><label>Building Number <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'BldgNb'"></div>
-                <div class="form-group"><label>Post Code <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'PstCd'"></div>
-                <div class="form-group"><label>Country Sub-Division <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'CtrySubDvsn'"></div>
-                <div class="form-group"><label>Building Name <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'BldgNm'"></div>
-                <div class="form-group"><label>Floor <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'Flr'"></div>
-                <div class="form-group"><label>Post Box <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'PstBx'"></div>
-                <div class="form-group"><label>Room <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'Room'"></div>
-                <div class="form-group"><label>Department <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'Dept'"></div>
-                <div class="form-group"><label>Sub-Department <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'SubDept'"></div>
-            </ng-container>
+                        <!-- Structured / Hybrid: Full structured fields -->
+                        <ng-container *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                <div class="form-group"><label>Country <span class="req">*</span></label><input
+                                                [formControlName]="prefix+'Ctry'" maxlength="2" placeholder="US"></div>
+                                <div class="form-group"><label>Town Name <span class="req">*</span></label><input
+                                                [formControlName]="prefix+'TwnNm'" placeholder="e.g. New York"></div>
+                                <div class="form-group"><label>Street Name <span
+                                                        class="opt">Optional</span></label><input
+                                                [formControlName]="prefix+'StrtNm'"></div>
+                                <div class="form-group"><label>Building Number <span
+                                                        class="opt">Optional</span></label><input
+                                                [formControlName]="prefix+'BldgNb'"></div>
+                                <div class="form-group"><label>Post Code <span class="opt">Optional</span></label><input
+                                                [formControlName]="prefix+'PstCd'"></div>
+                                <div class="form-group"><label>Country Sub-Division <span
+                                                        class="opt">Optional</span></label><input
+                                                [formControlName]="prefix+'CtrySubDvsn'"></div>
+                                <div class="form-group"><label>Building Name <span
+                                                        class="opt">Optional</span></label><input
+                                                [formControlName]="prefix+'BldgNm'"></div>
+                                <div class="form-group"><label>Floor <span class="opt">Optional</span></label><input
+                                                [formControlName]="prefix+'Flr'"></div>
+                                <div class="form-group"><label>Post Box <span class="opt">Optional</span></label><input
+                                                [formControlName]="prefix+'PstBx'"></div>
+                                <div class="form-group"><label>Room <span class="opt">Optional</span></label><input
+                                                [formControlName]="prefix+'Room'"></div>
+                                <div class="form-group"><label>Department <span
+                                                        class="opt">Optional</span></label><input
+                                                [formControlName]="prefix+'Dept'"></div>
+                                <div class="form-group"><label>Sub-Department <span
+                                                        class="opt">Optional</span></label><input
+                                                [formControlName]="prefix+'SubDept'"></div>
+                        </ng-container>
 
-            <!-- Forbidden notice -->
-            <div *ngIf="form.get(prefix+'AddrType')?.value === 'structured'" class="addr-notice">
-                <mat-icon>info</mat-icon> <span>AdrLine is <strong>forbidden</strong> in Structured mode.</span>
-            </div>
-        </div>
-    </ng-container>
-</ng-template>
-
-<!-- Validation Result Panel -->
-<ng-template #resultPanel>
-    <div *ngIf="validationReport && !isValidating" class="validation-result-panel">
-        <div class="report-header">
-            <div>
-                <h3 class="rh-name">pacs.009.001.08</h3><span class="rh-meta">{{validationReport.message||'N/A'}} ·
-                    {{validationReport.total_time_ms}}ms</span>
-            </div>
-            <div class="rh-status" [ngClass]="validationReport.status==='PASS'?'rh-pass':'rh-fail'">
-                <mat-icon>{{validationReport.status==='PASS'?'check_circle':'cancel'}}</mat-icon>
-                {{validationReport.status==='PASS'?'PASSED':'FAILED'}}
-            </div>
-        </div>
-        <div class="meta-strip">
-            <div class="ms-item"><span class="ms-label">Status</span><span class="ms-val"
-                    [style.color]="validationReport.status==='PASS'?'#16a34a':'#dc2626'">{{validationReport.status}}</span>
-            </div>
-            <div class="ms-item"><span class="ms-label">Errors</span><span class="ms-val"
-                    [class.ms-err]="validationReport.errors>0">{{validationReport.errors}}</span></div>
-            <div class="ms-item"><span class="ms-label">Warnings</span><span class="ms-val"
-                    [class.ms-warn]="validationReport.warnings>0">{{validationReport.warnings}}</span></div>
-            <div class="ms-item"><span class="ms-label">Duration</span><span
-                    class="ms-val">{{validationReport.total_time_ms}}ms</span></div>
-        </div>
-        <div class="layer-row">
-            <div class="layer-pill" *ngFor="let k of reportLayers(validationReport)">
-                <span class="pill-l"><mat-icon [class.ok]="!isLayerFail(validationReport,k)"
-                        [class.err]="isLayerFail(validationReport,k)">{{isLayerFail(validationReport,k)?'cancel':'check_circle'}}</mat-icon>
-                    L{{k}} {{layerName(k)}}</span>
-                <span [class.pass-t]="!isLayerFail(validationReport,k)"
-                    [class.fail-t]="isLayerFail(validationReport,k)">{{isLayerFail(validationReport,k)?'Failed':'Passed'}}</span>
-            </div>
-        </div>
-        <div class="all-passed"
-            *ngIf="validationReport.status==='PASS'&&validationReport.errors===0&&validationReport.warnings===0">
-            <mat-icon>verified</mat-icon>
-            <h3>All Layers Passed</h3>
-            <p>Fully compliant with ISO 20022.</p>
-        </div>
-        <div *ngIf="validationReport.details?.length">
-            <div class="layer-item" *ngFor="let l of groupedIssues(validationReport)">
-                <div class="layer-hd" (click)="toggleLayer(l.name)">
-                    <mat-icon [style.transform]="isLayerExpanded(l.name)?'rotate(90deg)':''"
-                        style="transition:transform .2s">chevron_right</mat-icon>
-                    L{{l.layer}} — {{l.name}}
-                    <span *ngIf="l.errors>0" class="badge badge-err">{{l.errors}} Error{{l.errors>1?'s':''}}</span>
-                    <span *ngIf="l.warnings>0" class="badge badge-warn">{{l.warnings}}
-                        Warning{{l.warnings>1?'s':''}}</span>
+                        <!-- Forbidden notice -->
+                        <div *ngIf="form.get(prefix+'AddrType')?.value === 'structured'" class="addr-notice">
+                                <mat-icon>info</mat-icon> <span>AdrLine is <strong>forbidden</strong> in Structured
+                                        mode.</span>
+                        </div>
                 </div>
-                <div class="layer-issues" *ngIf="isLayerExpanded(l.name)">
-                    <div class="issue" *ngFor="let i of l.issues">
-                        <span class="issue-path"><mat-icon [class.err]="i.severity==='ERROR'"
-                                [class.warn]="i.severity==='WARNING'"
-                                [class.ok]="i.severity!=='ERROR'&&i.severity!=='WARNING'">{{i.severity==='ERROR'?'cancel':(i.severity==='WARNING'?'warning':'check_circle')}}</mat-icon>{{i.path||'Root'}}</span>
-                        <span class="issue-msg">{{i.message}}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+        </ng-container>
 </ng-template>

@@ -8,7 +8,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { HttpClient } from '@angular/common/http';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { ConfigService } from '../../services/config.service';
@@ -63,6 +63,11 @@ export class ValidateComponent implements OnInit {
   filterStatus: 'All' | 'Passed' | 'Failed' = 'All';
   expandedFile: FileEntry | null = null;
 
+  // ── Pagination State ───────────────────────────────────────────────────────
+  currentPage = 1;
+  pageSize = 10;
+  pageSizeOptions = [10, 25, 50, 100];
+
   // ── XML Editor state ─────────────────────────────────────────────────────────────
   editingEntry: FileEntry | null = null;
   originalContent: string = '';
@@ -104,6 +109,27 @@ export class ValidateComponent implements OnInit {
       }
       return true;
     });
+  }
+
+  get paginatedFiles() {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    return this.filteredFiles.slice(startIndex, startIndex + Number(this.pageSize));
+  }
+
+  get totalPages() {
+    return Math.ceil(this.filteredFiles.length / this.pageSize);
+  }
+
+  changePage(newPage: number) {
+    if (newPage >= 1 && newPage <= this.totalPages) {
+      this.currentPage = newPage;
+      this.expandedFile = null;
+    }
+  }
+
+  onPageSizeChange() {
+    this.currentPage = 1;
+    this.expandedFile = null;
   }
 
   get overallPassRate() {
@@ -153,6 +179,7 @@ export class ValidateComponent implements OnInit {
 
   setFilter(status: 'All' | 'Passed' | 'Failed') {
     this.filterStatus = status;
+    this.currentPage = 1; // Reset to page 1 on filter change
   }
 
   downloadReport() {
@@ -220,6 +247,7 @@ export class ValidateComponent implements OnInit {
   constructor(
     private http: HttpClient,
     private route: ActivatedRoute,
+    private router: Router,
     private snackBar: MatSnackBar,
     private config: ConfigService,
     private cdr: ChangeDetectorRef
@@ -251,6 +279,43 @@ export class ValidateComponent implements OnInit {
         this.loadValidationFromHistory(reportId, autoRun);
       }
     });
+
+    // Handle XML pushed via state (from Manual Entry builders)
+    const state = history.state;
+    if (state && state.autoValidateXml) {
+      this.addXmlFromState(state.autoValidateXml, state.fileName, state.messageType);
+
+      // Clear state so refreshing the page doesn't re-add the file
+      window.history.replaceState({}, document.title);
+    }
+  }
+
+  private addXmlFromState(xml: string, fileName: string, messageType: string) {
+    const entry: FileEntry = {
+      id: 'f' + Date.now(),
+      name: fileName || `generated-${Date.now()}.xml`,
+      size: new Blob([xml]).size,
+      sizeLabel: this.formatSize(new Blob([xml]).size),
+      content: xml,
+      status: 'pending',
+      report: null,
+      messageType: messageType || 'Auto-detect',
+      handle: null
+    };
+
+    // Check if it already exists to avoid dupes purely from reload
+    const existing = this.files.find(f => f.content === xml);
+    if (!existing) {
+      this.files.unshift(entry);
+      this.saveWorkspace();
+      this.selectedFile = entry;
+      this.validateFile(entry);
+    } else {
+      this.selectedFile = existing;
+      if (existing.status === 'pending') {
+        this.validateFile(existing);
+      }
+    }
   }
 
   private _filter(value: string): string[] {
@@ -698,13 +763,13 @@ export class ValidateComponent implements OnInit {
       const store = tx.objectStore(this.STORE_NAME);
 
       // Clear existing first
-      await this.clearDBStore(store);
+      store.clear();
 
       // Add all current files
       for (const f of this.files) {
         // We strip large binary data if needed, but here we store content.
         // Handles CAN be stored in IDB.
-        store.put(f);
+        store.put({ ...f, status: f.status === 'validating' ? 'pending' : f.status });
       }
     } catch (e) {
       console.warn('Failed to persist workspace:', e);
@@ -721,7 +786,10 @@ export class ValidateComponent implements OnInit {
 
         request.onsuccess = () => {
           if (request.result && request.result.length > 0) {
-            this.files = request.result;
+            this.files = request.result.map((f: any) => ({
+              ...f,
+              status: f.status === 'validating' ? 'pending' : f.status
+            }));
             this.cdr.detectChanges();
           }
           resolve();
@@ -776,14 +844,6 @@ export class ValidateComponent implements OnInit {
       error: (err) => {
         this.snackBar.open('Failed to load validation from history.', 'Close', { duration: 3000 });
       }
-    });
-  }
-
-  private clearDBStore(store: IDBObjectStore): Promise<void> {
-    return new Promise((resolve) => {
-      const req = store.clear();
-      req.onsuccess = () => resolve();
-      req.onerror = () => resolve(); // Ignore errors
     });
   }
 

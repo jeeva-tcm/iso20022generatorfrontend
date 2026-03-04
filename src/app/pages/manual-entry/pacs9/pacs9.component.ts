@@ -3,12 +3,14 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
 
 @Component({
     selector: 'app-pacs9',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule],
+    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule],
     templateUrl: './pacs9.component.html',
     styleUrl: './pacs9.component.css'
 })
@@ -16,10 +18,8 @@ export class Pacs9Component implements OnInit {
     form!: FormGroup;
     generatedXml = '';
     currentTab: 'form' | 'preview' = 'form';
-    isValidating = false;
-    validationReport: any = null;
-    expandedLayers: Record<string, boolean> = {};
-    covEnabled = false;
+    editorLineCount: number[] = [];
+    isParsingXml = false;
 
     currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'SGD', 'HKD', 'INR', 'CNY', 'AED', 'SAR'];
     sttlmMethods = ['INDA', 'INGA', 'CLRG', 'COVE'];
@@ -28,14 +28,35 @@ export class Pacs9Component implements OnInit {
         'prvsInstgAgt1', 'prvsInstgAgt2', 'prvsInstgAgt3',
         'intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'];
 
-    constructor(private fb: FormBuilder, private http: HttpClient, private config: ConfigService) { }
+    constructor(
+        private fb: FormBuilder,
+        private http: HttpClient,
+        private config: ConfigService,
+        private snackBar: MatSnackBar,
+        private router: Router
+    ) { }
 
     ngOnInit() {
-        this.buildForm(); this.generateXml();
-        this.form.get('sttlmMtd')?.valueChanges.subscribe(v => { this.covEnabled = v === 'COVE'; });
+        this.buildForm();
+        this.generateXml();
+        this.onEditorChange(this.generatedXml, true);
         // Auto-sync AppHdr Fr/To BICs with GrpHdr InstgAgt/InstdAgt
-        this.form.get('instgAgtBic')?.valueChanges.subscribe(v => this.form.patchValue({ fromBic: v }, { emitEvent: false }));
-        this.form.get('instdAgtBic')?.valueChanges.subscribe(v => this.form.patchValue({ toBic: v }, { emitEvent: false }));
+        this.form.get('fromBic')?.valueChanges.subscribe(v => {
+            this.form.patchValue({ instgAgtBic: v }, { emitEvent: false });
+        });
+        this.form.get('toBic')?.valueChanges.subscribe(v => {
+            this.form.patchValue({ instdAgtBic: v }, { emitEvent: false });
+        });
+        this.form.get('instgAgtBic')?.valueChanges.subscribe(v => {
+            this.form.patchValue({ fromBic: v }, { emitEvent: false });
+        });
+        this.form.get('instdAgtBic')?.valueChanges.subscribe(v => {
+            this.form.patchValue({ toBic: v }, { emitEvent: false });
+        });
+        // Track form changes for live XML update
+        this.form.valueChanges.subscribe(() => {
+            this.generateXml();
+        });
     }
 
     private buildForm() {
@@ -44,12 +65,12 @@ export class Pacs9Component implements OnInit {
         const c: any = {
             fromBic: ['BBBBUS33XXX', BIC], toBic: ['CCCCGB2LXXX', BIC], bizMsgId: ['MSG-2026-FI-001', Validators.required],
             msgId: ['MSG-2026-FI-001', Validators.required], creDtTm: [this.isoNow(), Validators.required],
-            nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d*$/)]], sttlmMtd: ['INDA', Validators.required],
+            nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['INDA', Validators.required],
             instgAgtBic: ['BBBBUS33XXX', BIC], instdAgtBic: ['CCCCGB2LXXX', BIC],
             instrId: ['INSTR-FI-001', Validators.required], endToEndId: ['E2E-FI-001', Validators.required],
             txId: ['TX-FI-001', Validators.required],
             uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)]],
-            amount: ['50000.00', [Validators.required, Validators.pattern(/^\d+(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
+            amount: ['50000.00', [Validators.required, Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
             sttlmDt: [new Date().toISOString().split('T')[0], Validators.required],
             // Debtor FI (required)
             dbtrFiBic: ['BBBBUS33XXX', BIC], dbtrFiAcct: [''],
@@ -62,20 +83,33 @@ export class Pacs9Component implements OnInit {
             // Optional agents
             prvsInstgAgt1Bic: ['', BIC_OPT], prvsInstgAgt2Bic: ['', BIC_OPT], prvsInstgAgt3Bic: ['', BIC_OPT],
             intrmyAgt1Bic: ['', BIC_OPT], intrmyAgt2Bic: ['', BIC_OPT], intrmyAgt3Bic: ['', BIC_OPT],
-            // COV fields
-            covEndToEndId: [''], covCurrency: ['USD'], covAmount: [''],
-            covDbtrName: [''], covDbtrIban: [''], covDbtrAgtBic: [''],
-            covCdtrName: [''], covCdtrIban: [''], covCdtrAgtBic: [''],
+
         };
         // Address prefixes for agents
         this.agentPrefixes.forEach(p => {
-            c[p + 'AddrType'] = 'none'; c[p + 'AdrLine1'] = ''; c[p + 'AdrLine2'] = '';
-            c[p + 'Dept'] = ''; c[p + 'SubDept'] = '';
-            c[p + 'StrtNm'] = ''; c[p + 'BldgNb'] = ''; c[p + 'BldgNm'] = '';
-            c[p + 'Flr'] = ''; c[p + 'PstBx'] = ''; c[p + 'Room'] = '';
-            c[p + 'PstCd'] = ''; c[p + 'TwnNm'] = ''; c[p + 'CtrySubDvsn'] = ''; c[p + 'Ctry'] = '';
+            c[p + 'AddrType'] = 'none'; c[p + 'AdrLine1'] = ['', Validators.maxLength(70)]; c[p + 'AdrLine2'] = ['', Validators.maxLength(70)];
+            c[p + 'Dept'] = ['', Validators.maxLength(70)]; c[p + 'SubDept'] = ['', Validators.maxLength(70)];
+            c[p + 'StrtNm'] = ['', Validators.maxLength(140)]; c[p + 'BldgNb'] = ['', Validators.maxLength(16)]; c[p + 'BldgNm'] = ['', Validators.maxLength(140)];
+            c[p + 'Flr'] = ['', Validators.maxLength(70)]; c[p + 'PstBx'] = ['', Validators.maxLength(16)]; c[p + 'Room'] = ['', Validators.maxLength(70)];
+            c[p + 'PstCd'] = ['', Validators.maxLength(16)]; c[p + 'TwnNm'] = ['', Validators.maxLength(140)]; c[p + 'CtrySubDvsn'] = ['', Validators.maxLength(35)]; c[p + 'Ctry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
         });
         this.form = this.fb.group(c);
+    }
+
+    err(f: string): string | null {
+        const c = this.form.get(f);
+        if (!c || !c.touched || !c.invalid) return null;
+        if (c.errors?.['required']) return 'Required field.';
+        if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
+        if (c.errors?.['pattern']) {
+            if (f.toLowerCase().includes('bic')) return 'Valid 8 or 11-char BIC required.';
+            if (f.toLowerCase().includes('iban')) return 'Valid 34-char IBAN required.';
+            if (f.toLowerCase().includes('uetr')) return 'Valid UUID required.';
+            if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Max 18 digits, up to 5 decimals.';
+            if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
+            if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
+        }
+        return 'Invalid value.';
     }
 
     isoNow(): string {
@@ -84,9 +118,10 @@ export class Pacs9Component implements OnInit {
         return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}${s}${p(Math.floor(Math.abs(off) / 60))}:${p(Math.abs(off) % 60)}`;
     }
 
-    toggleCov() { this.covEnabled = !this.covEnabled; if (this.covEnabled) this.form.patchValue({ sttlmMtd: 'COVE' }); }
+
 
     generateXml() {
+        if (this.isParsingXml) return;
         const v = this.form.value;
         let creDtTm = v.creDtTm || this.isoNow();
         if (creDtTm.endsWith('Z')) creDtTm = creDtTm.replace('Z', '+00:00');
@@ -117,12 +152,10 @@ export class Pacs9Component implements OnInit {
         // Cdtr (FI)
         tx += `\t\t\t<Cdtr>\n\t\t\t\t<FinInstnId>\n\t\t\t\t\t<BICFI>${this.e(v.cdtrFiBic)}</BICFI>\n\t\t\t\t</FinInstnId>\n\t\t\t</Cdtr>\n`;
         if (v.cdtrFiAcct?.trim()) tx += `\t\t\t<CdtrAcct>\n\t\t\t\t<Id>\n\t\t\t\t\t<Othr>\n\t\t\t\t\t\t<Id>${this.e(v.cdtrFiAcct)}</Id>\n\t\t\t\t\t</Othr>\n\t\t\t\t</Id>\n\t\t\t</CdtrAcct>\n`;
-        // COV block
-        if (this.covEnabled) tx += this.buildCov(v);
 
-        // Use instgAgtBic/instdAgtBic for AppHdr Fr/To to guarantee match
-        const frBic = v.instgAgtBic || v.fromBic;
-        const toBic = v.instdAgtBic || v.toBic;
+
+        const frBic = v.fromBic;
+        const toBic = v.toBic;
 
         this.generatedXml =
             `<?xml version="1.0" encoding="UTF-8"?>
@@ -150,6 +183,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
 \t\t</FICdtTrf>
 \t</Document>
 </BusMsgEnvlp>`;
+        this.onEditorChange(this.generatedXml, true);
     }
 
     // XML helpers
@@ -193,67 +227,130 @@ ${tx}\t\t\t</CdtTrfTxInf>
         return `${this.tabs(indent)}<PstlAdr>\n${lines.join('\n')}\n${this.tabs(indent)}</PstlAdr>\n`;
     }
 
-    // COV: UndrlygCstmrCdtTrf (CreditTransferTransaction68)
-    // XSD order: PmtId?, PmtTpInf?, UltmtDbtr?, InitgPty?, Dbtr, DbtrAcct?, DbtrAgt, ..., CdtrAgt, ..., Cdtr, CdtrAcct?, ...
-    private buildCov(v: any): string {
-        let b = `\t\t\t<UndrlygCstmrCdtTrf>\n`;
-        // Dbtr (PartyIdentification272 — required in COV)
-        if (v.covDbtrName) {
-            b += `\t\t\t\t<Dbtr>\n\t\t\t\t\t<Nm>${this.e(v.covDbtrName)}</Nm>\n\t\t\t\t</Dbtr>\n`;
-            if (v.covDbtrIban) b += `\t\t\t\t<DbtrAcct>\n\t\t\t\t\t<Id>\n\t\t\t\t\t\t<IBAN>${this.e(v.covDbtrIban)}</IBAN>\n\t\t\t\t\t</Id>\n\t\t\t\t</DbtrAcct>\n`;
-        }
-        // DbtrAgt (required in COV)
-        if (v.covDbtrAgtBic) b += `\t\t\t\t<DbtrAgt>\n\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t<BICFI>${this.e(v.covDbtrAgtBic)}</BICFI>\n\t\t\t\t\t</FinInstnId>\n\t\t\t\t</DbtrAgt>\n`;
-        // CdtrAgt (required in COV)
-        if (v.covCdtrAgtBic) b += `\t\t\t\t<CdtrAgt>\n\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t<BICFI>${this.e(v.covCdtrAgtBic)}</BICFI>\n\t\t\t\t\t</FinInstnId>\n\t\t\t\t</CdtrAgt>\n`;
-        // Cdtr (PartyIdentification272 — required in COV)
-        if (v.covCdtrName) {
-            b += `\t\t\t\t<Cdtr>\n\t\t\t\t\t<Nm>${this.e(v.covCdtrName)}</Nm>\n\t\t\t\t</Cdtr>\n`;
-            if (v.covCdtrIban) b += `\t\t\t\t<CdtrAcct>\n\t\t\t\t\t<Id>\n\t\t\t\t\t\t<IBAN>${this.e(v.covCdtrIban)}</IBAN>\n\t\t\t\t\t</Id>\n\t\t\t\t</CdtrAcct>\n`;
-        }
-        // InstdAmt
-        if (v.covAmount && v.covCurrency)
-            b += `\t\t\t\t<InstdAmt Ccy="${this.e(v.covCurrency)}">${v.covAmount}</InstdAmt>\n`;
-        b += `\t\t\t</UndrlygCstmrCdtTrf>\n`;
-        return b;
-    }
+
 
     // Validation
     validateMessage() {
-        this.generateXml(); if (!this.generatedXml?.trim()) return;
-        this.isValidating = true; this.validationReport = null; this.expandedLayers = {};
-        this.http.post(this.config.getApiUrl('/validate'), {
-            xml_content: this.generatedXml, mode: 'Full 1-3', message_type: 'pacs.009.001.08', store_in_history: true
-        }).subscribe({
-            next: (d: any) => {
-                this.validationReport = d; this.isValidating = false;
-                if (d?.details) [...new Set(d.details.map((x: any) => x.layer))].forEach(l => this.expandedLayers[this.layerName(String(l))] = true);
-            },
-            error: () => {
-                this.isValidating = false;
-                this.validationReport = {
-                    status: 'FAIL', errors: 1, warnings: 0, message: 'pacs.009.001.08', total_time_ms: 0,
-                    layer_status: { '1': { status: '❌', time: 0 } },
-                    details: [{ severity: 'ERROR', layer: 1, code: 'BACKEND_ERROR', path: '', message: 'Could not reach backend.', fix_suggestion: 'Check server.' }]
-                };
+        this.generateXml();
+        if (!this.generatedXml?.trim()) return;
+
+        // Redirect to validate page with the XML payload
+        this.router.navigate(['/validate'], {
+            state: {
+                autoValidateXml: this.generatedXml,
+                fileName: `pacs009-${Date.now()}.xml`,
+                messageType: 'pacs.009.001.08'
             }
         });
     }
 
-    reportLayers(r: any): string[] { return r?.layer_status ? Object.keys(r.layer_status).sort() : []; }
-    layerName(k: string) { return ({ '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' } as any)[k] ?? `Layer ${k}`; }
-    isLayerFail(r: any, k: string) { return (r?.layer_status?.[k]?.status ?? '').includes('❌'); }
-    groupedIssues(r: any) {
-        if (!r?.details) return [];
-        return [...new Set(r.details.map((x: any) => x.layer))].sort().map(l => {
-            const issues = r.details.filter((x: any) => x.layer === l);
-            return { layer: l, name: this.layerName(String(l)), issues, errors: issues.filter((x: any) => x.severity === 'ERROR').length, warnings: issues.filter((x: any) => x.severity === 'WARNING').length };
-        });
-    }
-    toggleLayer(n: string) { this.expandedLayers[n] = !this.expandedLayers[n]; }
-    isLayerExpanded(n: string) { return !!this.expandedLayers[n]; }
+
 
     downloadXml() { this.generateXml(); const b = new Blob([this.generatedXml], { type: 'application/xml' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `pacs009-${Date.now()}.xml`; a.click(); URL.revokeObjectURL(a.href); }
-    copyToClipboard() { this.generateXml(); navigator.clipboard.writeText(this.generatedXml).then(() => alert('Copied!')); }
+    copyToClipboard() {
+        this.generateXml();
+        navigator.clipboard.writeText(this.generatedXml).then(() => {
+            this.snackBar.open('Copied!', 'Close', { duration: 3000, horizontalPosition: 'center', verticalPosition: 'bottom' });
+        });
+    }
     switchToPreview() { this.generateXml(); this.currentTab = 'preview'; }
+
+    onEditorChange(content: string, fromForm = false) {
+        this.generatedXml = content;
+        const lines = content.split('\n').length;
+        this.editorLineCount = Array.from({ length: lines }, (_, i) => i + 1);
+
+        if (fromForm || this.isParsingXml) return;
+        this.parseXmlToForm(content);
+    }
+
+    parseXmlToForm(content: string) {
+        try {
+            const doc = new DOMParser().parseFromString(content, 'text/xml');
+            if (doc.querySelector('parsererror')) return;
+
+            const patch: any = {};
+            const tval = (t: string) => doc.getElementsByTagName(t)[0]?.textContent || '';
+            const setVal = (key: string, val: string) => { patch[key] = val; };
+
+            setVal('bizMsgId', tval('BizMsgIdr'));
+            setVal('msgId', tval('MsgId'));
+            setVal('instrId', tval('InstrId'));
+            setVal('endToEndId', tval('EndToEndId'));
+            setVal('txId', tval('TxId'));
+            setVal('uetr', tval('UETR'));
+            setVal('nbOfTxs', tval('NbOfTxs'));
+            setVal('sttlmMtd', tval('SttlmMtd'));
+            setVal('sttlmDt', tval('IntrBkSttlmDt'));
+
+            const amtEl = doc.getElementsByTagName('IntrBkSttlmAmt')[0] || doc.getElementsByTagName('EqvtAmt')[0];
+            setVal('amount', amtEl ? (amtEl.textContent || '') : '');
+            setVal('currency', amtEl ? (amtEl.getAttribute('Ccy') || '') : '');
+
+            const creDtTm = doc.getElementsByTagName('CreDtTm')[0] || doc.getElementsByTagName('CreDt')[0];
+            setVal('creDtTm', creDtTm ? (creDtTm.textContent || '') : '');
+
+            const tryTag = (parentOrEl: string | Element, child: string) => {
+                const p = typeof parentOrEl === 'string' ? doc.getElementsByTagName(parentOrEl)[0] : parentOrEl;
+                return p ? (p.getElementsByTagName(child)[0]?.textContent || '') : '';
+            };
+
+            setVal('dbtrFiBic', tryTag('Dbtr', 'BICFI'));
+            setVal('dbtrFiAcct', tryTag('DbtrAcct', 'Id'));
+            setVal('cdtrFiBic', tryTag('Cdtr', 'BICFI'));
+            setVal('cdtrFiAcct', tryTag('CdtrAcct', 'Id'));
+
+            setVal('dbtrAgtBic', tryTag('DbtrAgt', 'BICFI'));
+            setVal('cdtrAgtBic', tryTag('CdtrAgt', 'BICFI'));
+
+            setVal('fromBic', tryTag('Fr', 'BICFI'));
+            setVal('toBic', tryTag('To', 'BICFI'));
+
+            const instgBic = tryTag('InstgAgt', 'BICFI');
+            setVal('instgAgtBic', instgBic || patch.fromBic);
+            const instdBic = tryTag('InstdAgt', 'BICFI');
+            setVal('instdAgtBic', instdBic || patch.toBic);
+
+            const mapAgt = (tag: string, prefix: string) => setVal(prefix + 'Bic', tryTag(tag, 'BICFI'));
+            mapAgt('PrvsInstgAgt1', 'prvsInstgAgt1');
+            mapAgt('PrvsInstgAgt2', 'prvsInstgAgt2');
+            mapAgt('PrvsInstgAgt3', 'prvsInstgAgt3');
+            mapAgt('IntrmyAgt1', 'intrmyAgt1');
+            mapAgt('IntrmyAgt2', 'intrmyAgt2');
+            mapAgt('IntrmyAgt3', 'intrmyAgt3');
+
+            const mapAddr = (tag: string, prefix: string) => {
+                ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'CtrySubDvsn', 'Ctry', 'AdrLine1', 'AdrLine2'].forEach(f => patch[prefix + f] = '');
+                patch[prefix + 'AddrType'] = 'none';
+
+                const p = doc.getElementsByTagName(tag)[0];
+                if (!p) return;
+                const addr = p.getElementsByTagName('PstlAdr')[0];
+                if (!addr) return;
+
+                const aV = (t: string) => addr.getElementsByTagName(t)[0]?.textContent || '';
+                if (aV('Ctry') || aV('TwnNm') || aV('StrtNm') || aV('BldgNb')) {
+                    patch[prefix + 'AddrType'] = 'structured';
+                    ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'CtrySubDvsn', 'Ctry'].forEach(f => patch[prefix + f] = aV(f));
+                } else if (addr.getElementsByTagName('AdrLine').length > 0) {
+                    patch[prefix + 'AddrType'] = 'unstructured';
+                    const lines = addr.getElementsByTagName('AdrLine');
+                    patch[prefix + 'AdrLine1'] = lines[0]?.textContent || '';
+                    patch[prefix + 'AdrLine2'] = lines[1]?.textContent || '';
+                }
+            };
+
+            this.agentPrefixes.forEach(p => mapAddr(p.charAt(0).toUpperCase() + p.slice(1), p));
+
+            this.isParsingXml = true;
+            this.form.patchValue(patch, { emitEvent: false });
+            this.isParsingXml = false;
+        } catch (e) {
+            this.isParsingXml = false;
+        }
+    }
+
+    syncScroll(editor: HTMLTextAreaElement, gutter: HTMLDivElement) {
+        gutter.scrollTop = editor.scrollTop;
+    }
 }

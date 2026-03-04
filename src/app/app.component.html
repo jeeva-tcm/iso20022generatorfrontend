@@ -12,32 +12,28 @@
         <a mat-button routerLink="/validate" routerLinkActive="active-link">VALIDATE</a>
 
         <!-- Manual Entry Dropdown -->
-        <div class="dropdown-wrapper">
-
+        <div class="dropdown-wrapper" (mouseleave)="isMenuForcedClosed = false">
             <a mat-button class="dropdown-trigger" routerLinkActive="active-link"
                 [routerLinkActiveOptions]="{exact: false}" [class.active-link]="isManualEntryActive">
-                <mat-icon class="dropdown-arrow">expand_more</mat-icon> MANUAL ENTRY
-
+                MANUAL ENTRY <mat-icon class="dropdown-arrow">expand_more</mat-icon>
             </a>
-            <div class="dropdown-menu">
-                <a routerLink="/generate" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}">
+            <div class="dropdown-menu" [class.hide-menu]="isMenuForcedClosed">
+                <!-- <a routerLink="/generate" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}"
+                    (click)="isMenuForcedClosed = true">
                     <span class="msg-tag dynamic">FULL</span> MX EXPLORER (700+ TYPES)
-                </a>
-                <a routerLink="/generate/pacs8" routerLinkActive="active-link">
+                </a> -->
+                <a routerLink="/generate/pacs8" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
                     <span class="msg-tag pacs">PACS</span> pacs.008.001.08
                 </a>
-                <a routerLink="/generate/pacs9" routerLinkActive="active-link">
+                <a routerLink="/generate/pacs9" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
                     <span class="msg-tag pacs">PACS</span> pacs.009.001.08
                 </a>
-                <a routerLink="/generate/pacs9cov" routerLinkActive="active-link">
+                <a routerLink="/generate/pacs9cov" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
                     <span class="msg-tag pacs">PACS</span> pacs.009.001.08 COV
                 </a>
-                <!-- <a routerLink="/generate/pain1" routerLinkActive="active-link">
-                    <span class="msg-tag pain">PAIN</span> pain.001.001.09
-                </a> -->
-                <!-- <a routerLink="/generate/camt53" routerLinkActive="active-link">
-                    <span class="msg-tag camt">CAMT</span> camt.053.001.08
-                </a> -->
+                <a routerLink="/generate/camt57" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                    <span class="msg-tag camt">CAMT</span> camt.057.001.06
+                </a>
             </div>
         </div>
 

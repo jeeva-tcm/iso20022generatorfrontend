@@ -36,6 +36,14 @@
     --accent-light: rgba(129, 140, 248, 0.15);
     --accent-text: #c7d2fe;
 
+    /* Editor variables */
+    --editor-bg: #0f172a;
+    --editor-gutter: #020617;
+    --editor-gutter-text: #475569;
+    --editor-text: #a5b4fc;
+    --editor-thumb: #334155;
+    --editor-thumb-hover: #475569;
+
     transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease;
 }
 
@@ -60,6 +68,14 @@ body.light-theme {
     --accent-color: #4f46e5;
     --accent-light: rgba(79, 70, 229, 0.08);
     --accent-text: #4f46e5;
+
+    /* Editor variables */
+    --editor-bg: #ffffff;
+    --editor-gutter: #f1f5f9;
+    --editor-gutter-text: #94a3b8;
+    --editor-text: #0f172a;
+    --editor-thumb: #cbd5e1;
+    --editor-thumb-hover: #94a3b8;
 }
 
 * {
@@ -164,4 +180,24 @@ body {
     /* Firefox */
     -ms-overflow-style: none;
     /* IE and Edge */
+}
+
+/* Global Validation Messages */
+.validation-msg {
+    color: #ef4444;
+    font-size: 11px;
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+body.light-theme .validation-msg {
+    color: #dc2626;
+}
+
+.ng-invalid.ng-touched {
+    border-color: #ef4444 !important;
+}
+
+body.light-theme .ng-invalid.ng-touched {
+    border-color: #dc2626 !important;
 }

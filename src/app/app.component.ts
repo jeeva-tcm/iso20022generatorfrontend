@@ -31,6 +31,7 @@ export class AppComponent implements OnInit {
     title = 'ISO 20022 Validator';
     isValidatePage = false;
     isManualEntryActive = false;
+    isMenuForcedClosed = false;
 
     constructor(
         private router: Router,
