@@ -11,48 +11,48 @@
 
                     <div class="section-title">Message Header</div>
                     <div class="form-group"><label>Sender BIC (Fr) <span class="req">*</span></label><input
-                            formControlName="fromBic"><div class="validation-msg" *ngIf="err('fromBic') as e">{{e}}</div></div>
+                            formControlName="fromBic" maxlength="11" pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$" required><div class="validation-msg" *ngIf="err('fromBic') as e">{{e}}</div></div>
                     <div class="form-group"><label>Receiver BIC (To) <span class="req">*</span></label><input
-                            formControlName="toBic"><div class="validation-msg" *ngIf="err('toBic') as e">{{e}}</div></div>
+                            formControlName="toBic" maxlength="11" pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$" required><div class="validation-msg" *ngIf="err('toBic') as e">{{e}}</div></div>
                     <div class="form-group"><label>Business Msg ID <span class="req">*</span></label><input
-                            formControlName="bizMsgId"><div class="validation-msg" *ngIf="err('bizMsgId') as e">{{e}}</div></div>
+                            formControlName="bizMsgId" maxlength="35" required><div class="validation-msg" *ngIf="err('bizMsgId') as e">{{e}}</div></div>
                     <div class="form-group"><label>Message ID <span class="req">*</span></label><input
-                            formControlName="msgId"><div class="validation-msg" *ngIf="err('msgId') as e">{{e}}</div>
+                            formControlName="msgId" maxlength="35" required><div class="validation-msg" *ngIf="err('msgId') as e">{{e}}</div>
                     </div>
                     <div class="form-group"><label>Creation DateTime <span class="req">*</span></label><input
-                            formControlName="creDtTm"><div class="validation-msg" *ngIf="err('creDtTm') as e">{{e}}</div></div>
+                            formControlName="creDtTm" required><div class="validation-msg" *ngIf="err('creDtTm') as e">{{e}}</div></div>
                     <div class="form-group"><label>Number of Txns <span class="req">*</span></label><input
-                            formControlName="nbOfTxs"><div class="validation-msg" *ngIf="err('nbOfTxs') as e">{{e}}</div></div>
+                            formControlName="nbOfTxs" maxlength="15" pattern="^[1-9]\d{0,14}$" required><div class="validation-msg" *ngIf="err('nbOfTxs') as e">{{e}}</div></div>
                     <div class="form-group"><label>Settlement Method <span class="req">*</span></label>
-                        <select formControlName="sttlmMtd">
+                        <select formControlName="sttlmMtd" required>
                             <option *ngFor="let m of sttlmMethods" [value]="m">{{m}}</option>
                         </select><div class="validation-msg" *ngIf="err('sttlmMtd') as e">{{e}}</div>
                     </div>
 
                     <div class="section-title">Transaction Details</div>
                     <div class="form-group"><label>Instruction ID <span class="req">*</span></label><input
-                            formControlName="instrId"><div class="validation-msg" *ngIf="err('instrId') as e">{{e}}</div></div>
+                            formControlName="instrId" maxlength="35" required><div class="validation-msg" *ngIf="err('instrId') as e">{{e}}</div></div>
                     <div class="form-group"><label>End To End ID <span class="req">*</span></label><input
-                            formControlName="endToEndId"><div class="validation-msg" *ngIf="err('endToEndId') as e">{{e}}</div></div>
+                            formControlName="endToEndId" maxlength="35" required><div class="validation-msg" *ngIf="err('endToEndId') as e">{{e}}</div></div>
                     <div class="form-group"><label>Transaction ID <span class="req">*</span></label><input
-                            formControlName="txId"><div class="validation-msg" *ngIf="err('txId') as e">{{e}}</div></div>
-                    <div class="form-group"><label>UETR <span class="req">*</span></label><input formControlName="uetr"><div class="validation-msg" *ngIf="err('uetr') as e">{{e}}</div>
+                            formControlName="txId" maxlength="35" required><div class="validation-msg" *ngIf="err('txId') as e">{{e}}</div></div>
+                    <div class="form-group"><label>UETR <span class="req">*</span></label><input formControlName="uetr" maxlength="36" pattern="^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$" required><div class="validation-msg" *ngIf="err('uetr') as e">{{e}}</div>
                     </div>
 
                     <div class="section-title">Payment Amounts</div>
                     <div class="form-group"><label>Amount <span class="req">*</span></label><input
-                            formControlName="amount" type="number" step="0.01"><div class="validation-msg" *ngIf="err('amount') as e">{{e}}</div></div>
+                            formControlName="amount" pattern="^\d{1,18}(\.\d{1,5})?$" step="any" required type="number"><div class="validation-msg" *ngIf="err('amount') as e">{{e}}</div></div>
                     <div class="form-group"><label>Currency <span class="req">*</span></label>
-                        <select formControlName="currency">
+                        <select formControlName="currency" required>
                             <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
                         </select><div class="validation-msg" *ngIf="err('currency') as e">{{e}}</div>
                     </div>
                     <div class="form-group"><label>Settlement Date <span class="req">*</span></label><input
-                            formControlName="sttlmDt" type="date"><div class="validation-msg" *ngIf="err('sttlmDt') as e">{{e}}</div></div>
+                            formControlName="sttlmDt" required type="date"><div class="validation-msg" *ngIf="err('sttlmDt') as e">{{e}}</div></div>
                     <div class="form-group"><label>Service Level <span class="opt">Optional</span></label><input
-                            formControlName="svcLvlCd" placeholder="e.g. SEPA"><div class="validation-msg" *ngIf="err('svcLvlCd') as e">{{e}}</div></div>
+                            formControlName="svcLvlCd"  placeholder="e.g. SEPA"><div class="validation-msg" *ngIf="err('svcLvlCd') as e">{{e}}</div></div>
                     <div class="form-group"><label>Charge Bearer <span class="req">*</span></label>
-                        <select formControlName="chrgBr">
+                        <select formControlName="chrgBr" required>
                             <option *ngFor="let cb of chargeBearers" [value]="cb">{{cb}}</option>
                         </select><div class="validation-msg" *ngIf="err('chrgBr') as e">{{e}}</div>
                     </div>
@@ -60,44 +60,44 @@
                     <!-- Main Agents -->
                     <div class="section-title">Main Agents</div>
                     <div class="form-group"><label>Instructing Agent BIC <span class="req">*</span></label><input
-                            formControlName="instgAgtBic"><div class="validation-msg" *ngIf="err('instgAgtBic') as e">{{e}}</div></div>
+                            formControlName="instgAgtBic" maxlength="11" pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$" required><div class="validation-msg" *ngIf="err('instgAgtBic') as e">{{e}}</div></div>
                     <ng-container
                         *ngTemplateOutlet="addressForm; context:{prefix:'instgAgt',title:'Instructing Agent'}"></ng-container>
                     <div class="form-group"><label>Instructed Agent BIC <span class="req">*</span></label><input
-                            formControlName="instdAgtBic"><div class="validation-msg" *ngIf="err('instdAgtBic') as e">{{e}}</div></div>
+                            formControlName="instdAgtBic" maxlength="11" pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$" required><div class="validation-msg" *ngIf="err('instdAgtBic') as e">{{e}}</div></div>
                     <ng-container
                         *ngTemplateOutlet="addressForm; context:{prefix:'instdAgt',title:'Instructed Agent'}"></ng-container>
 
                     <!-- Debtor -->
                     <div class="section-title">Debtor (Payer)</div>
                     <div class="form-group"><label>Name <span class="req">*</span></label><input
-                            formControlName="dbtrName"><div class="validation-msg" *ngIf="err('dbtrName') as e">{{e}}</div>
+                            formControlName="dbtrName" maxlength="140" required><div class="validation-msg" *ngIf="err('dbtrName') as e">{{e}}</div>
                     </div>
                     <div class="form-group"><label>IBAN <span class="req">*</span></label><input
-                            formControlName="dbtrIban"><div class="validation-msg" *ngIf="err('dbtrIban') as e">{{e}}</div>
+                            formControlName="dbtrIban" maxlength="34" pattern="^[A-Z]{2}[0-9]{2}[a-zA-Z0-9]{1,30}$" required><div class="validation-msg" *ngIf="err('dbtrIban') as e">{{e}}</div>
                     </div>
                     <ng-container
                         *ngTemplateOutlet="addressForm; context:{prefix:'dbtr',title:'Debtor'}"></ng-container>
 
                     <div class="section-title">Debtor Agent</div>
                     <div class="form-group"><label>Agent BIC <span class="req">*</span></label><input
-                            formControlName="dbtrAgtBic"><div class="validation-msg" *ngIf="err('dbtrAgtBic') as e">{{e}}</div></div>
+                            formControlName="dbtrAgtBic" maxlength="11" pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$" required><div class="validation-msg" *ngIf="err('dbtrAgtBic') as e">{{e}}</div></div>
                     <ng-container
                         *ngTemplateOutlet="addressForm; context:{prefix:'dbtrAgt',title:'Debtor Agent'}"></ng-container>
 
                     <!-- Creditor -->
                     <div class="section-title">Creditor Agent</div>
                     <div class="form-group"><label>Agent BIC <span class="req">*</span></label><input
-                            formControlName="cdtrAgtBic"><div class="validation-msg" *ngIf="err('cdtrAgtBic') as e">{{e}}</div></div>
+                            formControlName="cdtrAgtBic" maxlength="11" pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$" required><div class="validation-msg" *ngIf="err('cdtrAgtBic') as e">{{e}}</div></div>
                     <ng-container
                         *ngTemplateOutlet="addressForm; context:{prefix:'cdtrAgt',title:'Creditor Agent'}"></ng-container>
 
                     <div class="section-title">Creditor (Payee)</div>
                     <div class="form-group"><label>Name <span class="req">*</span></label><input
-                            formControlName="cdtrName"><div class="validation-msg" *ngIf="err('cdtrName') as e">{{e}}</div>
+                            formControlName="cdtrName" maxlength="140" required><div class="validation-msg" *ngIf="err('cdtrName') as e">{{e}}</div>
                     </div>
                     <div class="form-group"><label>IBAN <span class="req">*</span></label><input
-                            formControlName="cdtrIban"><div class="validation-msg" *ngIf="err('cdtrIban') as e">{{e}}</div>
+                            formControlName="cdtrIban" maxlength="34" pattern="^[A-Z]{2}[0-9]{2}[a-zA-Z0-9]{1,30}$" required><div class="validation-msg" *ngIf="err('cdtrIban') as e">{{e}}</div>
                     </div>
                     <ng-container
                         *ngTemplateOutlet="addressForm; context:{prefix:'cdtr',title:'Creditor'}"></ng-container>
@@ -105,34 +105,34 @@
                     <!-- Optional Agents -->
                     <div class="section-title">Previous Instructing Agents <span class="opt">Optional</span></div>
                     <div class="form-group"><label>Prev Inst Agent 1 BIC</label><input
-                            formControlName="prvsInstgAgt1Bic"><div class="validation-msg" *ngIf="err('prvsInstgAgt1Bic') as e">{{e}}</div></div>
+                            formControlName="prvsInstgAgt1Bic" maxlength="11" pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$"><div class="validation-msg" *ngIf="err('prvsInstgAgt1Bic') as e">{{e}}</div></div>
                     <ng-container
                         *ngTemplateOutlet="addressForm; context:{prefix:'prvsInstgAgt1',title:'Prev Inst Agent 1'}"></ng-container>
                     <div class="form-group"><label>Prev Inst Agent 2 BIC</label><input
-                            formControlName="prvsInstgAgt2Bic"><div class="validation-msg" *ngIf="err('prvsInstgAgt2Bic') as e">{{e}}</div></div>
+                            formControlName="prvsInstgAgt2Bic" maxlength="11" pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$"><div class="validation-msg" *ngIf="err('prvsInstgAgt2Bic') as e">{{e}}</div></div>
                     <ng-container
                         *ngTemplateOutlet="addressForm; context:{prefix:'prvsInstgAgt2',title:'Prev Inst Agent 2'}"></ng-container>
                     <div class="form-group"><label>Prev Inst Agent 3 BIC</label><input
-                            formControlName="prvsInstgAgt3Bic"><div class="validation-msg" *ngIf="err('prvsInstgAgt3Bic') as e">{{e}}</div></div>
+                            formControlName="prvsInstgAgt3Bic" maxlength="11" pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$"><div class="validation-msg" *ngIf="err('prvsInstgAgt3Bic') as e">{{e}}</div></div>
                     <ng-container
                         *ngTemplateOutlet="addressForm; context:{prefix:'prvsInstgAgt3',title:'Prev Inst Agent 3'}"></ng-container>
 
                     <div class="section-title">Intermediary Agents <span class="opt">Optional</span></div>
                     <div class="form-group"><label>Intermediary Agent 1 BIC</label><input
-                            formControlName="intrmyAgt1Bic"><div class="validation-msg" *ngIf="err('intrmyAgt1Bic') as e">{{e}}</div></div>
+                            formControlName="intrmyAgt1Bic" maxlength="11" pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$"><div class="validation-msg" *ngIf="err('intrmyAgt1Bic') as e">{{e}}</div></div>
                     <ng-container
                         *ngTemplateOutlet="addressForm; context:{prefix:'intrmyAgt1',title:'Intermediary Agent 1'}"></ng-container>
                     <div class="form-group"><label>Intermediary Agent 2 BIC</label><input
-                            formControlName="intrmyAgt2Bic"><div class="validation-msg" *ngIf="err('intrmyAgt2Bic') as e">{{e}}</div></div>
+                            formControlName="intrmyAgt2Bic" maxlength="11" pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$"><div class="validation-msg" *ngIf="err('intrmyAgt2Bic') as e">{{e}}</div></div>
                     <ng-container
                         *ngTemplateOutlet="addressForm; context:{prefix:'intrmyAgt2',title:'Intermediary Agent 2'}"></ng-container>
                     <div class="form-group"><label>Intermediary Agent 3 BIC</label><input
-                            formControlName="intrmyAgt3Bic"><div class="validation-msg" *ngIf="err('intrmyAgt3Bic') as e">{{e}}</div></div>
+                            formControlName="intrmyAgt3Bic" maxlength="11" pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$"><div class="validation-msg" *ngIf="err('intrmyAgt3Bic') as e">{{e}}</div></div>
                     <ng-container
                         *ngTemplateOutlet="addressForm; context:{prefix:'intrmyAgt3',title:'Intermediary Agent 3'}"></ng-container>
 
                     <div class="section-title">Remittance <span class="opt">Optional</span></div>
-                    <div class="form-group"><label>Purpose Code</label><input formControlName="purpCd"
+                    <div class="form-group"><label>Purpose Code</label><input formControlName="purpCd" maxlength="140"
                             placeholder="e.g. CASH"><div class="validation-msg" *ngIf="err('purpCd') as e">{{e}}</div>
                     </div>
                 </div>
