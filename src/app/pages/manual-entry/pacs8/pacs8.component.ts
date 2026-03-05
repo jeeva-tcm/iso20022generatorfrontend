@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
+import { AddressValidatorService, AddressValidationResult } from '../../../services/address-validator.service';
 
 @Component({
   selector: 'app-pacs8',
@@ -24,6 +25,9 @@ export class Pacs8Component implements OnInit {
   currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'SGD', 'HKD', 'INR', 'CNY', 'AED', 'SAR'];
   sttlmMethods = ['INDA', 'INGA', 'CLRG'];
   chargeBearers = ['SHAR', 'DEBT', 'CRED', 'SLEV'];
+  // Duplicate import and component definition removed – kept earlier import and @Component
+
+  isAddressValid = true;
 
   agentPrefixes = ['instgAgt', 'instdAgt', 'dbtrAgt', 'cdtrAgt',
     'prvsInstgAgt1', 'prvsInstgAgt2', 'prvsInstgAgt3',
@@ -34,7 +38,8 @@ export class Pacs8Component implements OnInit {
     private http: HttpClient,
     private config: ConfigService,
     private snackBar: MatSnackBar,
-    private router: Router
+    private router: Router,
+    private addressValidator: AddressValidatorService
   ) { }
 
   ngOnInit() {
@@ -56,6 +61,7 @@ export class Pacs8Component implements OnInit {
     });
     // Track form changes for live XML update
     this.form.valueChanges.subscribe(() => {
+      this.validateAddresses();
       this.generateXml();
     });
   }
@@ -93,32 +99,59 @@ export class Pacs8Component implements OnInit {
   }
 
   err(f: string): string | null {
-        const c = this.form.get(f);
-        if (!c || !c.touched || !c.invalid) return null;
-        if (c.errors?.['required']) return 'Required field.';
-        if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
-        if (c.errors?.['pattern']) {
-            if (f.toLowerCase().includes('bic')) return 'Valid 8 or 11-char BIC required.';
-            if (f.toLowerCase().includes('iban')) return 'Valid 34-char IBAN required.';
-            if (f.toLowerCase().includes('uetr')) return 'Valid UUID required.';
-            if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Max 18 digits, up to 5 decimals.';
-            if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
-            if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
-        }
-        return 'Invalid value.';
+    const c = this.form.get(f);
+    if (!c || !c.touched || !c.invalid) return null;
+    if (c.errors?.['required']) return 'Required field.';
+    if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
+    if (c.errors?.['pattern']) {
+      if (f.toLowerCase().includes('bic')) return 'Valid 8 or 11-char BIC required.';
+      if (f.toLowerCase().includes('iban')) return 'Valid 34-char IBAN required.';
+      if (f.toLowerCase().includes('uetr')) return 'Valid UUID required.';
+      if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Max 18 digits, up to 5 decimals.';
+      if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
+      if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
     }
+    return 'Invalid value.';
+  }
 
-    isoNow(): string {
+  isoNow(): string {
     const d = new Date(), p = (n: number) => n.toString().padStart(2, '0');
     const off = -d.getTimezoneOffset(), s = off >= 0 ? '+' : '-';
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}${s}${p(Math.floor(Math.abs(off) / 60))}:${p(Math.abs(off) % 60)}`;
   }
 
+  // Validate all address blocks before generating XML
+  validateAddresses(): void {
+    const prefixes = ['instgAgt', 'instdAgt', 'dbtr', 'cdtr', 'dbtrAgt', 'cdtrAgt'];
+    const results: AddressValidationResult[] = [];
+    prefixes.forEach(p => {
+      const address = {} as any;
+      // collect fields for this prefix
+      Object.keys(this.form.controls).forEach(key => {
+        if (key.startsWith(p)) {
+          address[key] = this.form.get(key)?.value;
+        }
+      });
+      if (Object.keys(address).length) {
+        const path = `/${p}`;
+        const res = this.addressValidator.validateAddress(address, path);
+        results.push(res);
+      }
+    });
+    const fail = results.find(r => r.status === 'FAIL');
+    if (fail) {
+      this.snackBar.open('Address validation failed: ' + fail.issues.map(i => i.message).join('; '), 'Close', { duration: 8000 });
+      // Prevent XML generation by setting a flag
+      this.isAddressValid = false;
+    } else {
+      this.isAddressValid = true;
+    }
+  }
+
   generateXml() {
     if (this.isParsingXml) return;
     const v = this.form.value;
-    let creDtTm = v.creDtTm || this.isoNow();
-    if (creDtTm.endsWith('Z')) creDtTm = creDtTm.replace('Z', '+00:00');
+    const creDtTm = v.creDtTm || this.isoNow();
 
     // CdtTrfTxInf — strict XSD element order
     let tx = '';
