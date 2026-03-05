@@ -31,6 +31,8 @@ export class AppComponent implements OnInit {
     title = 'ISO 20022 Validator';
     isValidatePage = false;
     isManualEntryActive = false;
+    isMtToMxActive = false;
+    isFullWidthPage = false;
     isMenuForcedClosed = false;
 
     constructor(
@@ -59,5 +61,7 @@ export class AppComponent implements OnInit {
     private updateState(url: string) {
         this.isValidatePage = url.includes('/validate');
         this.isManualEntryActive = url.includes('/generate');
+        this.isMtToMxActive = url.includes('/mt-to-mx');
+        this.isFullWidthPage = this.isManualEntryActive || this.isMtToMxActive;
     }
 }
