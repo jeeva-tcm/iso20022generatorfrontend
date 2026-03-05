@@ -30,6 +30,15 @@
             <!-- DESKTOP TABLE VIEW -->
             <div class="desktop-only">
                 <table mat-table [dataSource]="dataSource" multiTemplateDataRows class="full-width">
+                    <!-- Validation ID Column -->
+                    <ng-container matColumnDef="validation_id">
+                        <th mat-header-cell *matHeaderCellDef> ID </th>
+                        <td mat-cell *matCellDef="let element">
+                            <span class="val-id">{{$any(element).batch_id || $any(element).validation_id ||
+                                $any(element).id}}</span>
+                        </td>
+                    </ng-container>
+
                     <!-- Timestamp Column -->
                     <ng-container matColumnDef="timestamp">
                         <th mat-header-cell *matHeaderCellDef> Time </th>
@@ -41,6 +50,12 @@
                     <ng-container matColumnDef="type">
                         <th mat-header-cell *matHeaderCellDef> Message Type </th>
                         <td mat-cell *matCellDef="let element"> {{element.message_type}} </td>
+                    </ng-container>
+
+                    <!-- No of Files Column -->
+                    <ng-container matColumnDef="no_of_files">
+                        <th mat-header-cell *matHeaderCellDef> No. of Files </th>
+                        <td mat-cell *matCellDef="let element"> {{$any(element).no_of_files}} </td>
                     </ng-container>
 
                     <!-- Status Column -->
@@ -93,7 +108,26 @@
                     <ng-container matColumnDef="expandedDetail">
                         <td mat-cell *matCellDef="let element" [attr.colspan]="displayedColumns.length">
                             <div class="inline-history-details" *ngIf="element === expandedElement">
-                                <div class="detail-grid-container" *ngIf="expandedDetail">
+                                <div class="batch-file-selector" *ngIf="element.batch_records?.length > 1">
+                                    <h4 style="margin: 0 0 8px 0; font-size: 13px; color: #555; font-weight: 600;">Files
+                                        in this batch</h4>
+                                    <div class="file-chips">
+                                        <button *ngFor="let record of element.batch_records; let i = index" class="chip"
+                                            [class.active]="selectedSubFile === record"
+                                            (click)="selectSubFile(record, $event)">
+                                            <mat-icon *ngIf="record.status === 'PASSED'"
+                                                class="status-ic passed">check_circle</mat-icon>
+                                            <mat-icon *ngIf="record.status === 'FAILED'"
+                                                class="status-ic failed">cancel</mat-icon>
+                                            <mat-icon *ngIf="record.status === 'WARNING'"
+                                                class="status-ic warning">warning</mat-icon>
+                                            <span>{{record.message_type}}</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="detail-grid-container" *ngIf="expandedDetail"
+                                    [class.loading-state]="isDetailLoading">
                                     <div class="result-summary">
                                         <h3>Validation Audit</h3>
                                         <div class="audit-meta">
@@ -130,18 +164,47 @@
                                     <div class="xml-preview">
                                         <div class="preview-header">
                                             <h3>Original Message</h3>
-                                            <button mat-flat-button color="primary" size="small"
-                                                [routerLink]="['/validate']"
-                                                [queryParams]="{ reportId: element.validation_id, autoRun: 'true' }">
-                                                <mat-icon>play_circle_outline</mat-icon> RE-RUN VALIDATION
-                                            </button>
+                                            <div class="header-actions-right" style="display: flex; gap: 8px;">
+                                                <button mat-flat-button color="accent" size="small"
+                                                    *ngIf="!isEditingXml" (click)="startEditingXml()">
+                                                    <mat-icon>edit</mat-icon> EDIT XML
+                                                </button>
+                                                <button mat-stroked-button
+                                                    style="color: #ef4444; border-color: rgba(239, 68, 68, 0.5);"
+                                                    size="small" *ngIf="isEditingXml" (click)="cancelEditingXml()">
+                                                    <mat-icon>cancel</mat-icon> CANCEL
+                                                </button>
+                                                <button mat-flat-button color="accent" size="small" *ngIf="isEditingXml"
+                                                    (click)="saveEditedXml()">
+                                                    <mat-icon>save</mat-icon> SAVE LOCAL FILE
+                                                </button>
+                                                <button mat-flat-button color="primary" size="small"
+                                                    *ngIf="!isEditingXml" [routerLink]="['/validate']"
+                                                    [queryParams]="{ reportId: (selectedSubFile || element).validation_id, autoRun: 'true' }">
+                                                    <mat-icon>play_circle_outline</mat-icon> RE-RUN
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div class="full-xml-container">
-                                            <pre class="preview-box">{{expandedDetail.original_message}}</pre>
+                                        <div class="full-xml-container" [class.editing-mode]="isEditingXml">
+                                            <div class="editor-body">
+                                                <div class="editor-line-numbers" #lineNumbers>
+                                                    <div *ngFor="let idx of editorLineCount; let i = index">{{i + 1}}
+                                                    </div>
+                                                </div>
+                                                <pre *ngIf="!isEditingXml" class="editor-textarea"
+                                                    (scroll)="syncScroll(readOnlyXml, lineNumbers)"
+                                                    #readOnlyXml>{{expandedDetail.original_message}}</pre>
+                                                <textarea *ngIf="isEditingXml" class="editor-textarea"
+                                                    [(ngModel)]="editedXmlContent"
+                                                    (ngModelChange)="onEditorChange($event)"
+                                                    (scroll)="syncScroll(xmlEditor, lineNumbers)"
+                                                    (keydown)="handleKeyDown($event)" #xmlEditor wrap="off"
+                                                    spellcheck="false"></textarea>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="loading-mini" *ngIf="isLoading && !expandedDetail">
+                                <div class="loading-mini" *ngIf="isDetailLoading">
                                     <mat-progress-bar mode="query"></mat-progress-bar>
                                 </div>
                             </div>
@@ -171,11 +234,22 @@
                     [class.is-expanded]="expandedElement === element">
                     <div class="card-main-info" (click)="onViewDetails(element)">
                         <div class="card-header-row">
-                            <span class="m-time">{{element.timestamp | date:'d-MMM-yyyy HH:mm:ss'}}</span>
+                            <span class="m-id" style="font-weight: 500; font-size: 13px;">{{element.batch_id ||
+                                element.validation_id ||
+                                element.id}}</span>
+                            <span class="m-time"
+                                style="font-size: 12px; color: #666; margin-left: 8px;">{{element.timestamp |
+                                date:'d-MMM-yyyy HH:mm'}}</span>
+                            <span style="flex: 1;"></span>
                             <span [class]="'status-badge ' + getStatusClass(element.status)">{{element.status}}</span>
                         </div>
                         <div class="card-title-row">
                             <span class="m-type">{{element.message_type}}</span>
+                            <span class="m-files" *ngIf="element.no_of_files > 0">
+                                <mat-icon
+                                    style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle;">insert_drive_file</mat-icon>
+                                {{element.no_of_files}} file(s)
+                            </span>
                             <div class="m-metrics">
                                 <span class="err-count" *ngIf="element.total_errors > 0">
                                     <mat-icon>error_outline</mat-icon>{{element.total_errors}}
@@ -201,11 +275,25 @@
 
                     <!-- Mobile Expansion -->
                     <div class="mobile-expansion-content" *ngIf="expandedElement === element">
-                        <div class="detail-loading" *ngIf="isLoading && !expandedDetail">
+                        <div class="batch-file-selector" *ngIf="element.batch_records?.length > 1"
+                            style="padding: 12px; background: rgba(0,0,0,0.02); border-bottom: 1px solid #eee;">
+                            <h4 style="margin: 0 0 8px 0; font-size: 13px; color: #555; font-weight: 600;">Files in this
+                                batch</h4>
+                            <div class="file-chips" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                <button *ngFor="let record of element.batch_records; let i = index" class="chip"
+                                    [class.active]="selectedSubFile === record" (click)="selectSubFile(record, $event)"
+                                    style="padding: 4px 12px; border: 1px solid #ccc; background: #fff; border-radius: 16px; font-size: 12px; display: flex; align-items: center; gap: 4px;">
+                                    <span [class]="'status-dot ' + getStatusClass(record.status)"></span>
+                                    <span>{{record.message_type}}</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="detail-loading" *ngIf="isDetailLoading">
                             <mat-progress-bar mode="query"></mat-progress-bar>
                         </div>
 
-                        <div class="expanded-data" *ngIf="expandedDetail">
+                        <div class="expanded-data" *ngIf="expandedDetail" [class.loading-state]="isDetailLoading">
                             <div class="mobile-audit-info">
                                 <div class="audit-item">
                                     <span class="label">Schema:</span>
@@ -234,7 +322,7 @@
                             </div>
 
                             <button mat-flat-button color="primary" class="full-report-btn" [routerLink]="['/validate']"
-                                [queryParams]="{ reportId: element.validation_id, autoRun: 'true' }">
+                                [queryParams]="{ reportId: (selectedSubFile || element).validation_id, autoRun: 'true' }">
                                 RE-RUN VALIDATION
                             </button>
                         </div>

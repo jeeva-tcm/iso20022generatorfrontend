@@ -674,12 +674,13 @@ export class ValidateComponent implements OnInit {
   }
 
   validateAll() {
+    const batchId = crypto.randomUUID();
     for (const f of this.files) {
-      this.validateFile(f);
+      this.validateFile(f, batchId);
     }
   }
 
-  validateFile(entry: FileEntry) {
+  validateFile(entry: FileEntry, batchId?: string) {
     if (!entry.content?.trim()) return;
 
     // Client-side well-formedness pre-check
@@ -711,7 +712,8 @@ export class ValidateComponent implements OnInit {
       xml_content: entry.content,
       mode: this.validationMode,
       message_type: cleanType,
-      store_in_history: true
+      store_in_history: true,
+      batch_id: batchId
     }).subscribe({
       next: (data: any) => {
         entry.report = data;
