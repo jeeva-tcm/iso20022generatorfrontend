@@ -1,7 +1,7 @@
 <mat-toolbar color="primary" class="header">
     <span class="logo-container">
         <mat-icon class="logo-icon">verified_user</mat-icon>
-        <span>ISO 20022 Validator</span>
+        <span style="margin-left: -1px;margin-right: 7px;">ISO 20022 Validator</span>
     </span>
 
     <span class="spacer"></span>
@@ -9,10 +9,45 @@
     <nav class="nav-links">
         <a mat-button routerLink="/" routerLinkActive="active-link"
             [routerLinkActiveOptions]="{exact: true}">DASHBOARD</a>
-        <a mat-button routerLink="/validate" routerLinkActive="active-link">VALIDATE</a>
+        <a mat-button routerLink="/validate" routerLinkActive="active-link"
+            [routerLinkActiveOptions]="{exact: true}">VALIDATE</a>
+
+        <!-- Manual Entry Dropdown -->
+        <div class="dropdown-wrapper" (mouseleave)="isMenuForcedClosed = false">
+            <a mat-button class="dropdown-trigger" routerLinkActive="active-link"
+                [routerLinkActiveOptions]="{exact: false}" [class.active-link]="isManualEntryActive">
+                MANUAL ENTRY <mat-icon class="dropdown-arrow">expand_more</mat-icon>
+            </a>
+            <div class="dropdown-menu" [class.hide-menu]="isMenuForcedClosed">
+                <!-- <a routerLink="/generate" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}"
+                    (click)="isMenuForcedClosed = true">
+                    <span class="msg-tag dynamic">FULL</span> MX EXPLORER (700+ TYPES)
+                </a> -->
+                <a routerLink="/generate/pacs8" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                    <span class="msg-tag pacs">PACS</span> pacs.008.001.08
+                </a>
+                <a routerLink="/generate/pacs9" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                    <span class="msg-tag pacs">PACS</span> pacs.009.001.08
+                </a>
+                <a routerLink="/generate/pacs9cov" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                    <span class="msg-tag pacs">PACS</span> pacs.009.001.08 COV
+                </a>
+                <a routerLink="/generate/camt57" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                    <span class="msg-tag camt">CAMT</span> camt.057.001.06
+                </a>
+            </div>
+        </div>
+
+        <a mat-button routerLink="/mt-to-mx" routerLinkActive="active-link">MT → MX</a>
+
         <a mat-button routerLink="/history" routerLinkActive="active-link">HISTORY</a>
         <a mat-button routerLink="/rules" routerLinkActive="active-link">RULES</a>
         <a mat-button routerLink="/help" routerLinkActive="active-link">HELP</a>
+
+        <button mat-icon-button (click)="toggleTheme()"
+            [matTooltip]="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'" class="theme-toggle">
+            <mat-icon>{{ isDarkMode ? 'wb_sunny' : 'nights_stay' }}</mat-icon>
+        </button>
     </nav>
 
     <span class="spacer"></span>
@@ -27,6 +62,6 @@
     </div>
 </mat-toolbar>
 
-<div class="main-content">
+<div class="main-content" [class.dark-page]="isValidatePage" [class.me-full-page]="isFullWidthPage">
     <router-outlet></router-outlet>
 </div>

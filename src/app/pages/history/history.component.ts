@@ -40,12 +40,19 @@ import { ConfigService } from '../../services/config.service';
 })
 export class HistoryComponent implements OnInit {
     dataSource = new MatTableDataSource<any>([]);
-    displayedColumns: string[] = ['timestamp', 'validation_id', 'type', 'status', 'metrics', 'actions'];
+    displayedColumns: string[] = ['validation_id', 'timestamp', 'type', 'no_of_files', 'status', 'metrics', 'actions'];
     isLoading: boolean = false;
     searchTerm: string = '';
     expandedElement: any | null = null;
     expandedDetail: any = null;
+    selectedSubFile: any = null;
     showAllMobileIssues: boolean = false;
+    isDetailLoading: boolean = false;
+    detailCache: { [key: string]: any } = {};
+
+    isEditingXml: boolean = false;
+    editedXmlContent: string = '';
+    editorLineCount: number[] = [1];
 
     @ViewChild(MatPaginator) paginator!: MatPaginator;
 
@@ -64,12 +71,52 @@ export class HistoryComponent implements OnInit {
         this.http.get<any[]>(this.config.getApiUrl('/history'))
             .subscribe({
                 next: (data) => {
-                    this.dataSource.data = data;
+                    // Group records by batch_id (or validation_id if missing)
+                    const grouped: { [key: string]: any } = {};
+                    data.forEach(item => {
+                        const id = item.batch_id || item.validation_id || item.id || 'unknown';
+                        if (!grouped[id]) {
+                            // Initialize with the first item's properties
+                            grouped[id] = {
+                                ...item,
+                                no_of_files: 0,
+                                __batch_failed: 0,
+                                __batch_warnings: 0,
+                                batch_records: []
+                            };
+                            // We will manually sum up errors and warnings so we reset the initial item's values for accumulation:
+                            grouped[id].total_errors = 0;
+                            grouped[id].total_warnings = 0;
+                        }
+
+                        grouped[id].no_of_files += 1;
+                        grouped[id].total_errors += (item.total_errors || 0);
+                        grouped[id].total_warnings += (item.total_warnings || 0);
+                        grouped[id].batch_records.push(item);
+
+                        if (item.status === 'FAILED') grouped[id].__batch_failed += 1;
+                        else if (item.status === 'WARNING') grouped[id].__batch_warnings += 1;
+
+                        if (grouped[id].__batch_failed > 0) grouped[id].status = 'FAILED';
+                        else if (grouped[id].__batch_warnings > 0) grouped[id].status = 'WARNING';
+                        else grouped[id].status = 'PASSED';
+                    });
+
+                    const aggregated = Object.values(grouped).map(item => {
+                        delete item.__batch_failed;
+                        delete item.__batch_warnings;
+                        return item;
+                    });
+
+                    // Sort by timestamp descending
+                    aggregated.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+                    this.dataSource.data = aggregated;
                     this.dataSource.paginator = this.paginator;
 
                     // Custom filter to target only ID and Message Type
                     this.dataSource.filterPredicate = (record: any, filter: string) => {
-                        const searchStr = `${record.validation_id} ${record.message_type}`.toLowerCase();
+                        const searchStr = `${record.batch_id || record.id || record.validation_id || ''} ${record.message_type || ''}`.toLowerCase();
                         return searchStr.includes(filter.toLowerCase());
                     };
 
@@ -98,29 +145,70 @@ export class HistoryComponent implements OnInit {
         if (this.expandedElement === element) {
             this.expandedElement = null;
             this.expandedDetail = null;
+            this.selectedSubFile = null;
+            this.isDetailLoading = false;
             return;
         }
 
         this.expandedElement = element;
-        this.isLoading = true;
+        this.selectedSubFile = element.batch_records && element.batch_records.length > 0
+            ? element.batch_records[0]
+            : element;
+
+        // Reset expanded detail here for a fresh row open, but don't reset when switching subfiles.
+        this.expandedDetail = null;
+
+        this.loadSubFileDetail(this.selectedSubFile);
+    }
+
+    selectSubFile(subFile: any, event?: Event) {
+        if (event) event.stopPropagation();
+        this.selectedSubFile = subFile;
+        this.loadSubFileDetail(subFile);
+    }
+
+    loadSubFileDetail(subFile: any) {
+        const vid = subFile.validation_id || subFile.id;
+
+        this.isEditingXml = false;
+
+        // Cache Hit: immediately switch content
+        if (this.detailCache[vid]) {
+            this.expandedDetail = this.detailCache[vid];
+            this.updateLineNumbers(this.expandedDetail.original_message);
+            this.showAllMobileIssues = false;
+            this.isDetailLoading = false;
+            return;
+        }
+
+        this.isDetailLoading = true;
         this.showAllMobileIssues = false;
-        this.http.get<any>(this.config.getApiUrl(`/history/${element.validation_id}`)).subscribe({
+
+        this.http.get<any>(this.config.getApiUrl(`/history/${vid}`)).subscribe({
             next: (data) => {
-                this.expandedDetail = data;
-                this.isLoading = false;
+                this.detailCache[vid] = data;
+                // Only write to the UI if the user hasn't quickly clicked to a different file during load time
+                if (this.selectedSubFile === subFile) {
+                    this.expandedDetail = data;
+                    this.updateLineNumbers(data.original_message || '');
+                    this.isDetailLoading = false;
+                }
             },
             error: (err) => {
                 console.error("Failed to load historical report:", err);
-                this.isLoading = false;
+                if (this.selectedSubFile === subFile) {
+                    this.isDetailLoading = false;
+                }
                 this.snackBar.open('Error loading record details. Backend might be down.', 'Dismiss', { duration: 4000 });
             }
         });
     }
 
     onDelete(element: any) {
-        if (confirm(`Permanentely delete validation record ${element.validation_id}?`)) {
+        const idToDelete = element.batch_id || element.validation_id || element.id;
+        if (confirm(`Permanentely delete validation record(s) ${idToDelete}?`)) {
             this.isLoading = true;
-            this.http.delete(this.config.getApiUrl(`/history/${element.validation_id}`)).subscribe({
+            this.http.delete(this.config.getApiUrl(`/history/${idToDelete}`)).subscribe({
                 next: () => {
                     this.loadHistory();
                     if (this.expandedElement === element) {
@@ -178,6 +266,84 @@ export class HistoryComponent implements OnInit {
                 this.snackBar.open('Export failed. Please try again later.', 'Dismiss', { duration: 5000 });
             }
         });
+    }
+
+    startEditingXml() {
+        this.isEditingXml = true;
+        this.editedXmlContent = this.expandedDetail.original_message || '';
+        this.updateLineNumbers(this.editedXmlContent);
+    }
+
+    cancelEditingXml() {
+        this.isEditingXml = false;
+        this.editedXmlContent = '';
+        this.updateLineNumbers(this.expandedDetail.original_message || '');
+    }
+
+    onEditorChange(content: string) {
+        this.editedXmlContent = content;
+        this.updateLineNumbers(content);
+    }
+
+    updateLineNumbers(content: string) {
+        const lines = content ? content.split('\n').length : 1;
+        this.editorLineCount = Array(lines).fill(0);
+    }
+
+    syncScroll(textArea: any, lineNumbers: any) {
+        if (textArea && lineNumbers) {
+            lineNumbers.scrollTop = textArea.scrollTop;
+        }
+    }
+
+    handleKeyDown(event: KeyboardEvent) {
+        if (event.key === 'Tab') {
+            event.preventDefault();
+            const target = event.target as HTMLTextAreaElement;
+            const start = target.selectionStart;
+            const end = target.selectionEnd;
+            this.editedXmlContent = this.editedXmlContent.substring(0, start) + '    ' + this.editedXmlContent.substring(end);
+            setTimeout(() => {
+                target.selectionStart = target.selectionEnd = start + 4;
+            });
+        }
+    }
+
+    async saveEditedXml() {
+        try {
+            if ('showSaveFilePicker' in window) {
+                const suggestedName = (this.selectedSubFile || this.expandedElement).message_type + '_edited.xml';
+                const handle = await (window as any).showSaveFilePicker({
+                    suggestedName: suggestedName,
+                    types: [{
+                        description: 'XML File',
+                        accept: { 'text/xml': ['.xml'] }
+                    }]
+                });
+                const writable = await handle.createWritable();
+                await writable.write(this.editedXmlContent);
+                await writable.close();
+                this.snackBar.open('Local file saved successfully.', 'Close', { duration: 3000 });
+                this.isEditingXml = false;
+            } else {
+                // Fallback
+                const blob = new Blob([this.editedXmlContent], { type: 'text/xml' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = (this.selectedSubFile || this.expandedElement).message_type + '_edited.xml';
+                a.click();
+                window.URL.revokeObjectURL(url);
+                this.snackBar.open('File downloaded.', 'Close', { duration: 3000 });
+                this.isEditingXml = false;
+            }
+            this.updateLineNumbers(this.expandedDetail.original_message || '');
+        } catch (err: any) {
+            if (err.name !== 'AbortError') {
+                console.error('Failed to save file:', err);
+                this.snackBar.open('Failed to save file.', 'Dismiss', { duration: 3000 });
+            }
+        }
     }
 
     isExpansionDetailRow = (i: number, row: Object) => row.hasOwnProperty('detailRow');

@@ -1,0 +1,893 @@
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { ConfigService } from '../../services/config.service';
+
+@Component({
+    selector: 'app-mt-to-mx',
+    standalone: true,
+    imports: [CommonModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule],
+    templateUrl: './mt-to-mx.component.html',
+    styleUrl: './mt-to-mx.component.css'
+})
+export class MtToMxComponent implements OnInit {
+    mtInput = '';
+    mxOutput = '';
+    editorLineCount: number[] = [1];
+    outputLineCount: number[] = [1];
+    detectedMtType = '';
+    mappedMxType = '';
+    conversionStatus: 'idle' | 'converting' | 'success' | 'error' = 'idle';
+    errorMessage = '';
+    missingFields: { tag: string, name: string, line?: number | string }[] = [];
+    conversionLog: { severity: string; message: string }[] = [];
+
+    // Validation modal state
+    showValidationModal = false;
+    validationStatus: 'idle' | 'validating' | 'done' = 'idle';
+    validationReport: any = null;
+    validationExpandedIssue: any = null;
+
+    // MT type to MX type mapping per SWIFT ISO 20022 migration
+    private mtToMxMap: Record<string, { mx: string; desc: string }> = {
+        'MT103': { mx: 'pacs.008.001.08', desc: 'FI to FI Customer Credit Transfer' },
+        'MT103+': { mx: 'pacs.008.001.08', desc: 'FI to FI Customer Credit Transfer (STP)' },
+        'MT103 REMIT': { mx: 'pacs.008.001.08', desc: 'FI to FI Customer Credit Transfer (Remit)' },
+        'MT202': { mx: 'pacs.009.001.08', desc: 'FI to FI Institution Credit Transfer' },
+        'MT202COV': { mx: 'pacs.009.001.08', desc: 'FI to FI Institution Credit Transfer (COV)' },
+        'MT200': { mx: 'pacs.009.001.08', desc: 'Financial Institution Transfer' },
+        'MT900': { mx: 'camt.054.001.08', desc: 'Debit Confirmation' },
+        'MT910': { mx: 'camt.054.001.08', desc: 'Credit Confirmation' },
+        'MT940': { mx: 'camt.053.001.08', desc: 'Customer Statement' },
+        'MT950': { mx: 'camt.053.001.08', desc: 'Statement Message' },
+        'MT942': { mx: 'camt.052.001.08', desc: 'Interim Transaction Report' },
+        'MT199': { mx: 'pacs.002.001.10', desc: 'Free Format Message (FI)' },
+        'MT299': { mx: 'pacs.002.001.10', desc: 'Free Format Message (FI)' },
+        'MT192': { mx: 'camt.056.001.08', desc: 'Request for Cancellation' },
+        'MT196': { mx: 'camt.029.001.09', desc: 'Resolution of Investigation' },
+        'MT210': { mx: 'camt.057.001.06', desc: 'Notice to Receive' },
+    };
+
+    @ViewChild('mtEditor') mtEditorRef!: ElementRef<HTMLTextAreaElement>;
+    @ViewChild('mtLineNumbers') mtLineNumbersRef!: ElementRef<HTMLDivElement>;
+    @ViewChild('mxEditor') mxEditorRef!: ElementRef<HTMLTextAreaElement>;
+    @ViewChild('mxLineNumbers') mxLineNumbersRef!: ElementRef<HTMLDivElement>;
+
+    constructor(
+        private snackBar: MatSnackBar,
+        private http: HttpClient,
+        private config: ConfigService
+    ) { }
+
+    ngOnInit() {
+        // Start empty so XML is not shown by default
+        this.mtInput = '';
+        this.mxOutput = '';
+        this.conversionStatus = 'idle';
+        this.updateLineCount('mt');
+        this.updateLineCount('mx');
+    }
+
+    onMtChange(content: string) {
+        this.mtInput = content;
+        this.updateLineCount('mt');
+        this.detectedMtType = this.detectMtType(content);
+        const mapped = this.mtToMxMap[this.detectedMtType];
+        this.mappedMxType = mapped ? mapped.mx : '';
+
+        // Reset output when input changes - XML should only show after explicit click
+        this.mxOutput = '';
+        this.conversionStatus = 'idle';
+        this.conversionLog = [];
+        this.errorMessage = '';
+    }
+
+    onMxChange(content: string) {
+        this.mxOutput = content;
+        this.updateLineCount('mx');
+    }
+
+    updateLineCount(which: 'mt' | 'mx') {
+        const content = which === 'mt' ? this.mtInput : this.mxOutput;
+        const lines = (content || '').split('\n').length;
+        if (which === 'mt') {
+            this.editorLineCount = Array.from({ length: lines }, (_, i) => i + 1);
+        } else {
+            this.outputLineCount = Array.from({ length: lines }, (_, i) => i + 1);
+        }
+    }
+
+    syncScroll(editor: HTMLTextAreaElement, gutter: HTMLDivElement) {
+        gutter.scrollTop = editor.scrollTop;
+    }
+
+    detectMtType(mt: string): string {
+        if (!mt?.trim()) return '';
+        // Check {1: block} for message type
+        const basicMatch = mt.match(/\{1:[FA](\d{2})([A-Z]{8,12})\d{4}\d{6}/);
+        // Check for {2: block} for message type
+        const appMatch = mt.match(/\{2:[IO](\d{3})/);
+        if (appMatch) {
+            const type = 'MT' + appMatch[1];
+            // Check for COV
+            if (type === 'MT202' && mt.includes(':119:COV')) return 'MT202COV';
+            if (type === 'MT103' && mt.includes(':119:STP')) return 'MT103+';
+            if (type === 'MT103' && mt.includes(':77T:')) return 'MT103 REMIT';
+            return type;
+        }
+        // Fallback: check for :20: tag — common pattern
+        if (mt.includes(':20:')) {
+            if (mt.includes(':119:COV')) return 'MT202COV';
+            if (mt.includes(':119:STP')) return 'MT103+';
+            // Detect by field patterns
+            if (mt.includes(':59:') || mt.includes(':59A:')) return 'MT103';
+            if (mt.includes(':58A:') || mt.includes(':58D:')) return 'MT202';
+        }
+        return '';
+    }
+
+    convert() {
+        this.conversionStatus = 'converting';
+        this.conversionLog = [];
+        this.errorMessage = '';
+        this.mxOutput = '';
+
+        const mtType = this.detectMtType(this.mtInput);
+        this.detectedMtType = mtType;
+
+        this.addLog('INFO', `Sending MT message to backend conversion engine...`);
+
+        this.http.post<any>(this.config.getApiUrl('/convert-mt-to-mx'), {
+            mt_message: this.mtInput,
+            target_mt_type: mtType || null
+        }).subscribe({
+            next: (response) => {
+                this.mxOutput = response.mx_message;
+                this.updateLineCount('mx');
+
+                // Set the mapped MX type based on the response if available, or fallback
+                if (response.detected_type) {
+                    this.detectedMtType = response.detected_type;
+                    const mapping = this.mtToMxMap[this.detectedMtType] || this.mtToMxMap['MT' + this.detectedMtType];
+                    if (mapping) {
+                        this.mappedMxType = mapping.mx;
+                    }
+                }
+
+                this.conversionStatus = 'success';
+                this.addLog('INFO', `Conversion completed successfully by dynamic engine.`);
+            },
+            error: (err) => {
+                this.conversionStatus = 'error';
+                this.missingFields = [];
+
+                if (err.error && err.error.detail && err.error.detail.errors) {
+                    const errors = err.error.detail.errors;
+                    this.errorMessage = errors.join(' | ');
+
+                    // Specific logic for missing mandatory fields
+                    const tagsSeen = new Set<string>();
+                    errors.forEach((msg: string) => {
+                        // Backend format: "Missing mandatory field :20: (Transaction Reference Number)"
+                        const match = msg.match(/Missing mandatory field :([^:]+): \(([^)]+)\)/);
+                        const emptyMatch = msg.match(/Mandatory field :([^:]+): \(([^)]+)\) is empty/);
+
+                        if (match) {
+                            const tag = match[1];
+                            if (!tagsSeen.has(tag)) {
+                                const insertionInfo = this.getLineSuggestion(tag);
+                                this.missingFields.push({
+                                    tag,
+                                    name: match[2],
+                                    line: insertionInfo.line
+                                });
+                                tagsSeen.add(tag);
+                                if (insertionInfo.isExists) this.addLog('WARN', `Empty mandatory tag :${tag}: found on line ${insertionInfo.line}.`);
+                            }
+                        } else if (emptyMatch) {
+                            const tag = emptyMatch[1];
+                            if (!tagsSeen.has(tag)) {
+                                const insertionInfo = this.getLineSuggestion(tag);
+                                this.missingFields.push({
+                                    tag,
+                                    name: emptyMatch[2],
+                                    line: insertionInfo.line
+                                });
+                                tagsSeen.add(tag);
+                                if (insertionInfo.isExists) this.addLog('WARN', `Empty mandatory tag :${tag}: found on line ${insertionInfo.line}.`);
+                            }
+                        } else {
+                            // Fallback regex for tags without names if any
+                            const basicMatch = msg.match(/:([0-9]{2}[A-Z]?):/);
+                            if (basicMatch && !tagsSeen.has(basicMatch[1])) {
+                                const tag = basicMatch[1];
+                                const insertionInfo = this.getLineSuggestion(tag);
+                                this.missingFields.push({
+                                    tag,
+                                    name: 'Mandatory Field',
+                                    line: insertionInfo.line
+                                });
+                                tagsSeen.add(tag);
+                            }
+                        }
+
+                        this.addLog('ERROR', msg);
+                    });
+                } else {
+                    this.errorMessage = err.message || 'Conversion failed.';
+                    this.addLog('ERROR', this.errorMessage);
+                }
+            }
+        });
+    }
+
+    private parseMtFields(mt: string): Record<string, string> {
+        const fields: Record<string, string> = {};
+
+        // Parse SWIFT blocks
+        const block1Match = mt.match(/\{1:([^}]+)\}/);
+        const block2Match = mt.match(/\{2:([^}]+)\}/);
+        if (block1Match) {
+            fields['_block1'] = block1Match[1];
+            const b1 = block1Match[1];
+            if (b1.length >= 12) {
+                fields['_senderBic'] = b1.substring(3, 11);
+            }
+        }
+        if (block2Match) {
+            fields['_block2'] = block2Match[1];
+            const b2 = block2Match[1];
+            if (b2.startsWith('O') && b2.length >= 18) {
+                fields['_receiverBic'] = b2.substring(15, 23) || '';
+            } else if (b2.startsWith('I') && b2.length >= 12) {
+                fields['_receiverBic'] = b2.substring(4, 12);
+            }
+        }
+
+        // Parse block 3 for UETR
+        const block3Match = mt.match(/\{3:[^}]*\{121:([a-f0-9-]{36})\}/i);
+        if (block3Match) fields['_uetr'] = block3Match[1];
+
+        // Parse block 4 tags
+        const block4Match = mt.match(/\{4:\s*\n?([\s\S]*?)(?:-\}|\{5:)/);
+        const textBlock = block4Match ? block4Match[1] : mt;
+        const tagRegex = /:(\d{2}[A-Z]?):([^:]*?)(?=\n:\d{2}[A-Z]?:|$)/gs;
+        let m;
+        while ((m = tagRegex.exec(textBlock)) !== null) {
+            const tag = m[1].trim();
+            const val = m[2].trim();
+            if (fields[tag]) {
+                fields[tag + '_2'] = val;
+            } else {
+                fields[tag] = val;
+            }
+        }
+        return fields;
+    }
+
+    // === MT103 → pacs.008.001.08 ===
+    private convertMT103ToPacs008(f: Record<string, string>): string {
+        const now = this.isoNow();
+        const date = now.split('T')[0];
+        const senderBic = this.normalizeSwiftBic(f['_senderBic'] || 'BANKUS33XXX');
+        const receiverBic = this.normalizeSwiftBic(f['_receiverBic'] || 'BANKGB2LXXX');
+        const msgId = f['20'] || 'MSGID-' + Date.now();
+        const instrId = f['20'] || msgId;
+        const endToEndId = f['21'] || msgId;
+        const uetr = f['_uetr'] || this.generateUUID();
+
+        // Parse amount from :32A:
+        const { date: valDate, ccy, amount } = this.parseField32A(f['32A'] || '');
+        const sttlmDt = valDate || date;
+        const chrgBr = this.mapChargeBearer(f['71A'] || 'SHA');
+
+        // Parse parties
+        const dbtr = this.parsePartyField(f['50A'] || f['50K'] || f['50F'] || '');
+        const cdtr = this.parsePartyField(f['59'] || f['59A'] || f['59F'] || '');
+        const dbtrAgt = this.parseBicField(f['52A'] || f['52D'] || '', senderBic);
+        const cdtrAgt = this.parseBicField(f['57A'] || f['57D'] || '', receiverBic);
+        const instgAgt = senderBic;
+        const instdAgt = receiverBic;
+
+        this.addLog('INFO', `Sender BIC: ${senderBic}, Receiver BIC: ${receiverBic}`);
+        this.addLog('INFO', `Amount: ${amount} ${ccy}, Value Date: ${sttlmDt}`);
+
+        return `<?xml version="1.0" encoding="UTF-8"?>
+<BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
+\t<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
+\t\t<Fr><FIId><FinInstnId><BICFI>${this.esc(instgAgt)}</BICFI></FinInstnId></FIId></Fr>
+\t\t<To><FIId><FinInstnId><BICFI>${this.esc(instdAgt)}</BICFI></FinInstnId></FIId></To>
+\t\t<BizMsgIdr>${this.esc(msgId)}</BizMsgIdr>
+\t\t<MsgDefIdr>pacs.008.001.08</MsgDefIdr>
+\t\t<BizSvc>swift.cbprplus.02</BizSvc>
+\t\t<CreDt>${now}</CreDt>
+\t</AppHdr>
+\t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08">
+\t\t<FIToFICstmrCdtTrf>
+\t\t\t<GrpHdr>
+\t\t\t\t<MsgId>${this.esc(msgId)}</MsgId>
+\t\t\t\t<CreDtTm>${now}</CreDtTm>
+\t\t\t\t<NbOfTxs>1</NbOfTxs>
+\t\t\t\t<SttlmInf>
+\t\t\t\t\t<SttlmMtd>INDA</SttlmMtd>
+\t\t\t\t</SttlmInf>
+\t\t\t</GrpHdr>
+\t\t\t<CdtTrfTxInf>
+\t\t\t\t<PmtId>
+\t\t\t\t\t<InstrId>${this.esc(instrId)}</InstrId>
+\t\t\t\t\t<EndToEndId>${this.esc(endToEndId)}</EndToEndId>
+\t\t\t\t\t<TxId>${this.esc(instrId)}</TxId>
+\t\t\t\t\t<UETR>${uetr}</UETR>
+\t\t\t\t</PmtId>
+\t\t\t\t<IntrBkSttlmAmt Ccy="${this.esc(ccy)}">${amount}</IntrBkSttlmAmt>
+\t\t\t\t<IntrBkSttlmDt>${sttlmDt}</IntrBkSttlmDt>
+\t\t\t\t<ChrgBr>${chrgBr}</ChrgBr>
+\t\t\t\t<InstgAgt>
+\t\t\t\t\t<FinInstnId>
+\t\t\t\t\t\t<BICFI>${this.esc(instgAgt)}</BICFI>
+\t\t\t\t\t</FinInstnId>
+\t\t\t\t</InstgAgt>
+\t\t\t\t<InstdAgt>
+\t\t\t\t\t<FinInstnId>
+\t\t\t\t\t\t<BICFI>${this.esc(instdAgt)}</BICFI>
+\t\t\t\t\t</FinInstnId>
+\t\t\t\t</InstdAgt>
+\t\t\t\t<Dbtr>
+\t\t\t\t\t<Nm>${this.esc(dbtr.name)}</Nm>
+\t\t\t\t</Dbtr>${dbtr.iban ? `
+\t\t\t\t<DbtrAcct>
+\t\t\t\t\t<Id>
+\t\t\t\t\t\t<IBAN>${this.esc(dbtr.iban)}</IBAN>
+\t\t\t\t\t</Id>
+\t\t\t\t</DbtrAcct>` : (dbtr.acct ? `
+\t\t\t\t<DbtrAcct>
+\t\t\t\t\t<Id>
+\t\t\t\t\t\t<Othr>
+\t\t\t\t\t\t\t<Id>${this.esc(dbtr.acct)}</Id>
+\t\t\t\t\t\t</Othr>
+\t\t\t\t\t</Id>
+\t\t\t\t</DbtrAcct>` : '')}
+\t\t\t\t<DbtrAgt>
+\t\t\t\t\t<FinInstnId>
+\t\t\t\t\t\t<BICFI>${this.esc(dbtrAgt)}</BICFI>
+\t\t\t\t\t</FinInstnId>
+\t\t\t\t</DbtrAgt>
+\t\t\t\t<CdtrAgt>
+\t\t\t\t\t<FinInstnId>
+\t\t\t\t\t\t<BICFI>${this.esc(cdtrAgt)}</BICFI>
+\t\t\t\t\t</FinInstnId>
+\t\t\t\t</CdtrAgt>
+\t\t\t\t<Cdtr>
+\t\t\t\t\t<Nm>${this.esc(cdtr.name)}</Nm>
+\t\t\t\t</Cdtr>${cdtr.iban ? `
+\t\t\t\t<CdtrAcct>
+\t\t\t\t\t<Id>
+\t\t\t\t\t\t<IBAN>${this.esc(cdtr.iban)}</IBAN>
+\t\t\t\t\t</Id>
+\t\t\t\t</CdtrAcct>` : (cdtr.acct ? `
+\t\t\t\t<CdtrAcct>
+\t\t\t\t\t<Id>
+\t\t\t\t\t\t<Othr>
+\t\t\t\t\t\t\t<Id>${this.esc(cdtr.acct)}</Id>
+\t\t\t\t\t\t</Othr>
+\t\t\t\t\t</Id>
+\t\t\t\t</CdtrAcct>` : '')}${f['70'] ? `
+\t\t\t\t<RmtInf>
+\t\t\t\t\t<Ustrd>${this.esc(f['70'])}</Ustrd>
+\t\t\t\t</RmtInf>` : ''}
+\t\t\t</CdtTrfTxInf>
+\t\t</FIToFICstmrCdtTrf>
+\t</Document>
+</BusMsgEnvlp>`;
+    }
+
+    // === MT202/MT200 → pacs.009.001.08 ===
+    private convertMT202ToPacs009(f: Record<string, string>, isCov: boolean): string {
+        const now = this.isoNow();
+        const senderBic = this.normalizeSwiftBic(f['_senderBic'] || 'BANKUS33XXX');
+        const receiverBic = this.normalizeSwiftBic(f['_receiverBic'] || 'BANKGB2LXXX');
+        const msgId = f['20'] || 'MSGID-' + Date.now();
+        const txRef = f['21'] || msgId;
+        const uetr = f['_uetr'] || this.generateUUID();
+        const { date: valDate, ccy, amount } = this.parseField32A(f['32A'] || '');
+        const sttlmDt = valDate || now.split('T')[0];
+
+        const dbtrBic = this.parseBicField(f['52A'] || f['52D'] || '', senderBic);
+        const cdtrBic = this.parseBicField(f['58A'] || f['58D'] || '', receiverBic);
+        const sttlmMtd = isCov ? 'COVE' : 'INDA';
+
+        this.addLog('INFO', `Sender: ${senderBic}, Receiver: ${receiverBic}`);
+        this.addLog('INFO', `Amount: ${amount} ${ccy}, COV: ${isCov}`);
+
+        let covBlock = '';
+        if (isCov) {
+            // Parse underlying customer credit transfer fields from sequence B
+            const covDbtrName = f['50A'] || f['50K'] || '';
+            const covCdtrName = f['59'] || f['59A'] || '';
+            const covDbtr = this.parsePartyField(covDbtrName);
+            const covCdtr = this.parsePartyField(covCdtrName);
+            const covDbtrAgt = this.parseBicField(f['52A_2'] || '', dbtrBic);
+            const covCdtrAgt = this.parseBicField(f['57A_2'] || '', cdtrBic);
+
+            covBlock = `
+\t\t\t\t<UndrlygCstmrCdtTrf>
+\t\t\t\t\t<Dbtr>
+\t\t\t\t\t\t<Nm>${this.esc(covDbtr.name || 'Ordering Customer')}</Nm>
+\t\t\t\t\t</Dbtr>${covDbtr.iban ? `
+\t\t\t\t\t<DbtrAcct>
+\t\t\t\t\t\t<Id>
+\t\t\t\t\t\t\t<IBAN>${this.esc(covDbtr.iban)}</IBAN>
+\t\t\t\t\t\t</Id>
+\t\t\t\t\t</DbtrAcct>` : ''}
+\t\t\t\t\t<DbtrAgt>
+\t\t\t\t\t\t<FinInstnId>
+\t\t\t\t\t\t\t<BICFI>${this.esc(covDbtrAgt)}</BICFI>
+\t\t\t\t\t\t</FinInstnId>
+\t\t\t\t\t</DbtrAgt>
+\t\t\t\t\t<CdtrAgt>
+\t\t\t\t\t\t<FinInstnId>
+\t\t\t\t\t\t\t<BICFI>${this.esc(covCdtrAgt)}</BICFI>
+\t\t\t\t\t\t</FinInstnId>
+\t\t\t\t\t</CdtrAgt>
+\t\t\t\t\t<Cdtr>
+\t\t\t\t\t\t<Nm>${this.esc(covCdtr.name || 'Beneficiary Customer')}</Nm>
+\t\t\t\t\t</Cdtr>${covCdtr.iban ? `
+\t\t\t\t\t<CdtrAcct>
+\t\t\t\t\t\t<Id>
+\t\t\t\t\t\t\t<IBAN>${this.esc(covCdtr.iban)}</IBAN>
+\t\t\t\t\t\t</Id>
+\t\t\t\t\t</CdtrAcct>` : ''}
+\t\t\t\t\t<InstdAmt Ccy="${this.esc(ccy)}">${amount}</InstdAmt>
+\t\t\t\t</UndrlygCstmrCdtTrf>`;
+        }
+
+        return `<?xml version="1.0" encoding="UTF-8"?>
+<BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
+\t<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
+\t\t<Fr><FIId><FinInstnId><BICFI>${this.esc(senderBic)}</BICFI></FinInstnId></FIId></Fr>
+\t\t<To><FIId><FinInstnId><BICFI>${this.esc(receiverBic)}</BICFI></FinInstnId></FIId></To>
+\t\t<BizMsgIdr>${this.esc(msgId)}</BizMsgIdr>
+\t\t<MsgDefIdr>pacs.009.001.08</MsgDefIdr>
+\t\t<BizSvc>${isCov ? 'swift.cbprplus.cov.04' : 'swift.cbprplus.02'}</BizSvc>
+\t\t<CreDt>${now}</CreDt>
+\t</AppHdr>
+\t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.009.001.08">
+\t\t<FICdtTrf>
+\t\t\t<GrpHdr>
+\t\t\t\t<MsgId>${this.esc(msgId)}</MsgId>
+\t\t\t\t<CreDtTm>${now}</CreDtTm>
+\t\t\t\t<NbOfTxs>1</NbOfTxs>
+\t\t\t\t<SttlmInf>
+\t\t\t\t\t<SttlmMtd>${sttlmMtd}</SttlmMtd>
+\t\t\t\t</SttlmInf>
+\t\t\t</GrpHdr>
+\t\t\t<CdtTrfTxInf>
+\t\t\t\t<PmtId>
+\t\t\t\t\t<InstrId>${this.esc(msgId)}</InstrId>
+\t\t\t\t\t<EndToEndId>${this.esc(txRef)}</EndToEndId>
+\t\t\t\t\t<UETR>${uetr}</UETR>
+\t\t\t\t</PmtId>
+\t\t\t\t<IntrBkSttlmAmt Ccy="${this.esc(ccy)}">${amount}</IntrBkSttlmAmt>
+\t\t\t\t<IntrBkSttlmDt>${sttlmDt}</IntrBkSttlmDt>
+\t\t\t\t<InstgAgt>
+\t\t\t\t\t<FinInstnId>
+\t\t\t\t\t\t<BICFI>${this.esc(senderBic)}</BICFI>
+\t\t\t\t\t</FinInstnId>
+\t\t\t\t</InstgAgt>
+\t\t\t\t<InstdAgt>
+\t\t\t\t\t<FinInstnId>
+\t\t\t\t\t\t<BICFI>${this.esc(receiverBic)}</BICFI>
+\t\t\t\t\t</FinInstnId>
+\t\t\t\t</InstdAgt>
+\t\t\t\t<Dbtr>
+\t\t\t\t\t<FinInstnId>
+\t\t\t\t\t\t<BICFI>${this.esc(dbtrBic)}</BICFI>
+\t\t\t\t\t</FinInstnId>
+\t\t\t\t</Dbtr>
+\t\t\t\t<Cdtr>
+\t\t\t\t\t<FinInstnId>
+\t\t\t\t\t\t<BICFI>${this.esc(cdtrBic)}</BICFI>
+\t\t\t\t\t</FinInstnId>
+\t\t\t\t</Cdtr>${covBlock}
+\t\t\t</CdtTrfTxInf>
+\t\t</FICdtTrf>
+\t</Document>
+</BusMsgEnvlp>`;
+    }
+
+    // === MT210 → camt.057.001.06 ===
+    private convertMT210ToCamt057(f: Record<string, string>): string {
+        const now = this.isoNow();
+        const senderBic = this.normalizeSwiftBic(f['_senderBic'] || 'BANKUS33XXX');
+        const receiverBic = this.normalizeSwiftBic(f['_receiverBic'] || 'BANKGB2LXXX');
+        const msgId = f['20'] || 'MSGID-' + Date.now();
+        const { date: valDate, ccy, amount } = this.parseField32A(f['30'] ? '000000' + f['30'] : (f['32B'] || ''));
+
+        return `<?xml version="1.0" encoding="UTF-8"?>
+<BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
+\t<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
+\t\t<Fr><FIId><FinInstnId><BICFI>${this.esc(senderBic)}</BICFI></FinInstnId></FIId></Fr>
+\t\t<To><FIId><FinInstnId><BICFI>${this.esc(receiverBic)}</BICFI></FinInstnId></FIId></To>
+\t\t<BizMsgIdr>${this.esc(msgId)}</BizMsgIdr>
+\t\t<MsgDefIdr>camt.057.001.06</MsgDefIdr>
+\t\t<BizSvc>swift.cbprplus.02</BizSvc>
+\t\t<CreDt>${now}</CreDt>
+\t</AppHdr>
+\t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.057.001.06">
+\t\t<NtfctnToRcv>
+\t\t\t<GrpHdr>
+\t\t\t\t<MsgId>${this.esc(msgId)}</MsgId>
+\t\t\t\t<CreDtTm>${now}</CreDtTm>
+\t\t\t</GrpHdr>
+\t\t\t<Ntfctn>
+\t\t\t\t<Id>${this.esc(msgId)}</Id>
+\t\t\t\t<Itm>
+\t\t\t\t\t<Amt Ccy="${this.esc(ccy || 'USD')}">${amount || '0.00'}</Amt>
+\t\t\t\t\t<XpctdValDt>${valDate || now.split('T')[0]}</XpctdValDt>
+\t\t\t\t</Itm>
+\t\t\t</Ntfctn>
+\t\t</NtfctnToRcv>
+\t</Document>
+</BusMsgEnvlp>`;
+    }
+
+    // === Generic fallback ===
+    private convertGeneric(f: Record<string, string>, mxType: string): string {
+        const now = this.isoNow();
+        const senderBic = this.normalizeSwiftBic(f['_senderBic'] || 'BANKUS33XXX');
+        const receiverBic = this.normalizeSwiftBic(f['_receiverBic'] || 'BANKGB2LXXX');
+        const msgId = f['20'] || 'MSGID-' + Date.now();
+
+        this.addLog('WARNING', `Using generic conversion for ${mxType}. Output may need manual adjustment.`);
+
+        return `<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generic conversion from ${this.detectedMtType} to ${mxType} -->
+<!-- Manual review recommended for full compliance -->
+<BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
+\t<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
+\t\t<Fr><FIId><FinInstnId><BICFI>${this.esc(senderBic)}</BICFI></FinInstnId></FIId></Fr>
+\t\t<To><FIId><FinInstnId><BICFI>${this.esc(receiverBic)}</BICFI></FinInstnId></FIId></To>
+\t\t<BizMsgIdr>${this.esc(msgId)}</BizMsgIdr>
+\t\t<MsgDefIdr>${mxType}</MsgDefIdr>
+\t\t<BizSvc>swift.cbprplus.02</BizSvc>
+\t\t<CreDt>${now}</CreDt>
+\t</AppHdr>
+\t<!-- Document body requires manual mapping for ${mxType} -->
+</BusMsgEnvlp>`;
+    }
+
+    // ─── Helpers ───
+    private esc(v: string) { return (v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+    private isoNow(): string {
+        const d = new Date(), p = (n: number) => n.toString().padStart(2, '0');
+        const off = -d.getTimezoneOffset(), s = off >= 0 ? '+' : '-';
+        return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}${s}${p(Math.floor(Math.abs(off) / 60))}:${p(Math.abs(off) % 60)}`;
+    }
+
+    private generateUUID(): string {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+            const r = Math.random() * 16 | 0;
+            return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+    }
+
+    private normalizeSwiftBic(bic: string): string {
+        bic = bic.trim().replace(/\s/g, '');
+        if (bic.length === 8) bic += 'XXX';
+        return bic.substring(0, 11).toUpperCase();
+    }
+
+    private parseField32A(val: string): { date: string; ccy: string; amount: string } {
+        // Format: YYMMDDCCCAMOUNT  e.g. 260304USD1500,00
+        val = val.trim().replace(/\n/g, '');
+        const m = val.match(/^(\d{6})([A-Z]{3})([0-9,.]+)$/);
+        if (m) {
+            const yy = m[1].substring(0, 2);
+            const mm = m[1].substring(2, 4);
+            const dd = m[1].substring(4, 6);
+            const year = parseInt(yy) > 50 ? '19' + yy : '20' + yy;
+            return {
+                date: `${year}-${mm}-${dd}`,
+                ccy: m[2],
+                amount: m[3].replace(',', '.')
+            };
+        }
+        // Try 32B format: CCCAMOUNT
+        const m2 = val.match(/^([A-Z]{3})([0-9,.]+)$/);
+        if (m2) return { date: '', ccy: m2[1], amount: m2[2].replace(',', '.') };
+        return { date: '', ccy: 'USD', amount: '0.00' };
+    }
+
+    private mapChargeBearer(mt: string): string {
+        const map: Record<string, string> = { 'SHA': 'SHAR', 'BEN': 'CRED', 'OUR': 'DEBT', 'SLV': 'SLEV' };
+        return map[mt.trim().toUpperCase()] || 'SHAR';
+    }
+
+    private parsePartyField(val: string): { name: string; iban: string; acct: string; bic: string } {
+        const lines = val.split('\n').map(l => l.trim()).filter(l => l);
+        let name = '', iban = '', acct = '', bic = '';
+
+        for (const line of lines) {
+            if (line.startsWith('/')) {
+                const id = line.substring(1);
+                if (/^[A-Z]{2}\d{2}/.test(id)) iban = id;
+                else acct = id;
+            } else if (/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}/.test(line) && line.length <= 11) {
+                bic = line;
+            } else {
+                name = name ? name + ' ' + line : line;
+            }
+        }
+        return { name: name || 'Unknown Party', iban, acct, bic };
+    }
+
+    private parseBicField(val: string, fallback: string): string {
+        const lines = val.split('\n').map(l => l.trim()).filter(l => l);
+        for (const line of lines) {
+            const clean = line.replace(/^\/[A-Z]+\//, '');
+            if (/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2,5}$/.test(clean)) {
+                return this.normalizeSwiftBic(clean);
+            }
+        }
+        return fallback;
+    }
+
+    private addLog(severity: string, message: string) {
+        this.conversionLog.push({ severity, message });
+    }
+
+    // Toolbar actions
+    copyMxToClipboard() {
+        if (!this.mxOutput?.trim()) return;
+        navigator.clipboard.writeText(this.mxOutput).then(() => {
+            this.snackBar.open('MX XML copied to clipboard!', 'Close', { duration: 3000, horizontalPosition: 'center', verticalPosition: 'bottom' });
+        });
+    }
+
+    downloadMx() {
+        if (!this.mxOutput?.trim()) return;
+        const b = new Blob([this.mxOutput], { type: 'application/xml' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(b);
+        a.download = `${this.mappedMxType || 'mx'}-${Date.now()}.xml`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }
+
+    validateMx() {
+        if (!this.mxOutput?.trim()) return;
+
+        // Client-side well-formedness pre-check
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(this.mxOutput, 'text/xml');
+        if (doc.querySelector('parsererror')) {
+            this.validationReport = {
+                status: 'FAIL', errors: 1, warnings: 0,
+                message: this.mappedMxType || 'Unknown',
+                total_time_ms: 0,
+                layer_status: { '1': { status: '❌', time: 0 } },
+                details: [{
+                    severity: 'ERROR', layer: 1, code: 'XML_SYNTAX', path: '1',
+                    message: 'Malformed XML — invalid structure or unclosed tags.',
+                    fix_suggestion: 'Check all tags are properly opened and closed.'
+                }]
+            };
+            this.validationStatus = 'done';
+            this.showValidationModal = true;
+            return;
+        }
+
+        this.validationReport = null;
+        this.validationStatus = 'validating';
+        this.validationExpandedIssue = null;
+        this.showValidationModal = true;
+
+        this.http.post(this.config.getApiUrl('/validate'), {
+            xml_content: this.mxOutput,
+            mode: 'Full 1-3',
+            message_type: this.mappedMxType || 'Auto-detect',
+            store_in_history: true
+        }).subscribe({
+            next: (data: any) => {
+                this.validationReport = data;
+                this.validationStatus = 'done';
+            },
+            error: () => {
+                this.validationReport = {
+                    status: 'FAIL', errors: 1, warnings: 0,
+                    message: 'Error', total_time_ms: 0,
+                    layer_status: {},
+                    details: [{
+                        severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
+                        path: '', message: 'Validation failed — backend not reachable.',
+                        fix_suggestion: 'Ensure the validation server is running.'
+                    }]
+                };
+                this.validationStatus = 'done';
+            }
+        });
+    }
+
+    closeValidationModal() {
+        this.showValidationModal = false;
+        this.validationReport = null;
+        this.validationStatus = 'idle';
+        this.validationExpandedIssue = null;
+    }
+
+    getValidationLayers(): string[] {
+        if (!this.validationReport?.layer_status) return [];
+        return Object.keys(this.validationReport.layer_status).sort();
+    }
+
+    getLayerName(k: string): string {
+        const names: Record<string, string> = { '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' };
+        return names[k] ?? `Layer ${k}`;
+    }
+
+    getLayerStatus(k: string): string {
+        return this.validationReport?.layer_status?.[k]?.status ?? '';
+    }
+
+    getLayerTime(k: string): number {
+        return this.validationReport?.layer_status?.[k]?.time ?? 0;
+    }
+
+    isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
+    isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
+    isLayerWarn(k: string) {
+        const s = this.getLayerStatus(k);
+        return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+    }
+
+    getValidationIssues(): any[] { return this.validationReport?.details ?? []; }
+    getValidationErrors(): any[] { return this.getValidationIssues().filter(i => i.severity === 'ERROR'); }
+    getValidationWarnings(): any[] { return this.getValidationIssues().filter(i => i.severity === 'WARNING'); }
+
+    toggleValidationIssue(issue: any) {
+        this.validationExpandedIssue = this.validationExpandedIssue === issue ? null : issue;
+    }
+
+    copyFix(text: string, e: MouseEvent) {
+        e.stopPropagation();
+        navigator.clipboard.writeText(text).then(() => {
+            this.snackBar.open('Copied!', '', { duration: 1500 });
+        });
+    }
+
+    loadSample(eventOrType: any) {
+        let type = eventOrType;
+        if (eventOrType && eventOrType.target) {
+            type = eventOrType.target.value;
+        }
+
+        switch (type) {
+            case 'MT103': this.mtInput = this.getSampleMT103(); break;
+            case 'MT202': this.mtInput = this.getSampleMT202(); break;
+            case 'MT202COV': this.mtInput = this.getSampleMT202COV(); break;
+            case 'MT192': this.mtInput = this.getSampleMT192(); break;
+            case 'MT196': this.mtInput = this.getGenericSample('MT196'); break;
+            default: this.mtInput = this.getGenericSample(type);
+        }
+        this.onMtChange(this.mtInput);
+        this.syncScroll(this.mtEditorRef.nativeElement, this.mtLineNumbersRef.nativeElement);
+    }
+
+    clearAll() {
+        this.mtInput = '';
+        this.mxOutput = '';
+        this.detectedMtType = '';
+        this.mappedMxType = '';
+        this.conversionStatus = 'idle';
+        this.conversionLog = [];
+        this.errorMessage = '';
+        this.updateLineCount('mt');
+        this.updateLineCount('mx');
+    }
+
+    // Sample messages
+    private getGenericSample(type: string): string {
+        const cleanType = type.replace('MT', '').replace('+', '').replace(' REMIT', '').replace('COV', '');
+        return `{1:F01BBBBUS33AXXX0000000000}{2:I${cleanType}CCCCGB2LXXXXN}{3:{121:${this.generateUUID()}}}{4:
+:20:REF${Date.now()}
+:32A:261231USD1500,00
+:50K:/US33XXX12345678901234
+GENERIC SENDER INC
+NEW YORK US
+:59:/GB29NWBK60161331926819
+GENERIC RECEIVER LTD
+LONDON GB
+:71A:SHA
+-}`;
+    }
+
+    private getSampleMT103(): string {
+        return `{1:F01BBBBUS33AXXX0000000000}{2:I103CCCCGB2LXXXXN}{3:{121:550e8400-e29b-41d4-a716-446655440000}}{4:
+:20:REF20261231001
+:23B:CRED
+:32A:261231USD1500,00
+:50K:/US33XXX12345678901234
+JOHN DOE CORP
+123 MAIN STREET
+NEW YORK US
+:52A:BBBBUS33XXX
+:53A:BBBBUS33XXX
+:57A:CCCCGB2LXXX
+:59:/GB29NWBK60161331926819
+JANE SMITH LTD
+456 HIGH STREET
+LONDON GB
+:70:PAYMENT FOR INVOICE 12345
+:71A:SHA
+-}`;
+    }
+
+    private getSampleMT202(): string {
+        return `{1:F01BBBBUS33AXXX0000000000}{2:I202CCCCGB2LXXXXN}{3:{121:660e8400-e29b-41d4-a716-446655440000}}{4:
+:20:REF20261231002
+:21:E2E-FI-001
+:32A:261231EUR50000,00
+:52A:BBBBUS33XXX
+:58A:CCCCGB2LXXX
+-}`;
+    }
+
+    private getSampleMT202COV(): string {
+        return `{1:F01RBOSGB2LAXXX0000000000}{2:I202NDEAFIHHXXXXN}{3:{121:8a562c67-ca16-48ba-b074-65581be6f001}}{4:
+:20:REF20261231003
+:21:E2E-COV-001
+:32A:261231EUR1500000,00
+:52A:RBOSGB2LXXX
+:58A:OKOYFIHH
+:119:COV
+:50K:/R85236974
+A DEBITER
+:59:/O96325478
+Z KREDITER
+-}`;
+    }
+
+    private getSampleMT192(): string {
+        return `{1:F01BBBBUS33AXXX0000000000}{2:I192CCCCGB2LXXXXN}{4:
+:20:REF192CANX001
+:21:RELREF778899
+-}`;
+    }
+
+    private getLineSuggestion(tag: string): { line: number | string, isExists: boolean } {
+        const lines = (this.mtInput || '').split('\n');
+
+        // 1. Check if tag exists but is empty
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].trim().startsWith(`:${tag}:`)) {
+                return { line: i + 1, isExists: true };
+            }
+        }
+
+        // 2. Suggest insertion point based on tag order (simple numeric sort)
+        const targetTagNum = parseInt(tag.substring(0, 2));
+        let lastTagLine = -1;
+        let foundInsertionLine = -1;
+
+        for (let i = 0; i < lines.length; i++) {
+            const lineMatch = lines[i].match(/^:([0-9]{2}[A-Z]?):/);
+            if (lineMatch) {
+                const currentTagNum = parseInt(lineMatch[1].substring(0, 2));
+                if (currentTagNum > targetTagNum && foundInsertionLine === -1) {
+                    foundInsertionLine = i + 1;
+                }
+                lastTagLine = i + 1;
+            }
+        }
+
+        if (foundInsertionLine !== -1) return { line: `Line ${foundInsertionLine}`, isExists: false };
+        if (lastTagLine !== -1) return { line: `Line ${lastTagLine + 1}`, isExists: false };
+
+        return { line: 'New Line', isExists: false };
+    }
+}

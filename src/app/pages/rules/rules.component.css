@@ -1,29 +1,30 @@
 .rules-container {
     width: 100%;
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 0 auto;
-    padding-bottom: 60px;
+    padding: 10px 24px 40px;
     box-sizing: border-box;
-    overflow-x: hidden;
 }
 
 .page-header {
-    margin-bottom: 48px;
-    text-align: center;
+    margin-bottom: 32px;
 }
 
 .page-header h1 {
-    font-size: 2.5rem;
+    font-size: 2.25rem;
     font-weight: 800;
-    color: #1a202c;
-    margin-bottom: 12px;
+    color: var(--text-main);
+    margin-bottom: 8px;
+    letter-spacing: -1px;
 }
 
 .page-header p {
-    color: #718096;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    max-width: 700px;
 }
 
+/* ── Rules Stack (Layers) ── */
 .rules-stack {
     display: flex;
     flex-direction: column;
@@ -32,90 +33,129 @@
 
 .layer-card {
     position: relative;
-    border-radius: 20px;
-    padding: 16px;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s ease;
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-light) !important;
+    border-radius: 20px !important;
+    box-shadow: var(--shadow-md) !important;
+    overflow: hidden;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+    padding: 8px;
 }
 
 .layer-card:hover {
-    transform: translateX(10px);
+    transform: translateY(-2px);
+    border-color: rgba(99, 102, 241, 0.2) !important;
 }
 
 .layer-badge {
     position: absolute;
     top: 24px;
     right: 24px;
-    background: #e2e8f0;
-    color: #475569;
-    padding: 6px 16px;
-    border-radius: 12px;
-    font-size: 0.75rem;
+    padding: 6px 14px;
+    background: rgba(99, 102, 241, 0.1);
+    color: #818cf8;
+    font-size: 11px;
     font-weight: 800;
-    letter-spacing: 0.05em;
+    border-radius: 8px;
+    letter-spacing: 1px;
+    border: 1px solid rgba(99, 102, 241, 0.2);
 }
 
-.layer-badge.highlight {
-    background: #4f46e5;
-    color: white;
-}
 
-.layer-card.gradient {
-    background: linear-gradient(135deg, #ffffff, #f5f3ff);
-    border-left: 6px solid #4f46e5;
+mat-card-header {
+    padding: 24px 24px 8px !important;
 }
 
 mat-card-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 4px;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    color: var(--text-main) !important;
+    margin-bottom: 4px !important;
 }
 
 mat-card-subtitle {
-    color: #6366f1;
-    font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.95rem !important;
+    color: #6366f1 !important;
+    font-weight: 600 !important;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.5px;
+}
+
+
+mat-card-content {
+    padding: 8px 24px 32px !important;
 }
 
 mat-card-content p {
-    color: #64748b;
+    color: var(--text-muted);
     font-size: 1rem;
-    margin: 16px 0 24px;
+    line-height: 1.6;
+    margin-bottom: 24px;
+    max-width: 800px;
 }
 
+.validation-section-title {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.validation-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-light);
+}
+
+/* ── Rule List ── */
 .rule-list {
     list-style: none;
     padding: 0;
+    margin: 0;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 12px;
 }
 
 .rule-list li {
     display: flex;
-    align-items: center;
-    gap: 10px;
+    align-items: flex-start;
+    gap: 12px;
     font-size: 0.95rem;
-    color: #334155;
-    background: rgba(0, 0, 0, 0.02);
+    color: var(--text-main);
     padding: 12px 16px;
+    background: var(--bg-app);
     border-radius: 12px;
+    border: 1px solid var(--border-light);
+    min-width: 0;
+    /* Prevents overflow from long strings */
+    overflow: hidden;
+    word-break: break-word;
 }
 
 .rule-list mat-icon {
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
-    color: #10b981;
+    color: #22c55e;
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    margin-top: -1px;
+    /* Optical alignment with text */
 }
 
-.gradient .rule-list mat-icon {
-    color: #4f46e5;
+.rule-list strong {
+    color: var(--text-main);
+    font-weight: 600;
+    margin-right: 4px;
 }
 
+/* ── Animations ── */
 .animate-fade-in {
     animation: fadeIn 0.8s ease;
 }
@@ -123,7 +163,7 @@ mat-card-content p {
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(10px);
     }
 
     to {
@@ -132,141 +172,23 @@ mat-card-content p {
     }
 }
 
-/* Validation Section Styles */
-.validation-section-title {
-    color: #1e293b;
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin-top: 24px;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-
-
-.rule-list li strong {
-    color: #1e293b;
-    margin-right: 4px;
-}
-
-/* ========================================= */
-/* RULES PAGE RESPONSIVENESS                 */
-/* ========================================= */
-
-/* ========================================= */
-/* ELITE RESPONSIVENESS (MOBILE-FIRST)       */
-/* ========================================= */
-
+/* ── Mobile Optimization ── */
 @media (max-width: 768px) {
-    .rules-container {
-        padding: 0 4px;
-    }
-
-    .page-header {
-        text-align: left !important;
-        margin-bottom: 40px;
-        padding: 0 16px;
-    }
-
     .page-header h1 {
-        font-size: 2.25rem !important;
-        line-height: 1.1;
-        letter-spacing: -2px !important;
-        word-spacing: 2px;
-        background: linear-gradient(to bottom right, #111827, #374151);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 16px;
-    }
-
-    .page-header p {
-        font-size: 1.15rem !important;
-        line-height: 1.4;
-        color: #64748b;
-        max-width: 90%;
-    }
-
-    .rules-stack {
-        gap: 20px;
-    }
-
-    .layer-card {
-        padding: 24px 20px !important;
-        border-radius: 24px !important;
-        margin: 0 8px;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04) !important;
-        width: calc(100% - 16px);
+        font-size: 1.75rem;
     }
 
     .layer-badge {
         position: static;
-        display: inline-flex;
-        margin-bottom: 20px;
-        padding: 8px 14px;
-        border-radius: 12px;
-        font-size: 0.8rem;
+        display: inline-block;
+        margin: 24px 24px 0;
     }
 
-    mat-card-title {
-        font-size: 1.6rem !important;
-        line-height: 1.2;
-        margin-bottom: 8px !important;
-    }
-
-    mat-card-subtitle {
-        font-size: 0.8rem !important;
-        letter-spacing: 0.1em;
-    }
-
-    mat-card-content p {
-        font-size: 1.05rem !important;
-        line-height: 1.6;
-        margin: 12px 0 24px !important;
+    mat-card-header {
+        padding-top: 16px !important;
     }
 
     .rule-list {
         grid-template-columns: 1fr;
-        gap: 10px;
-    }
-
-    .rule-list li {
-        padding: 16px !important;
-        font-size: 0.95rem !important;
-        border: 1px solid rgba(0, 0, 0, 0.03);
-        flex-direction: row;
-        align-items: flex-start;
-        word-break: break-all;
-        overflow-wrap: break-word;
-    }
-
-    .rule-list li strong {
-        display: block;
-        margin-bottom: 2px;
-    }
-
-
-}
-
-@media (max-width: 480px) {
-    .page-header h1 {
-        font-size: 1.85rem !important;
-    }
-
-    .layer-card {
-        padding: 20px 12px !important;
-        margin: 0 4px;
-        width: calc(100% - 8px);
-    }
-
-    .rule-list li {
-        padding: 12px 14px !important;
-        font-size: 0.9rem !important;
-    }
-
-    mat-card-title {
-        font-size: 1.4rem !important;
     }
 }

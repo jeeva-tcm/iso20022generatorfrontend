@@ -1,80 +1,3 @@
-<!-- <div class="rules-container animate-fade-in">
-    <div class="page-header">
-        <h1>Validation Rule Engine</h1>
-        <p>A multi-layered defense system ensuring 100% compliance with ISO 20022 standards.</p>
-    </div>
-
-    <div class="rules-stack">
-        <mat-card class="layer-card">
-            <div class="layer-badge">LAYER 1</div>
-            <mat-card-header>
-                <mat-card-title>Technical & Payload Security</mat-card-title>
-                <mat-card-subtitle>Foundational Integrity Check</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-                <p>Verifies the physical properties of the incoming XML message before processing begins.</p>
-                <ul class="rule-list">
-                    <li><mat-icon>check</mat-icon> Well-formedness check (XML syntax)</li>
-                    <li><mat-icon>check</mat-icon> UTF-8 Encoding verification</li>
-                    <li><mat-icon>check</mat-icon> Illegal control character detection (ASCII 0-31)</li>
-                    <li><mat-icon>check</mat-icon> Payload size and presence validation</li>
-                </ul>
-            </mat-card-content>
-        </mat-card>
-
-        <mat-card class="layer-card">
-            <div class="layer-badge">LAYER 2</div>
-            <mat-card-header>
-                <mat-card-title>Structural ISO Standard (XSD)</mat-card-title>
-                <mat-card-subtitle>Blueprint Matcher</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-                <p>Enforces strict adherence to the official ISO 20022 XML Schema Definitions (XSD).</p>
-                <ul class="rule-list">
-                    <li><mat-icon>check</mat-icon> Mandatory tag presence and sequencing</li>
-                    <li><mat-icon>check</mat-icon> Field data type constraints (Decimal, Date, String)</li>
-                    <li><mat-icon>check</mat-icon> Namespace and root element verification</li>
-                    <li><mat-icon>check</mat-icon> Pattern-based string length restrictions</li>
-                </ul>
-            </mat-card-content>
-        </mat-card>
-
-        <mat-card class="layer-card gradient">
-            <div class="layer-badge highlight">LAYER 3 & 4</div>
-            <mat-card-header>
-                <mat-card-title>Dynamic Business Logic</mat-card-title>
-                <mat-card-subtitle>Enterprise Financial Rules</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-                <p>Advanced cross-field logic and conditional rules specific to banking transactions.</p>
-                <ul class="rule-list">
-                    <li><mat-icon>bolt</mat-icon> IBAN Modulo 97 checksum validation</li>
-                    <li><mat-icon>bolt</mat-icon> Amount summation (Header vs Individual transactions)</li>
-                    <li><mat-icon>bolt</mat-icon> Conditional mandatory fields (e.g. Agent BIC requirement)</li>
-                    <li><mat-icon>bolt</mat-icon> Interbank settlement date & time-stamping rules</li>
-                </ul>
-            </mat-card-content>
-        </mat-card>
-
-        <mat-card class="layer-card">
-            <div class="layer-badge">LAYER 5</div>
-            <mat-card-header>
-                <mat-card-title>Reference Master Data</mat-card-title>
-                <mat-card-subtitle>Global Lookup Checks</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-                <p>Validation against real-time global master data directories.</p>
-                <ul class="rule-list">
-                    <li><mat-icon>language</mat-icon> BIC code verification (SWIFT Directory)</li>
-                    <li><mat-icon>language</mat-icon> Currency code validation (ISO 4217)</li>
-                    <li><mat-icon>language</mat-icon> Country code and ISO 3166 compliance</li>
-                    <li><mat-icon>language</mat-icon> Externalized purpose and charge codes</li>
-                </ul>
-            </mat-card-content>
-        </mat-card>
-    </div>
-</div> -->
-
 <div class="rules-container animate-fade-in">
   <div class="page-header">
     <h1>Validation Rule Engine</h1>
@@ -179,19 +102,19 @@
         </p>
         <ul class="rule-list">
           <li>
-            <mat-icon style="width: 2rem;">check</mat-icon>
+            <mat-icon>check</mat-icon>
             Purpose Code validation against ISO Code Sets (SALA/RENT/SUPP)
           </li>
           <li>
-            <mat-icon style="width: 2rem;">check</mat-icon>
+            <mat-icon>check</mat-icon>
             BIC code verification (SWIFT Directory) & Currency code validation (ISO 4217)
           </li>
           <li>
-            <mat-icon style="width: 2rem;">check</mat-icon>
+            <mat-icon>check</mat-icon>
             Charge Bearer validation (SLEV, SHAR, CRED, DEBT) logic
           </li>
           <li>
-            <mat-icon style="width: 2rem;">check</mat-icon>
+            <mat-icon>check</mat-icon>
             Conditional Amount Limits and High-Value payment flagging
           </li>
         </ul>

@@ -1,0 +1,401 @@
+import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
+import { ConfigService } from '../../../services/config.service';
+
+@Component({
+    selector: 'app-pacs9',
+    standalone: true,
+    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule],
+    templateUrl: './pacs9.component.html',
+    styleUrl: './pacs9.component.css'
+})
+export class Pacs9Component implements OnInit {
+    form!: FormGroup;
+    generatedXml = '';
+    currentTab: 'form' | 'preview' = 'form';
+    editorLineCount: number[] = [];
+    isParsingXml = false;
+
+    currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'SGD', 'HKD', 'INR', 'CNY', 'AED', 'SAR'];
+    sttlmMethods = ['INDA', 'INGA', 'CLRG', 'COVE'];
+
+    agentPrefixes = ['instgAgt', 'instdAgt', 'dbtrAgt', 'cdtrAgt',
+        'prvsInstgAgt1', 'prvsInstgAgt2', 'prvsInstgAgt3',
+        'intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'];
+
+    constructor(
+        private fb: FormBuilder,
+        private http: HttpClient,
+        private config: ConfigService,
+        private snackBar: MatSnackBar,
+        private router: Router
+    ) { }
+
+    ngOnInit() {
+        this.buildForm();
+        this.generateXml();
+        this.onEditorChange(this.generatedXml, true);
+        // Auto-sync AppHdr Fr/To BICs with GrpHdr InstgAgt/InstdAgt
+        this.form.get('fromBic')?.valueChanges.subscribe(v => {
+            this.form.patchValue({ instgAgtBic: v }, { emitEvent: false });
+        });
+        this.form.get('toBic')?.valueChanges.subscribe(v => {
+            this.form.patchValue({ instdAgtBic: v }, { emitEvent: false });
+        });
+        this.form.get('instgAgtBic')?.valueChanges.subscribe(v => {
+            this.form.patchValue({ fromBic: v }, { emitEvent: false });
+        });
+        this.form.get('instdAgtBic')?.valueChanges.subscribe(v => {
+            this.form.patchValue({ toBic: v }, { emitEvent: false });
+        });
+        // Track form changes for live XML update
+        this.form.valueChanges.subscribe(() => {
+            this.updateConditionalValidators();
+            this.generateXml();
+        });
+    }
+
+    updateConditionalValidators() {
+        this.agentPrefixes.forEach(p => {
+            const addrType = this.form.get(p + 'AddrType')?.value;
+            const ctryCtrl = this.form.get(p + 'Ctry');
+            const twnNmCtrl = this.form.get(p + 'TwnNm');
+
+            if (addrType && addrType !== 'none') {
+                if (!ctryCtrl?.hasValidator(Validators.required)) {
+                    ctryCtrl?.setValidators([Validators.required, Validators.pattern(/^[A-Z]{2,2}$/)]);
+                    ctryCtrl?.updateValueAndValidity({ emitEvent: false });
+                }
+            } else {
+                if (ctryCtrl?.hasValidator(Validators.required)) {
+                    ctryCtrl?.clearValidators();
+                    ctryCtrl?.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
+                    ctryCtrl?.updateValueAndValidity({ emitEvent: false });
+                }
+            }
+
+            if (addrType === 'structured' || addrType === 'hybrid') {
+                if (!twnNmCtrl?.hasValidator(Validators.required)) {
+                    twnNmCtrl?.setValidators([Validators.required, Validators.maxLength(140)]);
+                    twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
+                }
+            } else {
+                if (twnNmCtrl?.hasValidator(Validators.required)) {
+                    twnNmCtrl?.clearValidators();
+                    twnNmCtrl?.setValidators([Validators.maxLength(140)]);
+                    twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
+                }
+            }
+        });
+    }
+
+    private buildForm() {
+        const BIC = [Validators.required, Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
+        const BIC_OPT = [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
+        const c: any = {
+            fromBic: ['BBBBUS33XXX', BIC], toBic: ['CCCCGB2LXXX', BIC], bizMsgId: ['MSG-2026-FI-001', Validators.required],
+            msgId: ['MSG-2026-FI-001', Validators.required], creDtTm: [this.isoNow(), Validators.required],
+            nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['INDA', Validators.required],
+            instgAgtBic: ['BBBBUS33XXX', BIC], instdAgtBic: ['CCCCGB2LXXX', BIC],
+            instrId: ['INSTR-FI-001', Validators.required], endToEndId: ['E2E-FI-001', Validators.required],
+            txId: ['TX-FI-001', Validators.required],
+            uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/)]],
+            amount: ['50000.00', [Validators.required, Validators.pattern(/^(?!0+(\.0+)?$)\d{1,18}(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
+            sttlmDt: [new Date().toISOString().split('T')[0], Validators.required],
+            // Debtor FI (required)
+            dbtrFiBic: ['BBBBUS33XXX', BIC], dbtrFiAcct: [''],
+            // Debtor Agent (optional)
+            dbtrAgtBic: ['', BIC_OPT],
+            // Creditor Agent (optional)
+            cdtrAgtBic: ['', BIC_OPT],
+            // Creditor FI (required)
+            cdtrFiBic: ['CCCCGB2LXXX', BIC], cdtrFiAcct: [''],
+            // Optional agents
+            prvsInstgAgt1Bic: ['', BIC_OPT], prvsInstgAgt2Bic: ['', BIC_OPT], prvsInstgAgt3Bic: ['', BIC_OPT],
+            intrmyAgt1Bic: ['', BIC_OPT], intrmyAgt2Bic: ['', BIC_OPT], intrmyAgt3Bic: ['', BIC_OPT],
+
+        };
+        // Address prefixes for agents
+        this.agentPrefixes.forEach(p => {
+            c[p + 'AddrType'] = 'none'; c[p + 'AdrLine1'] = ['', Validators.maxLength(70)]; c[p + 'AdrLine2'] = ['', Validators.maxLength(70)];
+            c[p + 'Dept'] = ['', Validators.maxLength(70)]; c[p + 'SubDept'] = ['', Validators.maxLength(70)];
+            c[p + 'StrtNm'] = ['', Validators.maxLength(140)]; c[p + 'BldgNb'] = ['', Validators.maxLength(16)]; c[p + 'BldgNm'] = ['', Validators.maxLength(140)];
+            c[p + 'Flr'] = ['', Validators.maxLength(70)]; c[p + 'PstBx'] = ['', Validators.maxLength(16)]; c[p + 'Room'] = ['', Validators.maxLength(70)];
+            c[p + 'PstCd'] = ['', Validators.maxLength(16)]; c[p + 'TwnNm'] = ['', Validators.maxLength(140)]; c[p + 'CtrySubDvsn'] = ['', Validators.maxLength(35)]; c[p + 'Ctry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
+            c[p + 'TwnLctnNm'] = ['', Validators.maxLength(140)]; c[p + 'DstrctNm'] = ['', Validators.maxLength(140)]; c[p + 'AdrTpCd'] = ['']; c[p + 'AdrTpPrtry'] = ['', Validators.maxLength(35)];
+        });
+        this.form = this.fb.group(c);
+    }
+
+    err(f: string): string | null {
+        const c = this.form.get(f);
+        if (!c || (!c.dirty && !c.touched) || !c.invalid) return null;
+        if (c.errors?.['required']) return 'Required field.';
+        if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
+        if (c.errors?.['pattern']) {
+            if (f.toLowerCase().includes('bic')) return 'Valid 8 or 11-char BIC required.';
+            if (f.toLowerCase().includes('iban')) return 'Valid 34-char IBAN required.';
+            if (f.toLowerCase().includes('uetr')) return 'Valid UUID required.';
+            if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Amount must be > 0 (max 18 digits).';
+            if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
+            if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
+        }
+        return 'Invalid value.';
+    }
+
+    isoNow(): string {
+        const d = new Date(), p = (n: number) => n.toString().padStart(2, '0');
+        const off = -d.getTimezoneOffset(), s = off >= 0 ? '+' : '-';
+        return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}${s}${p(Math.floor(Math.abs(off) / 60))}:${p(Math.abs(off) % 60)}`;
+    }
+
+
+
+    generateXml() {
+        if (this.isParsingXml) return;
+        const v = this.form.value;
+        let creDtTm = v.creDtTm || this.isoNow();
+        if (creDtTm.endsWith('Z')) creDtTm = creDtTm.replace('Z', '+00:00');
+
+        // CdtTrfTxInf — pacs.009.001.08 CBPR+ element order
+        let tx = '';
+        tx += this.tag('PmtId', this.el('InstrId', v.instrId) + this.el('EndToEndId', v.endToEndId) + this.el('TxId', v.txId) + this.el('UETR', v.uetr), 3);
+        tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${v.amount}</IntrBkSttlmAmt>\n`;
+        tx += this.el('IntrBkSttlmDt', v.sttlmDt, 3);
+        // PrvsInstgAgts
+        tx += this.agt('PrvsInstgAgt1', 'prvsInstgAgt1', v);
+        tx += this.agt('PrvsInstgAgt2', 'prvsInstgAgt2', v);
+        tx += this.agt('PrvsInstgAgt3', 'prvsInstgAgt3', v);
+        // InstgAgt/InstdAgt in CdtTrfTxInf (CBPR+ requires these at txn level, NOT GrpHdr)
+        tx += this.agt('InstgAgt', 'instgAgt', v);
+        tx += this.agt('InstdAgt', 'instdAgt', v);
+        // IntrmyAgts
+        tx += this.agt('IntrmyAgt1', 'intrmyAgt1', v);
+        tx += this.agt('IntrmyAgt2', 'intrmyAgt2', v);
+        tx += this.agt('IntrmyAgt3', 'intrmyAgt3', v);
+        // Dbtr (FI — BranchAndFinancialInstitutionIdentification8)
+        tx += `\t\t\t<Dbtr>\n\t\t\t\t<FinInstnId>\n\t\t\t\t\t<BICFI>${this.e(v.dbtrFiBic)}</BICFI>\n\t\t\t\t</FinInstnId>\n\t\t\t</Dbtr>\n`;
+        if (v.dbtrFiAcct?.trim()) tx += `\t\t\t<DbtrAcct>\n\t\t\t\t<Id>\n\t\t\t\t\t<Othr>\n\t\t\t\t\t\t<Id>${this.e(v.dbtrFiAcct)}</Id>\n\t\t\t\t\t</Othr>\n\t\t\t\t</Id>\n\t\t\t</DbtrAcct>\n`;
+        // DbtrAgt (optional)
+        tx += this.agt('DbtrAgt', 'dbtrAgt', v);
+        // CdtrAgt (optional)
+        tx += this.agt('CdtrAgt', 'cdtrAgt', v);
+        // Cdtr (FI)
+        tx += `\t\t\t<Cdtr>\n\t\t\t\t<FinInstnId>\n\t\t\t\t\t<BICFI>${this.e(v.cdtrFiBic)}</BICFI>\n\t\t\t\t</FinInstnId>\n\t\t\t</Cdtr>\n`;
+        if (v.cdtrFiAcct?.trim()) tx += `\t\t\t<CdtrAcct>\n\t\t\t\t<Id>\n\t\t\t\t\t<Othr>\n\t\t\t\t\t\t<Id>${this.e(v.cdtrFiAcct)}</Id>\n\t\t\t\t\t</Othr>\n\t\t\t\t</Id>\n\t\t\t</CdtrAcct>\n`;
+
+
+        const frBic = v.fromBic;
+        const toBic = v.toBic;
+
+        this.generatedXml =
+            `<?xml version="1.0" encoding="UTF-8"?>
+<BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
+\t<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
+\t\t<Fr><FIId><FinInstnId><BICFI>${this.e(frBic)}</BICFI></FinInstnId></FIId></Fr>
+\t\t<To><FIId><FinInstnId><BICFI>${this.e(toBic)}</BICFI></FinInstnId></FIId></To>
+\t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>
+\t\t<MsgDefIdr>pacs.009.001.08</MsgDefIdr>
+\t\t<BizSvc>swift.cbprplus.02</BizSvc>
+\t\t<CreDt>${creDtTm}</CreDt>
+\t</AppHdr>
+\t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.009.001.08">
+\t\t<FICdtTrf>
+\t\t\t<GrpHdr>
+\t\t\t\t<MsgId>${this.e(v.msgId)}</MsgId>
+\t\t\t\t<CreDtTm>${creDtTm}</CreDtTm>
+\t\t\t\t<NbOfTxs>${v.nbOfTxs}</NbOfTxs>
+\t\t\t\t<SttlmInf>
+\t\t\t\t\t<SttlmMtd>${this.e(v.sttlmMtd)}</SttlmMtd>
+\t\t\t\t</SttlmInf>
+\t\t\t</GrpHdr>
+\t\t\t<CdtTrfTxInf>
+${tx}\t\t\t</CdtTrfTxInf>
+\t\t</FICdtTrf>
+\t</Document>
+</BusMsgEnvlp>`;
+        this.onEditorChange(this.generatedXml, true);
+    }
+
+    // XML helpers
+    private e(v: string) { return (v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    private tabs(n: number) { return '\t'.repeat(n); }
+    private el(tag: string, val: string, indent = 3) { return val?.trim() ? `${this.tabs(indent)}<${tag}>${this.e(val)}</${tag}>\n` : ''; }
+    private tag(tag: string, content: string, indent = 3) { return content?.trim() ? `${this.tabs(indent)}<${tag}>\n${content}${this.tabs(indent)}</${tag}>\n` : ''; }
+
+    grpAgt(tag: string, prefix: string, v: any) {
+        const bic = v[prefix + 'Bic']; if (!bic) return '';
+        return `\t\t\t\t<${tag}>\n\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n${this.addrXml(v, prefix, 6)}\t\t\t\t\t</FinInstnId>\n\t\t\t\t</${tag}>\n`;
+    }
+    agt(tag: string, prefix: string, v: any) {
+        const bic = v[prefix + 'Bic']; if (!bic) return '';
+        return `\t\t\t<${tag}>\n\t\t\t\t<FinInstnId>\n\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n${this.addrXml(v, prefix, 5)}\t\t\t\t</FinInstnId>\n\t\t\t</${tag}>\n`;
+    }
+    addrXml(v: any, p: string, indent = 4): string {
+        const type = v[p + 'AddrType']; if (!type || type === 'none') return '';
+        const lines: string[] = []; const t = this.tabs(indent + 1);
+        if (type === 'structured' || type === 'hybrid') {
+            // PostalAddress27 XSD element order
+            if (v[p + 'AdrTpCd']) lines.push(`${t}<AdrTp>\n${t}\t<Cd>${this.e(v[p + 'AdrTpCd'])}</Cd>\n${t}</AdrTp>`);
+            else if (v[p + 'AdrTpPrtry']) lines.push(`${t}<AdrTp>\n${t}\t<Prtry>${this.e(v[p + 'AdrTpPrtry'])}</Prtry>\n${t}</AdrTp>`);
+            if (v[p + 'Dept']) lines.push(`${t}<Dept>${this.e(v[p + 'Dept'])}</Dept>`);
+            if (v[p + 'SubDept']) lines.push(`${t}<SubDept>${this.e(v[p + 'SubDept'])}</SubDept>`);
+            if (v[p + 'StrtNm']) lines.push(`${t}<StrtNm>${this.e(v[p + 'StrtNm'])}</StrtNm>`);
+            if (v[p + 'BldgNb']) lines.push(`${t}<BldgNb>${this.e(v[p + 'BldgNb'])}</BldgNb>`);
+            if (v[p + 'BldgNm']) lines.push(`${t}<BldgNm>${this.e(v[p + 'BldgNm'])}</BldgNm>`);
+            if (v[p + 'Flr']) lines.push(`${t}<Flr>${this.e(v[p + 'Flr'])}</Flr>`);
+            if (v[p + 'PstBx']) lines.push(`${t}<PstBx>${this.e(v[p + 'PstBx'])}</PstBx>`);
+            if (v[p + 'Room']) lines.push(`${t}<Room>${this.e(v[p + 'Room'])}</Room>`);
+            if (v[p + 'PstCd']) lines.push(`${t}<PstCd>${this.e(v[p + 'PstCd'])}</PstCd>`);
+            if (v[p + 'TwnNm']) lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'])}</TwnNm>`);
+            if (v[p + 'TwnLctnNm']) lines.push(`${t}<TwnLctnNm>${this.e(v[p + 'TwnLctnNm'])}</TwnLctnNm>`);
+            if (v[p + 'DstrctNm']) lines.push(`${t}<DstrctNm>${this.e(v[p + 'DstrctNm'])}</DstrctNm>`);
+            if (v[p + 'CtrySubDvsn']) lines.push(`${t}<CtrySubDvsn>${this.e(v[p + 'CtrySubDvsn'])}</CtrySubDvsn>`);
+            if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
+        }
+        // AdrLine: allowed in unstructured/hybrid, FORBIDDEN in structured
+        if (type === 'unstructured' || type === 'hybrid') {
+            if (v[p + 'AdrLine1']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine1'])}</AdrLine>`);
+            if (v[p + 'AdrLine2']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine2'])}</AdrLine>`);
+        }
+        if (!lines.length) return '';
+        return `${this.tabs(indent)}<PstlAdr>\n${lines.join('\n')}\n${this.tabs(indent)}</PstlAdr>\n`;
+    }
+
+
+
+    // Validation
+    validateMessage() {
+        this.generateXml();
+        if (!this.generatedXml?.trim()) return;
+
+        // Redirect to validate page with the XML payload
+        this.router.navigate(['/validate'], {
+            state: {
+                autoValidateXml: this.generatedXml,
+                fileName: `pacs009-${Date.now()}.xml`,
+                messageType: 'pacs.009.001.08'
+            }
+        });
+    }
+
+
+
+    downloadXml() { this.generateXml(); const b = new Blob([this.generatedXml], { type: 'application/xml' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `pacs009-${Date.now()}.xml`; a.click(); URL.revokeObjectURL(a.href); }
+    copyToClipboard() {
+        this.generateXml();
+        navigator.clipboard.writeText(this.generatedXml).then(() => {
+            this.snackBar.open('Copied!', 'Close', { duration: 3000, horizontalPosition: 'center', verticalPosition: 'bottom' });
+        });
+    }
+    switchToPreview() { this.generateXml(); this.currentTab = 'preview'; }
+
+    onEditorChange(content: string, fromForm = false) {
+        this.generatedXml = content;
+        const lines = content.split('\n').length;
+        this.editorLineCount = Array.from({ length: lines }, (_, i) => i + 1);
+
+        if (fromForm || this.isParsingXml) return;
+        this.parseXmlToForm(content);
+    }
+
+    parseXmlToForm(content: string) {
+        try {
+            const doc = new DOMParser().parseFromString(content, 'text/xml');
+            if (doc.querySelector('parsererror')) return;
+
+            const patch: any = {};
+            const tval = (t: string) => doc.getElementsByTagName(t)[0]?.textContent || '';
+            const setVal = (key: string, val: string) => { patch[key] = val; };
+
+            setVal('bizMsgId', tval('BizMsgIdr'));
+            setVal('msgId', tval('MsgId'));
+            setVal('instrId', tval('InstrId'));
+            setVal('endToEndId', tval('EndToEndId'));
+            setVal('txId', tval('TxId'));
+            setVal('uetr', tval('UETR'));
+            setVal('nbOfTxs', tval('NbOfTxs'));
+            setVal('sttlmMtd', tval('SttlmMtd'));
+            setVal('sttlmDt', tval('IntrBkSttlmDt'));
+
+            const amtEl = doc.getElementsByTagName('IntrBkSttlmAmt')[0] || doc.getElementsByTagName('EqvtAmt')[0];
+            setVal('amount', amtEl ? (amtEl.textContent || '') : '');
+            setVal('currency', amtEl ? (amtEl.getAttribute('Ccy') || '') : '');
+
+            const creDtTm = doc.getElementsByTagName('CreDtTm')[0] || doc.getElementsByTagName('CreDt')[0];
+            setVal('creDtTm', creDtTm ? (creDtTm.textContent || '') : '');
+
+            const tryTag = (parentOrEl: string | Element, child: string) => {
+                const p = typeof parentOrEl === 'string' ? doc.getElementsByTagName(parentOrEl)[0] : parentOrEl;
+                return p ? (p.getElementsByTagName(child)[0]?.textContent || '') : '';
+            };
+
+            setVal('dbtrFiBic', tryTag('Dbtr', 'BICFI'));
+            setVal('dbtrFiAcct', tryTag('DbtrAcct', 'Id'));
+            setVal('cdtrFiBic', tryTag('Cdtr', 'BICFI'));
+            setVal('cdtrFiAcct', tryTag('CdtrAcct', 'Id'));
+
+            setVal('dbtrAgtBic', tryTag('DbtrAgt', 'BICFI'));
+            setVal('cdtrAgtBic', tryTag('CdtrAgt', 'BICFI'));
+
+            setVal('fromBic', tryTag('Fr', 'BICFI'));
+            setVal('toBic', tryTag('To', 'BICFI'));
+
+            const instgBic = tryTag('InstgAgt', 'BICFI');
+            setVal('instgAgtBic', instgBic || patch.fromBic);
+            const instdBic = tryTag('InstdAgt', 'BICFI');
+            setVal('instdAgtBic', instdBic || patch.toBic);
+
+            const mapAgt = (tag: string, prefix: string) => setVal(prefix + 'Bic', tryTag(tag, 'BICFI'));
+            mapAgt('PrvsInstgAgt1', 'prvsInstgAgt1');
+            mapAgt('PrvsInstgAgt2', 'prvsInstgAgt2');
+            mapAgt('PrvsInstgAgt3', 'prvsInstgAgt3');
+            mapAgt('IntrmyAgt1', 'intrmyAgt1');
+            mapAgt('IntrmyAgt2', 'intrmyAgt2');
+            mapAgt('IntrmyAgt3', 'intrmyAgt3');
+
+            const mapAddr = (tag: string, prefix: string) => {
+                ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry', 'AdrLine1', 'AdrLine2', 'AdrTpCd', 'AdrTpPrtry'].forEach(f => patch[prefix + f] = '');
+                patch[prefix + 'AddrType'] = 'none';
+
+                const p = doc.getElementsByTagName(tag)[0];
+                if (!p) return;
+                const addr = p.getElementsByTagName('PstlAdr')[0];
+                if (!addr) return;
+
+                const aV = (t: string) => addr.getElementsByTagName(t)[0]?.textContent || '';
+                if (aV('Ctry') || aV('TwnNm') || aV('StrtNm') || aV('BldgNb') || aV('TwnLctnNm') || aV('DstrctNm')) {
+                    patch[prefix + 'AddrType'] = 'structured';
+                    ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry'].forEach(f => patch[prefix + f] = aV(f));
+                    const adrTp = addr.getElementsByTagName('AdrTp')[0];
+                    if (adrTp) {
+                        patch[prefix + 'AdrTpCd'] = adrTp.getElementsByTagName('Cd')[0]?.textContent || '';
+                        patch[prefix + 'AdrTpPrtry'] = adrTp.getElementsByTagName('Prtry')[0]?.textContent || '';
+                    }
+                } else if (addr.getElementsByTagName('AdrLine').length > 0) {
+                    patch[prefix + 'AddrType'] = 'unstructured';
+                    const lines = addr.getElementsByTagName('AdrLine');
+                    patch[prefix + 'AdrLine1'] = lines[0]?.textContent || '';
+                    patch[prefix + 'AdrLine2'] = lines[1]?.textContent || '';
+                }
+            };
+
+            this.agentPrefixes.forEach(p => mapAddr(p.charAt(0).toUpperCase() + p.slice(1), p));
+
+            this.isParsingXml = true;
+            this.form.patchValue(patch, { emitEvent: false });
+            this.isParsingXml = false;
+        } catch (e) {
+            this.isParsingXml = false;
+        }
+    }
+
+    syncScroll(editor: HTMLTextAreaElement, gutter: HTMLDivElement) {
+        gutter.scrollTop = editor.scrollTop;
+    }
+}

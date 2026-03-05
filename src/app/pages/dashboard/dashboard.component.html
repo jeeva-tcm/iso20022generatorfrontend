@@ -77,12 +77,11 @@
                             <div class="status-indicator" [class.passed]="item.status === 'PASS'"
                                 [class.failed]="item.status === 'FAIL'"></div>
                             <div class="activity-info">
-                                <span class="activity-id">{{item.validation_id}}</span>
                                 <span class="activity-type">{{item.message_type}}</span>
                             </div>
-                            <span class="activity-time">{{item.timestamp | date:'MMM d, h:mm a'}}</span>
+                            <span class="activity-time">{{item.timestamp | date:'d-MMM-yyyy HH:mm:ss'}}</span>
                             <button mat-icon-button [routerLink]="['/validate']"
-                                [queryParams]="{reportId: item.validation_id}">
+                                [queryParams]="{reportId: item.validation_id, autoRun: 'true'}">
                                 <mat-icon>chevron_right</mat-icon>
                             </button>
                         </div>
