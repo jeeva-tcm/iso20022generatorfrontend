@@ -23,6 +23,7 @@ export class MtToMxComponent implements OnInit {
     mappedMxType = '';
     conversionStatus: 'idle' | 'converting' | 'success' | 'error' = 'idle';
     errorMessage = '';
+    missingFields: { tag: string, name: string, line?: number | string }[] = [];
     conversionLog: { severity: string; message: string }[] = [];
 
     // Validation modal state
@@ -63,8 +64,12 @@ export class MtToMxComponent implements OnInit {
     ) { }
 
     ngOnInit() {
-        this.mtInput = this.getSampleMT103();
+        // Start empty so XML is not shown by default
+        this.mtInput = '';
+        this.mxOutput = '';
+        this.conversionStatus = 'idle';
         this.updateLineCount('mt');
+        this.updateLineCount('mx');
     }
 
     onMtChange(content: string) {
@@ -73,6 +78,12 @@ export class MtToMxComponent implements OnInit {
         this.detectedMtType = this.detectMtType(content);
         const mapped = this.mtToMxMap[this.detectedMtType];
         this.mappedMxType = mapped ? mapped.mx : '';
+
+        // Reset output when input changes - XML should only show after explicit click
+        this.mxOutput = '';
+        this.conversionStatus = 'idle';
+        this.conversionLog = [];
+        this.errorMessage = '';
     }
 
     onMxChange(content: string) {
@@ -128,50 +139,90 @@ export class MtToMxComponent implements OnInit {
         const mtType = this.detectMtType(this.mtInput);
         this.detectedMtType = mtType;
 
-        if (!mtType) {
-            this.conversionStatus = 'error';
-            this.errorMessage = 'Could not detect MT message type. Please ensure valid SWIFT MT format.';
-            this.addLog('ERROR', this.errorMessage);
-            return;
-        }
+        this.addLog('INFO', `Sending MT message to backend conversion engine...`);
 
-        const mapping = this.mtToMxMap[mtType];
-        if (!mapping) {
-            this.conversionStatus = 'error';
-            this.errorMessage = `MT type "${mtType}" is not yet supported for conversion.`;
-            this.addLog('ERROR', this.errorMessage);
-            return;
-        }
+        this.http.post<any>(this.config.getApiUrl('/convert-mt-to-mx'), {
+            mt_message: this.mtInput,
+            target_mt_type: mtType || null
+        }).subscribe({
+            next: (response) => {
+                this.mxOutput = response.mx_message;
+                this.updateLineCount('mx');
 
-        this.mappedMxType = mapping.mx;
-        this.addLog('INFO', `Detected: ${mtType} → ${mapping.mx} (${mapping.desc})`);
+                // Set the mapped MX type based on the response if available, or fallback
+                if (response.detected_type) {
+                    this.detectedMtType = response.detected_type;
+                    const mapping = this.mtToMxMap[this.detectedMtType] || this.mtToMxMap['MT' + this.detectedMtType];
+                    if (mapping) {
+                        this.mappedMxType = mapping.mx;
+                    }
+                }
 
-        try {
-            const fields = this.parseMtFields(this.mtInput);
-            this.addLog('INFO', `Parsed ${Object.keys(fields).length} fields from MT message.`);
+                this.conversionStatus = 'success';
+                this.addLog('INFO', `Conversion completed successfully by dynamic engine.`);
+            },
+            error: (err) => {
+                this.conversionStatus = 'error';
+                this.missingFields = [];
 
-            let xml = '';
-            if (mtType === 'MT103' || mtType === 'MT103+' || mtType === 'MT103 REMIT') {
-                xml = this.convertMT103ToPacs008(fields);
-            } else if (mtType === 'MT202' || mtType === 'MT200') {
-                xml = this.convertMT202ToPacs009(fields, false);
-            } else if (mtType === 'MT202COV') {
-                xml = this.convertMT202ToPacs009(fields, true);
-            } else if (mtType === 'MT210') {
-                xml = this.convertMT210ToCamt057(fields);
-            } else {
-                xml = this.convertGeneric(fields, mapping.mx);
+                if (err.error && err.error.detail && err.error.detail.errors) {
+                    const errors = err.error.detail.errors;
+                    this.errorMessage = errors.join(' | ');
+
+                    // Specific logic for missing mandatory fields
+                    const tagsSeen = new Set<string>();
+                    errors.forEach((msg: string) => {
+                        // Backend format: "Missing mandatory field :20: (Transaction Reference Number)"
+                        const match = msg.match(/Missing mandatory field :([^:]+): \(([^)]+)\)/);
+                        const emptyMatch = msg.match(/Mandatory field :([^:]+): \(([^)]+)\) is empty/);
+
+                        if (match) {
+                            const tag = match[1];
+                            if (!tagsSeen.has(tag)) {
+                                const insertionInfo = this.getLineSuggestion(tag);
+                                this.missingFields.push({
+                                    tag,
+                                    name: match[2],
+                                    line: insertionInfo.line
+                                });
+                                tagsSeen.add(tag);
+                                if (insertionInfo.isExists) this.addLog('WARN', `Empty mandatory tag :${tag}: found on line ${insertionInfo.line}.`);
+                            }
+                        } else if (emptyMatch) {
+                            const tag = emptyMatch[1];
+                            if (!tagsSeen.has(tag)) {
+                                const insertionInfo = this.getLineSuggestion(tag);
+                                this.missingFields.push({
+                                    tag,
+                                    name: emptyMatch[2],
+                                    line: insertionInfo.line
+                                });
+                                tagsSeen.add(tag);
+                                if (insertionInfo.isExists) this.addLog('WARN', `Empty mandatory tag :${tag}: found on line ${insertionInfo.line}.`);
+                            }
+                        } else {
+                            // Fallback regex for tags without names if any
+                            const basicMatch = msg.match(/:([0-9]{2}[A-Z]?):/);
+                            if (basicMatch && !tagsSeen.has(basicMatch[1])) {
+                                const tag = basicMatch[1];
+                                const insertionInfo = this.getLineSuggestion(tag);
+                                this.missingFields.push({
+                                    tag,
+                                    name: 'Mandatory Field',
+                                    line: insertionInfo.line
+                                });
+                                tagsSeen.add(tag);
+                            }
+                        }
+
+                        this.addLog('ERROR', msg);
+                    });
+                } else {
+                    this.errorMessage = err.message || 'Conversion failed.';
+                    this.addLog('ERROR', this.errorMessage);
+                }
             }
-
-            this.mxOutput = xml;
-            this.updateLineCount('mx');
-            this.conversionStatus = 'success';
-            this.addLog('INFO', `Conversion to ${mapping.mx} completed successfully.`);
-        } catch (e: any) {
-            this.conversionStatus = 'error';
-            this.errorMessage = e.message || 'Conversion failed.';
-            this.addLog('ERROR', this.errorMessage);
-        }
+        });
     }
 
     private parseMtFields(mt: string): Record<string, string> {
@@ -709,14 +760,22 @@ export class MtToMxComponent implements OnInit {
         });
     }
 
-    loadSample(type: string) {
+    loadSample(eventOrType: any) {
+        let type = eventOrType;
+        if (eventOrType && eventOrType.target) {
+            type = eventOrType.target.value;
+        }
+
         switch (type) {
             case 'MT103': this.mtInput = this.getSampleMT103(); break;
             case 'MT202': this.mtInput = this.getSampleMT202(); break;
             case 'MT202COV': this.mtInput = this.getSampleMT202COV(); break;
-            default: this.mtInput = this.getSampleMT103();
+            case 'MT192': this.mtInput = this.getSampleMT192(); break;
+            case 'MT196': this.mtInput = this.getGenericSample('MT196'); break;
+            default: this.mtInput = this.getGenericSample(type);
         }
         this.onMtChange(this.mtInput);
+        this.syncScroll(this.mtEditorRef.nativeElement, this.mtLineNumbersRef.nativeElement);
     }
 
     clearAll() {
@@ -732,11 +791,26 @@ export class MtToMxComponent implements OnInit {
     }
 
     // Sample messages
+    private getGenericSample(type: string): string {
+        const cleanType = type.replace('MT', '').replace('+', '').replace(' REMIT', '').replace('COV', '');
+        return `{1:F01BBBBUS33AXXX0000000000}{2:I${cleanType}CCCCGB2LXXXXN}{3:{121:${this.generateUUID()}}}{4:
+:20:REF${Date.now()}
+:32A:261231USD1500,00
+:50K:/US33XXX12345678901234
+GENERIC SENDER INC
+NEW YORK US
+:59:/GB29NWBK60161331926819
+GENERIC RECEIVER LTD
+LONDON GB
+:71A:SHA
+-}`;
+    }
+
     private getSampleMT103(): string {
         return `{1:F01BBBBUS33AXXX0000000000}{2:I103CCCCGB2LXXXXN}{3:{121:550e8400-e29b-41d4-a716-446655440000}}{4:
-:20:REF20260304001
+:20:REF20261231001
 :23B:CRED
-:32A:260304USD1500,00
+:32A:261231USD1500,00
 :50K:/US33XXX12345678901234
 JOHN DOE CORP
 123 MAIN STREET
@@ -755,9 +829,9 @@ LONDON GB
 
     private getSampleMT202(): string {
         return `{1:F01BBBBUS33AXXX0000000000}{2:I202CCCCGB2LXXXXN}{3:{121:660e8400-e29b-41d4-a716-446655440000}}{4:
-:20:REF20260304002
+:20:REF20261231002
 :21:E2E-FI-001
-:32A:260304EUR50000,00
+:32A:261231EUR50000,00
 :52A:BBBBUS33XXX
 :58A:CCCCGB2LXXX
 -}`;
@@ -765,9 +839,9 @@ LONDON GB
 
     private getSampleMT202COV(): string {
         return `{1:F01RBOSGB2LAXXX0000000000}{2:I202NDEAFIHHXXXXN}{3:{121:8a562c67-ca16-48ba-b074-65581be6f001}}{4:
-:20:REF20260304003
+:20:REF20261231003
 :21:E2E-COV-001
-:32A:260304EUR1500000,00
+:32A:261231EUR1500000,00
 :52A:RBOSGB2LXXX
 :58A:OKOYFIHH
 :119:COV
@@ -776,5 +850,44 @@ A DEBITER
 :59:/O96325478
 Z KREDITER
 -}`;
+    }
+
+    private getSampleMT192(): string {
+        return `{1:F01BBBBUS33AXXX0000000000}{2:I192CCCCGB2LXXXXN}{4:
+:20:REF192CANX001
+:21:RELREF778899
+-}`;
+    }
+
+    private getLineSuggestion(tag: string): { line: number | string, isExists: boolean } {
+        const lines = (this.mtInput || '').split('\n');
+
+        // 1. Check if tag exists but is empty
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].trim().startsWith(`:${tag}:`)) {
+                return { line: i + 1, isExists: true };
+            }
+        }
+
+        // 2. Suggest insertion point based on tag order (simple numeric sort)
+        const targetTagNum = parseInt(tag.substring(0, 2));
+        let lastTagLine = -1;
+        let foundInsertionLine = -1;
+
+        for (let i = 0; i < lines.length; i++) {
+            const lineMatch = lines[i].match(/^:([0-9]{2}[A-Z]?):/);
+            if (lineMatch) {
+                const currentTagNum = parseInt(lineMatch[1].substring(0, 2));
+                if (currentTagNum > targetTagNum && foundInsertionLine === -1) {
+                    foundInsertionLine = i + 1;
+                }
+                lastTagLine = i + 1;
+            }
+        }
+
+        if (foundInsertionLine !== -1) return { line: `Line ${foundInsertionLine}`, isExists: false };
+        if (lastTagLine !== -1) return { line: `Line ${lastTagLine + 1}`, isExists: false };
+
+        return { line: 'New Line', isExists: false };
     }
 }

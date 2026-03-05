@@ -8,9 +8,24 @@
     <div class="converter-toolbar">
         <div class="toolbar-left">
             <span class="toolbar-label">Samples:</span>
-            <button class="sample-btn" (click)="loadSample('MT103')">MT103</button>
-            <button class="sample-btn" (click)="loadSample('MT202')">MT202</button>
-            <button class="sample-btn" (click)="loadSample('MT202COV')">MT202 COV</button>
+            <select class="sample-select" (change)="loadSample($event)">
+                <option value="MT103">MT103</option>
+                <option value="MT103+">MT103+ (STP)</option>
+                <option value="MT103 REMIT">MT103 REMIT</option>
+                <option value="MT202">MT202</option>
+                <option value="MT202COV">MT202 COV</option>
+                <option value="MT200">MT200</option>
+                <option value="MT210">MT210</option>
+                <option value="MT900">MT900</option>
+                <option value="MT910">MT910</option>
+                <option value="MT940">MT940</option>
+                <option value="MT950">MT950</option>
+                <option value="MT942">MT942</option>
+                <option value="MT199">MT199</option>
+                <option value="MT299">MT299</option>
+                <option value="MT192">MT192</option>
+                <option value="MT196">MT196</option>
+            </select>
         </div>
         <div class="toolbar-right">
             <button class="action-btn clear-btn" (click)="clearAll()">
@@ -24,8 +39,18 @@
         </div>
     </div>
 
+    <!-- Missing Fields Alert -->
+    <div class="missing-fields-banner" *ngIf="missingFields.length > 0">
+        <mat-icon>warning</mat-icon>
+        <div class="banner-content">
+            <strong>Conversion Blocked: Mandatory Fields Missing</strong>
+            <span>Please add valid values for: <code *ngFor="let field of missingFields" class="missing-field-tag"
+                    [title]="field.name">[{{field.line}}] :{{field.tag}}: {{field.name}}</code> to proceed.</span>
+        </div>
+    </div>
+
     <!-- Detection Badge -->
-    <div class="detection-strip" *ngIf="detectedMtType">
+    <div class="detection-strip" *ngIf="detectedMtType && conversionStatus !== 'idle'">
         <div class="detect-item">
             <span class="detect-label">Detected</span>
             <span class="detect-value mt-badge">{{detectedMtType}}</span>
@@ -38,8 +63,13 @@
         <div class="detect-status" *ngIf="conversionStatus === 'success'">
             <mat-icon class="status-ok">check_circle</mat-icon> Converted
         </div>
-        <div class="detect-status error" *ngIf="conversionStatus === 'error'">
+        <div class="detect-status error" *ngIf="conversionStatus === 'error' && missingFields.length === 0"
+            [matTooltip]="errorMessage">
             <mat-icon class="status-err">error</mat-icon> Failed
+        </div>
+        <div class="error-detail-text"
+            *ngIf="conversionStatus === 'error' && errorMessage && missingFields.length === 0">
+            {{errorMessage}}
         </div>
     </div>
 
@@ -98,18 +128,7 @@
         </div>
     </div>
 
-    <!-- Conversion Log -->
-    <div class="log-panel" *ngIf="conversionLog.length > 0">
-        <div class="log-header">
-            <mat-icon>terminal</mat-icon> Conversion Log
-        </div>
-        <div class="log-entries">
-            <div class="log-entry" *ngFor="let entry of conversionLog" [ngClass]="entry.severity.toLowerCase()">
-                <span class="log-severity">{{entry.severity}}</span>
-                <span class="log-message">{{entry.message}}</span>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Validation Results Modal -->
     <div class="validation-overlay" *ngIf="showValidationModal" (click)="closeValidationModal()">
