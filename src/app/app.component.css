@@ -32,6 +32,8 @@
     height: 34px;
     width: 34px;
     filter: drop-shadow(0 4px 10px rgba(79, 70, 229, 0.3));
+    margin-left: -10px;
+    /* margin-right: 2px; */
 }
 
 .spacer {

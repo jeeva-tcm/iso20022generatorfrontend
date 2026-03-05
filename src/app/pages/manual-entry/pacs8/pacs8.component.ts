@@ -61,8 +61,42 @@ export class Pacs8Component implements OnInit {
     });
     // Track form changes for live XML update
     this.form.valueChanges.subscribe(() => {
-      this.validateAddresses();
+      this.updateConditionalValidators();
       this.generateXml();
+    });
+  }
+
+  updateConditionalValidators() {
+    [...this.agentPrefixes, 'dbtr', 'cdtr'].forEach(p => {
+      const addrType = this.form.get(p + 'AddrType')?.value;
+      const ctryCtrl = this.form.get(p + 'Ctry');
+      const twnNmCtrl = this.form.get(p + 'TwnNm');
+
+      if (addrType && addrType !== 'none') {
+        if (!ctryCtrl?.hasValidator(Validators.required)) {
+          ctryCtrl?.setValidators([Validators.required, Validators.pattern(/^[A-Z]{2,2}$/)]);
+          ctryCtrl?.updateValueAndValidity({ emitEvent: false });
+        }
+      } else {
+        if (ctryCtrl?.hasValidator(Validators.required)) {
+          ctryCtrl?.clearValidators();
+          ctryCtrl?.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
+          ctryCtrl?.updateValueAndValidity({ emitEvent: false });
+        }
+      }
+
+      if (addrType === 'structured' || addrType === 'hybrid') {
+        if (!twnNmCtrl?.hasValidator(Validators.required)) {
+          twnNmCtrl?.setValidators([Validators.required, Validators.maxLength(140)]);
+          twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
+        }
+      } else {
+        if (twnNmCtrl?.hasValidator(Validators.required)) {
+          twnNmCtrl?.clearValidators();
+          twnNmCtrl?.setValidators([Validators.maxLength(140)]);
+          twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
+        }
+      }
     });
   }
 
@@ -80,9 +114,9 @@ export class Pacs8Component implements OnInit {
       amount: ['1500.00', [Validators.required, Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
       sttlmDt: [new Date().toISOString().split('T')[0], Validators.required], svcLvlCd: [''],
       chrgBr: ['SHAR', Validators.required],
-      dbtrName: ['John Doe Corp', [Validators.required, Validators.maxLength(140)]], dbtrIban: ['US33XXX12345678901234', [Validators.required, Validators.pattern(/^[A-Z]{2,2}[0-9]{2,2}[a-zA-Z0-9]{1,30}$/)]],
+      dbtrName: ['John Doe Corp', [Validators.required, Validators.maxLength(140)]], dbtrAcct: ['471932901234', [Validators.required, Validators.maxLength(34)]],
       dbtrAgtBic: ['BBBBUS33XXX', BIC],
-      cdtrName: ['Jane Smith Ltd', [Validators.required, Validators.maxLength(140)]], cdtrIban: ['GB29NWBK60161331926819', [Validators.required, Validators.pattern(/^[A-Z]{2,2}[0-9]{2,2}[a-zA-Z0-9]{1,30}$/)]],
+      cdtrName: ['Jane Smith Ltd', [Validators.required, Validators.maxLength(140)]], cdtrAcct: ['GB29NWBK60161331926819', [Validators.required, Validators.maxLength(34)]],
       cdtrAgtBic: ['CCCCGB2LXXX', BIC],
       prvsInstgAgt1Bic: ['', BIC_OPT], prvsInstgAgt2Bic: ['', BIC_OPT], prvsInstgAgt3Bic: ['', BIC_OPT],
       intrmyAgt1Bic: ['', BIC_OPT], intrmyAgt2Bic: ['', BIC_OPT], intrmyAgt3Bic: ['', BIC_OPT],
@@ -94,13 +128,27 @@ export class Pacs8Component implements OnInit {
       c[p + 'StrtNm'] = ['', Validators.maxLength(140)]; c[p + 'BldgNb'] = ['', Validators.maxLength(16)]; c[p + 'BldgNm'] = ['', Validators.maxLength(140)];
       c[p + 'Flr'] = ['', Validators.maxLength(70)]; c[p + 'PstBx'] = ['', Validators.maxLength(16)]; c[p + 'Room'] = ['', Validators.maxLength(70)];
       c[p + 'PstCd'] = ['', Validators.maxLength(16)]; c[p + 'TwnNm'] = ['', Validators.maxLength(140)]; c[p + 'CtrySubDvsn'] = ['', Validators.maxLength(35)]; c[p + 'Ctry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
+      c[p + 'TwnLctnNm'] = ['', Validators.maxLength(140)]; c[p + 'DstrctNm'] = ['', Validators.maxLength(140)]; c[p + 'AdrTpCd'] = ['']; c[p + 'AdrTpPrtry'] = ['', Validators.maxLength(35)];
+    });
+    ['dbtr', 'cdtr'].forEach(p => {
+      c[p + 'IdType'] = 'none';
+      c[p + 'OrgAnyBIC'] = ['', [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
+      c[p + 'OrgLEI'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
+      c[p + 'OrgOthrId'] = ['', Validators.maxLength(35)];
+      c[p + 'OrgOthrSchmeNmCd'] = ['', Validators.maxLength(4)]; c[p + 'OrgOthrSchmeNmPrtry'] = ['', Validators.maxLength(35)]; c[p + 'OrgOthrIssr'] = ['', Validators.maxLength(35)];
+      c[p + 'PrvtDtAndPlcOfBirthDt'] = [''];
+      c[p + 'PrvtDtAndPlcOfBirthPrvc'] = ['', Validators.maxLength(35)];
+      c[p + 'PrvtDtAndPlcOfBirthCity'] = ['', Validators.maxLength(35)];
+      c[p + 'PrvtDtAndPlcOfBirthCtry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
+      c[p + 'PrvtOthrId'] = ['', Validators.maxLength(35)];
+      c[p + 'PrvtOthrSchmeNmCd'] = ['', Validators.maxLength(4)]; c[p + 'PrvtOthrSchmeNmPrtry'] = ['', Validators.maxLength(35)]; c[p + 'PrvtOthrIssr'] = ['', Validators.maxLength(35)];
     });
     this.form = this.fb.group(c);
   }
 
   err(f: string): string | null {
     const c = this.form.get(f);
-    if (!c || !c.touched || !c.invalid) return null;
+    if (!c || (!c.dirty && !c.touched) || !c.invalid) return null;
     if (c.errors?.['required']) return 'Required field.';
     if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
     if (c.errors?.['pattern']) {
@@ -118,34 +166,6 @@ export class Pacs8Component implements OnInit {
     const d = new Date(), p = (n: number) => n.toString().padStart(2, '0');
     const off = -d.getTimezoneOffset(), s = off >= 0 ? '+' : '-';
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}${s}${p(Math.floor(Math.abs(off) / 60))}:${p(Math.abs(off) % 60)}`;
-  }
-
-  // Validate all address blocks before generating XML
-  validateAddresses(): void {
-    const prefixes = ['instgAgt', 'instdAgt', 'dbtr', 'cdtr', 'dbtrAgt', 'cdtrAgt'];
-    const results: AddressValidationResult[] = [];
-    prefixes.forEach(p => {
-      const address = {} as any;
-      // collect fields for this prefix
-      Object.keys(this.form.controls).forEach(key => {
-        if (key.startsWith(p)) {
-          address[key] = this.form.get(key)?.value;
-        }
-      });
-      if (Object.keys(address).length) {
-        const path = `/${p}`;
-        const res = this.addressValidator.validateAddress(address, path);
-        results.push(res);
-      }
-    });
-    const fail = results.find(r => r.status === 'FAIL');
-    if (fail) {
-      this.snackBar.open('Address validation failed: ' + fail.issues.map(i => i.message).join('; '), 'Close', { duration: 8000 });
-      // Prevent XML generation by setting a flag
-      this.isAddressValid = false;
-    } else {
-      this.isAddressValid = true;
-    }
   }
 
   generateXml() {
@@ -171,14 +191,25 @@ export class Pacs8Component implements OnInit {
     tx += this.agt('IntrmyAgt1', 'intrmyAgt1', v);
     tx += this.agt('IntrmyAgt2', 'intrmyAgt2', v);
     tx += this.agt('IntrmyAgt3', 'intrmyAgt3', v);
+
+    const formatAcct = (val: string, tabs: number) => {
+      if (!val) return '';
+      const ibanCountries = ['AD', 'AE', 'AL', 'AT', 'AZ', 'BA', 'BE', 'BG', 'BH', 'BR', 'BY', 'CH', 'CR', 'CY', 'CZ', 'DE', 'DK', 'DO', 'EE', 'EG', 'ES', 'FI', 'FO', 'FR', 'GB', 'GE', 'GI', 'GL', 'GR', 'GT', 'HR', 'HU', 'IE', 'IL', 'IQ', 'IS', 'IT', 'JO', 'KW', 'KZ', 'LB', 'LI', 'LT', 'LU', 'LV', 'MC', 'MD', 'ME', 'MK', 'MR', 'MT', 'MU', 'NL', 'NO', 'PK', 'PL', 'PS', 'PT', 'QA', 'RO', 'RS', 'RU', 'SA', 'SC', 'SE', 'SI', 'SK', 'SM', 'ST', 'SV', 'TL', 'TN', 'TR', 'UA', 'VA', 'VG', 'XK'];
+      if (val.length >= 14 && ibanCountries.includes(val.substring(0, 2).toUpperCase()) && /^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/i.test(val)) {
+        return this.el('IBAN', val, tabs + 1);
+      } else {
+        return `\n${'\t'.repeat(tabs + 1)}<Othr>\n${'\t'.repeat(tabs + 2)}<Id>${this.e(val)}</Id>\n${'\t'.repeat(tabs + 1)}</Othr>\n${'\t'.repeat(tabs)}`;
+      }
+    };
+
     // Dbtr, DbtrAcct, DbtrAgt
-    tx += this.tag('Dbtr', this.el('Nm', v.dbtrName, 4) + this.addrXml(v, 'dbtr', 4), 3);
-    tx += this.tag('DbtrAcct', this.tag('Id', this.el('IBAN', v.dbtrIban, 5), 4), 3);
+    tx += this.tag('Dbtr', this.el('Nm', v.dbtrName, 4) + this.addrXml(v, 'dbtr', 4) + this.partyIdXml(v, 'dbtr', 4), 3);
+    tx += this.tag('DbtrAcct', this.tag('Id', formatAcct(v.dbtrAcct, 4), 4), 3);
     tx += this.agt('DbtrAgt', 'dbtrAgt', v);
     // CdtrAgt, Cdtr, CdtrAcct
     tx += this.agt('CdtrAgt', 'cdtrAgt', v);
-    tx += this.tag('Cdtr', this.el('Nm', v.cdtrName, 4) + this.addrXml(v, 'cdtr', 4), 3);
-    tx += this.tag('CdtrAcct', this.tag('Id', this.el('IBAN', v.cdtrIban, 5), 4), 3);
+    tx += this.tag('Cdtr', this.el('Nm', v.cdtrName, 4) + this.addrXml(v, 'cdtr', 4) + this.partyIdXml(v, 'cdtr', 4), 3);
+    tx += this.tag('CdtrAcct', this.tag('Id', formatAcct(v.cdtrAcct, 4), 4), 3);
     if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 4), 3);
 
     const frBic = v.fromBic;
@@ -232,6 +263,8 @@ ${tx}\t\t\t</CdtTrfTxInf>
     const lines: string[] = []; const t = this.tabs(indent + 1);
     if (type === 'structured' || type === 'hybrid') {
       // PostalAddress27 XSD element order
+      if (v[p + 'AdrTpCd']) lines.push(`${t}<AdrTp>\n${t}\t<Cd>${this.e(v[p + 'AdrTpCd'])}</Cd>\n${t}</AdrTp>`);
+      else if (v[p + 'AdrTpPrtry']) lines.push(`${t}<AdrTp>\n${t}\t<Prtry>${this.e(v[p + 'AdrTpPrtry'])}</Prtry>\n${t}</AdrTp>`);
       if (v[p + 'Dept']) lines.push(`${t}<Dept>${this.e(v[p + 'Dept'])}</Dept>`);
       if (v[p + 'SubDept']) lines.push(`${t}<SubDept>${this.e(v[p + 'SubDept'])}</SubDept>`);
       if (v[p + 'StrtNm']) lines.push(`${t}<StrtNm>${this.e(v[p + 'StrtNm'])}</StrtNm>`);
@@ -242,6 +275,8 @@ ${tx}\t\t\t</CdtTrfTxInf>
       if (v[p + 'Room']) lines.push(`${t}<Room>${this.e(v[p + 'Room'])}</Room>`);
       if (v[p + 'PstCd']) lines.push(`${t}<PstCd>${this.e(v[p + 'PstCd'])}</PstCd>`);
       if (v[p + 'TwnNm']) lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'])}</TwnNm>`);
+      if (v[p + 'TwnLctnNm']) lines.push(`${t}<TwnLctnNm>${this.e(v[p + 'TwnLctnNm'])}</TwnLctnNm>`);
+      if (v[p + 'DstrctNm']) lines.push(`${t}<DstrctNm>${this.e(v[p + 'DstrctNm'])}</DstrctNm>`);
       if (v[p + 'CtrySubDvsn']) lines.push(`${t}<CtrySubDvsn>${this.e(v[p + 'CtrySubDvsn'])}</CtrySubDvsn>`);
       if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
     }
@@ -252,6 +287,51 @@ ${tx}\t\t\t</CdtTrfTxInf>
     }
     if (!lines.length) return '';
     return `${this.tabs(indent)}<PstlAdr>\n${lines.join('\n')}\n${this.tabs(indent)}</PstlAdr>\n`;
+  }
+
+  partyIdXml(v: any, p: string, indent = 4): string {
+    const type = v[p + 'IdType']; if (!type || type === 'none') return '';
+    const t = this.tabs(indent + 1);
+    if (type === 'org') {
+      let org = '';
+      if (v[p + 'OrgAnyBIC']) org += `${t}\t<AnyBIC>${this.e(v[p + 'OrgAnyBIC'])}</AnyBIC>\n`;
+      if (v[p + 'OrgLEI']) org += `${t}\t<LEI>${this.e(v[p + 'OrgLEI'])}</LEI>\n`;
+      if (v[p + 'OrgOthrId']) {
+        org += `${t}\t<Othr>\n${t}\t\t<Id>${this.e(v[p + 'OrgOthrId'])}</Id>\n`;
+        if (v[p + 'OrgOthrSchmeNmCd'] || v[p + 'OrgOthrSchmeNmPrtry']) {
+          org += `${t}\t\t<SchmeNm>\n`;
+          if (v[p + 'OrgOthrSchmeNmCd']) org += `${t}\t\t\t<Cd>${this.e(v[p + 'OrgOthrSchmeNmCd'])}</Cd>\n`;
+          else org += `${t}\t\t\t<Prtry>${this.e(v[p + 'OrgOthrSchmeNmPrtry'])}</Prtry>\n`;
+          org += `${t}\t\t</SchmeNm>\n`;
+        }
+        if (v[p + 'OrgOthrIssr']) org += `${t}\t\t<Issr>${this.e(v[p + 'OrgOthrIssr'])}</Issr>\n`;
+        org += `${t}\t</Othr>\n`;
+      }
+      return `${this.tabs(indent)}<Id>\n${t}<OrgId>\n${org}${t}</OrgId>\n${this.tabs(indent)}</Id>\n`;
+    } else if (type === 'prvt') {
+      let prvt = '';
+      if (v[p + 'PrvtDtAndPlcOfBirthDt'] || v[p + 'PrvtDtAndPlcOfBirthCity'] || v[p + 'PrvtDtAndPlcOfBirthCtry']) {
+        prvt += `${t}\t<DtAndPlcOfBirth>\n`;
+        if (v[p + 'PrvtDtAndPlcOfBirthDt']) prvt += `${t}\t\t<BirthDt>${this.e(v[p + 'PrvtDtAndPlcOfBirthDt'])}</BirthDt>\n`;
+        if (v[p + 'PrvtDtAndPlcOfBirthPrvc']) prvt += `${t}\t\t<PrvcOfBirth>${this.e(v[p + 'PrvtDtAndPlcOfBirthPrvc'])}</PrvcOfBirth>\n`;
+        if (v[p + 'PrvtDtAndPlcOfBirthCity']) prvt += `${t}\t\t<CityOfBirth>${this.e(v[p + 'PrvtDtAndPlcOfBirthCity'])}</CityOfBirth>\n`;
+        if (v[p + 'PrvtDtAndPlcOfBirthCtry']) prvt += `${t}\t\t<CtryOfBirth>${this.e(v[p + 'PrvtDtAndPlcOfBirthCtry'])}</CtryOfBirth>\n`;
+        prvt += `${t}\t</DtAndPlcOfBirth>\n`;
+      }
+      if (v[p + 'PrvtOthrId']) {
+        prvt += `${t}\t<Othr>\n${t}\t\t<Id>${this.e(v[p + 'PrvtOthrId'])}</Id>\n`;
+        if (v[p + 'PrvtOthrSchmeNmCd'] || v[p + 'PrvtOthrSchmeNmPrtry']) {
+          prvt += `${t}\t\t<SchmeNm>\n`;
+          if (v[p + 'PrvtOthrSchmeNmCd']) prvt += `${t}\t\t\t<Cd>${this.e(v[p + 'PrvtOthrSchmeNmCd'])}</Cd>\n`;
+          else prvt += `${t}\t\t\t<Prtry>${this.e(v[p + 'PrvtOthrSchmeNmPrtry'])}</Prtry>\n`;
+          prvt += `${t}\t\t</SchmeNm>\n`;
+        }
+        if (v[p + 'PrvtOthrIssr']) prvt += `${t}\t\t<Issr>${this.e(v[p + 'PrvtOthrIssr'])}</Issr>\n`;
+        prvt += `${t}\t</Othr>\n`;
+      }
+      return `${this.tabs(indent)}<Id>\n${t}<PrvtId>\n${prvt}${t}</PrvtId>\n${this.tabs(indent)}</Id>\n`;
+    }
+    return '';
   }
 
   // Validation
@@ -323,11 +403,22 @@ ${tx}\t\t\t</CdtTrfTxInf>
       };
 
       setVal('svcLvlCd', tryTag('SvcLvl', 'Cd'));
+      const tryAcct = (group: string) => {
+        const groupEl = doc.getElementsByTagName(group)[0];
+        if (!groupEl) return '';
+        const idNode = groupEl.getElementsByTagName('Id')[0];
+        if (!idNode) return '';
+        const iban = idNode.getElementsByTagName('IBAN')[0]?.textContent;
+        if (iban) return iban;
+        const othrNodes = idNode.getElementsByTagName('Othr');
+        return othrNodes[0]?.getElementsByTagName('Id')[0]?.textContent || '';
+      };
+
       setVal('dbtrName', tryTag('Dbtr', 'Nm'));
-      setVal('dbtrIban', tryTag('DbtrAcct', 'IBAN'));
+      setVal('dbtrAcct', tryAcct('DbtrAcct'));
       setVal('dbtrAgtBic', tryTag('DbtrAgt', 'BICFI'));
       setVal('cdtrName', tryTag('Cdtr', 'Nm'));
-      setVal('cdtrIban', tryTag('CdtrAcct', 'IBAN'));
+      setVal('cdtrAcct', tryAcct('CdtrAcct'));
       setVal('cdtrAgtBic', tryTag('CdtrAgt', 'BICFI'));
       setVal('fromBic', tryTag('Fr', 'BICFI'));
       setVal('toBic', tryTag('To', 'BICFI'));
@@ -346,18 +437,69 @@ ${tx}\t\t\t</CdtTrfTxInf>
       mapAgt('IntrmyAgt3', 'intrmyAgt3');
 
       const mapAddr = (tag: string, prefix: string) => {
-        ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'CtrySubDvsn', 'Ctry', 'AdrLine1', 'AdrLine2'].forEach(f => patch[prefix + f] = '');
+        ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry', 'AdrLine1', 'AdrLine2', 'AdrTpCd', 'AdrTpPrtry'].forEach(f => patch[prefix + f] = '');
         patch[prefix + 'AddrType'] = 'none';
 
         const p = doc.getElementsByTagName(tag)[0];
         if (!p) return;
+
+        // --- Added ID Parsing since we generate PartyId ---
+        const idNode = p.getElementsByTagName('Id')[0];
+        patch[prefix + 'IdType'] = 'none';
+        ['OrgAnyBIC', 'OrgLEI', 'OrgOthrId', 'OrgOthrSchmeNmCd', 'OrgOthrSchmeNmPrtry', 'OrgOthrIssr', 'PrvtDtAndPlcOfBirthDt', 'PrvtDtAndPlcOfBirthPrvc', 'PrvtDtAndPlcOfBirthCity', 'PrvtDtAndPlcOfBirthCtry', 'PrvtOthrId', 'PrvtOthrSchmeNmCd', 'PrvtOthrSchmeNmPrtry', 'PrvtOthrIssr'].forEach(f => patch[prefix + f] = '');
+        if (idNode) {
+          const orgId = idNode.getElementsByTagName('OrgId')[0];
+          if (orgId) {
+            patch[prefix + 'IdType'] = 'org';
+            patch[prefix + 'OrgAnyBIC'] = orgId.getElementsByTagName('AnyBIC')[0]?.textContent || '';
+            patch[prefix + 'OrgLEI'] = orgId.getElementsByTagName('LEI')[0]?.textContent || '';
+            const othr = orgId.getElementsByTagName('Othr')[0];
+            if (othr) {
+              patch[prefix + 'OrgOthrId'] = othr.getElementsByTagName('Id')[0]?.textContent || '';
+              patch[prefix + 'OrgOthrIssr'] = othr.getElementsByTagName('Issr')[0]?.textContent || '';
+              const schmeNm = othr.getElementsByTagName('SchmeNm')[0];
+              if (schmeNm) {
+                patch[prefix + 'OrgOthrSchmeNmCd'] = schmeNm.getElementsByTagName('Cd')[0]?.textContent || '';
+                patch[prefix + 'OrgOthrSchmeNmPrtry'] = schmeNm.getElementsByTagName('Prtry')[0]?.textContent || '';
+              }
+            }
+          }
+          const prvtId = idNode.getElementsByTagName('PrvtId')[0];
+          if (prvtId) {
+            patch[prefix + 'IdType'] = 'prvt';
+            const dob = prvtId.getElementsByTagName('DtAndPlcOfBirth')[0];
+            if (dob) {
+              patch[prefix + 'PrvtDtAndPlcOfBirthDt'] = dob.getElementsByTagName('BirthDt')[0]?.textContent || '';
+              patch[prefix + 'PrvtDtAndPlcOfBirthPrvc'] = dob.getElementsByTagName('PrvcOfBirth')[0]?.textContent || '';
+              patch[prefix + 'PrvtDtAndPlcOfBirthCity'] = dob.getElementsByTagName('CityOfBirth')[0]?.textContent || '';
+              patch[prefix + 'PrvtDtAndPlcOfBirthCtry'] = dob.getElementsByTagName('CtryOfBirth')[0]?.textContent || '';
+            }
+            const othr = prvtId.getElementsByTagName('Othr')[0];
+            if (othr) {
+              patch[prefix + 'PrvtOthrId'] = othr.getElementsByTagName('Id')[0]?.textContent || '';
+              patch[prefix + 'PrvtOthrIssr'] = othr.getElementsByTagName('Issr')[0]?.textContent || '';
+              const schmeNm = othr.getElementsByTagName('SchmeNm')[0];
+              if (schmeNm) {
+                patch[prefix + 'PrvtOthrSchmeNmCd'] = schmeNm.getElementsByTagName('Cd')[0]?.textContent || '';
+                patch[prefix + 'PrvtOthrSchmeNmPrtry'] = schmeNm.getElementsByTagName('Prtry')[0]?.textContent || '';
+              }
+            }
+          }
+        }
+        // ------------------------------------------------
+
         const addr = p.getElementsByTagName('PstlAdr')[0];
         if (!addr) return;
 
         const aV = (t: string) => addr.getElementsByTagName(t)[0]?.textContent || '';
-        if (aV('Ctry') || aV('TwnNm') || aV('StrtNm') || aV('BldgNb')) {
+        if (aV('Ctry') || aV('TwnNm') || aV('StrtNm') || aV('BldgNb') || aV('TwnLctnNm') || aV('DstrctNm')) {
           patch[prefix + 'AddrType'] = 'structured';
-          ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'CtrySubDvsn', 'Ctry'].forEach(f => patch[prefix + f] = aV(f));
+          ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry'].forEach(f => patch[prefix + f] = aV(f));
+          const adrTp = addr.getElementsByTagName('AdrTp')[0];
+          if (adrTp) {
+            patch[prefix + 'AdrTpCd'] = adrTp.getElementsByTagName('Cd')[0]?.textContent || '';
+            patch[prefix + 'AdrTpPrtry'] = adrTp.getElementsByTagName('Prtry')[0]?.textContent || '';
+          }
         } else if (addr.getElementsByTagName('AdrLine').length > 0) {
           patch[prefix + 'AddrType'] = 'unstructured';
           const lines = addr.getElementsByTagName('AdrLine');

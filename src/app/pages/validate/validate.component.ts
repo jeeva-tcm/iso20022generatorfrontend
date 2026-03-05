@@ -674,10 +674,20 @@ export class ValidateComponent implements OnInit {
   }
 
   validateAll() {
-    const batchId = crypto.randomUUID();
-    for (const f of this.files) {
-      this.validateFile(f, batchId);
-    }
+    this.http.get<any>(this.config.getApiUrl('/generate-id')).subscribe({
+      next: (data) => {
+        const batchId = data.id;
+        for (const f of this.files) {
+          this.validateFile(f, batchId);
+        }
+      },
+      error: () => {
+        // Fallback: use first file's validation without batch grouping
+        for (const f of this.files) {
+          this.validateFile(f);
+        }
+      }
+    });
   }
 
   validateFile(entry: FileEntry, batchId?: string) {

@@ -55,7 +55,42 @@ export class Pacs9Component implements OnInit {
         });
         // Track form changes for live XML update
         this.form.valueChanges.subscribe(() => {
+            this.updateConditionalValidators();
             this.generateXml();
+        });
+    }
+
+    updateConditionalValidators() {
+        this.agentPrefixes.forEach(p => {
+            const addrType = this.form.get(p + 'AddrType')?.value;
+            const ctryCtrl = this.form.get(p + 'Ctry');
+            const twnNmCtrl = this.form.get(p + 'TwnNm');
+
+            if (addrType && addrType !== 'none') {
+                if (!ctryCtrl?.hasValidator(Validators.required)) {
+                    ctryCtrl?.setValidators([Validators.required, Validators.pattern(/^[A-Z]{2,2}$/)]);
+                    ctryCtrl?.updateValueAndValidity({ emitEvent: false });
+                }
+            } else {
+                if (ctryCtrl?.hasValidator(Validators.required)) {
+                    ctryCtrl?.clearValidators();
+                    ctryCtrl?.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
+                    ctryCtrl?.updateValueAndValidity({ emitEvent: false });
+                }
+            }
+
+            if (addrType === 'structured' || addrType === 'hybrid') {
+                if (!twnNmCtrl?.hasValidator(Validators.required)) {
+                    twnNmCtrl?.setValidators([Validators.required, Validators.maxLength(140)]);
+                    twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
+                }
+            } else {
+                if (twnNmCtrl?.hasValidator(Validators.required)) {
+                    twnNmCtrl?.clearValidators();
+                    twnNmCtrl?.setValidators([Validators.maxLength(140)]);
+                    twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
+                }
+            }
         });
     }
 
@@ -69,8 +104,8 @@ export class Pacs9Component implements OnInit {
             instgAgtBic: ['BBBBUS33XXX', BIC], instdAgtBic: ['CCCCGB2LXXX', BIC],
             instrId: ['INSTR-FI-001', Validators.required], endToEndId: ['E2E-FI-001', Validators.required],
             txId: ['TX-FI-001', Validators.required],
-            uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)]],
-            amount: ['50000.00', [Validators.required, Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
+            uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/)]],
+            amount: ['50000.00', [Validators.required, Validators.pattern(/^(?!0+(\.0+)?$)\d{1,18}(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
             sttlmDt: [new Date().toISOString().split('T')[0], Validators.required],
             // Debtor FI (required)
             dbtrFiBic: ['BBBBUS33XXX', BIC], dbtrFiAcct: [''],
@@ -92,20 +127,21 @@ export class Pacs9Component implements OnInit {
             c[p + 'StrtNm'] = ['', Validators.maxLength(140)]; c[p + 'BldgNb'] = ['', Validators.maxLength(16)]; c[p + 'BldgNm'] = ['', Validators.maxLength(140)];
             c[p + 'Flr'] = ['', Validators.maxLength(70)]; c[p + 'PstBx'] = ['', Validators.maxLength(16)]; c[p + 'Room'] = ['', Validators.maxLength(70)];
             c[p + 'PstCd'] = ['', Validators.maxLength(16)]; c[p + 'TwnNm'] = ['', Validators.maxLength(140)]; c[p + 'CtrySubDvsn'] = ['', Validators.maxLength(35)]; c[p + 'Ctry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
+            c[p + 'TwnLctnNm'] = ['', Validators.maxLength(140)]; c[p + 'DstrctNm'] = ['', Validators.maxLength(140)]; c[p + 'AdrTpCd'] = ['']; c[p + 'AdrTpPrtry'] = ['', Validators.maxLength(35)];
         });
         this.form = this.fb.group(c);
     }
 
     err(f: string): string | null {
         const c = this.form.get(f);
-        if (!c || !c.touched || !c.invalid) return null;
+        if (!c || (!c.dirty && !c.touched) || !c.invalid) return null;
         if (c.errors?.['required']) return 'Required field.';
         if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
         if (c.errors?.['pattern']) {
             if (f.toLowerCase().includes('bic')) return 'Valid 8 or 11-char BIC required.';
             if (f.toLowerCase().includes('iban')) return 'Valid 34-char IBAN required.';
             if (f.toLowerCase().includes('uetr')) return 'Valid UUID required.';
-            if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Max 18 digits, up to 5 decimals.';
+            if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Amount must be > 0 (max 18 digits).';
             if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
             if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
         }
@@ -205,6 +241,8 @@ ${tx}\t\t\t</CdtTrfTxInf>
         const lines: string[] = []; const t = this.tabs(indent + 1);
         if (type === 'structured' || type === 'hybrid') {
             // PostalAddress27 XSD element order
+            if (v[p + 'AdrTpCd']) lines.push(`${t}<AdrTp>\n${t}\t<Cd>${this.e(v[p + 'AdrTpCd'])}</Cd>\n${t}</AdrTp>`);
+            else if (v[p + 'AdrTpPrtry']) lines.push(`${t}<AdrTp>\n${t}\t<Prtry>${this.e(v[p + 'AdrTpPrtry'])}</Prtry>\n${t}</AdrTp>`);
             if (v[p + 'Dept']) lines.push(`${t}<Dept>${this.e(v[p + 'Dept'])}</Dept>`);
             if (v[p + 'SubDept']) lines.push(`${t}<SubDept>${this.e(v[p + 'SubDept'])}</SubDept>`);
             if (v[p + 'StrtNm']) lines.push(`${t}<StrtNm>${this.e(v[p + 'StrtNm'])}</StrtNm>`);
@@ -215,6 +253,8 @@ ${tx}\t\t\t</CdtTrfTxInf>
             if (v[p + 'Room']) lines.push(`${t}<Room>${this.e(v[p + 'Room'])}</Room>`);
             if (v[p + 'PstCd']) lines.push(`${t}<PstCd>${this.e(v[p + 'PstCd'])}</PstCd>`);
             if (v[p + 'TwnNm']) lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'])}</TwnNm>`);
+            if (v[p + 'TwnLctnNm']) lines.push(`${t}<TwnLctnNm>${this.e(v[p + 'TwnLctnNm'])}</TwnLctnNm>`);
+            if (v[p + 'DstrctNm']) lines.push(`${t}<DstrctNm>${this.e(v[p + 'DstrctNm'])}</DstrctNm>`);
             if (v[p + 'CtrySubDvsn']) lines.push(`${t}<CtrySubDvsn>${this.e(v[p + 'CtrySubDvsn'])}</CtrySubDvsn>`);
             if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
         }
@@ -320,7 +360,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
             mapAgt('IntrmyAgt3', 'intrmyAgt3');
 
             const mapAddr = (tag: string, prefix: string) => {
-                ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'CtrySubDvsn', 'Ctry', 'AdrLine1', 'AdrLine2'].forEach(f => patch[prefix + f] = '');
+                ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry', 'AdrLine1', 'AdrLine2', 'AdrTpCd', 'AdrTpPrtry'].forEach(f => patch[prefix + f] = '');
                 patch[prefix + 'AddrType'] = 'none';
 
                 const p = doc.getElementsByTagName(tag)[0];
@@ -329,9 +369,14 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 if (!addr) return;
 
                 const aV = (t: string) => addr.getElementsByTagName(t)[0]?.textContent || '';
-                if (aV('Ctry') || aV('TwnNm') || aV('StrtNm') || aV('BldgNb')) {
+                if (aV('Ctry') || aV('TwnNm') || aV('StrtNm') || aV('BldgNb') || aV('TwnLctnNm') || aV('DstrctNm')) {
                     patch[prefix + 'AddrType'] = 'structured';
-                    ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'CtrySubDvsn', 'Ctry'].forEach(f => patch[prefix + f] = aV(f));
+                    ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry'].forEach(f => patch[prefix + f] = aV(f));
+                    const adrTp = addr.getElementsByTagName('AdrTp')[0];
+                    if (adrTp) {
+                        patch[prefix + 'AdrTpCd'] = adrTp.getElementsByTagName('Cd')[0]?.textContent || '';
+                        patch[prefix + 'AdrTpPrtry'] = adrTp.getElementsByTagName('Prtry')[0]?.textContent || '';
+                    }
                 } else if (addr.getElementsByTagName('AdrLine').length > 0) {
                     patch[prefix + 'AddrType'] = 'unstructured';
                     const lines = addr.getElementsByTagName('AdrLine');

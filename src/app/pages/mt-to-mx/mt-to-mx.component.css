@@ -566,13 +566,13 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     background: var(--bg-card);
     border: 1px solid var(--border-light);
     border-radius: 16px;
-    width: 680px;
-    max-height: 80vh;
+    width: 780px;
+    max-height: 90vh;
     display: flex;
     flex-direction: column;
     box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
     animation: slideUp 0.25s ease;
-    overflow: hidden;
+    /* overflow: hidden; */
 }
 
 .vm-header {
@@ -823,7 +823,7 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
 }
 
 .vm-issue-list {
-    max-height: 300px;
+    max-height: 500px;
     overflow-y: auto;
 }
 
