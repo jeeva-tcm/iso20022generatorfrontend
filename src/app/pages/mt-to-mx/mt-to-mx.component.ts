@@ -217,8 +217,11 @@ export class MtToMxComponent implements OnInit {
 
                         this.addLog('ERROR', msg);
                     });
+                } else if (err.status === 0) {
+                    this.errorMessage = 'Backend connection failed. Please ensure the local server (127.0.0.1:8001) is running.';
+                    this.addLog('ERROR', 'Connection Refused: Target backend offline or CORS error.');
                 } else {
-                    this.errorMessage = err.message || 'Conversion failed.';
+                    this.errorMessage = err.error?.detail || err.message || 'Server returned an unknown error.';
                     this.addLog('ERROR', this.errorMessage);
                 }
             }
@@ -764,6 +767,11 @@ export class MtToMxComponent implements OnInit {
         let type = eventOrType;
         if (eventOrType && eventOrType.target) {
             type = eventOrType.target.value;
+        }
+
+        if (type === '#' || !type) {
+            this.clearAll();
+            return;
         }
 
         switch (type) {

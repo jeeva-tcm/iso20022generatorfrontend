@@ -1866,7 +1866,7 @@ body.light-theme .btn-download {
 
 .table-header {
   display: grid;
-  grid-template-columns: 50px minmax(250px, 3fr) 1fr 1fr 1fr 1fr 90px;
+  grid-template-columns: 50px minmax(200px, 4fr) minmax(120px, 1.2fr) 70px 70px 80px 80px;
   gap: 16px;
   background: var(--bg-card-hover);
   padding: 14px 16px;
@@ -1879,7 +1879,7 @@ body.light-theme .btn-download {
 
 .table-row {
   display: grid;
-  grid-template-columns: 50px minmax(250px, 3fr) 1fr 1fr 1fr 1fr 90px;
+  grid-template-columns: 50px minmax(200px, 4fr) minmax(120px, 1.2fr) 70px 70px 80px 80px;
   gap: 16px;
   padding: 14px 16px;
   border-bottom: 1px solid var(--border-light);
@@ -1929,7 +1929,7 @@ body.light-theme .btn-download {
 
 .th-pass,
 .td-pass {
-  justify-content: flex-end;
+  justify-content: center;
 }
 
 .td-pass {
@@ -1937,8 +1937,10 @@ body.light-theme .btn-download {
 }
 
 .th-action,
-.td-action {
-  justify-content: flex-end;
+.td-action,
+.th-export,
+.td-export {
+  justify-content: center;
 }
 
 .file-ic {
@@ -2415,7 +2417,8 @@ body.light-theme .btn-download {
   border: 1px solid var(--border-light);
   color: var(--accent-color);
   border-radius: 6px;
-  padding: 5px 12px;
+  padding: 0 12px;
+  height: 28px;
   font-size: 12px;
   font-weight: 500;
   display: flex;
@@ -2423,11 +2426,27 @@ body.light-theme .btn-download {
   justify-content: center;
   cursor: pointer;
   transition: 0.2s;
+  white-space: nowrap;
 }
 
 .btn-table-action:hover {
   background: var(--accent-light);
   color: var(--accent-text);
+}
+
+.view-btn-alt {
+  padding: 0;
+  width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.view-btn-alt mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
 }
 
 /* ══════════════════════════════════════════════
@@ -2548,4 +2567,74 @@ body.light-theme .btn-download {
   overflow: auto;
   line-height: 1.5;
   tab-size: 4;
+}
+
+/* ══════════════════════════════════════════════
+   Table Pagination
+   ══════════════════════════════════════════════ */
+.table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 12px 20px;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-light);
+  font-size: 12px;
+  color: var(--text-muted);
+  gap: 24px;
+}
+
+.page-size-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-size-selector select {
+  background: var(--bg-app);
+  color: var(--text-main);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.page-size-selector select:focus {
+  outline: none;
+  border-color: var(--accent-light);
+}
+
+.page-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.btn-icon:hover:not(:disabled) {
+  background: var(--bg-card-hover);
+}
+
+.btn-icon:disabled {
+  color: #334155;
+  cursor: not-allowed;
+}
+
+.page-counter {
+  margin: 0 8px;
+  font-weight: 500;
+  color: var(--text-main);
 }

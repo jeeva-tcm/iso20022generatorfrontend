@@ -268,6 +268,44 @@ export class HistoryComponent implements OnInit {
         });
     }
 
+    downloadHistoricalReport() {
+        if (!this.expandedDetail || !this.expandedDetail.report) {
+            this.snackBar.open('No report available for this record.', 'Dismiss', { duration: 3000 });
+            return;
+        }
+
+        const report = this.expandedDetail.report;
+        const msgType = this.selectedSubFile?.message_type || this.expandedElement?.message_type;
+        const recordId = this.selectedSubFile?.validation_id || this.expandedElement?.validation_id;
+
+        let csv = "Validation ID,Message Type,Status,Total Errors,Total Warnings,Layer,Severity,Issue Path,Message\n";
+
+        const statusLabel = report.errors > 0 ? "FAILED" : (report.warnings > 0 ? "WARNINGS" : "PASSED");
+        const baseRow = `"${recordId}","${msgType}","${statusLabel}",${report.errors || 0},${report.warnings || 0}`;
+
+        if (report.details && report.details.length > 0) {
+            report.details.forEach((issue: any) => {
+                const layer = `"${(issue.layer || '').toString().replace(/"/g, '""')}"`;
+                const severity = `"${(issue.severity || '').toString().replace(/"/g, '""')}"`;
+                const issuePath = `"${(issue.path || 'Root').toString().replace(/"/g, '""')}"`;
+                const msg = `"${(issue.message || '').toString().replace(/"/g, '""')}"`;
+                csv += `${baseRow},${layer},${severity},${issuePath},${msg}\n`;
+            });
+        } else {
+            csv += `${baseRow},,,,\n`;
+        }
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `iso20022_report_${recordId}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
     startEditingXml() {
         this.isEditingXml = true;
         this.editedXmlContent = this.expandedDetail.original_message || '';

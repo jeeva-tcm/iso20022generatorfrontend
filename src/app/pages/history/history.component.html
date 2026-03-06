@@ -169,6 +169,10 @@
                                                     *ngIf="!isEditingXml" (click)="startEditingXml()">
                                                     <mat-icon>edit</mat-icon> EDIT XML
                                                 </button>
+                                                <button mat-stroked-button color="primary" size="small"
+                                                    *ngIf="!isEditingXml" (click)="downloadHistoricalReport()">
+                                                    <mat-icon>file_download</mat-icon> EXPORT RESULT
+                                                </button>
                                                 <button mat-stroked-button
                                                     style="color: #ef4444; border-color: rgba(239, 68, 68, 0.5);"
                                                     size="small" *ngIf="isEditingXml" (click)="cancelEditingXml()">

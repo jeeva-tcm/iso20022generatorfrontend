@@ -220,6 +220,44 @@ export class ValidateComponent implements OnInit {
     document.body.removeChild(link);
   }
 
+  downloadFileReport(f: FileEntry, e: MouseEvent) {
+    if (e) e.stopPropagation();
+    if (!f.report) {
+      this.snackBar.open('Run validation to see details.', 'Dismiss', { duration: 3000 });
+      return;
+    }
+    let csv = "File Name,Status,Pass %,Total Errors,Total Warnings,Layer,Severity,Issue Path,Message\n";
+    const name = `"${f.name.replace(/"/g, '""')}"`;
+    const status = f.status.toUpperCase();
+    const passRate = `${this.getFilePassRate(f)}%`;
+    const errs = f.report?.errors || 0;
+    const warns = f.report?.warnings || 0;
+
+    const baseRow = `${name},${status},${passRate},${errs},${warns}`;
+
+    if (f.report && f.report.details && f.report.details.length > 0) {
+      f.report.details.forEach((issue: any) => {
+        const layer = `"${(issue.layer || '').toString().replace(/"/g, '""')}"`;
+        const severity = `"${(issue.severity || '').toString().replace(/"/g, '""')}"`;
+        const issuePath = `"${(issue.path || 'Root').toString().replace(/"/g, '""')}"`;
+        const msg = `"${(issue.message || '').toString().replace(/"/g, '""')}"`;
+        csv += `${baseRow},${layer},${severity},${issuePath},${msg}\n`;
+      });
+    } else {
+      csv += `${baseRow},,,,\n`;
+    }
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `iso20022_report_${f.name}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
   getGroupedIssues(report: any) {
     if (!report?.details) return [];
     const layers = [...new Set(report.details.map((x: any) => x.layer))].sort();
