@@ -178,6 +178,7 @@
           <div class="th-col th-err">Errors</div>
           <div class="th-col th-pass">Pass %</div>
           <div class="th-col th-action">XML</div>
+          <div class="th-col th-export">Export</div>
         </div>
         <div class="table-body">
           <ng-container *ngFor="let f of paginatedFiles; let i = index">
@@ -211,9 +212,15 @@
               <div class="td-col td-pass wrap-text-centered">
                 <span class="pass-val-text">{{getFilePassRate(f)}}%</span>
               </div>
-              <div class="td-col td-action">
-                <button class="btn-table-action" (click)="openEditor(f, $event)">
+              <div class="td-col td-action" style="justify-content: center;">
+                <button class="btn-table-action" (click)="openEditor(f, $event)" matTooltip="View / Edit XML">
                   View XML
+                </button>
+              </div>
+              <div class="td-col td-export" style="justify-content: center;">
+                <button class="btn-table-action view-btn-alt" (click)="downloadFileReport(f, $event)"
+                  matTooltip="Export result as CSV">
+                  <mat-icon>file_download</mat-icon>
                 </button>
               </div>
             </div>
@@ -279,6 +286,41 @@
 
           <div class="empty-state" *ngIf="filteredFiles.length === 0">
             <p>No files match your filters.</p>
+          </div>
+        </div>
+
+        <!-- Custom Pagination Footer -->
+        <div class="table-pagination" *ngIf="filteredFiles.length > 0">
+          <div class="page-size-selector">
+            <span>Items per page:</span>
+            <select [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+              <option *ngFor="let size of pageSizeOptions" [value]="size">{{size}}</option>
+            </select>
+          </div>
+
+          <div class="page-info">
+            {{ (currentPage - 1) * pageSize + 1 }} -
+            {{ (currentPage * pageSize) > filteredFiles.length ? filteredFiles.length : (currentPage * pageSize) }}
+            of {{ filteredFiles.length }}
+          </div>
+
+          <div class="page-controls">
+            <button class="btn-icon" (click)="changePage(1)" [disabled]="currentPage === 1" matTooltip="First Page">
+              <mat-icon>first_page</mat-icon>
+            </button>
+            <button class="btn-icon" (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1"
+              matTooltip="Previous Page">
+              <mat-icon>chevron_left</mat-icon>
+            </button>
+            <span class="page-counter">Page {{currentPage}} of {{totalPages}}</span>
+            <button class="btn-icon" (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages"
+              matTooltip="Next Page">
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+            <button class="btn-icon" (click)="changePage(totalPages)" [disabled]="currentPage === totalPages"
+              matTooltip="Last Page">
+              <mat-icon>last_page</mat-icon>
+            </button>
           </div>
         </div>
       </div>

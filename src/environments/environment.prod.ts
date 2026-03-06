@@ -1,8 +1,8 @@
-// src/environments/environment.ts
-// Local development settings
+// src/environments/environment.prod.ts
+// Production settings
 export const environment = {
-    production: false,
-    apiBaseUrl: 'https://iso20022generatorbackend.onrender.com',
+    production: true,
+     apiBaseUrl: 'https://iso20022generatorbackend.onrender.com',
     firebaseConfig: {
         apiKey: 'AIzaSyCt_KAzNydfejmWk6s-j34JYKlWcPUvvRo',
         authDomain: 'iso20022-6b3d5.firebaseapp.com',

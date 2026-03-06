@@ -98,9 +98,38 @@ export class Camt057Component implements OnInit {
             // Optional but commonly used
             endToEndId: ['E2E-057-001', Validators.maxLength(35)],
             uetr: ['550e8400-e29b-41d4-a716-446655440001', [Validators.pattern(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)]],
-            dbtrName: ['Sender Bank Ltd', Validators.maxLength(140)],
-            dbtrBic: ['SENDBK55XXX', BIC]
         });
+
+        // Add agents
+        const BIC_OPT = [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
+        this.agentPrefixes.forEach(p => {
+            this.form.addControl(p + 'Name', this.fb.control('', Validators.maxLength(140)));
+            this.form.addControl(p + 'Bic', this.fb.control('', BIC_OPT));
+            this.form.addControl(p + 'Lei', this.fb.control('', Validators.maxLength(20)));
+            this.form.addControl(p + 'ClrSysCd', this.fb.control('', Validators.maxLength(4)));
+            this.form.addControl(p + 'ClrSysMmbId', this.fb.control('', Validators.maxLength(35)));
+            this.form.addControl(p + 'Acct', this.fb.control('', Validators.maxLength(34)));
+
+            // Address fields
+            this.form.addControl(p + 'AddrType', this.fb.control('none'));
+            this.form.addControl(p + 'Dept', this.fb.control(''));
+            this.form.addControl(p + 'SubDept', this.fb.control(''));
+            this.form.addControl(p + 'StrtNm', this.fb.control(''));
+            this.form.addControl(p + 'BldgNb', this.fb.control(''));
+            this.form.addControl(p + 'BldgNm', this.fb.control(''));
+            this.form.addControl(p + 'Flr', this.fb.control(''));
+            this.form.addControl(p + 'PstBx', this.fb.control(''));
+            this.form.addControl(p + 'Room', this.fb.control(''));
+            this.form.addControl(p + 'PstCd', this.fb.control(''));
+            this.form.addControl(p + 'TwnNm', this.fb.control(''));
+            this.form.addControl(p + 'CtrySubDvsn', this.fb.control(''));
+            this.form.addControl(p + 'Ctry', this.fb.control('', Validators.maxLength(2)));
+            this.form.addControl(p + 'AdrLine1', this.fb.control(''));
+            this.form.addControl(p + 'AdrLine2', this.fb.control(''));
+        });
+
+        // Set Default Dbtr
+        this.form.patchValue({ dbtrName: 'Sender Bank Ltd', dbtrBic: 'SENDBK55XXX' });
     }
 
     err(f: string): string | null {
@@ -258,12 +287,52 @@ ${itmXml}
                 setVal('currency', amtEl ? (amtEl.getAttribute('Ccy') || '') : '');
                 setVal('valDt', itm.getElementsByTagName('XpctdValDt')[0]?.textContent || '');
 
-                const dbtr = itm.getElementsByTagName('Dbtr')[0];
-                setVal('dbtrName', dbtr ? (dbtr.getElementsByTagName('Nm')[0]?.textContent || '') : '');
-                const dbtrAgt = itm.getElementsByTagName('DbtrAgt')[0];
-                setVal('dbtrBic', dbtrAgt ? (dbtrAgt.getElementsByTagName('BICFI')[0]?.textContent || '') : '');
+                const parseAgent = (tag: string, prefix: string) => {
+                    const node = itm.getElementsByTagName(tag)[0];
+                    if (!node) return;
+                    if (tag === 'Dbtr' || tag === 'Cdtr') {
+                        const pty = node.getElementsByTagName('Pty')[0];
+                        if (pty) {
+                            setVal(prefix + 'Name', pty.getElementsByTagName('Nm')[0]?.textContent || '');
+                            const id = pty.getElementsByTagName('Id')[0];
+                            if (id) {
+                                setVal(prefix + 'Bic', id.getElementsByTagName('AnyBIC')[0]?.textContent || '');
+                                setVal(prefix + 'Lei', id.getElementsByTagName('LEI')[0]?.textContent || '');
+                                const othr = id.getElementsByTagName('Othr')[0];
+                                if (othr) {
+                                    setVal(prefix + 'ClrSysMmbId', othr.getElementsByTagName('Id')[0]?.textContent || '');
+                                    setVal(prefix + 'ClrSysCd', othr.getElementsByTagName('Cd')[0]?.textContent || '');
+                                }
+                            }
+                        }
+                    } else {
+                        const finId = node.getElementsByTagName('FinInstnId')[0];
+                        if (finId) {
+                            setVal(prefix + 'Bic', finId.getElementsByTagName('BICFI')[0]?.textContent || '');
+                            setVal(prefix + 'Name', finId.getElementsByTagName('Nm')[0]?.textContent || '');
+                            setVal(prefix + 'Lei', finId.getElementsByTagName('LEI')[0]?.textContent || '');
+                            const clr = finId.getElementsByTagName('ClrSysMmbId')[0];
+                            if (clr) {
+                                setVal(prefix + 'ClrSysMmbId', clr.getElementsByTagName('MmbId')[0]?.textContent || '');
+                                setVal(prefix + 'ClrSysCd', clr.getElementsByTagName('Cd')[0]?.textContent || '');
+                            }
+                        }
+                    }
+                };
+                parseAgent('Dbtr', 'dbtr');
+                parseAgent('DbtrAgt', 'dbtrAgt');
+                parseAgent('Cdtr', 'cdtr');
+                parseAgent('CdtrAgt', 'cdtrAgt');
             } else {
-                ['itmId', 'endToEndId', 'uetr', 'amount', 'currency', 'valDt', 'dbtrName', 'dbtrBic'].forEach(f => setVal(f, ''));
+                ['itmId', 'endToEndId', 'uetr', 'amount', 'currency', 'valDt'].forEach(f => setVal(f, ''));
+                this.agentPrefixes.forEach(p => {
+                    setVal(p + 'Bic', '');
+                    setVal(p + 'Name', '');
+                    setVal(p + 'Lei', '');
+                    setVal(p + 'ClrSysCd', '');
+                    setVal(p + 'ClrSysMmbId', '');
+                    setVal(p + 'Acct', '');
+                });
             }
 
             const tryTag = (parent: string, child: string) => {
@@ -292,6 +361,87 @@ ${itmXml}
     }
 
     private e(v: string) { return (v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    private tabs(n: number) { return '\t'.repeat(n); }
+
+    agt(tag: string, prefix: string, v: any, indent = 3) {
+        const bic = v[prefix + 'Bic'];
+        const name = v[prefix + 'Name'];
+        const lei = v[prefix + 'Lei'];
+        const clrCd = v[prefix + 'ClrSysCd'];
+        const clrMmb = v[prefix + 'ClrSysMmbId'];
+
+        if (!bic && !name && !lei && !clrMmb) return '';
+
+        let content = '';
+        if (bic) content += `${this.tabs(indent + 2)}<BICFI>${this.e(bic)}</BICFI>\n`;
+        if (clrMmb) {
+            content += `${this.tabs(indent + 2)}<ClrSysMmbId>\n`;
+            if (clrCd) content += `${this.tabs(indent + 3)}<ClrSysId>\n${this.tabs(indent + 4)}<Cd>${this.e(clrCd)}</Cd>\n${this.tabs(indent + 3)}</ClrSysId>\n`;
+            content += `${this.tabs(indent + 3)}<MmbId>${this.e(clrMmb)}</MmbId>\n`;
+            content += `${this.tabs(indent + 2)}</ClrSysMmbId>\n`;
+        }
+        if (name) content += `${this.tabs(indent + 2)}<Nm>${this.e(name)}</Nm>\n`;
+        content += this.addrXml(v, prefix, indent + 2);
+        if (lei) content += `${this.tabs(indent + 2)}<LEI>${this.e(lei)}</LEI>\n`;
+
+        return `${this.tabs(indent)}<${tag}>\n${this.tabs(indent + 1)}<FinInstnId>\n${content}${this.tabs(indent + 1)}</FinInstnId>\n${this.tabs(indent)}</${tag}>\n`;
+    }
+
+    partyAgentXml(tag: string, prefix: string, v: any, indent = 4) {
+        const bic = v[prefix + 'Bic'];
+        const name = v[prefix + 'Name'];
+        const lei = v[prefix + 'Lei'];
+        const clrCd = v[prefix + 'ClrSysCd'];
+        const clrMmb = v[prefix + 'ClrSysMmbId'];
+
+        if (!bic && !name && !lei && !clrMmb && v[prefix + 'AddrType'] === 'none') return '';
+
+        let content = '';
+        if (name) content += `${this.tabs(indent + 1)}<Nm>${this.e(name)}</Nm>\n`;
+        content += this.addrXml(v, prefix, indent + 1);
+
+        let org = '';
+        if (bic) org += `${this.tabs(indent + 3)}<AnyBIC>${this.e(bic)}</AnyBIC>\n`;
+        if (lei) org += `${this.tabs(indent + 3)}<LEI>${this.e(lei)}</LEI>\n`;
+        if (clrMmb) {
+            org += `${this.tabs(indent + 3)}<Othr>\n${this.tabs(indent + 4)}<Id>${this.e(clrMmb)}</Id>\n`;
+            if (clrCd) {
+                org += `${this.tabs(indent + 4)}<SchmeNm>\n${this.tabs(indent + 5)}<Cd>${this.e(clrCd)}</Cd>\n${this.tabs(indent + 4)}</SchmeNm>\n`;
+            }
+            org += `${this.tabs(indent + 3)}</Othr>\n`;
+        }
+
+        if (org) {
+            content += `${this.tabs(indent + 1)}<Id>\n${this.tabs(indent + 2)}<OrgId>\n${org}${this.tabs(indent + 2)}</OrgId>\n${this.tabs(indent + 1)}</Id>\n`;
+        }
+
+        return `${this.tabs(indent)}<${tag}>\n${content}${this.tabs(indent)}</${tag}>\n`;
+    }
+
+    addrXml(v: any, p: string, indent = 4): string {
+        const type = v[p + 'AddrType']; if (!type || type === 'none') return '';
+        const lines: string[] = []; const t = this.tabs(indent + 1);
+        if (type === 'structured' || type === 'hybrid') {
+            if (v[p + 'Dept']) lines.push(`${t}<Dept>${this.e(v[p + 'Dept'])}</Dept>`);
+            if (v[p + 'SubDept']) lines.push(`${t}<SubDept>${this.e(v[p + 'SubDept'])}</SubDept>`);
+            if (v[p + 'StrtNm']) lines.push(`${t}<StrtNm>${this.e(v[p + 'StrtNm'])}</StrtNm>`);
+            if (v[p + 'BldgNb']) lines.push(`${t}<BldgNb>${this.e(v[p + 'BldgNb'])}</BldgNb>`);
+            if (v[p + 'BldgNm']) lines.push(`${t}<BldgNm>${this.e(v[p + 'BldgNm'])}</BldgNm>`);
+            if (v[p + 'Flr']) lines.push(`${t}<Flr>${this.e(v[p + 'Flr'])}</Flr>`);
+            if (v[p + 'PstBx']) lines.push(`${t}<PstBx>${this.e(v[p + 'PstBx'])}</PstBx>`);
+            if (v[p + 'Room']) lines.push(`${t}<Room>${this.e(v[p + 'Room'])}</Room>`);
+            if (v[p + 'PstCd']) lines.push(`${t}<PstCd>${this.e(v[p + 'PstCd'])}</PstCd>`);
+            if (v[p + 'TwnNm']) lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'])}</TwnNm>`);
+            if (v[p + 'CtrySubDvsn']) lines.push(`${t}<CtrySubDvsn>${this.e(v[p + 'CtrySubDvsn'])}</CtrySubDvsn>`);
+            if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
+        }
+        if (type === 'unstructured' || type === 'hybrid') {
+            if (v[p + 'AdrLine1']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine1'])}</AdrLine>`);
+            if (v[p + 'AdrLine2']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine2'])}</AdrLine>`);
+        }
+        if (!lines.length) return '';
+        return `${this.tabs(indent)}<PstlAdr>\n${lines.join('\n')}\n${this.tabs(indent)}</PstlAdr>\n`;
+    }
 
     validateMessage() {
         this.generateXml();
