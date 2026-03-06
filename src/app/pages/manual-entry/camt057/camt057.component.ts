@@ -26,6 +26,8 @@ export class Camt057Component implements OnInit {
     categoryPurposes: string[] = [];
     purposes: string[] = [];
 
+    agentPrefixes = ['dbtr', 'dbtrAgt', 'cdtr', 'cdtrAgt'];
+
     constructor(
         private fb: FormBuilder,
         private http: HttpClient,
@@ -70,7 +72,7 @@ export class Camt057Component implements OnInit {
             next: (res) => { if (res && res.codes) this.purposes = res.codes; },
             error: (err) => console.error('Failed to load purposes', err)
         });
-        
+
     }
 
     private buildForm() {
@@ -149,7 +151,7 @@ export class Camt057Component implements OnInit {
     }
     warningTimeouts: { [key: string]: any } = {};
     showMaxLenWarning: { [key: string]: boolean } = {};
-    
+
     @HostListener('keydown', ['$event'])
     onKeydown(event: KeyboardEvent) {
         const target = event.target as HTMLInputElement;
@@ -162,7 +164,7 @@ export class Camt057Component implements OnInit {
                 if (controlName) {
                     this.showMaxLenWarning[controlName] = true;
                     if (this.warningTimeouts[controlName]) {
-                       clearTimeout(this.warningTimeouts[controlName]);
+                        clearTimeout(this.warningTimeouts[controlName]);
                     }
                     this.warningTimeouts[controlName] = setTimeout(() => {
                         this.showMaxLenWarning[controlName] = false;
@@ -171,7 +173,7 @@ export class Camt057Component implements OnInit {
             }
         }
     }
-    
+
     hint(f: string, maxLen: number): string | null {
         if (!this.showMaxLenWarning[f]) return null;
         const c = this.form.get(f);
@@ -209,13 +211,12 @@ export class Camt057Component implements OnInit {
         itmXml += `\t\t\t\t\t<Amt Ccy="${this.e(v.currency)}">${v.amount}</Amt>\n`;
         itmXml += `\t\t\t\t\t<XpctdValDt>${v.valDt}</XpctdValDt>\n`;
 
-        if (v.dbtrName?.trim()) {
-            itmXml += `\t\t\t\t\t<Dbtr>\n\t\t\t\t\t\t<Pty>\n\t\t\t\t\t\t\t<Nm>${this.e(v.dbtrName)}</Nm>\n\t\t\t\t\t\t</Pty>\n\t\t\t\t\t</Dbtr>\n`;
-        }
-        if (v.dbtrBic?.trim()) {
-            itmXml += `\t\t\t\t\t<DbtrAgt>\n\t\t\t\t\t\t<FinInstnId><BICFI>${this.e(v.dbtrBic)}</BICFI></FinInstnId>\n\t\t\t\t\t</DbtrAgt>\n`;
-        }
-        
+        // Parties & Agents correctly formatted
+        itmXml += this.partyAgentXml('Dbtr', 'dbtr', v, 5);
+        itmXml += this.agt('DbtrAgt', 'dbtrAgt', v, 5);
+        itmXml += this.agt('CdtrAgt', 'cdtrAgt', v, 5);
+        itmXml += this.partyAgentXml('Cdtr', 'cdtr', v, 5);
+
         if (v.purpCd?.trim()) itmXml += `					<Purp>
 						<Cd>${this.e(v.purpCd)}</Cd>
 					</Purp>
@@ -224,27 +225,27 @@ export class Camt057Component implements OnInit {
 
         this.generatedXml = `<?xml version="1.0" encoding="UTF-8"?>
 <BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
-\t<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
-\t\t<Fr><FIId><FinInstnId><BICFI>${this.e(v.fromBic)}</BICFI></FinInstnId></FIId></Fr>
-\t\t<To><FIId><FinInstnId><BICFI>${this.e(v.toBic)}</BICFI></FinInstnId></FIId></To>
-\t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>
-\t\t<MsgDefIdr>camt.057.001.06</MsgDefIdr>
-\t\t<BizSvc>${this.e(v.bizSvc)}</BizSvc>
-\t\t<CreDt>${creDtTm}</CreDt>
-\t</AppHdr>
-\t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.057.001.06">
-\t\t<NtfctnToRcv>
-\t\t\t<GrpHdr>
-\t\t\t\t<MsgId>${this.e(v.msgId)}</MsgId>
-\t\t\t\t<CreDtTm>${creDtTm}</CreDtTm>
-\t\t\t</GrpHdr>
-\t\t\t<Ntfctn>
-\t\t\t\t<Id>${this.e(v.ntfctnId)}</Id>
+	<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
+		<Fr><FIId><FinInstnId><BICFI>${this.e(v.fromBic)}</BICFI></FinInstnId></FIId></Fr>
+		<To><FIId><FinInstnId><BICFI>${this.e(v.toBic)}</BICFI></FinInstnId></FIId></To>
+		<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>
+		<MsgDefIdr>camt.057.001.06</MsgDefIdr>
+		<BizSvc>${this.e(v.bizSvc)}</BizSvc>
+		<CreDt>${creDtTm}</CreDt>
+	</AppHdr>
+	<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.057.001.06">
+		<NtfctnToRcv>
+			<GrpHdr>
+				<MsgId>${this.e(v.msgId)}</MsgId>
+				<CreDtTm>${creDtTm}</CreDtTm>
+			</GrpHdr>
+			<Ntfctn>
+				<Id>${this.e(v.ntfctnId)}</Id>
 ${acctXml}
 ${itmXml}
-\t\t\t</Ntfctn>
-\t\t</NtfctnToRcv>
-\t</Document>
+			</Ntfctn>
+		</NtfctnToRcv>
+	</Document>
 </BusMsgEnvlp>`;
         this.onEditorChange(this.generatedXml, true);
     }
@@ -345,7 +346,7 @@ ${itmXml}
             const creDtTm = doc.getElementsByTagName('CreDtTm')[0] || doc.getElementsByTagName('CreDt')[0];
             setVal('creDtTm', creDtTm ? (creDtTm.textContent || '') : '');
 
-            
+
             setVal('purpCd', tryTag('Purp', 'Cd') || tval('Purp'));
             setVal('ctgyPurpCd', tryTag('CtgyPurp', 'Cd') || tval('CtgyPurp'));
             this.isParsingXml = true;
