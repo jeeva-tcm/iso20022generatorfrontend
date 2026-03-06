@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
@@ -24,6 +24,8 @@ export class Pacs8Component implements OnInit {
 
   currencies: string[] = [];
   countries: string[] = [];
+    categoryPurposes: string[] = [];
+    purposes: string[] = [];
   sttlmMethods = ['INDA', 'INGA'];
   chargeBearers = ['SHAR', 'DEBT', 'CRED', 'SLEV'];
   // Duplicate import and component definition removed – kept earlier import and @Component
@@ -84,6 +86,16 @@ export class Pacs8Component implements OnInit {
       },
       error: (err) => console.error('Failed to load countries', err)
     });
+
+        this.http.get<any>(this.config.getApiUrl('/codelists/ctgyPurp')).subscribe({
+            next: (res) => { if (res && res.codes) this.categoryPurposes = res.codes; },
+            error: (err) => console.error('Failed to load category purposes', err)
+        });
+        this.http.get<any>(this.config.getApiUrl('/codelists/purp')).subscribe({
+            next: (res) => { if (res && res.codes) this.purposes = res.codes; },
+            error: (err) => console.error('Failed to load purposes', err)
+        });
+        
   }
 
   updateConditionalValidators() {
@@ -140,7 +152,7 @@ export class Pacs8Component implements OnInit {
       cdtrAgtBic: ['CCCCGB2LXXX', BIC],
       prvsInstgAgt1Bic: ['', BIC_OPT], prvsInstgAgt2Bic: ['', BIC_OPT], prvsInstgAgt3Bic: ['', BIC_OPT],
       intrmyAgt1Bic: ['', BIC_OPT], intrmyAgt2Bic: ['', BIC_OPT], intrmyAgt3Bic: ['', BIC_OPT],
-      purpCd: [''],
+      purpCd: [''], ctgyPurpCd: [''],
     };
     [...this.agentPrefixes, 'dbtr', 'cdtr'].forEach(p => {
       c[p + 'AddrType'] = 'none'; c[p + 'AdrLine1'] = ['', Validators.maxLength(70)]; c[p + 'AdrLine2'] = ['', Validators.maxLength(70)];
@@ -181,6 +193,42 @@ export class Pacs8Component implements OnInit {
     }
     return 'Invalid value.';
   }
+  warningTimeouts: { [key: string]: any } = {};
+  showMaxLenWarning: { [key: string]: boolean } = {};
+  
+  @HostListener('keydown', ['$event'])
+  onKeydown(event: KeyboardEvent) {
+      const target = event.target as HTMLInputElement;
+      if (!target || (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA')) return;
+      const maxLen = target.maxLength;
+      if (maxLen && maxLen > 0 && target.value && target.value.toString().length >= maxLen) {
+          if (target.selectionStart !== null && target.selectionStart !== target.selectionEnd) return;
+          if (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey) {
+              const controlName = target.getAttribute('formControlName') || target.getAttribute('name');
+              if (controlName) {
+                  this.showMaxLenWarning[controlName] = true;
+                  if (this.warningTimeouts[controlName]) {
+                     clearTimeout(this.warningTimeouts[controlName]);
+                  }
+                  this.warningTimeouts[controlName] = setTimeout(() => {
+                      this.showMaxLenWarning[controlName] = false;
+                  }, 3000);
+              }
+          }
+      }
+  }
+  
+  hint(f: string, maxLen: number): string | null {
+      if (!this.showMaxLenWarning[f]) return null;
+      const c = this.form.get(f);
+      if (!c || !c.value) return null;
+      const len = c.value.toString().length;
+      if (len >= maxLen) {
+          return `Maximum ${maxLen} characters reached (${len}/${maxLen})`;
+      }
+      return null;
+  }
+
 
   isoNow(): string {
     const d = new Date(), p = (n: number) => n.toString().padStart(2, '0');
@@ -196,7 +244,12 @@ export class Pacs8Component implements OnInit {
     // CdtTrfTxInf — strict XSD element order
     let tx = '';
     tx += this.tag('PmtId', this.el('InstrId', v.instrId) + this.el('EndToEndId', v.endToEndId) + this.el('TxId', v.txId) + this.el('UETR', v.uetr), 3);
-    if (v.svcLvlCd?.trim()) tx += this.tag('PmtTpInf', this.tag('SvcLvl', this.el('Cd', v.svcLvlCd, 4), 4), 3);
+    
+    let pmtTpXml = '';
+    if (v.svcLvlCd?.trim()) pmtTpXml += this.tag('SvcLvl', this.el('Cd', v.svcLvlCd, 5), 4);
+    if (v.ctgyPurpCd?.trim()) pmtTpXml += this.tag('CtgyPurp', this.el('Cd', v.ctgyPurpCd, 5), 4);
+    if (pmtTpXml) tx += this.tag('PmtTpInf', pmtTpXml, 3);
+
     tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${v.amount}</IntrBkSttlmAmt>\n`;
     tx += this.el('IntrBkSttlmDt', v.sttlmDt, 3);
     tx += this.el('ChrgBr', v.chrgBr, 3);
@@ -532,7 +585,10 @@ ${tx}\t\t\t</CdtTrfTxInf>
       mapAddr('Dbtr', 'dbtr');
       mapAddr('Cdtr', 'cdtr');
 
-      this.isParsingXml = true;
+      
+            setVal('purpCd', tryTag('Purp', 'Cd') || tval('Purp'));
+            setVal('ctgyPurpCd', tryTag('CtgyPurp', 'Cd') || tval('CtgyPurp'));
+            this.isParsingXml = true;
       this.form.patchValue(patch, { emitEvent: false });
       this.isParsingXml = false;
     } catch (e) {

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
@@ -23,6 +23,8 @@ export class Pacs9CovComponent implements OnInit {
 
     currencies: string[] = [];
     countries: string[] = [];
+    categoryPurposes: string[] = [];
+    purposes: string[] = [];
     sttlmMethods = ['COVE'];
 
     agentPrefixes = ['instgAgt', 'instdAgt', 'dbtrAgt', 'cdtrAgt',
@@ -84,6 +86,16 @@ export class Pacs9CovComponent implements OnInit {
             },
             error: (err) => console.error('Failed to load countries', err)
         });
+
+        this.http.get<any>(this.config.getApiUrl('/codelists/ctgyPurp')).subscribe({
+            next: (res) => { if (res && res.codes) this.categoryPurposes = res.codes; },
+            error: (err) => console.error('Failed to load category purposes', err)
+        });
+        this.http.get<any>(this.config.getApiUrl('/codelists/purp')).subscribe({
+            next: (res) => { if (res && res.codes) this.purposes = res.codes; },
+            error: (err) => console.error('Failed to load purposes', err)
+        });
+        
     }
 
     updateConditionalValidators() {
@@ -125,6 +137,7 @@ export class Pacs9CovComponent implements OnInit {
         const BIC = [Validators.required, Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
         const BIC_OPT = [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
         const c: any = {
+            purpCd: [''], ctgyPurpCd: [''],
             fromBic: ['RBOSGB2L', BIC], toBic: ['NDEAFIHH', BIC], bizMsgId: ['pacs9bizmsgidr01', Validators.required],
             msgId: ['pacs9bizmsgidr01', Validators.required], creDtTm: [this.isoNow(), Validators.required],
             nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['COVE', Validators.required],
@@ -214,6 +227,42 @@ export class Pacs9CovComponent implements OnInit {
         }
         return 'Invalid value.';
     }
+    warningTimeouts: { [key: string]: any } = {};
+    showMaxLenWarning: { [key: string]: boolean } = {};
+    
+    @HostListener('keydown', ['$event'])
+    onKeydown(event: KeyboardEvent) {
+        const target = event.target as HTMLInputElement;
+        if (!target || (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA')) return;
+        const maxLen = target.maxLength;
+        if (maxLen && maxLen > 0 && target.value && target.value.toString().length >= maxLen) {
+            if (target.selectionStart !== null && target.selectionStart !== target.selectionEnd) return;
+            if (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey) {
+                const controlName = target.getAttribute('formControlName') || target.getAttribute('name');
+                if (controlName) {
+                    this.showMaxLenWarning[controlName] = true;
+                    if (this.warningTimeouts[controlName]) {
+                       clearTimeout(this.warningTimeouts[controlName]);
+                    }
+                    this.warningTimeouts[controlName] = setTimeout(() => {
+                        this.showMaxLenWarning[controlName] = false;
+                    }, 3000);
+                }
+            }
+        }
+    }
+    
+    hint(f: string, maxLen: number): string | null {
+        if (!this.showMaxLenWarning[f]) return null;
+        const c = this.form.get(f);
+        if (!c || !c.value) return null;
+        const len = c.value.toString().length;
+        if (len >= maxLen) {
+            return `Maximum ${maxLen} characters reached (${len}/${maxLen})`;
+        }
+        return null;
+    }
+
 
     isoNow(): string {
         const d = new Date(), p = (n: number) => n.toString().padStart(2, '0');
@@ -230,6 +279,10 @@ export class Pacs9CovComponent implements OnInit {
         // CdtTrfTxInf — pacs.009.001.08 COV element order
         let tx = '';
         tx += this.tag('PmtId', this.el('InstrId', v.instrId) + this.el('EndToEndId', v.endToEndId) + this.el('UETR', v.uetr), 3);
+        
+        let pmtTpXml = '';
+        if (v.ctgyPurpCd?.trim()) pmtTpXml += this.tag('CtgyPurp', this.el('Cd', v.ctgyPurpCd, 5), 4);
+        if (pmtTpXml) tx += this.tag('PmtTpInf', pmtTpXml, 3);
         tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${v.amount}</IntrBkSttlmAmt>\n`;
         tx += this.el('IntrBkSttlmDt', v.sttlmDt, 3);
         // PrvsInstgAgts
@@ -244,6 +297,8 @@ export class Pacs9CovComponent implements OnInit {
         tx += this.agt('IntrmyAgt2', 'intrmyAgt2', v);
         tx += this.agt('IntrmyAgt3', 'intrmyAgt3', v);
         // Dbtr (FI — BranchAndFinancialInstitutionIdentification8)
+        
+        if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 4), 3);
         tx += `\t\t\t<Dbtr>\n\t\t\t\t<FinInstnId>\n\t\t\t\t\t<BICFI>${this.e(v.dbtrFiBic)}</BICFI>\n\t\t\t\t</FinInstnId>\n\t\t\t</Dbtr>\n`;
         if (v.dbtrFiAcct?.trim()) tx += `\t\t\t<DbtrAcct>\n\t\t\t\t<Id>\n\t\t\t\t\t<Othr>\n\t\t\t\t\t\t<Id>${this.e(v.dbtrFiAcct)}</Id>\n\t\t\t\t\t</Othr>\n\t\t\t\t</DbtrAcct>\n`;
         // DbtrAgt (optional)
@@ -682,6 +737,9 @@ ${this.prefixLines(tx, 'pacs:')}\t\t\t</pacs:CdtTrfTxInf>
                 mapAddr('UltmtCdtr', 'covUltmtCdtr');
             }
 
+            
+            setVal('purpCd', tryTag('Purp', 'Cd') || tval('Purp'));
+            setVal('ctgyPurpCd', tryTag('CtgyPurp', 'Cd') || tval('CtgyPurp'));
             this.isParsingXml = true;
             this.form.patchValue(patch, { emitEvent: false });
             this.isParsingXml = false;

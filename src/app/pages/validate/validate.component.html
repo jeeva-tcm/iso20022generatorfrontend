@@ -172,6 +172,8 @@
         <div class="table-header">
           <div class="th-col th-index">#</div>
           <div class="th-col th-name">File Name</div>
+          <div class="th-col th-batch">Batch ID</div>
+          <div class="th-col th-fileid">File ID</div>
           <div class="th-col th-status">Status</div>
           <div class="th-col th-err">Errors</div>
           <div class="th-col th-pass">Pass %</div>
@@ -186,6 +188,14 @@
                   description
                 </mat-icon>
                 {{f.name}}
+              </div>
+              <div class="td-col td-batch">
+                <span class="batch-tag" *ngIf="f.report?.batch_id">{{f.report.batch_id}}</span>
+                <span class="batch-tag empty" *ngIf="!f.report?.batch_id">—</span>
+              </div>
+              <div class="td-col td-fileid">
+                <span class="file-tag" *ngIf="f.report?.file_id">{{f.report.file_id}}</span>
+                <span class="file-tag empty" *ngIf="!f.report?.file_id">—</span>
               </div>
               <div class="td-col td-status">
                 <span class="status-badge" [ngClass]="f.status"

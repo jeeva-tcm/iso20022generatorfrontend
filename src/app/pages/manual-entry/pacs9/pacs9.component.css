@@ -747,4 +747,10 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     .right-panel {
         position: static;
     }
+}.field-hint.at-limit {
+    color: #f44336;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    display: block;
+    animation: fadeIn 0.3s ease-in-out;
 }

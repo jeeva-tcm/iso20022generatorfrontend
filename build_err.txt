@@ -1,0 +1,38 @@
+- Generating browser application bundles (phase: setup)...
+✔ Browser application bundle generation complete.
+✔ Browser application bundle generation complete.
+
+Error: src/app/pages/manual-entry/pacs8/pacs8.component.html:270:33 - error NG5002: Unexpected closing tag "div". It may happen when the tag has already been closed by another tag. For more info see https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags
+
+270                                 </div>
+                                    ~~~~~~
+
+  src/app/pages/manual-entry/pacs8/pacs8.component.ts:15:16
+    15   templateUrl: './pacs8.component.html',
+                      ~~~~~~~~~~~~~~~~~~~~~~~~
+    Error occurs in the template of component Pacs8Component.
+
+
+Error: src/app/pages/manual-entry/pacs8/pacs8.component.html:271:25 - error NG5002: Unexpected closing tag "form". It may happen when the tag has already been closed by another tag. For more info see https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags
+
+271                         </form>
+                            ~~~~~~~
+
+  src/app/pages/manual-entry/pacs8/pacs8.component.ts:15:16
+    15   templateUrl: './pacs8.component.html',
+                      ~~~~~~~~~~~~~~~~~~~~~~~~
+    Error occurs in the template of component Pacs8Component.
+
+
+Error: src/app/pages/manual-entry/pacs8/pacs8.component.html:301:1 - error NG5002: Unexpected closing tag "div". It may happen when the tag has already been closed by another tag. For more info see https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags
+
+301 </div>
+    ~~~~~~
+
+  src/app/pages/manual-entry/pacs8/pacs8.component.ts:15:16
+    15   templateUrl: './pacs8.component.html',
+                      ~~~~~~~~~~~~~~~~~~~~~~~~
+    Error occurs in the template of component Pacs8Component.
+
+
+

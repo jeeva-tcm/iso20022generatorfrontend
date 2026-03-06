@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
@@ -23,6 +23,8 @@ export class Camt057Component implements OnInit {
 
     currencies: string[] = [];
     countries: string[] = [];
+    categoryPurposes: string[] = [];
+    purposes: string[] = [];
 
     constructor(
         private fb: FormBuilder,
@@ -59,6 +61,16 @@ export class Camt057Component implements OnInit {
             },
             error: (err) => console.error('Failed to load countries', err)
         });
+
+        this.http.get<any>(this.config.getApiUrl('/codelists/ctgyPurp')).subscribe({
+            next: (res) => { if (res && res.codes) this.categoryPurposes = res.codes; },
+            error: (err) => console.error('Failed to load category purposes', err)
+        });
+        this.http.get<any>(this.config.getApiUrl('/codelists/purp')).subscribe({
+            next: (res) => { if (res && res.codes) this.purposes = res.codes; },
+            error: (err) => console.error('Failed to load purposes', err)
+        });
+        
     }
 
     private buildForm() {
@@ -66,6 +78,7 @@ export class Camt057Component implements OnInit {
         const BIC_REQ = [Validators.required, ...BIC];
 
         this.form = this.fb.group({
+            purpCd: [''], ctgyPurpCd: [''],
             fromBic: ['RECVUS33XXX', BIC_REQ],
             toBic: ['SENDGB2LXXX', BIC_REQ],
             bizMsgId: ['B-2026-N-001', [Validators.required, Validators.maxLength(35)]],
@@ -105,6 +118,42 @@ export class Camt057Component implements OnInit {
         }
         return 'Invalid value.';
     }
+    warningTimeouts: { [key: string]: any } = {};
+    showMaxLenWarning: { [key: string]: boolean } = {};
+    
+    @HostListener('keydown', ['$event'])
+    onKeydown(event: KeyboardEvent) {
+        const target = event.target as HTMLInputElement;
+        if (!target || (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA')) return;
+        const maxLen = target.maxLength;
+        if (maxLen && maxLen > 0 && target.value && target.value.toString().length >= maxLen) {
+            if (target.selectionStart !== null && target.selectionStart !== target.selectionEnd) return;
+            if (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey) {
+                const controlName = target.getAttribute('formControlName') || target.getAttribute('name');
+                if (controlName) {
+                    this.showMaxLenWarning[controlName] = true;
+                    if (this.warningTimeouts[controlName]) {
+                       clearTimeout(this.warningTimeouts[controlName]);
+                    }
+                    this.warningTimeouts[controlName] = setTimeout(() => {
+                        this.showMaxLenWarning[controlName] = false;
+                    }, 3000);
+                }
+            }
+        }
+    }
+    
+    hint(f: string, maxLen: number): string | null {
+        if (!this.showMaxLenWarning[f]) return null;
+        const c = this.form.get(f);
+        if (!c || !c.value) return null;
+        const len = c.value.toString().length;
+        if (len >= maxLen) {
+            return `Maximum ${maxLen} characters reached (${len}/${maxLen})`;
+        }
+        return null;
+    }
+
 
     isoNow(): string {
         const d = new Date(), p = (n: number) => n.toString().padStart(2, '0');
@@ -137,6 +186,11 @@ export class Camt057Component implements OnInit {
         if (v.dbtrBic?.trim()) {
             itmXml += `\t\t\t\t\t<DbtrAgt>\n\t\t\t\t\t\t<FinInstnId><BICFI>${this.e(v.dbtrBic)}</BICFI></FinInstnId>\n\t\t\t\t\t</DbtrAgt>\n`;
         }
+        
+        if (v.purpCd?.trim()) itmXml += `					<Purp>
+						<Cd>${this.e(v.purpCd)}</Cd>
+					</Purp>
+`;
         itmXml += `\t\t\t\t</Itm>`;
 
         this.generatedXml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -222,6 +276,9 @@ ${itmXml}
             const creDtTm = doc.getElementsByTagName('CreDtTm')[0] || doc.getElementsByTagName('CreDt')[0];
             setVal('creDtTm', creDtTm ? (creDtTm.textContent || '') : '');
 
+            
+            setVal('purpCd', tryTag('Purp', 'Cd') || tval('Purp'));
+            setVal('ctgyPurpCd', tryTag('CtgyPurp', 'Cd') || tval('CtgyPurp'));
             this.isParsingXml = true;
             this.form.patchValue(patch, { emitEvent: false });
             this.isParsingXml = false;
