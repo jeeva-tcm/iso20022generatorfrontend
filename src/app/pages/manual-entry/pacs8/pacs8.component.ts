@@ -22,8 +22,9 @@ export class Pacs8Component implements OnInit {
   editorLineCount: number[] = [];
   isParsingXml = false;
 
-  currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'SGD', 'HKD', 'INR', 'CNY', 'AED', 'SAR'];
-  sttlmMethods = ['INDA', 'INGA', 'CLRG'];
+  currencies: string[] = [];
+  countries: string[] = [];
+  sttlmMethods = ['INDA', 'INGA'];
   chargeBearers = ['SHAR', 'DEBT', 'CRED', 'SLEV'];
   // Duplicate import and component definition removed – kept earlier import and @Component
 
@@ -43,6 +44,7 @@ export class Pacs8Component implements OnInit {
   ) { }
 
   ngOnInit() {
+    this.fetchCodelists();
     this.buildForm();
     this.generateXml();
     this.onEditorChange(this.generatedXml, true);
@@ -59,10 +61,28 @@ export class Pacs8Component implements OnInit {
     this.form.get('instdAgtBic')?.valueChanges.subscribe(v => {
       this.form.patchValue({ toBic: v }, { emitEvent: false });
     });
-    // Track form changes for live XML update
     this.form.valueChanges.subscribe(() => {
       this.updateConditionalValidators();
       this.generateXml();
+    });
+  }
+
+  fetchCodelists() {
+    this.http.get<any>(this.config.getApiUrl('/codelists/currency')).subscribe({
+      next: (res) => {
+        if (res && res.codes) {
+          this.currencies = res.codes;
+        }
+      },
+      error: (err) => console.error('Failed to load currencies', err)
+    });
+    this.http.get<any>(this.config.getApiUrl('/codelists/country')).subscribe({
+      next: (res) => {
+        if (res && res.codes) {
+          this.countries = res.codes;
+        }
+      },
+      error: (err) => console.error('Failed to load countries', err)
     });
   }
 

@@ -21,7 +21,8 @@ export class Camt057Component implements OnInit {
     editorLineCount: any[] = [];
     isParsingXml = false;
 
-    currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'SGD', 'HKD', 'INR', 'CNY', 'AED', 'SAR'];
+    currencies: string[] = [];
+    countries: string[] = [];
 
     constructor(
         private fb: FormBuilder,
@@ -32,11 +33,31 @@ export class Camt057Component implements OnInit {
     ) { }
 
     ngOnInit() {
+        this.fetchCodelists();
         this.buildForm();
         this.generateXml();
         this.onEditorChange(this.generatedXml, true);
         this.form.valueChanges.subscribe(() => {
             this.generateXml();
+        });
+    }
+
+    fetchCodelists() {
+        this.http.get<any>(this.config.getApiUrl('/codelists/currency')).subscribe({
+            next: (res) => {
+                if (res && res.codes) {
+                    this.currencies = res.codes;
+                }
+            },
+            error: (err) => console.error('Failed to load currencies', err)
+        });
+        this.http.get<any>(this.config.getApiUrl('/codelists/country')).subscribe({
+            next: (res) => {
+                if (res && res.codes) {
+                    this.countries = res.codes;
+                }
+            },
+            error: (err) => console.error('Failed to load countries', err)
         });
     }
 

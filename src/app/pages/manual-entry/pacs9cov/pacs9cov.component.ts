@@ -21,7 +21,8 @@ export class Pacs9CovComponent implements OnInit {
     editorLineCount: number[] = [];
     isParsingXml = false;
 
-    currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'SGD', 'HKD', 'INR', 'CNY', 'AED', 'SAR'];
+    currencies: string[] = [];
+    countries: string[] = [];
     sttlmMethods = ['COVE'];
 
     agentPrefixes = ['instgAgt', 'instdAgt', 'dbtrAgt', 'cdtrAgt',
@@ -42,6 +43,7 @@ export class Pacs9CovComponent implements OnInit {
     ) { }
 
     ngOnInit() {
+        this.fetchCodelists();
         this.buildForm();
         this.generateXml();
         this.onEditorChange(this.generatedXml, true);
@@ -62,6 +64,25 @@ export class Pacs9CovComponent implements OnInit {
         this.form.valueChanges.subscribe(() => {
             this.updateConditionalValidators();
             this.generateXml();
+        });
+    }
+
+    fetchCodelists() {
+        this.http.get<any>(this.config.getApiUrl('/codelists/currency')).subscribe({
+            next: (res) => {
+                if (res && res.codes) {
+                    this.currencies = res.codes;
+                }
+            },
+            error: (err) => console.error('Failed to load currencies', err)
+        });
+        this.http.get<any>(this.config.getApiUrl('/codelists/country')).subscribe({
+            next: (res) => {
+                if (res && res.codes) {
+                    this.countries = res.codes;
+                }
+            },
+            error: (err) => console.error('Failed to load countries', err)
         });
     }
 

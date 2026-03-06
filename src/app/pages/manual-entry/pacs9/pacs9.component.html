@@ -283,8 +283,11 @@
                         <ng-container *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                                 <div class="form-group"><label>Country <span
                                                         *ngIf="form.get(prefix+'AddrType')?.value !== 'none'"
-                                                        class="req">*</span></label><input
-                                                [formControlName]="prefix+'Ctry'" maxlength="2" placeholder="US">
+                                                        class="req">*</span></label>
+                                        <select [formControlName]="prefix + 'Ctry'">
+                                                <option value="">Select Country</option>
+                                                <option *ngFor="let c of countries" [value]="c">{{c}}</option>
+                                        </select>
                                         <div class="validation-msg" *ngIf="err(prefix+'Ctry') as e">{{e}}</div>
                                 </div>
                                 <div class="form-group"><label>Town Name <span
