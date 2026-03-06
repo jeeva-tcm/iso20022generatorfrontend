@@ -24,7 +24,7 @@ export class Pacs9Component implements OnInit {
     currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'SGD', 'HKD', 'INR', 'CNY', 'AED', 'SAR'];
     sttlmMethods = ['INDA', 'INGA', 'CLRG', 'COVE'];
 
-    agentPrefixes = ['instgAgt', 'instdAgt', 'dbtrAgt', 'cdtrAgt',
+    agentPrefixes = ['instgAgt', 'instdAgt', 'dbtrFi', 'cdtrFi', 'dbtrAgt', 'cdtrAgt',
         'prvsInstgAgt1', 'prvsInstgAgt2', 'prvsInstgAgt3',
         'intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'];
 
@@ -108,13 +108,13 @@ export class Pacs9Component implements OnInit {
             amount: ['50000.00', [Validators.required, Validators.pattern(/^(?!0+(\.0+)?$)\d{1,18}(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
             sttlmDt: [new Date().toISOString().split('T')[0], Validators.required],
             // Debtor FI (required)
-            dbtrFiBic: ['BBBBUS33XXX', BIC], dbtrFiAcct: [''],
+            dbtrFiBic: ['BBBBUS33XXX', BIC],
             // Debtor Agent (optional)
             dbtrAgtBic: ['', BIC_OPT],
             // Creditor Agent (optional)
             cdtrAgtBic: ['', BIC_OPT],
             // Creditor FI (required)
-            cdtrFiBic: ['CCCCGB2LXXX', BIC], cdtrFiAcct: [''],
+            cdtrFiBic: ['CCCCGB2LXXX', BIC],
             // Optional agents
             prvsInstgAgt1Bic: ['', BIC_OPT], prvsInstgAgt2Bic: ['', BIC_OPT], prvsInstgAgt3Bic: ['', BIC_OPT],
             intrmyAgt1Bic: ['', BIC_OPT], intrmyAgt2Bic: ['', BIC_OPT], intrmyAgt3Bic: ['', BIC_OPT],
@@ -128,6 +128,11 @@ export class Pacs9Component implements OnInit {
             c[p + 'Flr'] = ['', Validators.maxLength(70)]; c[p + 'PstBx'] = ['', Validators.maxLength(16)]; c[p + 'Room'] = ['', Validators.maxLength(70)];
             c[p + 'PstCd'] = ['', Validators.maxLength(16)]; c[p + 'TwnNm'] = ['', Validators.maxLength(140)]; c[p + 'CtrySubDvsn'] = ['', Validators.maxLength(35)]; c[p + 'Ctry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
             c[p + 'TwnLctnNm'] = ['', Validators.maxLength(140)]; c[p + 'DstrctNm'] = ['', Validators.maxLength(140)]; c[p + 'AdrTpCd'] = ['']; c[p + 'AdrTpPrtry'] = ['', Validators.maxLength(35)];
+            c[p + 'Name'] = ['', Validators.maxLength(140)];
+            c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{20}$/)]];
+            c[p + 'ClrSysCd'] = ['', Validators.maxLength(4)];
+            c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
+            c[p + 'Acct'] = ['', [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
         });
         this.form = this.fb.group(c);
     }
@@ -179,14 +184,14 @@ export class Pacs9Component implements OnInit {
         tx += this.agt('IntrmyAgt2', 'intrmyAgt2', v);
         tx += this.agt('IntrmyAgt3', 'intrmyAgt3', v);
         // Dbtr (FI — BranchAndFinancialInstitutionIdentification8)
-        tx += `\t\t\t<Dbtr>\n\t\t\t\t<FinInstnId>\n\t\t\t\t\t<BICFI>${this.e(v.dbtrFiBic)}</BICFI>\n\t\t\t\t</FinInstnId>\n\t\t\t</Dbtr>\n`;
+        tx += this.agt('Dbtr', 'dbtrFi', v);
         if (v.dbtrFiAcct?.trim()) tx += `\t\t\t<DbtrAcct>\n\t\t\t\t<Id>\n\t\t\t\t\t<Othr>\n\t\t\t\t\t\t<Id>${this.e(v.dbtrFiAcct)}</Id>\n\t\t\t\t\t</Othr>\n\t\t\t\t</Id>\n\t\t\t</DbtrAcct>\n`;
         // DbtrAgt (optional)
         tx += this.agt('DbtrAgt', 'dbtrAgt', v);
         // CdtrAgt (optional)
         tx += this.agt('CdtrAgt', 'cdtrAgt', v);
         // Cdtr (FI)
-        tx += `\t\t\t<Cdtr>\n\t\t\t\t<FinInstnId>\n\t\t\t\t\t<BICFI>${this.e(v.cdtrFiBic)}</BICFI>\n\t\t\t\t</FinInstnId>\n\t\t\t</Cdtr>\n`;
+        tx += this.agt('Cdtr', 'cdtrFi', v);
         if (v.cdtrFiAcct?.trim()) tx += `\t\t\t<CdtrAcct>\n\t\t\t\t<Id>\n\t\t\t\t\t<Othr>\n\t\t\t\t\t\t<Id>${this.e(v.cdtrFiAcct)}</Id>\n\t\t\t\t\t</Othr>\n\t\t\t\t</Id>\n\t\t\t</CdtrAcct>\n`;
 
 
@@ -233,8 +238,27 @@ ${tx}\t\t\t</CdtTrfTxInf>
         return `\t\t\t\t<${tag}>\n\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n${this.addrXml(v, prefix, 6)}\t\t\t\t\t</FinInstnId>\n\t\t\t\t</${tag}>\n`;
     }
     agt(tag: string, prefix: string, v: any) {
-        const bic = v[prefix + 'Bic']; if (!bic) return '';
-        return `\t\t\t<${tag}>\n\t\t\t\t<FinInstnId>\n\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n${this.addrXml(v, prefix, 5)}\t\t\t\t</FinInstnId>\n\t\t\t</${tag}>\n`;
+        const bic = v[prefix + 'Bic'];
+        const name = v[prefix + 'Name'];
+        const lei = v[prefix + 'Lei'];
+        const clrCd = v[prefix + 'ClrSysCd'];
+        const clrMmb = v[prefix + 'ClrSysMmbId'];
+
+        if (!bic && !name && !lei && !clrMmb) return '';
+
+        let content = '';
+        if (bic) content += `\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n`;
+        if (clrMmb) {
+            content += `\t\t\t\t\t<ClrSysMmbId>\n`;
+            if (clrCd) content += `\t\t\t\t\t\t<ClrSysId>\n\t\t\t\t\t\t\t<Cd>${this.e(clrCd)}</Cd>\n\t\t\t\t\t\t</ClrSysId>\n`;
+            content += `\t\t\t\t\t\t<MmbId>${this.e(clrMmb)}</MmbId>\n`;
+            content += `\t\t\t\t\t</ClrSysMmbId>\n`;
+        }
+        if (name) content += `\t\t\t\t\t<Nm>${this.e(name)}</Nm>\n`;
+        content += this.addrXml(v, prefix, 5);
+        if (lei) content += `\t\t\t\t\t<LEI>${this.e(lei)}</LEI>\n`;
+
+        return `\t\t\t<${tag}>\n\t\t\t\t<FinInstnId>\n${content}\t\t\t\t</FinInstnId>\n\t\t\t</${tag}>\n`;
     }
     addrXml(v: any, p: string, indent = 4): string {
         const type = v[p + 'AddrType']; if (!type || type === 'none') return '';
@@ -335,14 +359,6 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 return p ? (p.getElementsByTagName(child)[0]?.textContent || '') : '';
             };
 
-            setVal('dbtrFiBic', tryTag('Dbtr', 'BICFI'));
-            setVal('dbtrFiAcct', tryTag('DbtrAcct', 'Id'));
-            setVal('cdtrFiBic', tryTag('Cdtr', 'BICFI'));
-            setVal('cdtrFiAcct', tryTag('CdtrAcct', 'Id'));
-
-            setVal('dbtrAgtBic', tryTag('DbtrAgt', 'BICFI'));
-            setVal('cdtrAgtBic', tryTag('CdtrAgt', 'BICFI'));
-
             setVal('fromBic', tryTag('Fr', 'BICFI'));
             setVal('toBic', tryTag('To', 'BICFI'));
 
@@ -351,13 +367,30 @@ ${tx}\t\t\t</CdtTrfTxInf>
             const instdBic = tryTag('InstdAgt', 'BICFI');
             setVal('instdAgtBic', instdBic || patch.toBic);
 
-            const mapAgt = (tag: string, prefix: string) => setVal(prefix + 'Bic', tryTag(tag, 'BICFI'));
-            mapAgt('PrvsInstgAgt1', 'prvsInstgAgt1');
-            mapAgt('PrvsInstgAgt2', 'prvsInstgAgt2');
-            mapAgt('PrvsInstgAgt3', 'prvsInstgAgt3');
-            mapAgt('IntrmyAgt1', 'intrmyAgt1');
-            mapAgt('IntrmyAgt2', 'intrmyAgt2');
-            mapAgt('IntrmyAgt3', 'intrmyAgt3');
+            this.agentPrefixes.forEach(p => {
+                let tag = p.charAt(0).toUpperCase() + p.slice(1);
+                if (p === 'dbtrFi') tag = 'Dbtr';
+                if (p === 'cdtrFi') tag = 'Cdtr';
+
+                const el = doc.getElementsByTagName(tag)[0];
+                if (el) {
+                    const fi = el.getElementsByTagName('FinInstnId')[0];
+                    if (fi) {
+                        patch[p + 'Bic'] = fi.getElementsByTagName('BICFI')[0]?.textContent || '';
+                        patch[p + 'Name'] = fi.getElementsByTagName('Nm')[0]?.textContent || '';
+                        patch[p + 'Lei'] = fi.getElementsByTagName('LEI')[0]?.textContent || '';
+                        const clr = fi.getElementsByTagName('ClrSysMmbId')[0];
+                        if (clr) {
+                            patch[p + 'ClrSysMmbId'] = clr.getElementsByTagName('MmbId')[0]?.textContent || '';
+                            patch[p + 'ClrSysCd'] = clr.getElementsByTagName('ClrSysId')[0]?.getElementsByTagName('Cd')[0]?.textContent || '';
+                        }
+                    }
+                }
+            });
+
+            // Re-fetch Acct since it's mapped to a different tag structure in pacs9
+            setVal('dbtrFiAcct', tryTag('DbtrAcct', 'Id'));
+            setVal('cdtrFiAcct', tryTag('CdtrAcct', 'Id'));
 
             const mapAddr = (tag: string, prefix: string) => {
                 ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry', 'AdrLine1', 'AdrLine2', 'AdrTpCd', 'AdrTpPrtry'].forEach(f => patch[prefix + f] = '');
@@ -385,7 +418,12 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 }
             };
 
-            this.agentPrefixes.forEach(p => mapAddr(p.charAt(0).toUpperCase() + p.slice(1), p));
+            this.agentPrefixes.forEach(p => {
+                let tag = p.charAt(0).toUpperCase() + p.slice(1);
+                if (p === 'dbtrFi') tag = 'Dbtr';
+                if (p === 'cdtrFi') tag = 'Cdtr';
+                mapAddr(tag, p);
+            });
 
             this.isParsingXml = true;
             this.form.patchValue(patch, { emitEvent: false });
