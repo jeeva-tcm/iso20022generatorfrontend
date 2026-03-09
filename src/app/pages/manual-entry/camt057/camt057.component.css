@@ -139,7 +139,7 @@ header p {
 input,
 select,
 textarea {
-    box-sizing: border-box;
+    box-sizing: border-box;padding-left: 10px;
 }
 
 /* Editor Layout with Line Numbers */

@@ -1192,33 +1192,33 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 14px;
+  padding: 8px 12px;
   background: var(--bg-card);
   border: 1px solid var(--border-light);
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
+  min-height: 44px;
 }
 
 .file-item-new:hover {
   background: var(--bg-card-hover);
+  border-color: var(--accent-light);
 }
 
 .fi-info {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
   flex: 1;
 }
 
 .fi-info mat-icon {
-  font-size: 26px;
-  width: 26px;
-  height: 26px;
-  color: var(--accent-color);
-  background: var(--accent-light);
-  border-radius: 8px;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1227,69 +1227,23 @@
 
 .fi-info mat-icon.doc-pass {
   color: #10b981;
-  background: rgba(16, 185, 129, 0.1);
 }
 
 .fi-info mat-icon.doc-fail {
   color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
 }
 
 .fi-info mat-icon.doc-warn {
   color: #f59e0b;
-  background: rgba(245, 158, 11, 0.1);
-}
-
-.fi-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
 }
 
 .fi-name {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-main);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.fi-substatus {
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-top: 2px;
-  font-weight: 500;
-}
-
-.fi-substatus.validating {
-  color: #818cf8;
-  animation: pulse-text 1.5s infinite ease-in-out;
-}
-
-@keyframes pulse-text {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.6;
-  }
-}
-
-.fi-substatus.passed {
-  color: #2ebc7a;
-}
-
-.fi-substatus.warnings {
-  color: #d69818;
-}
-
-.fi-substatus.failed {
-  color: #c9404d;
 }
 
 .fi-action {
@@ -1297,64 +1251,30 @@
   align-items: center;
 }
 
-.btn-run {
+.btn-icon-action {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  background: var(--accent-light);
+  width: 28px;
+  height: 28px;
+  background: var(--bg-card-hover);
   color: var(--accent-color);
   border: 1px solid var(--border-light);
-  padding: 5px 12px;
   border-radius: 6px;
-  font-size: 11px;
   cursor: pointer;
-  transition: 0.2s;
+  transition: all 0.2s;
+  padding: 0;
 }
 
-.btn-run mat-icon {
-  font-size: 14px;
-  width: 14px;
-  height: 14px;
+.btn-icon-action mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
 }
 
-.btn-run:hover {
-  background: rgba(99, 102, 241, 0.3);
-}
-
-.btn-passed,
-.btn-failed,
-.btn-warn,
-.btn-validating {
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-size: 11px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  border: none;
-}
-
-.btn-passed {
-  background: #143e2e;
-  color: #2ebc7a;
-}
-
-.btn-failed {
-  background: var(--error-gradient);
-  color: #ffffff;
-}
-
-.btn-warn {
-  background: #382c16;
-  color: #d69818;
-}
-
-.btn-validating {
-  background: rgba(99, 102, 241, 0.1);
-  color: #818cf8;
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  box-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
+.btn-icon-action:hover {
+  background: var(--accent-light);
+  color: var(--accent-text);
 }
 
 .spin {
@@ -1875,7 +1795,10 @@ body.light-theme .btn-download {
   font-weight: 500;
   color: var(--text-muted);
   align-items: center;
+  /* text-align: center; */
 }
+
+
 
 .table-row {
   display: grid;
@@ -1898,6 +1821,14 @@ body.light-theme .btn-download {
 .td-col {
   display: flex;
   align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.th-name,
+.td-name {
+  justify-content: flex-start;
+  text-align: left;
 }
 
 .td-name {
@@ -1911,7 +1842,6 @@ body.light-theme .btn-download {
 
 .th-index,
 .td-index {
-  justify-content: center;
   color: var(--text-muted);
   font-weight: 500;
   font-size: 13px;
@@ -2041,8 +1971,8 @@ body.light-theme .btn-download {
 }
 
 .status-badge.warnings {
-  background: var(--accent-light);
-  color: var(--accent-color);
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
 }
 
 .status-badge.pending {

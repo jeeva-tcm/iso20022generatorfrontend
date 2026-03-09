@@ -54,23 +54,14 @@
               {{ f.status === 'passed' ? 'task' : (f.status === 'failed' ? 'error' : (f.status === 'warnings' ?
               'warning' : 'description')) }}
             </mat-icon>
-            <div class="fi-text">
-              <div class="fi-name" [title]="f.name">{{f.name}}</div>
-              <div class="fi-substatus" [ngClass]="f.status">
-                Status: {{ f.status === 'pending' ? 'Not Validated' : (f.status === 'validating' ? 'Validating...' :
-                (f.status === 'passed' || f.status === 'warnings' ? 'Passed (' + getFilePassRate(f) + '%)' : 'Failed ('
-                + (f.report?.errors
-                || 0) + ')')) }}
-              </div>
-            </div>
+            <div class="fi-name" [title]="f.name">{{f.name}}</div>
           </div>
           <div class="fi-action">
-            <button *ngIf="f.status === 'pending'" class="btn-run"
-              (click)="validateFile(f)"><mat-icon>play_arrow</mat-icon> Play</button>
-            <button *ngIf="f.status === 'passed'" class="btn-passed">Passed ({{getFilePassRate(f)}}%)</button>
-            <button *ngIf="f.status === 'failed'" class="btn-failed">Failed ({{f.report?.errors}})</button>
-            <button *ngIf="f.status === 'warnings'" class="btn-passed">Passed ({{getFilePassRate(f)}}%)</button>
-            <button *ngIf="f.status === 'validating'" class="btn-validating"><mat-icon
+            <button *ngIf="f.status === 'pending'" class="btn-icon-action" (click)="validateFile(f)"
+              title="Validate"><mat-icon>play_arrow</mat-icon></button>
+            <button *ngIf="f.status !== 'pending' && f.status !== 'validating'" class="btn-icon-action"
+              (click)="validateFile(f)" title="Re-validate"><mat-icon>replay</mat-icon></button>
+            <button *ngIf="f.status === 'validating'" class="btn-icon-action"><mat-icon
                 class="spin">sync</mat-icon></button>
           </div>
         </div>
@@ -191,9 +182,7 @@
               <div class="td-col td-status">
                 <span class="status-badge" [ngClass]="f.status"
                   *ngIf="f.status !== 'validating' && f.status !== 'pending'">
-                  {{ f.status === 'passed' || f.status === 'warnings' ? 'Passed ('+getFilePassRate(f)+'%)' : (f.status
-                  === 'failed' ? 'Failed ' +
-                  f.report?.errors : f.status) }}
+                  {{ f.status === 'passed' ? 'PASSED' : (f.status === 'warnings' ? 'WARNINGS' : 'FAILED') }}
                 </span>
                 <span class="status-badge validating" *ngIf="f.status === 'validating'">Validating...</span>
                 <span class="status-badge pending" *ngIf="f.status === 'pending'">Pending</span>
@@ -282,8 +271,9 @@
         <!-- Custom Pagination Footer -->
         <div class="table-pagination" *ngIf="filteredFiles.length > 0">
           <div class="page-size-selector">
-            <span>Items per page:</span>
-            <select [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+            <!-- <span>Items per page:</span> -->
+            <select [(ngModel)]="pageSize" (change)="onPageSizeChange()" title="Items per page"
+              matTooltip="Items per page" matTooltipPosition="above">
               <option *ngFor="let size of pageSizeOptions" [value]="size">{{size}}</option>
             </select>
           </div>

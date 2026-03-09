@@ -134,7 +134,7 @@ header p {
 input,
 select,
 textarea {
-    box-sizing: border-box;
+    box-sizing: border-box;padding-left: 10px;
 }
 
 .addr-type-row {

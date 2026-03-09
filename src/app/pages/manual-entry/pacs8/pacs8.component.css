@@ -140,6 +140,7 @@ input,
 select,
 textarea {
     box-sizing: border-box;
+    padding-left: 10px;
 }
 
 /* Address */
