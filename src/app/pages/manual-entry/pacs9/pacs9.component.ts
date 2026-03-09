@@ -60,8 +60,39 @@ export class Pacs9Component implements OnInit {
         // Track form changes for live XML update
         this.form.valueChanges.subscribe(() => {
             this.updateConditionalValidators();
+            this.updateClearingSystemValidation();
             this.generateXml();
         });
+    }
+
+    private updateClearingSystemValidation() {
+        const systems = this.agentPrefixes.map(p => this.form.get(p + 'ClrSysCd')?.value?.trim()?.toUpperCase());
+        const anyT2 = systems.includes('T2');
+        const anyCHAPS = systems.includes('CHAPS');
+        const currencyCtrl = this.form.get('currency');
+        const ccy = currencyCtrl?.value;
+
+        // T2 Validation
+        if (anyT2 && ccy !== 'EUR' && ccy !== '') {
+            if (!currencyCtrl?.hasError('target2')) {
+                currencyCtrl?.setErrors({ ...currencyCtrl.errors, target2: true });
+            }
+        } else if (currencyCtrl?.hasError('target2')) {
+            const errors = { ...currencyCtrl.errors };
+            delete errors['target2'];
+            currencyCtrl.setErrors(Object.keys(errors).length ? errors : null);
+        }
+
+        // CHAPS Validation
+        if (anyCHAPS && ccy !== 'GBP' && ccy !== '') {
+            if (!currencyCtrl?.hasError('chaps')) {
+                currencyCtrl?.setErrors({ ...currencyCtrl.errors, chaps: true });
+            }
+        } else if (currencyCtrl?.hasError('chaps')) {
+            const errors = { ...currencyCtrl.errors };
+            delete errors['chaps'];
+            currencyCtrl.setErrors(Object.keys(errors).length ? errors : null);
+        }
     }
 
     fetchCodelists() {
@@ -184,6 +215,8 @@ export class Pacs9Component implements OnInit {
             if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
             if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
         }
+        if (c.errors?.['target2']) return 'TARGET2 payments must use EUR as the settlement currency.';
+        if (c.errors?.['chaps']) return 'Invalid Currency for CHAPS clearing system. When ClrSysId/Cd = CHAPS, the transaction currency must be GBP.';
         return 'Invalid value.';
     }
     warningTimeouts: { [key: string]: any } = {};
@@ -233,6 +266,21 @@ export class Pacs9Component implements OnInit {
 
     generateXml() {
         if (this.isParsingXml) return;
+
+        // Stop generation if TARGET2 rule is violated
+        if (this.form.get('currency')?.hasError('target2')) {
+            this.generatedXml = '<!-- TARGET2 VALIDATION ERROR: TARGET2 payments must use EUR as the settlement currency. -->';
+            this.onEditorChange(this.generatedXml, true);
+            return;
+        }
+
+        // Stop generation if CHAPS rule is violated
+        if (this.form.get('currency')?.hasError('chaps')) {
+            this.generatedXml = '<!-- CHAPS VALIDATION ERROR: Invalid Currency for CHAPS clearing system. When ClrSysId/Cd = CHAPS, the transaction currency must be GBP. -->';
+            this.onEditorChange(this.generatedXml, true);
+            return;
+        }
+
         const v = this.form.value;
         let creDtTm = v.creDtTm || this.isoNow();
         if (creDtTm.endsWith('Z')) creDtTm = creDtTm.replace('Z', '+00:00');
