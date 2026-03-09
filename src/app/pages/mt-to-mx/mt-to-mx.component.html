@@ -41,7 +41,7 @@
     </div>
 
     <!-- Missing Fields Alert -->
-    <div class="missing-fields-banner" *ngIf="missingFields.length > 0">
+    <div class="missing-fields-banner" *ngIf="conversionStatus === 'error' && missingFields.length > 0">
         <mat-icon>warning</mat-icon>
         <div class="banner-content">
             <strong>Conversion Blocked: Mandatory Fields Missing</strong>
@@ -69,8 +69,15 @@
             <mat-icon class="status-err">error</mat-icon> Failed
         </div>
         <div class="error-detail-text"
-            *ngIf="conversionStatus === 'error' && errorMessage && missingFields.length === 0">
-            {{errorMessage}}
+            *ngIf="conversionStatus === 'error' && (errorMessage || conversionErrors.length > 0) && missingFields.length === 0">
+            <div *ngIf="conversionErrors.length > 0">
+                <div *ngFor="let err of conversionErrors" class="error-line">
+                    <mat-icon
+                        style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle;">error_outline</mat-icon>
+                    {{err}}
+                </div>
+            </div>
+            <div *ngIf="conversionErrors.length === 0">{{errorMessage}}</div>
         </div>
     </div>
 
@@ -93,8 +100,31 @@
             </div>
         </div>
 
+        <!-- Field Reference Guide (Only shown after convert if something is missing) -->
+        <div class="panel field-guide-panel" *ngIf="activeFieldGuide && activeFieldGuide.length > 0">
+            <div class="panel-header guide-header">
+                <div class="panel-title">
+                    <mat-icon>auto_stories</mat-icon> {{detectedMtType}} Mandatory Fields
+                </div>
+            </div>
+            <div class="guide-body">
+                <div class="guide-item" *ngFor="let field of activeFieldGuide">
+                    <div class="guide-tag">:{{field.tag}}:</div>
+                    <div class="guide-info">
+                        <div class="guide-name">{{field.name}}</div>
+                        <div class="guide-desc">{{field.desc}}</div>
+                    </div>
+                    <div class="guide-status">REQUIRED</div>
+                </div>
+                <div class="guide-tip">
+                    <mat-icon>lightbulb</mat-icon>
+                    <span>Add these tags inside the <strong>{{ '{' }}4:</strong> block to pass validation.</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Right: MX Output -->
-        <div class="panel">
+        <div class="panel" *ngIf="!activeFieldGuide || mxOutput.trim()">
             <div class="panel-header">
                 <div class="panel-title">
                     <mat-icon>output</mat-icon> MX Output (ISO 20022 XML)
@@ -112,6 +142,14 @@
                 </div>
             </div>
             <div class="editor-wrapper" *ngIf="mxOutput.trim(); else emptyOutput">
+                <!-- Auto-Validation Summary (Only shown after explicit validation) -->
+                <div class="auto-validate-summary" *ngIf="validationReport && showValidationSummary">
+                    <div class="av-layer" *ngFor="let layer of [1,2,3]" [class]="getLayerClass(layer)">
+                        <mat-icon>{{getLayerIcon(layer)}}</mat-icon>
+                        <span class="av-name">{{getLayerNameForSummary(layer)}}</span>
+                    </div>
+                </div>
+
                 <div class="line-numbers" #mxLineNumbers>
                     <div *ngFor="let idx of outputLineCount; let i = index">{{i + 1}}</div>
                 </div>
@@ -141,6 +179,19 @@
                     <span>Validation Results</span>
                     <span class="vm-msg-type" *ngIf="validationReport?.message">{{validationReport.message}}</span>
                 </div>
+
+                <div class="vm-header-actions" *ngIf="validationStatus === 'done'">
+                    <button class="vm-action-btn" (click)="viewXmlModal()">
+                        <mat-icon>visibility</mat-icon> VIEW XML
+                    </button>
+                    <button class="vm-action-btn" (click)="editXmlModal()">
+                        <mat-icon>edit</mat-icon> EDIT
+                    </button>
+                    <button class="vm-action-btn run" (click)="runValidationModal()">
+                        <mat-icon>play_circle</mat-icon> RUN
+                    </button>
+                </div>
+
                 <button class="vm-close" (click)="closeValidationModal()">
                     <mat-icon>close</mat-icon>
                 </button>

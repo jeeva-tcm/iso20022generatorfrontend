@@ -320,8 +320,8 @@
 </div>
 
 <!-- Modal: Replace or Append -->
-<div class="custom-modal-overlay" *ngIf="showReplaceModal">
-  <div class="custom-modal">
+<div class="custom-modal-overlay" *ngIf="showReplaceModal" (click)="confirmReplace(false)">
+  <div class="custom-modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <mat-icon style="color: #fbbf24;">warning</mat-icon>
       <h3>Files Already Loaded</h3>
@@ -339,8 +339,8 @@
 </div>
 
 <!-- Modal: XML Editor -->
-<div class="editor-overlay" *ngIf="editingEntry">
-  <div class="editor-modal">
+<div class="editor-overlay" *ngIf="editingEntry" (click)="closeEditor()">
+  <div class="editor-modal" (click)="$event.stopPropagation()">
     <div class="editor-header">
       <div class="editor-title">
         <mat-icon style="vertical-align: middle; margin-right: 8px;">code</mat-icon>
@@ -363,8 +363,8 @@
 </div>
 
 <!-- Modal: Paste XML -->
-<div class="custom-modal-overlay" *ngIf="showPasteModal">
-  <div class="custom-modal paste-modal">
+<div class="custom-modal-overlay" *ngIf="showPasteModal" (click)="closePasteModal()">
+  <div class="custom-modal paste-modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <mat-icon style="color: #6366f1;">content_paste</mat-icon>
       <h3>Paste XML Content</h3>
@@ -377,7 +377,7 @@
         spellcheck="false"></textarea>
     </div>
     <div class="modal-actions">
-      <button class="btn-cancel" (click)="showPasteModal = false; pastedXmlContent = ''">Cancel</button>
+      <button class="btn-cancel" (click)="closePasteModal()">Cancel</button>
       <button class="btn-primary-action" (click)="validatePastedXml()">
         <mat-icon style="font-size: 16px; width: 16px; height: 16px; margin-right: 4px;">play_arrow</mat-icon>
         Validate

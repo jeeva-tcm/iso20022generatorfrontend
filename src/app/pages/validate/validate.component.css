@@ -2289,9 +2289,11 @@ body.light-theme .btn-download {
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
 .custom-modal {
+  cursor: default;
   background: var(--bg-card);
   border: 1px solid var(--border-light);
   border-radius: 12px;
@@ -2463,9 +2465,11 @@ body.light-theme .btn-download {
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
 .editor-modal {
+  cursor: default;
   background: var(--bg-card);
   width: 90%;
   height: 90%;

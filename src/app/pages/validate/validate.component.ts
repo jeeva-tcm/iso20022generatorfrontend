@@ -556,6 +556,11 @@ export class ValidateComponent implements OnInit {
     this.addPastedEntry(xml);
   }
 
+  closePasteModal() {
+    this.showPasteModal = false;
+    this.pastedXmlContent = '';
+  }
+
   private addPastedEntry(xml: string) {
     const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
     const entry: FileEntry = {
