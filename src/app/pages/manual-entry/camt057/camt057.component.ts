@@ -446,6 +446,11 @@ ${itmXml}
 
     validateMessage() {
         this.generateXml();
+        if (this.form.invalid) {
+            this.form.markAllAsTouched();
+            this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
+            return;
+        }
         if (!this.generatedXml?.trim()) return;
 
         // Redirect to validate page with the XML payload

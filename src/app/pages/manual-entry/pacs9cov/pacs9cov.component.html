@@ -15,26 +15,30 @@
                                                         formControlName="fromBic" maxlength="11"
                                                         pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$">
                                                 <div class="validation-msg" *ngIf="err('fromBic') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('fromBic', 11) as h">{{h}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('fromBic', 11) as h">{{h}}
+                                                </div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>Receiver BIC (To) <span
                                                                 class="req">*</span></label><input
                                                         formControlName="toBic" maxlength="11"
                                                         pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$">
                                                 <div class="validation-msg" *ngIf="err('toBic') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('toBic', 11) as h">{{h}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('toBic', 11) as h">{{h}}
+                                                </div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>Business Msg ID <span
                                                                 class="req">*</span></label><input
                                                         formControlName="bizMsgId" maxlength="35">
                                                 <div class="validation-msg" *ngIf="err('bizMsgId') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('bizMsgId', 35) as h">{{h}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('bizMsgId', 35) as h">{{h}}
+                                                </div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>Message ID <span
                                                                 class="req">*</span></label><input
                                                         formControlName="msgId" maxlength="35">
                                                 <div class="validation-msg" *ngIf="err('msgId') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('msgId', 35) as h">{{h}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('msgId', 35) as h">{{h}}
+                                                </div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>Creation DateTime <span
                                                                 class="req">*</span></label><input
@@ -46,7 +50,8 @@
                                                         formControlName="nbOfTxs" maxlength="15"
                                                         pattern="^[1-9]\d{0,14}$">
                                                 <div class="validation-msg" *ngIf="err('nbOfTxs') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('nbOfTxs', 15) as h">{{h}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('nbOfTxs', 15) as h">{{h}}
+                                                </div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>Settlement Method <span
                                                                 class="req">*</span></label>
@@ -62,29 +67,35 @@
                                                                 class="req">*</span></label><input
                                                         formControlName="instrId" maxlength="35">
                                                 <div class="validation-msg" *ngIf="err('instrId') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('instrId', 35) as h">{{h}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('instrId', 35) as h">{{h}}
+                                                </div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>End To End ID <span
                                                                 class="req">*</span></label><input
                                                         formControlName="endToEndId" maxlength="35">
                                                 <div class="validation-msg" *ngIf="err('endToEndId') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('endToEndId', 35) as h">{{h}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('endToEndId', 35) as h">
+                                                        {{h}}</div>
                                         </div>
-                                        <div class="form-group intermediary-field"><label>UETR <span class="req">*</span></label><input
+                                        <div class="form-group intermediary-field"><label>UETR <span
+                                                                class="req">*</span></label><input
                                                         formControlName="uetr" maxlength="36"
                                                         pattern="^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
                                                         required>
                                                 <div class="validation-msg" *ngIf="err('uetr') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('uetr', 36) as h">{{h}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('uetr', 36) as h">{{h}}
+                                                </div>
                                         </div>
 
                                         <div class="section-title">Settlement Amounts</div>
-                                        <div class="form-group intermediary-field"><label>Amount <span class="req">*</span></label><input
+                                        <div class="form-group intermediary-field"><label>Amount <span
+                                                                class="req">*</span></label><input
                                                         formControlName="amount" pattern="^\d{1,18}(\.\d{1,5})?$"
                                                         step="any" required type="number">
                                                 <div class="validation-msg" *ngIf="err('amount') as e">{{e}}</div>
                                         </div>
-                                        <div class="form-group intermediary-field"><label>Currency <span class="req">*</span></label>
+                                        <div class="form-group intermediary-field"><label>Currency <span
+                                                                class="req">*</span></label>
                                                 <select formControlName="currency" required>
                                                         <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
                                                 </select>
@@ -97,28 +108,30 @@
                                         </div>
 
                                         <!-- Main Agents -->
-                                        
-                    <div class="form-group">
-                        <label>Category Purpose</label>
-                        <select formControlName="ctgyPurpCd">
-                            <option value="">None</option>
-                            <option *ngFor="let c of categoryPurposes" [value]="c">{{c}}</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Purpose</label>
-                        <select formControlName="purpCd">
-                            <option value="">None</option>
-                            <option *ngFor="let p of purposes" [value]="p">{{p}}</option>
-                        </select>
-                    </div>
+
+                                        <div class="form-group">
+                                                <label>Category Purpose</label>
+                                                <select formControlName="ctgyPurpCd">
+                                                        <option value="">None</option>
+                                                        <option *ngFor="let c of categoryPurposes" [value]="c">{{c}}
+                                                        </option>
+                                                </select>
+                                        </div>
+                                        <div class="form-group">
+                                                <label>Purpose</label>
+                                                <select formControlName="purpCd">
+                                                        <option value="">None</option>
+                                                        <option *ngFor="let p of purposes" [value]="p">{{p}}</option>
+                                                </select>
+                                        </div>
                                         <div class="section-title">Main Agents</div>
                                         <div class="form-group intermediary-field"><label>Instructing Agent BIC <span
                                                                 class="req">*</span></label><input
                                                         formControlName="instgAgtBic" maxlength="11"
                                                         pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$">
                                                 <div class="validation-msg" *ngIf="err('instgAgtBic') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('instgAgtBic', 11) as h">{{h}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('instgAgtBic', 11) as h">
+                                                        {{h}}</div>
                                         </div>
                                         <ng-container
                                                 *ngTemplateOutlet="addressForm; context:{prefix:'instgAgt',title:'Instructing Agent'}"></ng-container>
@@ -128,7 +141,8 @@
                                                         formControlName="instdAgtBic" maxlength="11"
                                                         pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$">
                                                 <div class="validation-msg" *ngIf="err('instdAgtBic') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('instdAgtBic', 11) as h">{{h}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('instdAgtBic', 11) as h">
+                                                        {{h}}</div>
                                         </div>
                                         <ng-container
                                                 *ngTemplateOutlet="addressForm; context:{prefix:'instdAgt',title:'Instructed Agent'}"></ng-container>
@@ -140,7 +154,8 @@
                                                         formControlName="dbtrFiBic" maxlength="11"
                                                         pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$">
                                                 <div class="validation-msg" *ngIf="err('dbtrFiBic') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('dbtrFiBic', 11) as h">{{h}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('dbtrFiBic', 11) as h">
+                                                        {{h}}</div>
                                         </div>
                                         <ng-container
                                                 *ngTemplateOutlet="addressForm; context:{prefix:'dbtrFi',title:'Debtor FI'}"></ng-container>
@@ -153,7 +168,8 @@
                                                         formControlName="dbtrAgtBic" maxlength="11"
                                                         pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$">
                                                 <div class="validation-msg" *ngIf="err('dbtrAgtBic') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('dbtrAgtBic', 11) as h">{{h}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('dbtrAgtBic', 11) as h">
+                                                        {{h}}</div>
                                         </div>
                                         <ng-container
                                                 *ngTemplateOutlet="addressForm; context:{prefix:'dbtrAgt',title:'Debtor Agent'}"></ng-container>
@@ -163,11 +179,12 @@
                                         <!-- Creditor Agent -->
                                         <div class="section-title">Creditor Agent <span class="opt">Optional</span>
                                         </div>
-                                        <div class="form-group intermediary-field"><label>Creditor Agent BIC</label><input
-                                                        formControlName="cdtrAgtBic" maxlength="11"
+                                        <div class="form-group intermediary-field"><label>Creditor Agent
+                                                        BIC</label><input formControlName="cdtrAgtBic" maxlength="11"
                                                         pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$">
                                                 <div class="validation-msg" *ngIf="err('cdtrAgtBic') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('cdtrAgtBic', 11) as h">{{h}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('cdtrAgtBic', 11) as h">
+                                                        {{h}}</div>
                                         </div>
                                         <ng-container
                                                 *ngTemplateOutlet="addressForm; context:{prefix:'cdtrAgt',title:'Creditor Agent'}"></ng-container>
@@ -181,7 +198,8 @@
                                                         formControlName="cdtrFiBic" maxlength="11"
                                                         pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$">
                                                 <div class="validation-msg" *ngIf="err('cdtrFiBic') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('cdtrFiBic', 11) as h">{{h}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('cdtrFiBic', 11) as h">
+                                                        {{h}}</div>
                                         </div>
                                         <ng-container
                                                 *ngTemplateOutlet="addressForm; context:{prefix:'cdtrFi',title:'Creditor FI'}"></ng-container>
@@ -210,9 +228,13 @@
                                                         formControlName="covDbtrBic" maxlength="11"
                                                         pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$">
                                                 <div class="validation-msg" *ngIf="err('covDbtrBic') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group intermediary-field"><label>Debtor Name <span
+                                                                class="opt">Optional</span></label><input
                                                         formControlName="covDbtrName" maxlength="140">
                                                 <div class="validation-msg" *ngIf="err('covDbtrName') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('covDbtrName', 140) as h">{{h}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('covDbtrName', 140) as h">
+                                                        {{h}}</div>
                                         </div>
                                         <ng-container
                                                 *ngTemplateOutlet="addressForm; context:{prefix:'covDbtr',title:'COV Debtor'}"></ng-container>
@@ -231,7 +253,8 @@
                                                         pattern="^[A-Z]{2}[0-9]{2}[a-zA-Z0-9]{1,30}$"
                                                         placeholder="IBAN (if applicable)">
                                                 <div class="validation-msg" *ngIf="err('covDbtrIban') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('covDbtrIban', 34) as h">{{h}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('covDbtrIban', 34) as h">
+                                                        {{h}}</div>
                                         </div>
 
                                         <!-- COV Debtor Agent -->
@@ -258,9 +281,13 @@
                                                         formControlName="covCdtrBic" maxlength="11"
                                                         pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$">
                                                 <div class="validation-msg" *ngIf="err('covCdtrBic') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group intermediary-field"><label>Creditor Name <span
+                                                                class="opt">Optional</span></label><input
                                                         formControlName="covCdtrName" maxlength="140">
                                                 <div class="validation-msg" *ngIf="err('covCdtrName') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('covCdtrName', 140) as h">{{h}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('covCdtrName', 140) as h">
+                                                        {{h}}</div>
                                         </div>
                                         <ng-container
                                                 *ngTemplateOutlet="addressForm; context:{prefix:'covCdtr',title:'COV Creditor'}"></ng-container>
@@ -277,7 +304,8 @@
                                                         pattern="^[A-Z]{2}[0-9]{2}[a-zA-Z0-9]{1,30}$"
                                                         placeholder="IBAN (if applicable)">
                                                 <div class="validation-msg" *ngIf="err('covCdtrIban') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('covCdtrIban', 34) as h">{{h}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('covCdtrIban', 34) as h">
+                                                        {{h}}</div>
                                         </div>
                                         <ng-container
                                                 *ngTemplateOutlet="agentIdForm; context:{prefix:'covCdtr',title:'COV Creditor'}"></ng-container>
@@ -313,7 +341,8 @@
                                                         placeholder="Free text instruction">
                                                 <div class="validation-msg"
                                                         *ngIf="err('covInstrForCdtrAgtInstrInf') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('covInstrForCdtrAgtInstrInf', 140) as h">{{h}}</div>
+                                                <div class="field-hint at-limit"
+                                                        *ngIf="hint('covInstrForCdtrAgtInstrInf', 140) as h">{{h}}</div>
                                         </div>
                                         <div class="form-group"><label>Instr For Next Agent (Info) <span
                                                                 class="opt">Optional</span></label><input
@@ -321,7 +350,8 @@
                                                         placeholder="Free text instruction">
                                                 <div class="validation-msg"
                                                         *ngIf="err('covInstrForNxtAgtInstrInf') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('covInstrForNxtAgtInstrInf', 140) as h">{{h}}</div>
+                                                <div class="field-hint at-limit"
+                                                        *ngIf="hint('covInstrForNxtAgtInstrInf', 140) as h">{{h}}</div>
                                         </div>
                                         <div class="form-group"><label>Remittance Info (Unstructured) <span
                                                                 class="opt">Optional</span></label><input
@@ -349,8 +379,9 @@
                                         <!-- Optional Agents -->
                                         <div class="section-title">Previous Instructing Agents <span
                                                         class="opt">Optional</span></div>
-                                        <div class="form-group intermediary-field"><label>Prev Inst Agent 1 BIC</label><input
-                                                        formControlName="prvsInstgAgt1Bic" maxlength="11"
+                                        <div class="form-group intermediary-field"><label>Prev Inst Agent 1
+                                                        BIC</label><input formControlName="prvsInstgAgt1Bic"
+                                                        maxlength="11"
                                                         pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$">
                                                 <div class="validation-msg" *ngIf="err('prvsInstgAgt1Bic') as e">{{e}}
                                                 </div>
@@ -359,8 +390,9 @@
                                                 *ngTemplateOutlet="addressForm; context:{prefix:'prvsInstgAgt1',title:'Prev Inst Agent 1'}"></ng-container>
                                         <ng-container
                                                 *ngTemplateOutlet="agentIdForm; context:{prefix:'prvsInstgAgt1',title:'Prev Inst Agent 1'}"></ng-container>
-                                        <div class="form-group intermediary-field"><label>Prev Inst Agent 2 BIC</label><input
-                                                        formControlName="prvsInstgAgt2Bic" maxlength="11"
+                                        <div class="form-group intermediary-field"><label>Prev Inst Agent 2
+                                                        BIC</label><input formControlName="prvsInstgAgt2Bic"
+                                                        maxlength="11"
                                                         pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$">
                                                 <div class="validation-msg" *ngIf="err('prvsInstgAgt2Bic') as e">{{e}}
                                                 </div>
@@ -369,8 +401,9 @@
                                                 *ngTemplateOutlet="addressForm; context:{prefix:'prvsInstgAgt2',title:'Prev Inst Agent 2'}"></ng-container>
                                         <ng-container
                                                 *ngTemplateOutlet="agentIdForm; context:{prefix:'prvsInstgAgt2',title:'Prev Inst Agent 2'}"></ng-container>
-                                        <div class="form-group intermediary-field"><label>Prev Inst Agent 3 BIC</label><input
-                                                        formControlName="prvsInstgAgt3Bic" maxlength="11"
+                                        <div class="form-group intermediary-field"><label>Prev Inst Agent 3
+                                                        BIC</label><input formControlName="prvsInstgAgt3Bic"
+                                                        maxlength="11"
                                                         pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$">
                                                 <div class="validation-msg" *ngIf="err('prvsInstgAgt3Bic') as e">{{e}}
                                                 </div>
@@ -382,8 +415,8 @@
 
                                         <div class="section-title">Intermediary Agents <span class="opt">Optional</span>
                                         </div>
-                                        <div class="form-group intermediary-field"><label>Intermediary Agent 1 BIC</label><input
-                                                        formControlName="intrmyAgt1Bic" maxlength="11"
+                                        <div class="form-group intermediary-field"><label>Intermediary Agent 1
+                                                        BIC</label><input formControlName="intrmyAgt1Bic" maxlength="11"
                                                         pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$">
                                                 <div class="validation-msg" *ngIf="err('intrmyAgt1Bic') as e">{{e}}
                                                 </div>
@@ -392,8 +425,8 @@
                                                 *ngTemplateOutlet="addressForm; context:{prefix:'intrmyAgt1',title:'Intermediary Agent 1'}"></ng-container>
                                         <ng-container
                                                 *ngTemplateOutlet="agentIdForm; context:{prefix:'intrmyAgt1',title:'Intermediary Agent 1'}"></ng-container>
-                                        <div class="form-group intermediary-field"><label>Intermediary Agent 2 BIC</label><input
-                                                        formControlName="intrmyAgt2Bic" maxlength="11"
+                                        <div class="form-group intermediary-field"><label>Intermediary Agent 2
+                                                        BIC</label><input formControlName="intrmyAgt2Bic" maxlength="11"
                                                         pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$">
                                                 <div class="validation-msg" *ngIf="err('intrmyAgt2Bic') as e">{{e}}
                                                 </div>
@@ -402,8 +435,8 @@
                                                 *ngTemplateOutlet="addressForm; context:{prefix:'intrmyAgt2',title:'Intermediary Agent 2'}"></ng-container>
                                         <ng-container
                                                 *ngTemplateOutlet="agentIdForm; context:{prefix:'intrmyAgt2',title:'Intermediary Agent 2'}"></ng-container>
-                                        <div class="form-group intermediary-field"><label>Intermediary Agent 3 BIC</label><input
-                                                        formControlName="intrmyAgt3Bic" maxlength="11"
+                                        <div class="form-group intermediary-field"><label>Intermediary Agent 3
+                                                        BIC</label><input formControlName="intrmyAgt3Bic" maxlength="11"
                                                         pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$">
                                                 <div class="validation-msg" *ngIf="err('intrmyAgt3Bic') as e">{{e}}
                                                 </div>

@@ -90,7 +90,7 @@ export class Pacs9Component implements OnInit {
             next: (res) => { if (res && res.codes) this.purposes = res.codes; },
             error: (err) => console.error('Failed to load purposes', err)
         });
-        
+
     }
 
     updateConditionalValidators() {
@@ -188,7 +188,7 @@ export class Pacs9Component implements OnInit {
     }
     warningTimeouts: { [key: string]: any } = {};
     showMaxLenWarning: { [key: string]: boolean } = {};
-    
+
     @HostListener('keydown', ['$event'])
     onKeydown(event: KeyboardEvent) {
         const target = event.target as HTMLInputElement;
@@ -201,7 +201,7 @@ export class Pacs9Component implements OnInit {
                 if (controlName) {
                     this.showMaxLenWarning[controlName] = true;
                     if (this.warningTimeouts[controlName]) {
-                       clearTimeout(this.warningTimeouts[controlName]);
+                        clearTimeout(this.warningTimeouts[controlName]);
                     }
                     this.warningTimeouts[controlName] = setTimeout(() => {
                         this.showMaxLenWarning[controlName] = false;
@@ -210,7 +210,7 @@ export class Pacs9Component implements OnInit {
             }
         }
     }
-    
+
     hint(f: string, maxLen: number): string | null {
         if (!this.showMaxLenWarning[f]) return null;
         const c = this.form.get(f);
@@ -240,7 +240,7 @@ export class Pacs9Component implements OnInit {
         // CdtTrfTxInf — pacs.009.001.08 CBPR+ element order
         let tx = '';
         tx += this.tag('PmtId', this.el('InstrId', v.instrId) + this.el('EndToEndId', v.endToEndId) + this.el('TxId', v.txId) + this.el('UETR', v.uetr), 3);
-        
+
         let pmtTpXml = '';
         if (v.ctgyPurpCd?.trim()) pmtTpXml += this.tag('CtgyPurp', this.el('Cd', v.ctgyPurpCd, 5), 4);
         if (pmtTpXml) tx += this.tag('PmtTpInf', pmtTpXml, 3);
@@ -258,7 +258,7 @@ export class Pacs9Component implements OnInit {
         tx += this.agt('IntrmyAgt2', 'intrmyAgt2', v);
         tx += this.agt('IntrmyAgt3', 'intrmyAgt3', v);
         // Dbtr (FI — BranchAndFinancialInstitutionIdentification8)
-        
+
         if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 4), 3);
         tx += `\t\t\t<Dbtr>\n\t\t\t\t<FinInstnId>\n\t\t\t\t\t<BICFI>${this.e(v.dbtrFiBic)}</BICFI>\n\t\t\t\t</FinInstnId>\n\t\t\t</Dbtr>\n`;
         if (v.dbtrFiAcct?.trim()) tx += `\t\t\t<DbtrAcct>\n\t\t\t\t<Id>\n\t\t\t\t\t<Othr>\n\t\t\t\t\t\t<Id>${this.e(v.dbtrFiAcct)}</Id>\n\t\t\t\t\t</Othr>\n\t\t\t\t</Id>\n\t\t\t</DbtrAcct>\n`;
@@ -372,6 +372,11 @@ ${tx}\t\t\t</CdtTrfTxInf>
     // Validation
     validateMessage() {
         this.generateXml();
+        if (this.form.invalid) {
+            this.form.markAllAsTouched();
+            this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
+            return;
+        }
         if (!this.generatedXml?.trim()) return;
 
         // Redirect to validate page with the XML payload
@@ -501,7 +506,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 mapAddr(tag, p);
             });
 
-            
+
             setVal('purpCd', tryTag('Purp', 'Cd') || tval('Purp'));
             setVal('ctgyPurpCd', tryTag('CtgyPurp', 'Cd') || tval('CtgyPurp'));
             this.isParsingXml = true;

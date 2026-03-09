@@ -1866,7 +1866,7 @@ body.light-theme .btn-download {
 
 .table-header {
   display: grid;
-  grid-template-columns: 50px minmax(160px, 2fr) minmax(130px, 1.2fr) minmax(80px, 0.8fr) 1fr 80px 80px 90px;
+  grid-template-columns: 50px minmax(200px, 3fr) 1.5fr 80px 80px 90px 90px;
   gap: 12px;
   background: var(--bg-card-hover);
   padding: 14px 16px;
@@ -1879,7 +1879,7 @@ body.light-theme .btn-download {
 
 .table-row {
   display: grid;
-  grid-template-columns: 50px minmax(160px, 2fr) minmax(130px, 1.2fr) minmax(80px, 0.8fr) 1fr 80px 80px 90px;
+  grid-template-columns: 50px minmax(200px, 3fr) 1.5fr 80px 80px 90px 90px;
   gap: 12px;
   padding: 14px 16px;
   border-bottom: 1px solid var(--border-light);
