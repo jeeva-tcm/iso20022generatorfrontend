@@ -1866,8 +1866,8 @@ body.light-theme .btn-download {
 
 .table-header {
   display: grid;
-  grid-template-columns: 50px minmax(200px, 4fr) minmax(120px, 1.2fr) 70px 70px 80px 80px;
-  gap: 16px;
+  grid-template-columns: 50px minmax(160px, 2fr) minmax(130px, 1.2fr) minmax(80px, 0.8fr) 1fr 80px 80px 90px;
+  gap: 12px;
   background: var(--bg-card-hover);
   padding: 14px 16px;
   border-bottom: 1px solid var(--border-light);
@@ -1879,8 +1879,8 @@ body.light-theme .btn-download {
 
 .table-row {
   display: grid;
-  grid-template-columns: 50px minmax(200px, 4fr) minmax(120px, 1.2fr) 70px 70px 80px 80px;
-  gap: 16px;
+  grid-template-columns: 50px minmax(160px, 2fr) minmax(130px, 1.2fr) minmax(80px, 0.8fr) 1fr 80px 80px 90px;
+  gap: 12px;
   padding: 14px 16px;
   border-bottom: 1px solid var(--border-light);
   cursor: pointer;
@@ -1904,6 +1904,9 @@ body.light-theme .btn-download {
   gap: 10px;
   color: var(--text-main);
   font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .th-index,
@@ -1912,6 +1915,53 @@ body.light-theme .btn-download {
   color: var(--text-muted);
   font-weight: 500;
   font-size: 13px;
+}
+
+.th-batch,
+.td-batch,
+.th-fileid,
+.td-fileid {
+  justify-content: center;
+}
+
+.batch-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: rgba(99, 102, 241, 0.12);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  white-space: nowrap;
+}
+
+.batch-tag.empty {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: 'Inter', sans-serif;
+}
+
+.file-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: rgba(6, 182, 212, 0.12);
+  color: #22d3ee;
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  white-space: nowrap;
+}
+
+.file-tag.empty {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: 'Inter', sans-serif;
 }
 
 .th-err,

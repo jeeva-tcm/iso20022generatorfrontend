@@ -185,16 +185,18 @@ export class ValidateComponent implements OnInit {
   downloadReport() {
     if (this.files.length === 0) return;
 
-    let csv = "File Name,Status,Pass %,Total Errors,Total Warnings,Layer,Severity,Issue Path,Message\n";
+    let csv = "Batch ID,File ID,File Name,Status,Pass %,Total Errors,Total Warnings,Layer,Severity,Issue Path,Message\n";
 
     this.files.forEach(f => {
+      const batchId = f.report?.batch_id || '';
+      const fileId = f.report?.file_id || '';
       const name = `"${f.name.replace(/"/g, '""')}"`;
       const status = f.status.toUpperCase();
       const passRate = `${this.getFilePassRate(f)}%`;
       const errs = f.report?.errors || 0;
       const warns = f.report?.warnings || 0;
 
-      const baseRow = `${name},${status},${passRate},${errs},${warns}`;
+      const baseRow = `${batchId},${fileId},${name},${status},${passRate},${errs},${warns}`;
 
       if (f.report && f.report.details && f.report.details.length > 0) {
         f.report.details.forEach((issue: any) => {
@@ -717,15 +719,19 @@ export class ValidateComponent implements OnInit {
   }
 
   validateAll() {
-    this.http.get<any>(this.config.getApiUrl('/generate-id')).subscribe({
+    // Call the batch init endpoint to get one VAL ID + FILE IDs for all files
+    this.http.post<any>(this.config.getApiUrl('/validate-batch'), {
+      file_count: this.files.length
+    }).subscribe({
       next: (data) => {
-        const batchId = data.id;
-        for (const f of this.files) {
-          this.validateFile(f, batchId);
+        const batchId = data.batch_id;   // e.g. VAL06032600001
+        const fileIds: string[] = data.file_ids; // e.g. [FILE0001, FILE0002, ...]
+        for (let i = 0; i < this.files.length; i++) {
+          this.validateFile(this.files[i], batchId, fileIds[i]);
         }
       },
       error: () => {
-        // Fallback: use first file's validation without batch grouping
+        // Fallback: validate without batch grouping
         for (const f of this.files) {
           this.validateFile(f);
         }
@@ -733,7 +739,7 @@ export class ValidateComponent implements OnInit {
     });
   }
 
-  validateFile(entry: FileEntry, batchId?: string) {
+  validateFile(entry: FileEntry, batchId?: string, fileId?: string) {
     if (!entry.content?.trim()) return;
 
     // Client-side well-formedness pre-check
@@ -761,12 +767,32 @@ export class ValidateComponent implements OnInit {
     const rawType = (this.messageControl.value || 'Auto-detect').split(' ')[0];
     const cleanType = rawType === 'Auto-detect' ? 'Auto-detect' : rawType;
 
+    // If no fileId provided (single file validation), generate one for this single file
+    if (!batchId) {
+      // Single file validation — still call batch init for proper ID tracking
+      this.http.post<any>(this.config.getApiUrl('/validate-batch'), {
+        file_count: 1
+      }).subscribe({
+        next: (data) => {
+          this._doValidateRequest(entry, cleanType, data.batch_id, data.file_ids[0]);
+        },
+        error: () => {
+          this._doValidateRequest(entry, cleanType);
+        }
+      });
+    } else {
+      this._doValidateRequest(entry, cleanType, batchId, fileId);
+    }
+  }
+
+  private _doValidateRequest(entry: FileEntry, cleanType: string, batchId?: string, fileId?: string) {
     this.http.post(this.config.getApiUrl('/validate'), {
       xml_content: entry.content,
       mode: this.validationMode,
       message_type: cleanType,
       store_in_history: true,
-      batch_id: batchId
+      batch_id: batchId || null,
+      file_id: fileId || null
     }).subscribe({
       next: (data: any) => {
         entry.report = data;
