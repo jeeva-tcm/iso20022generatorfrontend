@@ -54,23 +54,14 @@
               {{ f.status === 'passed' ? 'task' : (f.status === 'failed' ? 'error' : (f.status === 'warnings' ?
               'warning' : 'description')) }}
             </mat-icon>
-            <div class="fi-text">
-              <div class="fi-name" [title]="f.name">{{f.name}}</div>
-              <div class="fi-substatus" [ngClass]="f.status">
-                Status: {{ f.status === 'pending' ? 'Not Validated' : (f.status === 'validating' ? 'Validating...' :
-                (f.status === 'passed' || f.status === 'warnings' ? 'Passed (' + getFilePassRate(f) + '%)' : 'Failed ('
-                + (f.report?.errors
-                || 0) + ')')) }}
-              </div>
-            </div>
+            <div class="fi-name" [title]="f.name">{{f.name}}</div>
           </div>
           <div class="fi-action">
-            <button *ngIf="f.status === 'pending'" class="btn-run"
-              (click)="validateFile(f)"><mat-icon>play_arrow</mat-icon> Play</button>
-            <button *ngIf="f.status === 'passed'" class="btn-passed">Passed ({{getFilePassRate(f)}}%)</button>
-            <button *ngIf="f.status === 'failed'" class="btn-failed">Failed ({{f.report?.errors}})</button>
-            <button *ngIf="f.status === 'warnings'" class="btn-passed">Passed ({{getFilePassRate(f)}}%)</button>
-            <button *ngIf="f.status === 'validating'" class="btn-validating"><mat-icon
+            <button *ngIf="f.status === 'pending'" class="btn-icon-action" (click)="validateFile(f)"
+              title="Validate"><mat-icon>play_arrow</mat-icon></button>
+            <button *ngIf="f.status !== 'pending' && f.status !== 'validating'" class="btn-icon-action"
+              (click)="validateFile(f)" title="Re-validate"><mat-icon>replay</mat-icon></button>
+            <button *ngIf="f.status === 'validating'" class="btn-icon-action"><mat-icon
                 class="spin">sync</mat-icon></button>
           </div>
         </div>
@@ -191,9 +182,7 @@
               <div class="td-col td-status">
                 <span class="status-badge" [ngClass]="f.status"
                   *ngIf="f.status !== 'validating' && f.status !== 'pending'">
-                  {{ f.status === 'passed' || f.status === 'warnings' ? 'Passed ('+getFilePassRate(f)+'%)' : (f.status
-                  === 'failed' ? 'Failed ' +
-                  f.report?.errors : f.status) }}
+                  {{ f.status === 'passed' ? 'PASSED' : (f.status === 'warnings' ? 'WARNINGS' : 'FAILED') }}
                 </span>
                 <span class="status-badge validating" *ngIf="f.status === 'validating'">Validating...</span>
                 <span class="status-badge pending" *ngIf="f.status === 'pending'">Pending</span>
@@ -242,20 +231,26 @@
                     <span>L{{l.layer}} - {{l.name}}</span>
 
                     <div style="margin-left: auto; display: flex; gap: 12px; font-size: 11px; font-weight: 500;">
-                      <span *ngIf="l.errors > 0"
-                        style="color: #ef4444; display: flex; align-items: center; gap: 4px; padding: 2px 8px; background: rgba(239, 68, 68, 0.15); border-radius: 4px;">
+                      <span *ngIf="l.errors > 0" (click)="setIssueFilter(f, l.name, 'ERROR', $event)"
+                        style="color: #ef4444; display: flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; border: 1px solid transparent; cursor: pointer; transition: all 0.2s;"
+                        [style.background]="isIssueFilterActive(f, l.name, 'ERROR') ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.15)'"
+                        [style.border-color]="isIssueFilterActive(f, l.name, 'ERROR') ? '#ef4444' : 'transparent'"
+                        [style.opacity]="(issueFilters[f.id + '_' + l.name] === 'WARNING') ? '0.4' : '1'">
                         <mat-icon style="font-size: 14px; width: 14px; height: 14px;">cancel</mat-icon> {{l.errors}}
                         Error{{l.errors > 1 ? 's' : ''}}
                       </span>
-                      <span *ngIf="l.warnings > 0"
-                        style="color: #fbbf24; display: flex; align-items: center; gap: 4px; padding: 2px 8px; background: rgba(245, 158, 11, 0.15); border-radius: 4px;">
+                      <span *ngIf="l.warnings > 0" (click)="setIssueFilter(f, l.name, 'WARNING', $event)"
+                        style="color: #fbbf24; display: flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; border: 1px solid transparent; cursor: pointer; transition: all 0.2s;"
+                        [style.background]="isIssueFilterActive(f, l.name, 'WARNING') ? 'rgba(245, 158, 11, 0.25)' : 'rgba(245, 158, 11, 0.15)'"
+                        [style.border-color]="isIssueFilterActive(f, l.name, 'WARNING') ? '#fbbf24' : 'transparent'"
+                        [style.opacity]="(issueFilters[f.id + '_' + l.name] === 'ERROR') ? '0.4' : '1'">
                         <mat-icon style="font-size: 14px; width: 14px; height: 14px;">warning</mat-icon> {{l.warnings}}
                         Warning{{l.warnings > 1 ? 's' : ''}}
                       </span>
                     </div>
                   </div>
                   <div class="layer-issues" *ngIf="isLayerExpanded(f, l.name)">
-                    <div class="issue-item" *ngFor="let issue of l.issues">
+                    <div class="issue-item" *ngFor="let issue of getFilteredIssues(f, l)">
                       <span class="issue-path"><mat-icon
                           [class.success]="issue.severity !== 'ERROR' && issue.severity !== 'WARNING'"
                           [class.error]="issue.severity === 'ERROR'"
@@ -282,8 +277,9 @@
         <!-- Custom Pagination Footer -->
         <div class="table-pagination" *ngIf="filteredFiles.length > 0">
           <div class="page-size-selector">
-            <span>Items per page:</span>
-            <select [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+            <!-- <span>Items per page:</span> -->
+            <select [(ngModel)]="pageSize" (change)="onPageSizeChange()" title="Items per page"
+              matTooltip="Items per page" matTooltipPosition="above">
               <option *ngFor="let size of pageSizeOptions" [value]="size">{{size}}</option>
             </select>
           </div>

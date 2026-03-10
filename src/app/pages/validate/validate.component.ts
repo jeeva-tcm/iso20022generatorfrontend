@@ -177,6 +177,31 @@ export class ValidateComponent implements OnInit {
     return !!this.expandedLayers[key];
   }
 
+  issueFilters: { [key: string]: 'ERROR' | 'WARNING' | 'ALL' } = {};
+
+  setIssueFilter(f: FileEntry, layerName: string, type: 'ERROR' | 'WARNING', e: Event) {
+    e.stopPropagation();
+    const key = f.id + '_' + layerName;
+    if (this.issueFilters[key] === type) {
+      this.issueFilters[key] = 'ALL';
+    } else {
+      this.issueFilters[key] = type;
+      this.expandedLayers[key] = true;
+    }
+  }
+
+  isIssueFilterActive(f: FileEntry, layerName: string, type: 'ERROR' | 'WARNING'): boolean {
+    const key = f.id + '_' + layerName;
+    return this.issueFilters[key] === type;
+  }
+
+  getFilteredIssues(f: FileEntry, l: any) {
+    const key = f.id + '_' + l.name;
+    const filter = this.issueFilters[key] || 'ALL';
+    if (filter === 'ALL') return l.issues;
+    return l.issues.filter((issue: any) => issue.severity === filter);
+  }
+
   setFilter(status: 'All' | 'Passed' | 'Failed') {
     this.filterStatus = status;
     this.currentPage = 1; // Reset to page 1 on filter change

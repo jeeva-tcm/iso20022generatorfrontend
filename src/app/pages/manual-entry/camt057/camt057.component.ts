@@ -3,6 +3,7 @@ import { Component, OnInit, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
@@ -10,7 +11,7 @@ import { ConfigService } from '../../../services/config.service';
 @Component({
     selector: 'app-camt057',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule],
+    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule],
     templateUrl: './camt057.component.html',
     styleUrl: './camt057.component.css'
 })
@@ -42,8 +43,39 @@ export class Camt057Component implements OnInit {
         this.generateXml();
         this.onEditorChange(this.generatedXml, true);
         this.form.valueChanges.subscribe(() => {
+            this.updateClearingSystemValidation();
             this.generateXml();
         });
+    }
+
+    private updateClearingSystemValidation() {
+        const systems = this.agentPrefixes.map(p => this.form.get(p + 'ClrSysCd')?.value?.trim()?.toUpperCase());
+        const anyT2 = systems.includes('T2');
+        const anyCHAPS = systems.includes('CHAPS');
+        const currencyCtrl = this.form.get('currency');
+        const ccy = currencyCtrl?.value;
+
+        // T2 Validation
+        if (anyT2 && ccy !== 'EUR' && ccy !== '') {
+            if (!currencyCtrl?.hasError('target2')) {
+                currencyCtrl?.setErrors({ ...currencyCtrl.errors, target2: true });
+            }
+        } else if (currencyCtrl?.hasError('target2')) {
+            const errors = { ...currencyCtrl.errors };
+            delete errors['target2'];
+            currencyCtrl.setErrors(Object.keys(errors).length ? errors : null);
+        }
+
+        // CHAPS Validation
+        if (anyCHAPS && ccy !== 'GBP' && ccy !== '') {
+            if (!currencyCtrl?.hasError('chaps')) {
+                currencyCtrl?.setErrors({ ...currencyCtrl.errors, chaps: true });
+            }
+        } else if (currencyCtrl?.hasError('chaps')) {
+            const errors = { ...currencyCtrl.errors };
+            delete errors['chaps'];
+            currencyCtrl.setErrors(Object.keys(errors).length ? errors : null);
+        }
     }
 
     fetchCodelists() {
@@ -81,6 +113,13 @@ export class Camt057Component implements OnInit {
 
         this.form = this.fb.group({
             purpCd: [''], ctgyPurpCd: [''],
+
+            rmtInfType: ['none'],
+            rmtInfUstrd: ['', Validators.maxLength(140)],
+            rmtInfStrdCdtrRefType: [''],
+            rmtInfStrdCdtrRef: ['', Validators.maxLength(35)],
+            rmtInfStrdAddtlRmtInf: ['', Validators.maxLength(140)],
+
             fromBic: ['RECVUS33XXX', BIC_REQ],
             toBic: ['SENDGB2LXXX', BIC_REQ],
             bizMsgId: ['B-2026-N-001', [Validators.required, Validators.maxLength(35)]],
@@ -147,6 +186,8 @@ export class Camt057Component implements OnInit {
             if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
             if (f === 'bizMsgId' || f === 'msgId' || f === 'ntfctnId' || f === 'itmId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
         }
+        if (c.errors?.['target2']) return 'TARGET2 payments must use EUR as the settlement currency.';
+        if (c.errors?.['chaps']) return 'Invalid Currency for CHAPS clearing system. When ClrSysId/Cd = CHAPS, the transaction currency must be GBP.';
         return 'Invalid value.';
     }
     warningTimeouts: { [key: string]: any } = {};
@@ -194,6 +235,23 @@ export class Camt057Component implements OnInit {
 
     generateXml() {
         if (this.isParsingXml) return;
+
+        // Stop generation if TARGET2 rule is violated
+        if (this.form.get('currency')?.hasError('target2')) {
+
+            this.generatedXml = '<!-- TARGET2 VALIDATION ERROR: TARGET2 payments must use EUR as the settlement currency. -->';
+            this.onEditorChange(this.generatedXml, true);
+            return;
+        }
+
+        // Stop generation if CHAPS rule is violated
+        if (this.form.get('currency')?.hasError('chaps')) {
+
+            this.generatedXml = '<!-- CHAPS VALIDATION ERROR: Invalid Currency for CHAPS clearing system. When ClrSysId/Cd = CHAPS, the transaction currency must be GBP. -->';
+            this.onEditorChange(this.generatedXml, true);
+            return;
+        }
+
         const v = this.form.value;
         let creDtTm = v.creDtTm || this.isoNow();
         if (creDtTm.endsWith('Z')) creDtTm = creDtTm.replace('Z', '+00:00');
@@ -223,6 +281,7 @@ export class Camt057Component implements OnInit {
 `;
         itmXml += `\t\t\t\t</Itm>`;
 
+
         this.generatedXml = `<?xml version="1.0" encoding="UTF-8"?>
 <BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
 	<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
@@ -251,6 +310,7 @@ ${itmXml}
     }
 
     onEditorChange(content: string, fromForm = false) {
+
         this.generatedXml = content;
         const lines = content.split('\n').length;
         this.editorLineCount = Array.from({ length: lines }, (_, i) => i + 1);
@@ -453,12 +513,33 @@ ${itmXml}
         }
         if (!this.generatedXml?.trim()) return;
 
-        // Redirect to validate page with the XML payload
-        this.router.navigate(['/validate'], {
-            state: {
-                autoValidateXml: this.generatedXml,
-                fileName: `camt057-${Date.now()}.xml`,
-                messageType: 'camt.057.001.06'
+        this.showValidationModal = true;
+        this.validationStatus = 'validating';
+        this.validationReport = null;
+        this.validationExpandedIssue = null;
+
+        this.http.post(this.config.getApiUrl('/validate'), {
+            xml_content: this.generatedXml,
+            mode: 'Full 1-3',
+            message_type: 'camt.057.001.06',
+            store_in_history: true
+        }).subscribe({
+            next: (data: any) => {
+                this.validationReport = data;
+                this.validationStatus = 'done';
+            },
+            error: (err) => {
+                this.validationReport = {
+                    status: 'FAIL', errors: 1, warnings: 0,
+                    message: 'camt.057.001.06', total_time_ms: 0,
+                    layer_status: {},
+                    details: [{
+                        severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
+                        path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'),
+                        fix_suggestion: 'Ensure the validation server is running.'
+                    }]
+                };
+                this.validationStatus = 'done';
             }
         });
     }
@@ -484,5 +565,65 @@ ${itmXml}
     switchToPreview() {
         this.generateXml();
         this.currentTab = 'preview';
+    }
+
+    // Validation Modal State
+    showValidationModal = false;
+    validationStatus: 'idle' | 'validating' | 'done' = 'idle';
+    validationReport: any = null;
+    validationExpandedIssue: any = null;
+
+    closeValidationModal() {
+        this.showValidationModal = false;
+        this.validationReport = null;
+        this.validationStatus = 'idle';
+        this.validationExpandedIssue = null;
+    }
+
+    getValidationLayers(): string[] {
+        if (!this.validationReport?.layer_status) return [];
+        return Object.keys(this.validationReport.layer_status).sort();
+    }
+
+    getLayerName(k: string): string {
+        const names: Record<string, string> = { '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' };
+        return names[k] ?? `Layer ${k}`;
+    }
+
+    getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
+    getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
+    isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
+    isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
+    isLayerWarn(k: string) {
+        const s = this.getLayerStatus(k);
+        return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+    }
+
+    getValidationIssues(): any[] { return this.validationReport?.details ?? []; }
+
+    toggleValidationIssue(issue: any) {
+        this.validationExpandedIssue = this.validationExpandedIssue === issue ? null : issue;
+    }
+
+    copyFix(text: string, e: MouseEvent) {
+        e.stopPropagation();
+        navigator.clipboard.writeText(text).then(() => {
+            this.snackBar.open('Copied!', '', { duration: 1500 });
+        });
+    }
+
+
+    viewXmlModal() {
+        this.closeValidationModal();
+        this.switchToPreview();
+    }
+
+    editXmlModal() {
+        this.closeValidationModal();
+        this.currentTab = 'form';
+    }
+
+    runValidationModal() {
+        this.validateMessage();
     }
 }

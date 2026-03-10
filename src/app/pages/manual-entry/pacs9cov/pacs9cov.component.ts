@@ -3,6 +3,7 @@ import { Component, OnInit, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
@@ -10,7 +11,7 @@ import { ConfigService } from '../../../services/config.service';
 @Component({
     selector: 'app-pacs9cov',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule],
+    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule],
     templateUrl: './pacs9cov.component.html',
     styleUrl: './pacs9cov.component.css'
 })
@@ -65,8 +66,44 @@ export class Pacs9CovComponent implements OnInit {
         // Track form changes for live XML update
         this.form.valueChanges.subscribe(() => {
             this.updateConditionalValidators();
+            this.updateClearingSystemValidation();
             this.generateXml();
         });
+    }
+
+    private updateClearingSystemValidation() {
+        const allPrefixes = [...this.agentPrefixes, ...this.covPartyPrefixes];
+        const systems = allPrefixes.map(p => {
+            const val = this.form.get(p + 'ClrSysCd')?.value || this.form.get(p + 'OrgClrSysCd')?.value;
+            return val?.trim()?.toUpperCase();
+        });
+
+        const anyT2 = systems.includes('T2');
+        const anyCHAPS = systems.includes('CHAPS');
+        const currencyCtrl = this.form.get('currency');
+        const ccy = currencyCtrl?.value;
+
+        // T2 Validation
+        if (anyT2 && ccy !== 'EUR' && ccy !== '') {
+            if (!currencyCtrl?.hasError('target2')) {
+                currencyCtrl?.setErrors({ ...currencyCtrl.errors, target2: true });
+            }
+        } else if (currencyCtrl?.hasError('target2')) {
+            const errors = { ...currencyCtrl.errors };
+            delete errors['target2'];
+            currencyCtrl.setErrors(Object.keys(errors).length ? errors : null);
+        }
+
+        // CHAPS Validation
+        if (anyCHAPS && ccy !== 'GBP' && ccy !== '') {
+            if (!currencyCtrl?.hasError('chaps')) {
+                currencyCtrl?.setErrors({ ...currencyCtrl.errors, chaps: true });
+            }
+        } else if (currencyCtrl?.hasError('chaps')) {
+            const errors = { ...currencyCtrl.errors };
+            delete errors['chaps'];
+            currencyCtrl.setErrors(Object.keys(errors).length ? errors : null);
+        }
     }
 
     fetchCodelists() {
@@ -138,6 +175,13 @@ export class Pacs9CovComponent implements OnInit {
         const BIC_OPT = [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
         const c: any = {
             purpCd: [''], ctgyPurpCd: [''],
+
+      rmtInfType: ['none'],
+      rmtInfUstrd: ['', Validators.maxLength(140)],
+      rmtInfStrdCdtrRefType: [''],
+      rmtInfStrdCdtrRef: ['', Validators.maxLength(35)],
+      rmtInfStrdAddtlRmtInf: ['', Validators.maxLength(140)],
+
             fromBic: ['RBOSGB2L', BIC], toBic: ['NDEAFIHH', BIC], bizMsgId: ['pacs9bizmsgidr01', Validators.required],
             msgId: ['pacs9bizmsgidr01', Validators.required], creDtTm: [this.isoNow(), Validators.required],
             nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['COVE', Validators.required],
@@ -237,6 +281,8 @@ export class Pacs9CovComponent implements OnInit {
             if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
             if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
         }
+        if (c.errors?.['target2']) return 'TARGET2 payments must use EUR as the settlement currency.';
+        if (c.errors?.['chaps']) return 'Invalid Currency for CHAPS clearing system. When ClrSysId/Cd = CHAPS, the transaction currency must be GBP.';
         return 'Invalid value.';
     }
     warningTimeouts: { [key: string]: any } = {};
@@ -284,6 +330,21 @@ export class Pacs9CovComponent implements OnInit {
 
     generateXml() {
         if (this.isParsingXml) return;
+
+        // Stop generation if TARGET2 rule is violated
+        if (this.form.get('currency')?.hasError('target2')) {
+            this.generatedXml = '<!-- TARGET2 VALIDATION ERROR: TARGET2 payments must use EUR as the settlement currency. -->';
+            this.onEditorChange(this.generatedXml, true);
+            return;
+        }
+
+        // Stop generation if CHAPS rule is violated
+        if (this.form.get('currency')?.hasError('chaps')) {
+            this.generatedXml = '<!-- CHAPS VALIDATION ERROR: Invalid Currency for CHAPS clearing system. When ClrSysId/Cd = CHAPS, the transaction currency must be GBP. -->';
+            this.onEditorChange(this.generatedXml, true);
+            return;
+        }
+
         const v = this.form.value;
         let creDtTm = v.creDtTm || this.isoNow();
         if (creDtTm.endsWith('Z')) creDtTm = creDtTm.replace('Z', '+00:00');
@@ -324,7 +385,24 @@ export class Pacs9CovComponent implements OnInit {
         // COV: UndrlygCstmrCdtTrf
         tx += this.buildCov(v);
 
-        const frBic = v.fromBic;
+        
+    let rmtInf = '';
+    if (v.rmtInfType === 'ustrd' && v.rmtInfUstrd) {
+        rmtInf = `\n\t\t\t\t<RmtInf>\n\t\t\t\t\t<Ustrd>${this.e(v.rmtInfUstrd)}</Ustrd>\n\t\t\t\t</RmtInf>`;
+    } else if (v.rmtInfType === 'strd') {
+        let cdtrRef = '';
+        if (v.rmtInfStrdCdtrRefType && v.rmtInfStrdCdtrRef) {
+            cdtrRef = `\n\t\t\t\t\t\t<CdtrRefInf>\n\t\t\t\t\t\t\t<Tp>\n\t\t\t\t\t\t\t\t<CdOrPrtry>\n\t\t\t\t\t\t\t\t\t<Cd>${this.e(v.rmtInfStrdCdtrRefType)}</Cd>\n\t\t\t\t\t\t\t\t</CdOrPrtry>\n\t\t\t\t\t\t\t</Tp>\n\t\t\t\t\t\t\t<Ref>${this.e(v.rmtInfStrdCdtrRef)}</Ref>\n\t\t\t\t\t\t</CdtrRefInf>`;
+        }
+        let addtl = v.rmtInfStrdAddtlRmtInf ? `\n\t\t\t\t\t\t<AddtlRmtInf>${this.e(v.rmtInfStrdAddtlRmtInf)}</AddtlRmtInf>` : '';
+        if (cdtrRef || addtl) {
+            rmtInf = `\n\t\t\t\t<RmtInf>\n\t\t\t\t\t<Strd>${cdtrRef}${addtl}\n\t\t\t\t\t</Strd>\n\t\t\t\t</RmtInf>`;
+        }
+    }
+    tx += rmtInf;
+
+
+    const frBic = v.fromBic;
         const toBic = v.toBic;
 
         this.generatedXml =
@@ -593,12 +671,33 @@ ${this.prefixLines(tx, 'pacs:')}\t\t\t</pacs:CdtTrfTxInf>
         }
         if (!this.generatedXml?.trim()) return;
 
-        // Redirect to validate page with the XML payload
-        this.router.navigate(['/validate'], {
-            state: {
-                autoValidateXml: this.generatedXml,
-                fileName: `pacs009cov-${Date.now()}.xml`,
-                messageType: 'pacs.009.001.08'
+        this.showValidationModal = true;
+        this.validationStatus = 'validating';
+        this.validationReport = null;
+        this.validationExpandedIssue = null;
+
+        this.http.post(this.config.getApiUrl('/validate'), {
+            xml_content: this.generatedXml,
+            mode: 'Full 1-3',
+            message_type: 'pacs.009.001.08',
+            store_in_history: true
+        }).subscribe({
+            next: (data: any) => {
+                this.validationReport = data;
+                this.validationStatus = 'done';
+            },
+            error: (err) => {
+                this.validationReport = {
+                    status: 'FAIL', errors: 1, warnings: 0,
+                    message: 'pacs.009.001.08', total_time_ms: 0,
+                    layer_status: {},
+                    details: [{
+                        severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
+                        path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'),
+                        fix_suggestion: 'Ensure the validation server is running.'
+                    }]
+                };
+                this.validationStatus = 'done';
             }
         });
     }
@@ -842,4 +941,64 @@ ${this.prefixLines(tx, 'pacs:')}\t\t\t</pacs:CdtTrfTxInf>
     syncScroll(editor: HTMLTextAreaElement, gutter: HTMLDivElement) {
         gutter.scrollTop = editor.scrollTop;
     }
+
+    // Validation Modal State
+    showValidationModal = false;
+    validationStatus: 'idle' | 'validating' | 'done' = 'idle';
+    validationReport: any = null;
+    validationExpandedIssue: any = null;
+
+    closeValidationModal() {
+        this.showValidationModal = false;
+        this.validationReport = null;
+        this.validationStatus = 'idle';
+        this.validationExpandedIssue = null;
+    }
+
+    getValidationLayers(): string[] {
+        if (!this.validationReport?.layer_status) return [];
+        return Object.keys(this.validationReport.layer_status).sort();
+    }
+
+    getLayerName(k: string): string {
+        const names: Record<string, string> = { '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' };
+        return names[k] ?? `Layer ${k}`;
+    }
+
+    getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
+    getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
+    isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
+    isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
+    isLayerWarn(k: string) {
+        const s = this.getLayerStatus(k);
+        return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+    }
+
+    getValidationIssues(): any[] { return this.validationReport?.details ?? []; }
+
+    toggleValidationIssue(issue: any) {
+        this.validationExpandedIssue = this.validationExpandedIssue === issue ? null : issue;
+    }
+
+    copyFix(text: string, e: MouseEvent) {
+        e.stopPropagation();
+        navigator.clipboard.writeText(text).then(() => {
+            this.snackBar.open('Copied!', '', { duration: 1500 });
+        });
+    }
+
+
+  viewXmlModal() {
+    this.closeValidationModal();
+    this.switchToPreview();
+  }
+
+  editXmlModal() {
+    this.closeValidationModal();
+    this.currentTab = 'form';
+  }
+
+  runValidationModal() {
+    this.validateMessage();
+  }
 }

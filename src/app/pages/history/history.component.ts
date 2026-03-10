@@ -75,13 +75,17 @@ export class HistoryComponent implements OnInit {
                     const grouped: { [key: string]: any } = {};
                     data.forEach(item => {
                         const id = item.batch_id || item.validation_id || item.id || 'unknown';
+
+                        // Force real status based on actual numeric metrics
+                        if (item.total_errors > 0) item.status = 'FAILED';
+                        else if (item.total_warnings > 0) item.status = 'WARNING';
+                        else item.status = 'PASSED';
+
                         if (!grouped[id]) {
                             // Initialize with the first item's properties
                             grouped[id] = {
                                 ...item,
                                 no_of_files: 0,
-                                __batch_failed: 0,
-                                __batch_warnings: 0,
                                 batch_records: []
                             };
                             // We will manually sum up errors and warnings so we reset the initial item's values for accumulation:
@@ -94,19 +98,12 @@ export class HistoryComponent implements OnInit {
                         grouped[id].total_warnings += (item.total_warnings || 0);
                         grouped[id].batch_records.push(item);
 
-                        if (item.status === 'FAILED') grouped[id].__batch_failed += 1;
-                        else if (item.status === 'WARNING') grouped[id].__batch_warnings += 1;
-
-                        if (grouped[id].__batch_failed > 0) grouped[id].status = 'FAILED';
-                        else if (grouped[id].__batch_warnings > 0) grouped[id].status = 'WARNING';
+                        if (grouped[id].total_errors > 0) grouped[id].status = 'FAILED';
+                        else if (grouped[id].total_warnings > 0) grouped[id].status = 'WARNING';
                         else grouped[id].status = 'PASSED';
                     });
 
-                    const aggregated = Object.values(grouped).map(item => {
-                        delete item.__batch_failed;
-                        delete item.__batch_warnings;
-                        return item;
-                    });
+                    const aggregated = Object.values(grouped);
 
                     // Sort by timestamp descending
                     aggregated.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
