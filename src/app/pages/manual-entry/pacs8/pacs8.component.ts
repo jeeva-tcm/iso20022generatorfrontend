@@ -3,6 +3,7 @@ import { Component, OnInit, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
@@ -11,7 +12,7 @@ import { AddressValidatorService, AddressValidationResult } from '../../../servi
 @Component({
   selector: 'app-pacs8',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule],
   templateUrl: './pacs8.component.html',
   styleUrl: './pacs8.component.css'
 })
@@ -229,6 +230,37 @@ export class Pacs8Component implements OnInit {
       bCtry?.updateValueAndValidity({ emitEvent: false });
     });
 
+    
+    const rmtType = this.form.get('rmtInfType')?.value;
+    const ustrd = this.form.get('rmtInfUstrd');
+    const strdRef = this.form.get('rmtInfStrdCdtrRef');
+    const strdRefType = this.form.get('rmtInfStrdCdtrRefType');
+    const addtlRmtInf = this.form.get('rmtInfStrdAddtlRmtInf');
+
+    if (rmtType === 'ustrd') {
+       ustrd?.setValidators([Validators.required, Validators.maxLength(140)]);
+       strdRef?.clearValidators();
+       strdRefType?.clearValidators();
+       addtlRmtInf?.clearValidators();
+    } else if (rmtType === 'strd') {
+       ustrd?.clearValidators();
+       if (strdRefType?.value === 'SCOR') {
+           strdRef?.setValidators([Validators.required, Validators.maxLength(35), Validators.pattern(/^RF[0-9]{2}[A-Z0-9]*$/i)]);
+       } else if (strdRefType?.value) {
+           strdRef?.setValidators([Validators.required, Validators.maxLength(35)]);
+       } else {
+           strdRef?.clearValidators();
+       }
+    } else {
+       ustrd?.clearValidators();
+       strdRef?.clearValidators();
+       strdRefType?.clearValidators();
+       addtlRmtInf?.clearValidators();
+    }
+    ustrd?.updateValueAndValidity({ emitEvent: false });
+    strdRef?.updateValueAndValidity({ emitEvent: false });
+
+
     // Agent & Party Clearing System Validators
     [...this.agentPrefixes].forEach(p => {
       const isParty = this.partyPrefixes.includes(p);
@@ -312,6 +344,21 @@ export class Pacs8Component implements OnInit {
       prvsInstgAgt1Bic: ['', BIC_OPT], prvsInstgAgt2Bic: ['', BIC_OPT], prvsInstgAgt3Bic: ['', BIC_OPT],
       intrmyAgt1Bic: ['', BIC_OPT], intrmyAgt2Bic: ['', BIC_OPT], intrmyAgt3Bic: ['', BIC_OPT],
       purpCd: [''], ctgyPurpCd: [''],
+
+      rmtInfType: ['none'],
+      rmtInfUstrd: ['', Validators.maxLength(140)],
+      rmtInfStrdCdtrRefType: [''],
+      rmtInfStrdCdtrRef: ['', Validators.maxLength(35)],
+      rmtInfStrdAddtlRmtInf: ['', Validators.maxLength(140)],
+      rmtInfStrdRfrdDocNb: ['', Validators.maxLength(35)],
+      rmtInfStrdRfrdDocCd: [''],
+      rmtInfStrdRfrdDocAmt: ['', [Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],
+      rmtInfStrdInvcrNm: ['', Validators.maxLength(140)],
+      rmtInfStrdInvceeNm: ['', Validators.maxLength(140)],
+      rmtInfStrdTaxRmtId: ['', Validators.maxLength(35)],
+      rmtInfStrdGrnshmtId: ['', Validators.maxLength(35)],
+
+
     };
     [...this.agentPrefixes, ...this.partyPrefixes].forEach(p => {
       c[p + 'AddrType'] = 'none'; c[p + 'AdrLine1'] = ['', Validators.maxLength(70)]; c[p + 'AdrLine2'] = ['', Validators.maxLength(70)];
@@ -491,6 +538,45 @@ export class Pacs8Component implements OnInit {
       tx += this.tag('UltmtCdtr', this.el('Nm', v.ultmtCdtrName, 4) + this.addrXml(v, 'ultmtCdtr', 4) + this.partyIdXml(v, 'ultmtCdtr', 4), 3);
     }
     if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 4), 3);
+
+    
+    let rmtInf = '';
+    if (v.rmtInfType === 'ustrd' && v.rmtInfUstrd) {
+        rmtInf = `\n\t\t\t\t<RmtInf>\n\t\t\t\t\t<Ustrd>${this.e(v.rmtInfUstrd)}</Ustrd>\n\t\t\t\t</RmtInf>`;
+    } else if (v.rmtInfType === 'strd') {
+        let cdtrRef = '';
+        if (v.rmtInfStrdCdtrRefType && v.rmtInfStrdCdtrRef) {
+            cdtrRef = `\n\t\t\t\t\t\t<CdtrRefInf>\n\t\t\t\t\t\t\t<Tp>\n\t\t\t\t\t\t\t\t<CdOrPrtry>\n\t\t\t\t\t\t\t\t\t<Cd>${this.e(v.rmtInfStrdCdtrRefType)}</Cd>\n\t\t\t\t\t\t\t\t</CdOrPrtry>\n\t\t\t\t\t\t\t</Tp>\n\t\t\t\t\t\t\t<Ref>${this.e(v.rmtInfStrdCdtrRef)}</Ref>\n\t\t\t\t\t\t</CdtrRefInf>`;
+        }
+        if (v.rmtInfStrdRfrdDocNb) {
+            let rd = `\n\t\t\t\t\t\t<RfrdDocInf>\n\t\t\t\t\t\t\t<Nb>${this.e(v.rmtInfStrdRfrdDocNb)}</Nb>\n`;
+            if (v.rmtInfStrdRfrdDocCd) rd += `\t\t\t\t\t\t\t<Tp>\n\t\t\t\t\t\t\t\t<CdOrPrtry>\n\t\t\t\t\t\t\t\t\t<Cd>${this.e(v.rmtInfStrdRfrdDocCd)}</Cd>\n\t\t\t\t\t\t\t\t</CdOrPrtry>\n\t\t\t\t\t\t\t</Tp>\n`;
+            rd += `\t\t\t\t\t\t</RfrdDocInf>`;
+            cdtrRef += rd;
+        }
+        if (v.rmtInfStrdRfrdDocAmt) {
+           cdtrRef += `\n\t\t\t\t\t\t<RfrdDocAmt>\n\t\t\t\t\t\t\t<RmtAmt>\n\t\t\t\t\t\t\t\t<DuePyblAmt Ccy="${this.e(v.currency)}">${v.rmtInfStrdRfrdDocAmt}</DuePyblAmt>\n\t\t\t\t\t\t\t</RmtAmt>\n\t\t\t\t\t\t</RfrdDocAmt>`;
+        }
+        if (v.rmtInfStrdInvcrNm) {
+           cdtrRef += `\n\t\t\t\t\t\t<Invcr>\n\t\t\t\t\t\t\t<Nm>${this.e(v.rmtInfStrdInvcrNm)}</Nm>\n\t\t\t\t\t\t</Invcr>`;
+        }
+        if (v.rmtInfStrdInvceeNm) {
+           cdtrRef += `\n\t\t\t\t\t\t<Invcee>\n\t\t\t\t\t\t\t<Nm>${this.e(v.rmtInfStrdInvceeNm)}</Nm>\n\t\t\t\t\t\t</Invcee>`;
+        }
+        if (v.rmtInfStrdTaxRmtId) {
+           cdtrRef += `\n\t\t\t\t\t\t<TaxRmt>\n\t\t\t\t\t\t\t<AdmstnZn>${this.e(v.rmtInfStrdTaxRmtId)}</AdmstnZn>\n\t\t\t\t\t\t</TaxRmt>`;
+        }
+        if (v.rmtInfStrdGrnshmtId) {
+           cdtrRef += `\n\t\t\t\t\t\t<GrnshmtRmt>\n\t\t\t\t\t\t\t<Id>\n\t\t\t\t\t\t\t\t<PrvtId>\n\t\t\t\t\t\t\t\t\t<Othr>\n\t\t\t\t\t\t\t\t\t\t<Id>${this.e(v.rmtInfStrdGrnshmtId)}</Id>\n\t\t\t\t\t\t\t\t\t</Othr>\n\t\t\t\t\t\t\t\t</PrvtId>\n\t\t\t\t\t\t\t</Id>\n\t\t\t\t\t\t</GrnshmtRmt>`;
+        }
+
+        let addtl = v.rmtInfStrdAddtlRmtInf ? `\n\t\t\t\t\t\t<AddtlRmtInf>${this.e(v.rmtInfStrdAddtlRmtInf)}</AddtlRmtInf>` : '';
+        if (cdtrRef || addtl) {
+            rmtInf = `\n\t\t\t\t<RmtInf>\n\t\t\t\t\t<Strd>${cdtrRef}${addtl}\n\t\t\t\t\t</Strd>\n\t\t\t\t</RmtInf>`;
+        }
+    }
+    tx += rmtInf;
+
 
     const frBic = v.fromBic;
     const toBic = v.toBic;
@@ -678,12 +764,33 @@ ${tx}\t\t\t</CdtTrfTxInf>
     }
     if (!this.generatedXml?.trim()) return;
 
-    // Redirect to validate page with the XML payload
-    this.router.navigate(['/validate'], {
-      state: {
-        autoValidateXml: this.generatedXml,
-        fileName: `pacs008-${Date.now()}.xml`,
-        messageType: 'pacs.008.001.08'
+    this.showValidationModal = true;
+    this.validationStatus = 'validating';
+    this.validationReport = null;
+    this.validationExpandedIssue = null;
+
+    this.http.post(this.config.getApiUrl('/validate'), {
+      xml_content: this.generatedXml,
+      mode: 'Full 1-3',
+      message_type: 'pacs.008.001.08',
+      store_in_history: true
+    }).subscribe({
+      next: (data: any) => {
+        this.validationReport = data;
+        this.validationStatus = 'done';
+      },
+      error: (err) => {
+        this.validationReport = {
+          status: 'FAIL', errors: 1, warnings: 0,
+          message: 'pacs.008.001.08', total_time_ms: 0,
+          layer_status: {},
+          details: [{
+            severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
+            path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'),
+            fix_suggestion: 'Ensure the validation server is running.'
+          }]
+        };
+        this.validationStatus = 'done';
       }
     });
   }
@@ -902,5 +1009,65 @@ ${tx}\t\t\t</CdtTrfTxInf>
 
   syncScroll(editor: HTMLTextAreaElement, gutter: HTMLDivElement) {
     gutter.scrollTop = editor.scrollTop;
+  }
+
+  // Validation Modal State
+  showValidationModal = false;
+  validationStatus: 'idle' | 'validating' | 'done' = 'idle';
+  validationReport: any = null;
+  validationExpandedIssue: any = null;
+
+  closeValidationModal() {
+    this.showValidationModal = false;
+    this.validationReport = null;
+    this.validationStatus = 'idle';
+    this.validationExpandedIssue = null;
+  }
+
+  getValidationLayers(): string[] {
+    if (!this.validationReport?.layer_status) return [];
+    return Object.keys(this.validationReport.layer_status).sort();
+  }
+
+  getLayerName(k: string): string {
+    const names: Record<string, string> = { '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' };
+    return names[k] ?? `Layer ${k}`;
+  }
+
+  getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
+  getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
+  isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
+  isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
+  isLayerWarn(k: string) {
+    const s = this.getLayerStatus(k);
+    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+  }
+
+  getValidationIssues(): any[] { return this.validationReport?.details ?? []; }
+
+  toggleValidationIssue(issue: any) {
+    this.validationExpandedIssue = this.validationExpandedIssue === issue ? null : issue;
+  }
+
+  copyFix(text: string, e: MouseEvent) {
+    e.stopPropagation();
+    navigator.clipboard.writeText(text).then(() => {
+      this.snackBar.open('Copied!', '', { duration: 1500 });
+    });
+  }
+
+
+  viewXmlModal() {
+    this.closeValidationModal();
+    this.switchToPreview();
+  }
+
+  editXmlModal() {
+    this.closeValidationModal();
+    this.currentTab = 'form';
+  }
+
+  runValidationModal() {
+    this.validateMessage();
   }
 }

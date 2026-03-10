@@ -1835,9 +1835,7 @@ body.light-theme .btn-download {
   gap: 10px;
   color: var(--text-main);
   font-weight: 600;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  word-break: break-all;
 }
 
 .th-index,
@@ -1927,6 +1925,7 @@ body.light-theme .btn-download {
   font-size: 20px !important;
   width: 20px !important;
   height: 20px !important;
+  flex-shrink: 0;
 }
 
 .file-ic.passed {

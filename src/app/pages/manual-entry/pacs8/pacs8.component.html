@@ -340,7 +340,107 @@
                                         </div>
 
                                 </div>
-                        </form>
+                        
+    <!-- Remittance Information -->
+    <div class="form-section">
+      <div class="section-header">
+        <mat-icon>receipt_long</mat-icon>
+        <h3>Remittance Information</h3>
+      </div>
+      <div class="form-row">
+        <div class="form-group full-width">
+          <label>Remittance Type</label>
+          <select formControlName="rmtInfType">
+            <option value="none">None</option>
+            <option value="ustrd">Unstructured</option>
+            <option value="strd">Structured</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="form-row" *ngIf="form.get('rmtInfType')?.value === 'ustrd'">
+        <div class="form-group full-width">
+          <label>Unstructured Remittance</label>
+          <input formControlName="rmtInfUstrd" maxlength="140" placeholder="Max 140 chars">
+          <div class="validation-msg" *ngIf="err('rmtInfUstrd') as e">{{e}}</div>
+        </div>
+      </div>
+
+      <ng-container *ngIf="form.get('rmtInfType')?.value === 'strd'">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Creditor Reference Type (ISO)</label>
+            <select formControlName="rmtInfStrdCdtrRefType">
+              <option value="">None</option>
+              <option value="SCOR">SCOR (Structured Creditor Ref)</option>
+              <option value="CUST">CUST (Customer Ref)</option>
+            </select>
+            <div class="validation-msg" *ngIf="err('rmtInfStrdCdtrRefType') as e">{{e}}</div>
+          </div>
+          <div class="form-group">
+            <label>Creditor Reference</label>
+            <input formControlName="rmtInfStrdCdtrRef" maxlength="35" placeholder="E.g., RF1853900000000">
+            <div class="validation-msg" *ngIf="err('rmtInfStrdCdtrRef') as e">{{e}}</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label>Additional Remittance Information</label>
+            <input formControlName="rmtInfStrdAddtlRmtInf" maxlength="140">
+            <div class="validation-msg" *ngIf="err('rmtInfStrdAddtlRmtInf') as e">{{e}}</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Referred Document Name/Code</label>
+            <select formControlName="rmtInfStrdRfrdDocCd">
+              <option value="">None</option>
+              <option value="CINV">CINV (Commercial Invoice)</option>
+              <option value="CNFA">CNFA (Credit Note)</option>
+              <option value="DNFA">DNFA (Debit Note)</option>
+              <option value="VCHR">VCHR (Voucher)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Referred Document Number</label>
+            <input formControlName="rmtInfStrdRfrdDocNb" maxlength="35" placeholder="E.g., INV-001">
+            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocNb') as e">{{e}}</div>
+          </div>
+          <div class="form-group">
+            <label>Referred Document Amount</label>
+            <input formControlName="rmtInfStrdRfrdDocAmt" placeholder="E.g., 100.50">
+            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmt') as e">{{e}}</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Invoicer Name</label>
+            <input formControlName="rmtInfStrdInvcrNm" maxlength="140">
+            <div class="validation-msg" *ngIf="err('rmtInfStrdInvcrNm') as e">{{e}}</div>
+          </div>
+          <div class="form-group">
+            <label>Invoicee Name</label>
+            <input formControlName="rmtInfStrdInvceeNm" maxlength="140">
+            <div class="validation-msg" *ngIf="err('rmtInfStrdInvceeNm') as e">{{e}}</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tax Remittance (Zone)</label>
+            <input formControlName="rmtInfStrdTaxRmtId" maxlength="35">
+            <div class="validation-msg" *ngIf="err('rmtInfStrdTaxRmtId') as e">{{e}}</div>
+          </div>
+          <div class="form-group">
+            <label>Garnishment ID</label>
+            <input formControlName="rmtInfStrdGrnshmtId" maxlength="35">
+            <div class="validation-msg" *ngIf="err('rmtInfStrdGrnshmtId') as e">{{e}}</div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
+
+</form>
                 </div>
 
                 <div class="right-panel">
@@ -590,5 +690,120 @@
                         <input [formControlName]="prefix+'Acct'" maxlength="34">
                         <div class="validation-msg" *ngIf="err(prefix+'Acct') as e">{{e}}</div>
                 </div>
+        
+
+    <!-- Validation Results Modal -->
+    <div class="validation-overlay" *ngIf="showValidationModal" (click)="closeValidationModal()">
+        <div class="validation-modal" (click)="$event.stopPropagation()">
+            <!-- Modal Header -->
+            <div class="vm-header">
+                <div class="vm-title">
+                    <mat-icon>verified</mat-icon>
+                    <span>Validation Results</span>
+                    <span class="vm-msg-type" *ngIf="validationReport?.message">{{validationReport.message}}</span>
+                </div>
+
+                <div class="vm-header-actions" *ngIf="validationStatus === 'done'">
+                    <button class="vm-action-btn" (click)="viewXmlModal()">
+                        <mat-icon>visibility</mat-icon> VIEW XML
+                    </button>
+                    <button class="vm-action-btn" (click)="editXmlModal()">
+                        <mat-icon>edit</mat-icon> EDIT
+                    </button>
+                    <button class="vm-action-btn run" (click)="runValidationModal()">
+                        <mat-icon>play_circle</mat-icon> RUN
+                    </button>
+                </div>
+
+                <button class="vm-close" (click)="closeValidationModal()">
+                    <mat-icon>close</mat-icon>
+                </button>
+            </div>
+
+            <!-- Loading State -->
+            <div class="vm-loading" *ngIf="validationStatus === 'validating'">
+                <div class="vm-spinner"></div>
+                <p>Validating your XML message...</p>
+                <span class="vm-loading-sub">Running Layer 1-3 checks</span>
+            </div>
+
+            <!-- Results -->
+            <div class="vm-body" *ngIf="validationStatus === 'done' && validationReport">
+                <!-- Status Banner -->
+                <div class="vm-status-banner" [class.pass]="validationReport.status === 'PASS'"
+                    [class.fail]="validationReport.status !== 'PASS'">
+                    <mat-icon>{{validationReport.status === 'PASS' ? 'check_circle' : 'cancel'}}</mat-icon>
+                    <div class="vm-status-text">
+                        <strong>{{validationReport.status === 'PASS' ? 'VALIDATION PASSED' : 'VALIDATION FAILED'}}</strong>
+                        <span>{{validationReport.errors || 0}} error(s), {{validationReport.warnings || 0}} warning(s)
+                            &bull; {{validationReport.total_time_ms || 0}}ms</span>
+                    </div>
+                </div>
+
+                <!-- Layer Results -->
+                <div class="vm-layers" *ngIf="getValidationLayers().length > 0">
+                    <div class="vm-layer" *ngFor="let k of getValidationLayers()" [class.layer-pass]="isLayerPass(k)"
+                        [class.layer-fail]="isLayerFail(k)" [class.layer-warn]="isLayerWarn(k)">
+                        <div class="vm-layer-icon">
+                            <span *ngIf="isLayerPass(k)">✅</span>
+                            <span *ngIf="isLayerFail(k)">❌</span>
+                            <span *ngIf="isLayerWarn(k)">⚠️</span>
+                        </div>
+                        <div class="vm-layer-info">
+                            <strong>Layer {{k}}: {{getLayerName(k)}}</strong>
+                            <span class="vm-layer-time">{{getLayerTime(k)}}ms</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Issues List -->
+                <div class="vm-issues" *ngIf="getValidationIssues().length > 0">
+                    <div class="vm-issues-header">
+                        <mat-icon>report</mat-icon>
+                        <span>Issues ({{getValidationIssues().length}})</span>
+                    </div>
+                    <div class="vm-issue-list">
+                        <div class="vm-issue" *ngFor="let issue of getValidationIssues()"
+                            (click)="toggleValidationIssue(issue)" [class.expanded]="validationExpandedIssue === issue">
+                            <div class="vm-issue-row">
+                                <span class="vm-issue-severity" [class.error]="issue.severity === 'ERROR'"
+                                    [class.warning]="issue.severity === 'WARNING'">
+                                    {{issue.severity}}
+                                </span>
+                                <span class="vm-issue-layer">L{{issue.layer}}</span>
+                                <span class="vm-issue-msg">{{issue.message}}</span>
+                                <mat-icon class="vm-issue-chevron">
+                                    {{validationExpandedIssue === issue ? 'expand_less' : 'expand_more'}}
+                                </mat-icon>
+                            </div>
+                            <div class="vm-issue-detail" *ngIf="validationExpandedIssue === issue">
+                                <div class="vm-detail-row" *ngIf="issue.path">
+                                    <strong>Path:</strong> <code>{{issue.path}}</code>
+                                </div>
+                                <div class="vm-detail-row" *ngIf="issue.code">
+                                    <strong>Code:</strong> <code>{{issue.code}}</code>
+                                </div>
+                                <div class="vm-detail-row fix" *ngIf="issue.fix_suggestion">
+                                    <strong>💡 Fix:</strong>
+                                    <span>{{issue.fix_suggestion}}</span>
+                                    <button class="vm-copy-btn" (click)="copyFix(issue.fix_suggestion, $event)"
+                                        matTooltip="Copy fix suggestion">
+                                        <mat-icon>content_copy</mat-icon>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- No Issues -->
+                <div class="vm-no-issues" *ngIf="getValidationIssues().length === 0">
+                    <mat-icon>celebration</mat-icon>
+                    <p>No issues found! Your message is valid.</p>
+                </div>
+            </div>
         </div>
+    </div>
+
+</div>
 </ng-template>

@@ -1,6 +1,8 @@
 :host {
-    display: block;
-    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
     font-family: 'Inter', system-ui, sans-serif;
     color: var(--text-main);
     background: var(--bg-app);
@@ -19,25 +21,35 @@
 
 .container {
     max-width: 1400px;
+    width: 100%;
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1;
 }
 
 .split-view {
     display: flex;
     gap: 1.5rem;
     align-items: flex-start;
+    height: calc(100vh - 120px);
 }
 
 .left-panel {
     flex: 1;
     min-width: 0;
+    height: 100%;
+    overflow-y: auto;
+    padding-right: 0.5rem;
 }
 
 .right-panel {
     flex: 1;
     min-width: 0;
-    position: sticky;
-    top: 1.5rem;
+    height: 100%;
+    overflow-y: auto;
+    padding-right: 0.5rem;
 }
 
 header {
@@ -140,7 +152,8 @@ header p {
 input,
 select,
 textarea {
-    box-sizing: border-box;padding-left: 10px;
+    box-sizing: border-box;
+    padding-left: 10px;
 }
 
 .addr-type-row {

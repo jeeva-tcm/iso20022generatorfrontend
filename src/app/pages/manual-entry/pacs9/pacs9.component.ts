@@ -3,6 +3,7 @@ import { Component, OnInit, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
@@ -10,7 +11,7 @@ import { ConfigService } from '../../../services/config.service';
 @Component({
     selector: 'app-pacs9',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule],
+    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule],
     templateUrl: './pacs9.component.html',
     styleUrl: './pacs9.component.css'
 })
@@ -427,12 +428,33 @@ ${tx}\t\t\t</CdtTrfTxInf>
         }
         if (!this.generatedXml?.trim()) return;
 
-        // Redirect to validate page with the XML payload
-        this.router.navigate(['/validate'], {
-            state: {
-                autoValidateXml: this.generatedXml,
-                fileName: `pacs009-${Date.now()}.xml`,
-                messageType: 'pacs.009.001.08'
+        this.showValidationModal = true;
+        this.validationStatus = 'validating';
+        this.validationReport = null;
+        this.validationExpandedIssue = null;
+
+        this.http.post(this.config.getApiUrl('/validate'), {
+            xml_content: this.generatedXml,
+            mode: 'Full 1-3',
+            message_type: 'pacs.009.001.08',
+            store_in_history: true
+        }).subscribe({
+            next: (data: any) => {
+                this.validationReport = data;
+                this.validationStatus = 'done';
+            },
+            error: (err) => {
+                this.validationReport = {
+                    status: 'FAIL', errors: 1, warnings: 0,
+                    message: 'pacs.009.001.08', total_time_ms: 0,
+                    layer_status: {},
+                    details: [{
+                        severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
+                        path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'),
+                        fix_suggestion: 'Ensure the validation server is running.'
+                    }]
+                };
+                this.validationStatus = 'done';
             }
         });
     }
@@ -568,4 +590,64 @@ ${tx}\t\t\t</CdtTrfTxInf>
     syncScroll(editor: HTMLTextAreaElement, gutter: HTMLDivElement) {
         gutter.scrollTop = editor.scrollTop;
     }
+
+    // Validation Modal State
+    showValidationModal = false;
+    validationStatus: 'idle' | 'validating' | 'done' = 'idle';
+    validationReport: any = null;
+    validationExpandedIssue: any = null;
+
+    closeValidationModal() {
+        this.showValidationModal = false;
+        this.validationReport = null;
+        this.validationStatus = 'idle';
+        this.validationExpandedIssue = null;
+    }
+
+    getValidationLayers(): string[] {
+        if (!this.validationReport?.layer_status) return [];
+        return Object.keys(this.validationReport.layer_status).sort();
+    }
+
+    getLayerName(k: string): string {
+        const names: Record<string, string> = { '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' };
+        return names[k] ?? `Layer ${k}`;
+    }
+
+    getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
+    getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
+    isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
+    isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
+    isLayerWarn(k: string) {
+        const s = this.getLayerStatus(k);
+        return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+    }
+
+    getValidationIssues(): any[] { return this.validationReport?.details ?? []; }
+
+    toggleValidationIssue(issue: any) {
+        this.validationExpandedIssue = this.validationExpandedIssue === issue ? null : issue;
+    }
+
+    copyFix(text: string, e: MouseEvent) {
+        e.stopPropagation();
+        navigator.clipboard.writeText(text).then(() => {
+            this.snackBar.open('Copied!', '', { duration: 1500 });
+        });
+    }
+
+
+  viewXmlModal() {
+    this.closeValidationModal();
+    this.switchToPreview();
+  }
+
+  editXmlModal() {
+    this.closeValidationModal();
+    this.currentTab = 'form';
+  }
+
+  runValidationModal() {
+    this.validateMessage();
+  }
 }
