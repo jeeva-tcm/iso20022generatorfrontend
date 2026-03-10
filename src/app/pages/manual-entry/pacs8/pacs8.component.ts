@@ -209,7 +209,7 @@ export class Pacs8Component implements OnInit {
       // LEI Validator
       const lei = this.form.get(p + 'OrgLEI');
       if (idType === 'org') {
-        lei?.setValidators([Validators.pattern(/^[A-Z0-9]{20}$/)]);
+        lei?.setValidators([Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]);
       } else {
         lei?.clearValidators();
       }
@@ -230,7 +230,7 @@ export class Pacs8Component implements OnInit {
       bCtry?.updateValueAndValidity({ emitEvent: false });
     });
 
-    
+
     const rmtType = this.form.get('rmtInfType')?.value;
     const ustrd = this.form.get('rmtInfUstrd');
     const strdRef = this.form.get('rmtInfStrdCdtrRef');
@@ -238,24 +238,24 @@ export class Pacs8Component implements OnInit {
     const addtlRmtInf = this.form.get('rmtInfStrdAddtlRmtInf');
 
     if (rmtType === 'ustrd') {
-       ustrd?.setValidators([Validators.required, Validators.maxLength(140)]);
-       strdRef?.clearValidators();
-       strdRefType?.clearValidators();
-       addtlRmtInf?.clearValidators();
+      ustrd?.setValidators([Validators.required, Validators.maxLength(140)]);
+      strdRef?.clearValidators();
+      strdRefType?.clearValidators();
+      addtlRmtInf?.clearValidators();
     } else if (rmtType === 'strd') {
-       ustrd?.clearValidators();
-       if (strdRefType?.value === 'SCOR') {
-           strdRef?.setValidators([Validators.required, Validators.maxLength(35), Validators.pattern(/^RF[0-9]{2}[A-Z0-9]*$/i)]);
-       } else if (strdRefType?.value) {
-           strdRef?.setValidators([Validators.required, Validators.maxLength(35)]);
-       } else {
-           strdRef?.clearValidators();
-       }
+      ustrd?.clearValidators();
+      if (strdRefType?.value === 'SCOR') {
+        strdRef?.setValidators([Validators.required, Validators.maxLength(35), Validators.pattern(/^RF[0-9]{2}[A-Z0-9]*$/i)]);
+      } else if (strdRefType?.value) {
+        strdRef?.setValidators([Validators.required, Validators.maxLength(35)]);
+      } else {
+        strdRef?.clearValidators();
+      }
     } else {
-       ustrd?.clearValidators();
-       strdRef?.clearValidators();
-       strdRefType?.clearValidators();
-       addtlRmtInf?.clearValidators();
+      ustrd?.clearValidators();
+      strdRef?.clearValidators();
+      strdRefType?.clearValidators();
+      addtlRmtInf?.clearValidators();
     }
     ustrd?.updateValueAndValidity({ emitEvent: false });
     strdRef?.updateValueAndValidity({ emitEvent: false });
@@ -291,7 +291,7 @@ export class Pacs8Component implements OnInit {
 
       if (!isParty) {
         // LEI Pattern for Agents
-        lei?.setValidators([Validators.pattern(/^[A-Z0-9]{20}$/)]);
+        lei?.setValidators([Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]);
         lei?.updateValueAndValidity({ emitEvent: false });
 
         // Account Pattern for Agents
@@ -321,8 +321,10 @@ export class Pacs8Component implements OnInit {
   }
 
   private buildForm() {
-    const BIC = [Validators.required, Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
-    const BIC_OPT = [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
+    const BIC = [Validators.required, Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
+    const BIC_OPT = [Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
+    // Safe character set: letters, digits, space, . , ( ) ' - only. No & @ ! # $ etc.
+    const SAFE_NAME = Validators.pattern(/^[a-zA-Z0-9 .,()'\-]+$/);
     const c: any = {
       fromBic: ['BBBBUS33XXX', BIC], toBic: ['CCCCGB2LXXX', BIC], bizMsgId: ['MSG-2026-B-001', [Validators.required, Validators.maxLength(35)]],
       msgId: ['MSG-2026-B-001', Validators.required], creDtTm: [this.isoNow(), Validators.required],
@@ -330,17 +332,17 @@ export class Pacs8Component implements OnInit {
       instgAgtBic: ['BBBBUS33XXX', BIC], instdAgtBic: ['CCCCGB2LXXX', BIC],
       instrId: ['INSTR-001', [Validators.required, Validators.maxLength(35)]], endToEndId: ['E2E-001', [Validators.required, Validators.maxLength(35)]],
       txId: ['TX-001', [Validators.required, Validators.maxLength(35)]],
-      uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)]],
-      amount: ['1500.00', [Validators.required, Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
+      uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[0-9a-fA-F\-]{36}$/)]],
+      amount: ['1500.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
       sttlmDt: [new Date().toISOString().split('T')[0], Validators.required], svcLvlCd: [''],
       chrgBr: ['SHAR', Validators.required],
       dbtrBic: ['', BIC_OPT],
       dbtrAgtBic: ['BBBBUS33XXX', BIC],
       cdtrBic: ['', BIC_OPT],
       cdtrAgtBic: ['CCCCGB2LXXX', BIC],
-      ultmtDbtrName: ['', Validators.maxLength(140)],
-      ultmtCdtrName: ['', Validators.maxLength(140)],
-      initgPtyName: ['', Validators.maxLength(140)],
+      ultmtDbtrName: ['', [Validators.maxLength(140), SAFE_NAME]],
+      ultmtCdtrName: ['', [Validators.maxLength(140), SAFE_NAME]],
+      initgPtyName: ['', [Validators.maxLength(140), SAFE_NAME]],
       prvsInstgAgt1Bic: ['', BIC_OPT], prvsInstgAgt2Bic: ['', BIC_OPT], prvsInstgAgt3Bic: ['', BIC_OPT],
       intrmyAgt1Bic: ['', BIC_OPT], intrmyAgt2Bic: ['', BIC_OPT], intrmyAgt3Bic: ['', BIC_OPT],
       purpCd: [''], ctgyPurpCd: [''],
@@ -369,8 +371,8 @@ export class Pacs8Component implements OnInit {
       c[p + 'TwnLctnNm'] = ['', Validators.maxLength(140)]; c[p + 'DstrctNm'] = ['', Validators.maxLength(140)]; c[p + 'AdrTpCd'] = ['']; c[p + 'AdrTpPrtry'] = ['', Validators.maxLength(35)];
 
       if (this.agentPrefixes.includes(p)) {
-        c[p + 'Name'] = ['', Validators.maxLength(140)];
-        c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{20}$/)]];
+        c[p + 'Name'] = ['', [Validators.maxLength(140), SAFE_NAME]];
+        c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
         c[p + 'ClrSysCd'] = ['', Validators.maxLength(4)];
         c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
         c[p + 'Acct'] = ['', [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
@@ -416,6 +418,7 @@ export class Pacs8Component implements OnInit {
       if (fl.includes('ctry') || fl.includes('country')) return '2-letter ISO code required.';
       if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
       if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
+      if (fl.includes('name') || fl.includes('nm')) return "Invalid characters. Only letters, numbers, spaces and . , ( ) ' - are allowed (no &, @, !, etc.)";
     }
     if (c.errors?.['noIdentifier']) return 'Name, LEI, or Member ID required.';
     if (c.errors?.['target2']) return 'TARGET2 payments must use EUR as the settlement currency.';
@@ -539,41 +542,41 @@ export class Pacs8Component implements OnInit {
     }
     if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 4), 3);
 
-    
+
     let rmtInf = '';
     if (v.rmtInfType === 'ustrd' && v.rmtInfUstrd) {
-        rmtInf = `\n\t\t\t\t<RmtInf>\n\t\t\t\t\t<Ustrd>${this.e(v.rmtInfUstrd)}</Ustrd>\n\t\t\t\t</RmtInf>`;
+      rmtInf = `\n\t\t\t\t<RmtInf>\n\t\t\t\t\t<Ustrd>${this.e(v.rmtInfUstrd)}</Ustrd>\n\t\t\t\t</RmtInf>`;
     } else if (v.rmtInfType === 'strd') {
-        let cdtrRef = '';
-        if (v.rmtInfStrdCdtrRefType && v.rmtInfStrdCdtrRef) {
-            cdtrRef = `\n\t\t\t\t\t\t<CdtrRefInf>\n\t\t\t\t\t\t\t<Tp>\n\t\t\t\t\t\t\t\t<CdOrPrtry>\n\t\t\t\t\t\t\t\t\t<Cd>${this.e(v.rmtInfStrdCdtrRefType)}</Cd>\n\t\t\t\t\t\t\t\t</CdOrPrtry>\n\t\t\t\t\t\t\t</Tp>\n\t\t\t\t\t\t\t<Ref>${this.e(v.rmtInfStrdCdtrRef)}</Ref>\n\t\t\t\t\t\t</CdtrRefInf>`;
-        }
-        if (v.rmtInfStrdRfrdDocNb) {
-            let rd = `\n\t\t\t\t\t\t<RfrdDocInf>\n\t\t\t\t\t\t\t<Nb>${this.e(v.rmtInfStrdRfrdDocNb)}</Nb>\n`;
-            if (v.rmtInfStrdRfrdDocCd) rd += `\t\t\t\t\t\t\t<Tp>\n\t\t\t\t\t\t\t\t<CdOrPrtry>\n\t\t\t\t\t\t\t\t\t<Cd>${this.e(v.rmtInfStrdRfrdDocCd)}</Cd>\n\t\t\t\t\t\t\t\t</CdOrPrtry>\n\t\t\t\t\t\t\t</Tp>\n`;
-            rd += `\t\t\t\t\t\t</RfrdDocInf>`;
-            cdtrRef += rd;
-        }
-        if (v.rmtInfStrdRfrdDocAmt) {
-           cdtrRef += `\n\t\t\t\t\t\t<RfrdDocAmt>\n\t\t\t\t\t\t\t<RmtAmt>\n\t\t\t\t\t\t\t\t<DuePyblAmt Ccy="${this.e(v.currency)}">${v.rmtInfStrdRfrdDocAmt}</DuePyblAmt>\n\t\t\t\t\t\t\t</RmtAmt>\n\t\t\t\t\t\t</RfrdDocAmt>`;
-        }
-        if (v.rmtInfStrdInvcrNm) {
-           cdtrRef += `\n\t\t\t\t\t\t<Invcr>\n\t\t\t\t\t\t\t<Nm>${this.e(v.rmtInfStrdInvcrNm)}</Nm>\n\t\t\t\t\t\t</Invcr>`;
-        }
-        if (v.rmtInfStrdInvceeNm) {
-           cdtrRef += `\n\t\t\t\t\t\t<Invcee>\n\t\t\t\t\t\t\t<Nm>${this.e(v.rmtInfStrdInvceeNm)}</Nm>\n\t\t\t\t\t\t</Invcee>`;
-        }
-        if (v.rmtInfStrdTaxRmtId) {
-           cdtrRef += `\n\t\t\t\t\t\t<TaxRmt>\n\t\t\t\t\t\t\t<AdmstnZn>${this.e(v.rmtInfStrdTaxRmtId)}</AdmstnZn>\n\t\t\t\t\t\t</TaxRmt>`;
-        }
-        if (v.rmtInfStrdGrnshmtId) {
-           cdtrRef += `\n\t\t\t\t\t\t<GrnshmtRmt>\n\t\t\t\t\t\t\t<Id>\n\t\t\t\t\t\t\t\t<PrvtId>\n\t\t\t\t\t\t\t\t\t<Othr>\n\t\t\t\t\t\t\t\t\t\t<Id>${this.e(v.rmtInfStrdGrnshmtId)}</Id>\n\t\t\t\t\t\t\t\t\t</Othr>\n\t\t\t\t\t\t\t\t</PrvtId>\n\t\t\t\t\t\t\t</Id>\n\t\t\t\t\t\t</GrnshmtRmt>`;
-        }
+      let cdtrRef = '';
+      if (v.rmtInfStrdCdtrRefType && v.rmtInfStrdCdtrRef) {
+        cdtrRef = `\n\t\t\t\t\t\t<CdtrRefInf>\n\t\t\t\t\t\t\t<Tp>\n\t\t\t\t\t\t\t\t<CdOrPrtry>\n\t\t\t\t\t\t\t\t\t<Cd>${this.e(v.rmtInfStrdCdtrRefType)}</Cd>\n\t\t\t\t\t\t\t\t</CdOrPrtry>\n\t\t\t\t\t\t\t</Tp>\n\t\t\t\t\t\t\t<Ref>${this.e(v.rmtInfStrdCdtrRef)}</Ref>\n\t\t\t\t\t\t</CdtrRefInf>`;
+      }
+      if (v.rmtInfStrdRfrdDocNb) {
+        let rd = `\n\t\t\t\t\t\t<RfrdDocInf>\n\t\t\t\t\t\t\t<Nb>${this.e(v.rmtInfStrdRfrdDocNb)}</Nb>\n`;
+        if (v.rmtInfStrdRfrdDocCd) rd += `\t\t\t\t\t\t\t<Tp>\n\t\t\t\t\t\t\t\t<CdOrPrtry>\n\t\t\t\t\t\t\t\t\t<Cd>${this.e(v.rmtInfStrdRfrdDocCd)}</Cd>\n\t\t\t\t\t\t\t\t</CdOrPrtry>\n\t\t\t\t\t\t\t</Tp>\n`;
+        rd += `\t\t\t\t\t\t</RfrdDocInf>`;
+        cdtrRef += rd;
+      }
+      if (v.rmtInfStrdRfrdDocAmt) {
+        cdtrRef += `\n\t\t\t\t\t\t<RfrdDocAmt>\n\t\t\t\t\t\t\t<RmtAmt>\n\t\t\t\t\t\t\t\t<DuePyblAmt Ccy="${this.e(v.currency)}">${v.rmtInfStrdRfrdDocAmt}</DuePyblAmt>\n\t\t\t\t\t\t\t</RmtAmt>\n\t\t\t\t\t\t</RfrdDocAmt>`;
+      }
+      if (v.rmtInfStrdInvcrNm) {
+        cdtrRef += `\n\t\t\t\t\t\t<Invcr>\n\t\t\t\t\t\t\t<Nm>${this.e(v.rmtInfStrdInvcrNm)}</Nm>\n\t\t\t\t\t\t</Invcr>`;
+      }
+      if (v.rmtInfStrdInvceeNm) {
+        cdtrRef += `\n\t\t\t\t\t\t<Invcee>\n\t\t\t\t\t\t\t<Nm>${this.e(v.rmtInfStrdInvceeNm)}</Nm>\n\t\t\t\t\t\t</Invcee>`;
+      }
+      if (v.rmtInfStrdTaxRmtId) {
+        cdtrRef += `\n\t\t\t\t\t\t<TaxRmt>\n\t\t\t\t\t\t\t<AdmstnZn>${this.e(v.rmtInfStrdTaxRmtId)}</AdmstnZn>\n\t\t\t\t\t\t</TaxRmt>`;
+      }
+      if (v.rmtInfStrdGrnshmtId) {
+        cdtrRef += `\n\t\t\t\t\t\t<GrnshmtRmt>\n\t\t\t\t\t\t\t<Id>\n\t\t\t\t\t\t\t\t<PrvtId>\n\t\t\t\t\t\t\t\t\t<Othr>\n\t\t\t\t\t\t\t\t\t\t<Id>${this.e(v.rmtInfStrdGrnshmtId)}</Id>\n\t\t\t\t\t\t\t\t\t</Othr>\n\t\t\t\t\t\t\t\t</PrvtId>\n\t\t\t\t\t\t\t</Id>\n\t\t\t\t\t\t</GrnshmtRmt>`;
+      }
 
-        let addtl = v.rmtInfStrdAddtlRmtInf ? `\n\t\t\t\t\t\t<AddtlRmtInf>${this.e(v.rmtInfStrdAddtlRmtInf)}</AddtlRmtInf>` : '';
-        if (cdtrRef || addtl) {
-            rmtInf = `\n\t\t\t\t<RmtInf>\n\t\t\t\t\t<Strd>${cdtrRef}${addtl}\n\t\t\t\t\t</Strd>\n\t\t\t\t</RmtInf>`;
-        }
+      let addtl = v.rmtInfStrdAddtlRmtInf ? `\n\t\t\t\t\t\t<AddtlRmtInf>${this.e(v.rmtInfStrdAddtlRmtInf)}</AddtlRmtInf>` : '';
+      if (cdtrRef || addtl) {
+        rmtInf = `\n\t\t\t\t<RmtInf>\n\t\t\t\t\t<Strd>${cdtrRef}${addtl}\n\t\t\t\t\t</Strd>\n\t\t\t\t</RmtInf>`;
+      }
     }
     tx += rmtInf;
 

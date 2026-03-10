@@ -760,17 +760,65 @@ export class MtToMxComponent implements OnInit {
         // Client-side well-formedness pre-check
         const parser = new DOMParser();
         const doc = parser.parseFromString(this.mxOutput, 'text/xml');
-        if (doc.querySelector('parsererror')) {
+        const parseErrorEl = doc.querySelector('parsererror');
+        if (parseErrorEl) {
+            // Collect ALL errors — don't stop at the first
+            const allDetails: any[] = [];
+            const lines = this.mxOutput.split('\n');
+            const rawAmpRe = /&(?![a-zA-Z#][a-zA-Z0-9#]*;)/g;
+            const nameTagRe = /<(Nm|StrtNm|TwnNm|BldgNm|AdrLine|DstrctNm|CtrySubDvsn|TwnLctnNm)>([^<]+)<\/\1>/g;
+            const safeCharRe = /^[a-zA-Z0-9 .,()'"-]+$/;
+
+            // 1. Find every line with a literal unescaped &
+            lines.forEach((line, idx) => {
+                rawAmpRe.lastIndex = 0;
+                if (rawAmpRe.test(line)) {
+                    const lineNum = String(idx + 1);
+                    allDetails.push({
+                        severity: 'ERROR', layer: 1, code: 'INVALID_CHARSET', path: lineNum,
+                        message: `Invalid character '&' at line ${lineNum}. The ampersand is reserved in XML and is not allowed in name or address fields.`,
+                        fix_suggestion: `Remove or replace '&' at line ${lineNum}. Write 'and' instead.`
+                    });
+                }
+            });
+
+            // 2. Find invalid charset in name/address tags
+            let tagMatch: RegExpExecArray | null;
+            nameTagRe.lastIndex = 0;
+            while ((tagMatch = nameTagRe.exec(this.mxOutput)) !== null) {
+                const tagName = tagMatch[1];
+                const tagValue = tagMatch[2].trim();
+                if (tagValue && !safeCharRe.test(tagValue)) {
+                    const before = this.mxOutput.substring(0, tagMatch.index);
+                    const lineNum = String((before.match(/\n/g) || []).length + 1);
+                    const badChars = [...new Set(tagValue.split('').filter(c => !/[a-zA-Z0-9 .,()'"-]/.test(c)))].join(' ');
+                    allDetails.push({
+                        severity: 'ERROR', layer: 1, code: 'INVALID_CHARSET', path: lineNum,
+                        message: `Field <${tagName}> at line ${lineNum} contains invalid character(s): ${badChars}. Only letters, digits, spaces and . , ( ) ' - are allowed.`,
+                        fix_suggestion: `Remove or replace ${badChars} in <${tagName}> at line ${lineNum}.`
+                    });
+                }
+            }
+
+            // 3. Generic fallback if nothing specific found
+            if (allDetails.length === 0) {
+                const rawError = parseErrorEl.textContent || '';
+                let lineNum = '?';
+                const lineMatch = rawError.match(/[Ll]ine[:\s]+(\d+)/i) || rawError.match(/(\d+):(\d+)/);
+                if (lineMatch) lineNum = lineMatch[1];
+                allDetails.push({
+                    severity: 'ERROR', layer: 1, code: 'XML_SYNTAX', path: lineNum,
+                    message: `Malformed XML at line ${lineNum} — invalid structure or unclosed tags.`,
+                    fix_suggestion: `Check line ${lineNum}: ensure all tags are properly opened and closed.`
+                });
+            }
+
             this.validationReport = {
-                status: 'FAIL', errors: 1, warnings: 0,
+                status: 'FAIL', errors: allDetails.length, warnings: 0,
                 message: this.mappedMxType || 'Unknown',
                 total_time_ms: 0,
                 layer_status: { '1': { status: '❌', time: 0 } },
-                details: [{
-                    severity: 'ERROR', layer: 1, code: 'XML_SYNTAX', path: '1',
-                    message: 'Malformed XML — invalid structure or unclosed tags.',
-                    fix_suggestion: 'Check all tags are properly opened and closed.'
-                }]
+                details: allDetails
             };
             this.validationStatus = 'done';
             this.showValidationModal = true;

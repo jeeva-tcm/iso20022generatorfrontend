@@ -108,7 +108,7 @@ export class Camt057Component implements OnInit {
     }
 
     private buildForm() {
-        const BIC = [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
+        const BIC = [Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
         const BIC_REQ = [Validators.required, ...BIC];
 
         this.form = this.fb.group({
@@ -128,25 +128,27 @@ export class Camt057Component implements OnInit {
             creDtTm: [this.isoNow(), Validators.required],
 
             ntfctnId: ['ID-057-001', [Validators.required, Validators.maxLength(35)]],
-            acctIban: ['GB33RECV1234567890', [Validators.required, Validators.pattern(/^[A-Z]{2}[0-9]{2}[a-zA-Z0-9]{1,30}$/)]],
+            acctIban: ['GB33RECV1234567890', [Validators.required, Validators.pattern(/^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$/)]],
             acctOwnrName: ['Global Receiver Corp', Validators.maxLength(140)], // Optional in CBPR+
 
             itmId: ['ITEM-001', [Validators.required, Validators.maxLength(35)]],
-            amount: ['5000.00', [Validators.required, Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],
+            amount: ['5000.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]],
             currency: ['USD', Validators.required],
             valDt: [new Date().toISOString().split('T')[0], Validators.required],
 
             // Optional but commonly used
             endToEndId: ['E2E-057-001', Validators.maxLength(35)],
-            uetr: ['550e8400-e29b-41d4-a716-446655440001', [Validators.pattern(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)]],
+            uetr: ['550e8400-e29b-41d4-a716-446655440001', [Validators.pattern(/^[0-9a-fA-F\-]{36}$/)]],
         });
 
         // Add agents
         const BIC_OPT = [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
+        // Safe character set: letters, digits, space, . , ( ) ' - only. No & @ ! # $ etc.
+        const SAFE_NAME = Validators.pattern(/^[a-zA-Z0-9 .,()'\-]+$/);
         this.agentPrefixes.forEach(p => {
-            this.form.addControl(p + 'Name', this.fb.control('', Validators.maxLength(140)));
+            this.form.addControl(p + 'Name', this.fb.control('', [Validators.maxLength(140), SAFE_NAME]));
             this.form.addControl(p + 'Bic', this.fb.control('', BIC_OPT));
-            this.form.addControl(p + 'Lei', this.fb.control('', Validators.maxLength(20)));
+            this.form.addControl(p + 'Lei', this.fb.control('', Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)));
             this.form.addControl(p + 'ClrSysCd', this.fb.control('', Validators.maxLength(4)));
             this.form.addControl(p + 'ClrSysMmbId', this.fb.control('', Validators.maxLength(35)));
             this.form.addControl(p + 'Acct', this.fb.control('', Validators.maxLength(34)));
@@ -164,7 +166,7 @@ export class Camt057Component implements OnInit {
             this.form.addControl(p + 'PstCd', this.fb.control(''));
             this.form.addControl(p + 'TwnNm', this.fb.control(''));
             this.form.addControl(p + 'CtrySubDvsn', this.fb.control(''));
-            this.form.addControl(p + 'Ctry', this.fb.control('', Validators.maxLength(2)));
+            this.form.addControl(p + 'Ctry', this.fb.control('', Validators.pattern(/^[A-Z]{2}$/)));
             this.form.addControl(p + 'AdrLine1', this.fb.control(''));
             this.form.addControl(p + 'AdrLine2', this.fb.control(''));
         });
@@ -185,6 +187,7 @@ export class Camt057Component implements OnInit {
             if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Max 18 digits, up to 5 decimals.';
             if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
             if (f === 'bizMsgId' || f === 'msgId' || f === 'ntfctnId' || f === 'itmId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
+            if (f.toLowerCase().includes('name') || f.toLowerCase().includes('nm')) return "Invalid characters. Only letters, numbers, spaces and . , ( ) ' - are allowed (no &, @, !, etc.)";
         }
         if (c.errors?.['target2']) return 'TARGET2 payments must use EUR as the settlement currency.';
         if (c.errors?.['chaps']) return 'Invalid Currency for CHAPS clearing system. When ClrSysId/Cd = CHAPS, the transaction currency must be GBP.';

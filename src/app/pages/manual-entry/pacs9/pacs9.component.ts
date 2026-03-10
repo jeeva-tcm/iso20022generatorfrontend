@@ -160,8 +160,10 @@ export class Pacs9Component implements OnInit {
     }
 
     private buildForm() {
-        const BIC = [Validators.required, Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
-        const BIC_OPT = [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
+        const BIC = [Validators.required, Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
+        const BIC_OPT = [Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
+        // Safe character set: letters, digits, space, . , ( ) ' - only. No & @ ! # $ etc.
+        const SAFE_NAME = Validators.pattern(/^[a-zA-Z0-9 .,()'\-]+$/);
         const c: any = {
             purpCd: [''], ctgyPurpCd: [''],
             fromBic: ['BBBBUS33XXX', BIC], toBic: ['CCCCGB2LXXX', BIC], bizMsgId: ['MSG-2026-FI-001', Validators.required],
@@ -170,8 +172,8 @@ export class Pacs9Component implements OnInit {
             instgAgtBic: ['BBBBUS33XXX', BIC], instdAgtBic: ['CCCCGB2LXXX', BIC],
             instrId: ['INSTR-FI-001', Validators.required], endToEndId: ['E2E-FI-001', Validators.required],
             txId: ['TX-FI-001', Validators.required],
-            uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/)]],
-            amount: ['50000.00', [Validators.required, Validators.pattern(/^(?!0+(\.0+)?$)\d{1,18}(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
+            uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[0-9a-fA-F\-]{36}$/)]],
+            amount: ['50000.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
             sttlmDt: [new Date().toISOString().split('T')[0], Validators.required],
             // Debtor FI (required)
             dbtrFiBic: ['BBBBUS33XXX', BIC],
@@ -194,8 +196,8 @@ export class Pacs9Component implements OnInit {
             c[p + 'Flr'] = ['', Validators.maxLength(70)]; c[p + 'PstBx'] = ['', Validators.maxLength(16)]; c[p + 'Room'] = ['', Validators.maxLength(70)];
             c[p + 'PstCd'] = ['', Validators.maxLength(16)]; c[p + 'TwnNm'] = ['', Validators.maxLength(140)]; c[p + 'CtrySubDvsn'] = ['', Validators.maxLength(35)]; c[p + 'Ctry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
             c[p + 'TwnLctnNm'] = ['', Validators.maxLength(140)]; c[p + 'DstrctNm'] = ['', Validators.maxLength(140)]; c[p + 'AdrTpCd'] = ['']; c[p + 'AdrTpPrtry'] = ['', Validators.maxLength(35)];
-            c[p + 'Name'] = ['', Validators.maxLength(140)];
-            c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{20}$/)]];
+            c[p + 'Name'] = ['', [Validators.maxLength(140), SAFE_NAME]];
+            c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
             c[p + 'ClrSysCd'] = ['', Validators.maxLength(4)];
             c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
             c[p + 'Acct'] = ['', [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
@@ -215,6 +217,7 @@ export class Pacs9Component implements OnInit {
             if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Amount must be > 0 (max 18 digits).';
             if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
             if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
+            if (f.toLowerCase().includes('name') || f.toLowerCase().includes('nm')) return "Invalid characters. Only letters, numbers, spaces and . , ( ) ' - are allowed (no &, @, !, etc.)";
         }
         if (c.errors?.['target2']) return 'TARGET2 payments must use EUR as the settlement currency.';
         if (c.errors?.['chaps']) return 'Invalid Currency for CHAPS clearing system. When ClrSysId/Cd = CHAPS, the transaction currency must be GBP.';
@@ -637,17 +640,17 @@ ${tx}\t\t\t</CdtTrfTxInf>
     }
 
 
-  viewXmlModal() {
-    this.closeValidationModal();
-    this.switchToPreview();
-  }
+    viewXmlModal() {
+        this.closeValidationModal();
+        this.switchToPreview();
+    }
 
-  editXmlModal() {
-    this.closeValidationModal();
-    this.currentTab = 'form';
-  }
+    editXmlModal() {
+        this.closeValidationModal();
+        this.currentTab = 'form';
+    }
 
-  runValidationModal() {
-    this.validateMessage();
-  }
+    runValidationModal() {
+        this.validateMessage();
+    }
 }

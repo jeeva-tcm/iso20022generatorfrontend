@@ -171,24 +171,26 @@ export class Pacs9CovComponent implements OnInit {
     }
 
     private buildForm() {
-        const BIC = [Validators.required, Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
-        const BIC_OPT = [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
+        const BIC = [Validators.required, Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
+        const BIC_OPT = [Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
+        // Safe character set: letters, digits, space, . , ( ) ' - only. No & @ ! # $ etc.
+        const SAFE_NAME = Validators.pattern(/^[a-zA-Z0-9 .,()'\-]+$/);
         const c: any = {
             purpCd: [''], ctgyPurpCd: [''],
 
-      rmtInfType: ['none'],
-      rmtInfUstrd: ['', Validators.maxLength(140)],
-      rmtInfStrdCdtrRefType: [''],
-      rmtInfStrdCdtrRef: ['', Validators.maxLength(35)],
-      rmtInfStrdAddtlRmtInf: ['', Validators.maxLength(140)],
+            rmtInfType: ['none'],
+            rmtInfUstrd: ['', Validators.maxLength(140)],
+            rmtInfStrdCdtrRefType: [''],
+            rmtInfStrdCdtrRef: ['', Validators.maxLength(35)],
+            rmtInfStrdAddtlRmtInf: ['', Validators.maxLength(140)],
 
             fromBic: ['RBOSGB2L', BIC], toBic: ['NDEAFIHH', BIC], bizMsgId: ['pacs9bizmsgidr01', Validators.required],
             msgId: ['pacs9bizmsgidr01', Validators.required], creDtTm: [this.isoNow(), Validators.required],
             nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['COVE', Validators.required],
             instgAgtBic: ['RBOSGB2L', BIC], instdAgtBic: ['NDEAFIHH', BIC],
             instrId: ['pacs9bizmsgidr01', Validators.required], endToEndId: ['pacs8bizmsgidr01', Validators.required],
-            uetr: ['8a562c67-ca16-48ba-b074-65581be6f001', [Validators.required, Validators.pattern(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/)]],
-            amount: ['1500000', [Validators.required, Validators.pattern(/^(?!0+(\.0+)?$)\d{1,18}(\.\d{1,5})?$/)]], currency: ['EUR', Validators.required],
+            uetr: ['8a562c67-ca16-48ba-b074-65581be6f001', [Validators.required, Validators.pattern(/^[0-9a-fA-F\-]{36}$/)]],
+            amount: ['1500000', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['EUR', Validators.required],
             sttlmDt: [new Date().toISOString().split('T')[0], Validators.required],
             // Debtor FI (required)
             dbtrFiBic: ['RBOSGB2L', BIC],
@@ -203,11 +205,11 @@ export class Pacs9CovComponent implements OnInit {
             intrmyAgt1Bic: ['', BIC_OPT], intrmyAgt2Bic: ['', BIC_OPT], intrmyAgt3Bic: ['', BIC_OPT],
             // COV — UndrlygCstmrCdtTrf fields
             covUltmtDbtrName: [''],
-            covDbtrName: ['A Debiter'],
+            covDbtrName: ['A Debiter', [Validators.maxLength(140), SAFE_NAME]],
             covDbtrAcct: ['R85236974'],
             covDbtrAgtBic: ['RBOSGB2L', BIC_OPT],
             covCdtrAgtBic: ['OKOYFIHH', BIC_OPT],
-            covCdtrName: ['Z Krediter'],
+            covCdtrName: ['Z Krediter', [Validators.maxLength(140), SAFE_NAME]],
             covCdtrAcct: ['O96325478'],
             covUltmtCdtrName: [''],
             // InstrForCdtrAgt
@@ -229,8 +231,8 @@ export class Pacs9CovComponent implements OnInit {
             c[p + 'Flr'] = ['', Validators.maxLength(70)]; c[p + 'PstBx'] = ['', Validators.maxLength(16)]; c[p + 'Room'] = ['', Validators.maxLength(70)];
             c[p + 'PstCd'] = ['', Validators.maxLength(16)]; c[p + 'TwnNm'] = ['', Validators.maxLength(140)]; c[p + 'CtrySubDvsn'] = ['', Validators.maxLength(35)]; c[p + 'Ctry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
             c[p + 'TwnLctnNm'] = ['', Validators.maxLength(140)]; c[p + 'DstrctNm'] = ['', Validators.maxLength(140)]; c[p + 'AdrTpCd'] = ['']; c[p + 'AdrTpPrtry'] = ['', Validators.maxLength(35)];
-            c[p + 'Name'] = ['', Validators.maxLength(140)];
-            c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{20}$/)]];
+            c[p + 'Name'] = ['', [Validators.maxLength(140), SAFE_NAME]];
+            c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
             c[p + 'ClrSysCd'] = ['', Validators.maxLength(4)];
             c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
             c[p + 'Acct'] = ['', [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
@@ -259,8 +261,8 @@ export class Pacs9CovComponent implements OnInit {
                 c[p + 'PrvtOthrId'] = ['', Validators.maxLength(35)];
                 c[p + 'PrvtOthrSchmeNmCd'] = ['', Validators.maxLength(4)]; c[p + 'PrvtOthrSchmeNmPrtry'] = ['', Validators.maxLength(35)]; c[p + 'PrvtOthrIssr'] = ['', Validators.maxLength(35)];
             } else {
-                c[p + 'Bic'] = ['', [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
-                c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{20}$/)]];
+                c[p + 'Bic'] = ['', [Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
+                c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
                 c[p + 'ClrSysCd'] = ['', Validators.maxLength(4)];
                 c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
             }
@@ -280,6 +282,7 @@ export class Pacs9CovComponent implements OnInit {
             if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Amount must be > 0 (max 18 digits).';
             if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
             if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
+            if (f.toLowerCase().includes('name') || f.toLowerCase().includes('nm')) return "Invalid characters. Only letters, numbers, spaces and . , ( ) ' - are allowed (no &, @, !, etc.)";
         }
         if (c.errors?.['target2']) return 'TARGET2 payments must use EUR as the settlement currency.';
         if (c.errors?.['chaps']) return 'Invalid Currency for CHAPS clearing system. When ClrSysId/Cd = CHAPS, the transaction currency must be GBP.';
@@ -385,24 +388,24 @@ export class Pacs9CovComponent implements OnInit {
         // COV: UndrlygCstmrCdtTrf
         tx += this.buildCov(v);
 
-        
-    let rmtInf = '';
-    if (v.rmtInfType === 'ustrd' && v.rmtInfUstrd) {
-        rmtInf = `\n\t\t\t\t<RmtInf>\n\t\t\t\t\t<Ustrd>${this.e(v.rmtInfUstrd)}</Ustrd>\n\t\t\t\t</RmtInf>`;
-    } else if (v.rmtInfType === 'strd') {
-        let cdtrRef = '';
-        if (v.rmtInfStrdCdtrRefType && v.rmtInfStrdCdtrRef) {
-            cdtrRef = `\n\t\t\t\t\t\t<CdtrRefInf>\n\t\t\t\t\t\t\t<Tp>\n\t\t\t\t\t\t\t\t<CdOrPrtry>\n\t\t\t\t\t\t\t\t\t<Cd>${this.e(v.rmtInfStrdCdtrRefType)}</Cd>\n\t\t\t\t\t\t\t\t</CdOrPrtry>\n\t\t\t\t\t\t\t</Tp>\n\t\t\t\t\t\t\t<Ref>${this.e(v.rmtInfStrdCdtrRef)}</Ref>\n\t\t\t\t\t\t</CdtrRefInf>`;
+
+        let rmtInf = '';
+        if (v.rmtInfType === 'ustrd' && v.rmtInfUstrd) {
+            rmtInf = `\n\t\t\t\t<RmtInf>\n\t\t\t\t\t<Ustrd>${this.e(v.rmtInfUstrd)}</Ustrd>\n\t\t\t\t</RmtInf>`;
+        } else if (v.rmtInfType === 'strd') {
+            let cdtrRef = '';
+            if (v.rmtInfStrdCdtrRefType && v.rmtInfStrdCdtrRef) {
+                cdtrRef = `\n\t\t\t\t\t\t<CdtrRefInf>\n\t\t\t\t\t\t\t<Tp>\n\t\t\t\t\t\t\t\t<CdOrPrtry>\n\t\t\t\t\t\t\t\t\t<Cd>${this.e(v.rmtInfStrdCdtrRefType)}</Cd>\n\t\t\t\t\t\t\t\t</CdOrPrtry>\n\t\t\t\t\t\t\t</Tp>\n\t\t\t\t\t\t\t<Ref>${this.e(v.rmtInfStrdCdtrRef)}</Ref>\n\t\t\t\t\t\t</CdtrRefInf>`;
+            }
+            let addtl = v.rmtInfStrdAddtlRmtInf ? `\n\t\t\t\t\t\t<AddtlRmtInf>${this.e(v.rmtInfStrdAddtlRmtInf)}</AddtlRmtInf>` : '';
+            if (cdtrRef || addtl) {
+                rmtInf = `\n\t\t\t\t<RmtInf>\n\t\t\t\t\t<Strd>${cdtrRef}${addtl}\n\t\t\t\t\t</Strd>\n\t\t\t\t</RmtInf>`;
+            }
         }
-        let addtl = v.rmtInfStrdAddtlRmtInf ? `\n\t\t\t\t\t\t<AddtlRmtInf>${this.e(v.rmtInfStrdAddtlRmtInf)}</AddtlRmtInf>` : '';
-        if (cdtrRef || addtl) {
-            rmtInf = `\n\t\t\t\t<RmtInf>\n\t\t\t\t\t<Strd>${cdtrRef}${addtl}\n\t\t\t\t\t</Strd>\n\t\t\t\t</RmtInf>`;
-        }
-    }
-    tx += rmtInf;
+        tx += rmtInf;
 
 
-    const frBic = v.fromBic;
+        const frBic = v.fromBic;
         const toBic = v.toBic;
 
         this.generatedXml =
@@ -988,17 +991,17 @@ ${this.prefixLines(tx, 'pacs:')}\t\t\t</pacs:CdtTrfTxInf>
     }
 
 
-  viewXmlModal() {
-    this.closeValidationModal();
-    this.switchToPreview();
-  }
+    viewXmlModal() {
+        this.closeValidationModal();
+        this.switchToPreview();
+    }
 
-  editXmlModal() {
-    this.closeValidationModal();
-    this.currentTab = 'form';
-  }
+    editXmlModal() {
+        this.closeValidationModal();
+        this.currentTab = 'form';
+    }
 
-  runValidationModal() {
-    this.validateMessage();
-  }
+    runValidationModal() {
+        this.validateMessage();
+    }
 }
