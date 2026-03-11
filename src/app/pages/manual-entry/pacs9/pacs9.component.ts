@@ -124,8 +124,17 @@ export class Pacs9Component implements OnInit {
         });
 
         this.http.get<any>(this.config.getApiUrl('/codelists/ctgyPurp')).subscribe({
-            next: (res) => { if (res && res.codes) this.categoryPurposes = res.codes; },
-            error: (err) => console.error('Failed to load category purposes', err)
+            next: (res) => { 
+                if (res && res.codes && res.codes.length > 0) {
+                    this.categoryPurposes = res.codes; 
+                } else {
+                    this.categoryPurposes = ['SALA', 'TAXS', 'SUPP', 'PENS', 'LOAN', 'DIVD', 'CASH', 'COLL', 'INTC', 'OTHR'];
+                }
+            },
+            error: (err) => {
+                console.error('Failed to load category purposes', err);
+                this.categoryPurposes = ['SALA', 'TAXS', 'SUPP', 'PENS', 'LOAN', 'DIVD', 'CASH', 'COLL', 'INTC', 'OTHR'];
+            }
         });
         this.http.get<any>(this.config.getApiUrl('/codelists/purp')).subscribe({
             next: (res) => { if (res && res.codes) this.purposes = res.codes; },
@@ -174,7 +183,7 @@ export class Pacs9Component implements OnInit {
         // Safe character set: letters, digits, space, . , ( ) ' - only. No & @ ! # $ etc.
         const SAFE_NAME = Validators.pattern(/^[a-zA-Z0-9 .,()'\-]+$/);
         const c: any = {
-            purpCd: [''], ctgyPurpCd: [''],
+            purpCd: [''], ctgyPurpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/)]],
             fromBic: ['BBBBUS33XXX', BIC], toBic: ['CCCCGB2LXXX', BIC], bizMsgId: ['MSG-2026-FI-001', Validators.required],
             msgId: ['MSG-2026-FI-001', Validators.required], creDtTm: [this.isoNow(), Validators.required],
             nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['INDA', Validators.required],
@@ -226,7 +235,7 @@ export class Pacs9Component implements OnInit {
             if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Amount must be > 0 (max 18 digits).';
             if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
             if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
-            if (f.toLowerCase().includes('name') || f.toLowerCase().includes('nm')) return "Invalid characters. Only letters, numbers, spaces and . , ( ) ' - are allowed (no &, @, !, etc.)";
+            if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Must be a valid ISO 20022 code (4 uppercase letters).';
         }
         if (c.errors?.['target2']) return 'TARGET2 payments must use EUR as the settlement currency.';
         if (c.errors?.['chaps']) return 'Invalid Currency for CHAPS clearing system. When ClrSysId/Cd = CHAPS, the transaction currency must be GBP.';

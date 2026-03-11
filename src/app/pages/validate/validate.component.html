@@ -257,7 +257,10 @@
                           [class.warning]="issue.severity === 'WARNING'">{{issue.severity === 'ERROR' ? 'cancel' :
                           (issue.severity === 'WARNING' ? 'warning' : 'check_circle')}}</mat-icon> {{issue.path ||
                         'Root'}}</span>
-                      <span class="issue-msg">{{issue.message}}</span>
+                      <span class="issue-msg">
+                        <strong *ngIf="issue.severity === 'ERROR'">Error Details: </strong>
+                        {{issue.message}}
+                      </span>
                     </div>
                   </div>
                 </div>

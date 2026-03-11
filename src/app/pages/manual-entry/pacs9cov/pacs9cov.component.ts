@@ -134,8 +134,17 @@ export class Pacs9CovComponent implements OnInit {
         });
 
         this.http.get<any>(this.config.getApiUrl('/codelists/ctgyPurp')).subscribe({
-            next: (res) => { if (res && res.codes) this.categoryPurposes = res.codes; },
-            error: (err) => console.error('Failed to load category purposes', err)
+            next: (res) => { 
+                if (res && res.codes && res.codes.length > 0) {
+                    this.categoryPurposes = res.codes; 
+                } else {
+                    this.categoryPurposes = ['SALA', 'TAXS', 'SUPP', 'PENS', 'LOAN', 'DIVD', 'CASH', 'COLL', 'INTC', 'OTHR'];
+                }
+            },
+            error: (err) => {
+                console.error('Failed to load category purposes', err);
+                this.categoryPurposes = ['SALA', 'TAXS', 'SUPP', 'PENS', 'LOAN', 'DIVD', 'CASH', 'COLL', 'INTC', 'OTHR'];
+            }
         });
         this.http.get<any>(this.config.getApiUrl('/codelists/purp')).subscribe({
             next: (res) => { if (res && res.codes) this.purposes = res.codes; },
@@ -185,7 +194,7 @@ export class Pacs9CovComponent implements OnInit {
         // Safe character set: letters, digits, space, . , ( ) ' - only. No & @ ! # $ etc.
         const SAFE_NAME = Validators.pattern(/^[a-zA-Z0-9 .,()'\-]+$/);
         const c: any = {
-            purpCd: [''], ctgyPurpCd: [''],
+            purpCd: [''], ctgyPurpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/)]],
 
             rmtInfType: ['none'],
             rmtInfUstrd: ['', [Validators.maxLength(140), Validators.pattern(/^[0-9a-zA-Z\/\-\?:\(\)\.,\'\+ !#$%&\*=\^_`\{\|\}~";<>@\[\\\]]+$/)]],
@@ -289,6 +298,7 @@ export class Pacs9CovComponent implements OnInit {
             if (f.toLowerCase().includes('iban')) return 'Valid 34-char IBAN required.';
             if (f.toLowerCase().includes('uetr')) return 'Valid UUID required.';
             if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Amount must be > 0 (max 18 digits).';
+            if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Must be a valid ISO 20022 code (4 uppercase letters).';
             if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
             if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
             if (f.toLowerCase().includes('name') || f.toLowerCase().includes('nm')) return "Invalid characters. Only letters, numbers, spaces and . , ( ) ' - are allowed (no &, @, !, etc.)";
