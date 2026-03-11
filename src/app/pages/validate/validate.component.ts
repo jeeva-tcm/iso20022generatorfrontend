@@ -72,6 +72,10 @@ export class ValidateComponent implements OnInit {
   editingEntry: FileEntry | null = null;
   originalContent: string = '';
   editorLineCount: number[] = [1];
+  private xmlHistory: string[] = [];
+  private xmlHistoryIdx: number = -1;
+  private maxHistory = 200;
+  private isInternalChange = false;
 
   // ── Global options ─────────────────────────────────────────────────────────
   validationMode = 'Full 1-3';
@@ -635,6 +639,10 @@ export class ValidateComponent implements OnInit {
     this.editingEntry = f;
     this.originalContent = f.content;
     this.updateEditorLines(f.content);
+    
+    // Initialize history
+    this.xmlHistory = [f.content];
+    this.xmlHistoryIdx = 0;
   }
 
   closeEditor() {
@@ -644,8 +652,136 @@ export class ValidateComponent implements OnInit {
     this.editingEntry = null;
   }
 
+  copyEditorXml() {
+    if (!this.editingEntry?.content) return;
+    navigator.clipboard.writeText(this.editingEntry.content).then(() => {
+      this.snackBar.open('Copied to clipboard!', '', { duration: 2000 });
+    });
+  }
+
+  downloadEditorXml() {
+    if (!this.editingEntry?.content) return;
+    const blob = new Blob([this.editingEntry.content], { type: 'application/xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = this.editingEntry.name || 'message.xml';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   onEditorChange(content: string) {
+    if (!this.isInternalChange) {
+      this.pushHistory();
+    }
     this.updateEditorLines(content);
+  }
+
+  private pushHistory() {
+    if (!this.editingEntry) return;
+    const val = this.editingEntry.content;
+    if (this.xmlHistoryIdx >= 0 && this.xmlHistory[this.xmlHistoryIdx] === val) return;
+
+    if (this.xmlHistoryIdx < this.xmlHistory.length - 1) {
+      this.xmlHistory.splice(this.xmlHistoryIdx + 1);
+    }
+
+    this.xmlHistory.push(val);
+    if (this.xmlHistory.length > this.maxHistory) {
+      this.xmlHistory.shift();
+    } else {
+      this.xmlHistoryIdx++;
+    }
+  }
+
+  undo() {
+    if (this.xmlHistoryIdx > 0 && this.editingEntry) {
+      this.xmlHistoryIdx--;
+      this.isInternalChange = true;
+      this.editingEntry.content = this.xmlHistory[this.xmlHistoryIdx];
+      this.updateEditorLines(this.editingEntry.content);
+      setTimeout(() => this.isInternalChange = false, 10);
+    }
+  }
+
+  redo() {
+    if (this.xmlHistoryIdx < this.xmlHistory.length - 1 && this.editingEntry) {
+      this.xmlHistoryIdx++;
+      this.isInternalChange = true;
+      this.editingEntry.content = this.xmlHistory[this.xmlHistoryIdx];
+      this.updateEditorLines(this.editingEntry.content);
+      setTimeout(() => this.isInternalChange = false, 10);
+    }
+  }
+
+  canUndo(): boolean { return this.xmlHistoryIdx > 0; }
+  canRedo(): boolean { return this.xmlHistoryIdx < this.xmlHistory.length - 1; }
+
+  formatXml() {
+    if (!this.editingEntry?.content?.trim()) return;
+    this.pushHistory();
+
+    try {
+      let xml = this.editingEntry.content.trim();
+      let formatted = '';
+      let indent = '';
+      const tab = '    ';
+
+      xml.split(/>\s*</).forEach(node => {
+        if (node.match(/^\/\w/)) indent = indent.substring(tab.length);
+        formatted += indent + '<' + node + '>\r\n';
+        if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith('?')) indent += tab;
+      });
+
+      this.editingEntry.content = formatted.substring(1, formatted.length - 3);
+      this.updateEditorLines(this.editingEntry.content);
+      this.snackBar.open('XML Formatted', '', { duration: 1500 });
+    } catch (e) {
+      this.snackBar.open('Unable to format XML', '', { duration: 3000 });
+    }
+  }
+
+  toggleComment() {
+    if (!this.editingEntry) return;
+    
+    const textarea = document.querySelector('.editor-textarea') as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const value = textarea.value;
+
+    this.isInternalChange = true;
+    this.pushHistory();
+
+    // Identify start/end of lines
+    let lineStart = value.lastIndexOf('\n', start - 1) + 1;
+    let lineEnd = value.indexOf('\n', end);
+    if (lineEnd === -1) lineEnd = value.length;
+
+    const selection = value.substring(lineStart, lineEnd);
+    const before = value.substring(0, lineStart);
+    const after = value.substring(lineEnd);
+
+    let newResult = '';
+    const trimmed = selection.trim();
+    
+    if (trimmed.startsWith('<!--') && trimmed.endsWith('-->')) {
+      // Uncomment
+      newResult = selection.replace('<!--', '').replace('-->', '');
+    } else {
+      // Comment
+      newResult = `<!-- ${selection} -->`;
+    }
+
+    this.editingEntry.content = before + newResult + after;
+    this.updateEditorLines(this.editingEntry.content);
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(lineStart, lineStart + newResult.length);
+      this.isInternalChange = false;
+    }, 0);
   }
 
   updateEditorLines(content: string) {
@@ -660,9 +796,20 @@ export class ValidateComponent implements OnInit {
   }
 
   handleKeyDown(e: KeyboardEvent) {
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-      e.preventDefault();
-      this.saveEditor();
+    if ((e.ctrlKey || e.metaKey)) {
+      if (e.key === 's') {
+        e.preventDefault();
+        this.formatXml();
+      } else if (e.key === 'z') {
+        e.preventDefault();
+        this.undo();
+      } else if (e.key === 'y') {
+        e.preventDefault();
+        this.redo();
+      } else if (e.key === '/') {
+        e.preventDefault();
+        this.toggleComment();
+      }
     }
   }
 

@@ -20,8 +20,14 @@ export class Pacs8Component implements OnInit {
   form!: FormGroup;
   generatedXml = '';
   currentTab: 'form' | 'preview' = 'form';
-  editorLineCount: number[] = [];
   isParsingXml = false;
+  editorLineCount: number[] = [];
+  
+  // Undo/Redo History
+  private xmlHistory: string[] = [];
+  private xmlHistoryIdx = -1;
+  private maxHistory = 50;
+  private isInternalChange = false;
 
   currencies: string[] = [];
   countries: string[] = [];
@@ -71,6 +77,9 @@ export class Pacs8Component implements OnInit {
       this.updateClearingSystemValidation();
       this.generateXml();
     });
+
+    // Init history
+    this.pushHistory();
   }
 
   private updateClearingSystemValidation() {
@@ -432,6 +441,31 @@ export class Pacs8Component implements OnInit {
 
   @HostListener('keydown', ['$event'])
   onKeydown(event: KeyboardEvent) {
+    // 1. History & Formatting Shortcuts (Ctrl+Z, Ctrl+Y, Ctrl+S)
+    if (event.ctrlKey || event.metaKey) {
+      if (document.activeElement?.classList.contains('code-editor')) {
+        switch (event.key.toLowerCase()) {
+          case 'z':
+            event.preventDefault();
+            this.undoXml();
+            return;
+          case 'y':
+            event.preventDefault();
+            this.redoXml();
+            return;
+          case 's':
+            event.preventDefault();
+            this.formatXml();
+            return;
+          case '/':
+            event.preventDefault();
+            this.toggleCommentXml();
+            return;
+        }
+      }
+    }
+
+    // 2. Existing MaxLength Warning logic
     const target = event.target as HTMLInputElement;
     if (!target || (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA')) return;
     const maxLen = target.maxLength;
@@ -812,12 +846,130 @@ ${tx}\t\t\t</CdtTrfTxInf>
   switchToPreview() { this.generateXml(); this.currentTab = 'preview'; }
 
   onEditorChange(content: string, fromForm = false) {
+    if (!this.isInternalChange && !fromForm) {
+      this.pushHistory();
+    }
+    
     this.generatedXml = content;
     const lines = content.split('\n').length;
     this.editorLineCount = Array.from({ length: lines }, (_, i) => i + 1);
 
     if (fromForm || this.isParsingXml) return;
     this.parseXmlToForm(content);
+  }
+
+  // --- History & Formatting ---
+  private pushHistory() {
+    const val = this.generatedXml;
+    if (this.xmlHistoryIdx >= 0 && this.xmlHistory[this.xmlHistoryIdx] === val) return;
+
+    if (this.xmlHistoryIdx < this.xmlHistory.length - 1) {
+      this.xmlHistory.splice(this.xmlHistoryIdx + 1);
+    }
+
+    this.xmlHistory.push(val);
+    if (this.xmlHistory.length > this.maxHistory) {
+      this.xmlHistory.shift();
+    } else {
+      this.xmlHistoryIdx++;
+    }
+  }
+
+  undoXml() {
+    if (this.xmlHistoryIdx > 0) {
+      this.xmlHistoryIdx--;
+      this.isInternalChange = true;
+      this.generatedXml = this.xmlHistory[this.xmlHistoryIdx];
+      this.refreshLineCount();
+      setTimeout(() => this.isInternalChange = false, 10);
+      this.parseXmlToForm(this.generatedXml);
+    }
+  }
+
+  redoXml() {
+    if (this.xmlHistoryIdx < this.xmlHistory.length - 1) {
+      this.xmlHistoryIdx++;
+      this.isInternalChange = true;
+      this.generatedXml = this.xmlHistory[this.xmlHistoryIdx];
+      this.refreshLineCount();
+      setTimeout(() => this.isInternalChange = false, 10);
+      this.parseXmlToForm(this.generatedXml);
+    }
+  }
+
+  canUndoXml(): boolean { return this.xmlHistoryIdx > 0; }
+  canRedoXml(): boolean { return this.xmlHistoryIdx < this.xmlHistory.length - 1; }
+
+  private refreshLineCount() {
+    const lines = (this.generatedXml || '').split('\n').length;
+    this.editorLineCount = Array.from({ length: lines }, (_, i) => i + 1);
+  }
+
+  formatXml() {
+    if (!this.generatedXml?.trim()) return;
+    this.pushHistory();
+    
+    try {
+      let xml = this.generatedXml.trim();
+      let formatted = '';
+      let indent = '';
+      const tab = '    ';
+      
+      xml.split(/>\s*</).forEach(node => {
+        if (node.match(/^\/\w/)) indent = indent.substring(tab.length);
+        formatted += indent + '<' + node + '>\r\n';
+        if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith('?')) indent += tab;
+      });
+      
+      this.generatedXml = formatted.substring(1, formatted.length - 3);
+      this.refreshLineCount();
+      this.snackBar.open('XML Formatted', '', { duration: 1500 });
+    } catch (e) {
+      this.snackBar.open('Unable to format XML', '', { duration: 3000 });
+    }
+  }
+
+  toggleCommentXml() {
+    if (!this.generatedXml) return;
+
+    const textarea = document.querySelector('.code-editor') as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const value = textarea.value;
+
+    this.isInternalChange = true;
+    this.pushHistory();
+
+    // Identify start/end of lines
+    let lineStart = value.lastIndexOf('\n', start - 1) + 1;
+    let lineEnd = value.indexOf('\n', end);
+    if (lineEnd === -1) lineEnd = value.length;
+
+    const selection = value.substring(lineStart, lineEnd);
+    const before = value.substring(0, lineStart);
+    const after = value.substring(lineEnd);
+
+    let newResult = '';
+    const trimmed = selection.trim();
+
+    if (trimmed.startsWith('<!--') && trimmed.endsWith('-->')) {
+      // Uncomment
+      newResult = selection.replace('<!--', '').replace('-->', '');
+    } else {
+      // Comment
+      newResult = `<!-- ${selection} -->`;
+    }
+
+    this.generatedXml = before + newResult + after;
+    this.refreshLineCount();
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(lineStart, lineStart + newResult.length);
+      this.isInternalChange = false;
+    }, 0);
   }
 
   parseXmlToForm(content: string) {

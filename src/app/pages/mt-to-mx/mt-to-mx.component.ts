@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, ChangeDetectorRef, HostListener } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
@@ -28,6 +28,14 @@ export class MtToMxComponent implements OnInit {
     conversionLog: { severity: string; message: string }[] = [];
     conversionErrors: string[] = [];
     activeFieldGuide: any = null;
+
+    // Undo/Redo History
+    private mtHistory: string[] = [];
+    private mtHistoryIdx = -1;
+    private mxHistory: string[] = [];
+    private mxHistoryIdx = -1;
+    private maxHistory = 50;
+    private isInternalChange = false;
 
     // Field reference metadata for UI display
     private fieldGuides: Record<string, any[]> = {
@@ -127,11 +135,19 @@ export class MtToMxComponent implements OnInit {
         this.conversionStatus = 'idle';
         this.updateLineCount('mt');
         this.updateLineCount('mx');
+        
+        // Init history
+        this.pushHistory('mt');
+        this.pushHistory('mx');
     }
 
 
 
     onMtChange(value: string) {
+        if (!this.isInternalChange) {
+            this.pushHistory('mt');
+        }
+        
         this.mtInput = value;
         this.errorMessage = '';
         const detected = this.detectMtType(value);
@@ -156,8 +172,151 @@ export class MtToMxComponent implements OnInit {
     }
 
     onMxChange(content: string) {
+        if (!this.isInternalChange) {
+            this.pushHistory('mx');
+        }
         this.mxOutput = content;
         this.updateLineCount('mx');
+    }
+
+    // --- History & Formatting ---
+    private pushHistory(type: 'mt' | 'mx') {
+        const val = type === 'mt' ? this.mtInput : this.mxOutput;
+        const history = type === 'mt' ? this.mtHistory : this.mxHistory;
+        let idx = type === 'mt' ? this.mtHistoryIdx : this.mxHistoryIdx;
+
+        // Don't push if no change from last recorded state
+        if (idx >= 0 && history[idx] === val) return;
+
+        // If we are in the middle of undo/redo, clear forward states
+        if (idx < history.length - 1) {
+            history.splice(idx + 1);
+        }
+
+        history.push(val);
+        if (history.length > this.maxHistory) {
+            history.shift();
+        } else {
+            idx++;
+        }
+
+        if (type === 'mt') this.mtHistoryIdx = idx;
+        else this.mxHistoryIdx = idx;
+    }
+
+    undo(type: 'mt' | 'mx') {
+        const history = type === 'mt' ? this.mtHistory : this.mxHistory;
+        let idx = type === 'mt' ? this.mtHistoryIdx : this.mxHistoryIdx;
+
+        if (idx > 0) {
+            idx--;
+            this.isInternalChange = true;
+            if (type === 'mt') {
+                this.mtInput = history[idx];
+                this.mtHistoryIdx = idx;
+                this.updateLineCount('mt');
+            } else {
+                this.mxOutput = history[idx];
+                this.mxHistoryIdx = idx;
+                this.updateLineCount('mx');
+            }
+            setTimeout(() => this.isInternalChange = false, 10);
+        }
+    }
+
+    redo(type: 'mt' | 'mx') {
+        const history = type === 'mt' ? this.mtHistory : this.mxHistory;
+        let idx = type === 'mt' ? this.mtHistoryIdx : this.mxHistoryIdx;
+
+        if (idx < history.length - 1) {
+            idx++;
+            this.isInternalChange = true;
+            if (type === 'mt') {
+                this.mtInput = history[idx];
+                this.mtHistoryIdx = idx;
+                this.updateLineCount('mt');
+            } else {
+                this.mxOutput = history[idx];
+                this.mxHistoryIdx = idx;
+                this.updateLineCount('mx');
+            }
+            setTimeout(() => this.isInternalChange = false, 10);
+        }
+    }
+
+    canUndo(type: 'mt' | 'mx'): boolean {
+        const idx = type === 'mt' ? this.mtHistoryIdx : this.mxHistoryIdx;
+        return idx > 0;
+    }
+
+    canRedo(type: 'mt' | 'mx'): boolean {
+        const history = type === 'mt' ? this.mtHistory : this.mxHistory;
+        const idx = type === 'mt' ? this.mtHistoryIdx : this.mxHistoryIdx;
+        return idx < history.length - 1;
+    }
+
+    formatXml() {
+        if (!this.mxOutput?.trim()) return;
+        this.pushHistory('mx');
+        
+        try {
+            let xml = this.mxOutput.trim();
+            // Basic Prettifier
+            let formatted = '';
+            let indent = '';
+            const tab = '    ';
+            
+            xml.split(/>\s*</).forEach(node => {
+                if (node.match(/^\/\w/)) indent = indent.substring(tab.length);
+                formatted += indent + '<' + node + '>\r\n';
+                if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith('?')) indent += tab;
+            });
+            
+            this.mxOutput = formatted.substring(1, formatted.length - 3);
+            this.updateLineCount('mx');
+            this.snackBar.open('XML Formatted', '', { duration: 1500 });
+        } catch (e) {
+            this.snackBar.open('Unable to format XML - Check syntax', '', { duration: 3000 });
+        }
+    }
+
+    formatMt() {
+        if (!this.mtInput?.trim()) return;
+        this.pushHistory('mt');
+        
+        // Normalize line endings and trim lines
+        const lines = this.mtInput.split('\n').map(l => l.trimEnd());
+        this.mtInput = lines.join('\n').trim();
+        this.updateLineCount('mt');
+        this.snackBar.open('MT Message Cleaned', '', { duration: 1500 });
+    }
+
+    @HostListener('keydown', ['$event'])
+    handleKeyboardEvents(event: KeyboardEvent) {
+        if (!(event.ctrlKey || event.metaKey)) return;
+
+        const isMtFocus = document.activeElement === this.mtEditorRef?.nativeElement;
+        const isMxFocus = document.activeElement === this.mxEditorRef?.nativeElement;
+
+        if (!isMtFocus && !isMxFocus) return;
+
+        const type = isMtFocus ? 'mt' : 'mx';
+
+        switch (event.key.toLowerCase()) {
+            case 'z':
+                event.preventDefault();
+                this.undo(type);
+                break;
+            case 'y':
+                event.preventDefault();
+                this.redo(type);
+                break;
+            case 's':
+                event.preventDefault();
+                if (type === 'mx') this.formatXml();
+                else this.formatMt();
+                break;
+        }
     }
 
     updateLineCount(which: 'mt' | 'mx') {

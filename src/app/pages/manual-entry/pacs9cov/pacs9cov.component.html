@@ -506,6 +506,22 @@
                 <div class="right-panel">
                         <!-- Top Actions -->
                         <div class="bottom-actions" style="margin-top: 0; margin-bottom: 1rem;">
+                                <!-- History & Formatting -->
+                                <button class="action-btn-small" (click)="undoXml()" [disabled]="!canUndoXml()" matTooltip="Undo (Ctrl+Z)">
+                                        <mat-icon>undo</mat-icon>
+                                </button>
+                                <button class="action-btn-small" (click)="redoXml()" [disabled]="!canRedoXml()" matTooltip="Redo (Ctrl+Y)">
+                                        <mat-icon>redo</mat-icon>
+                                </button>
+                                <button class="action-btn-small" (click)="formatXml()" [disabled]="!generatedXml" matTooltip="Format XML (Ctrl+S)">
+                                        <mat-icon>format_align_left</mat-icon>
+                                </button>
+                                <button class="action-btn-small" (click)="toggleCommentXml()" [disabled]="!generatedXml" matTooltip="Comment/Uncomment (Ctrl+/)">
+                                        <mat-icon>mode_comment</mat-icon>
+                                </button>
+
+                                <div style="flex: 1"></div>
+
                                 <button class="action-btn copy-btn"
                                         (click)="copyToClipboard()"><mat-icon>content_copy</mat-icon> Copy
                                         XML</button>

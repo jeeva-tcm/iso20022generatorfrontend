@@ -343,6 +343,25 @@
         Editing: {{editingEntry.name}}
       </div>
       <div class="editor-actions">
+        <button class="icon-btn-sml" (click)="undo()" [disabled]="!canUndo()" matTooltip="Undo (Ctrl+Z)">
+          <mat-icon>undo</mat-icon>
+        </button>
+        <button class="icon-btn-sml" (click)="redo()" [disabled]="!canRedo()" matTooltip="Redo (Ctrl+Y)">
+          <mat-icon>redo</mat-icon>
+        </button>
+        <button class="icon-btn-sml" (click)="formatXml()" matTooltip="Format XML (Ctrl+S)">
+          <mat-icon>format_align_left</mat-icon>
+        </button>
+        <button class="icon-btn-sml" (click)="toggleComment()" matTooltip="Comment/Uncomment (Ctrl+/)">
+          <mat-icon>mode_comment</mat-icon>
+        </button>
+        <button class="icon-btn-sml" (click)="copyEditorXml()" matTooltip="Copy XML">
+          <mat-icon>content_copy</mat-icon>
+        </button>
+        <button class="icon-btn-sml" (click)="downloadEditorXml()" matTooltip="Download XML">
+          <mat-icon>file_download</mat-icon>
+        </button>
+        <div class="v-sep"></div>
         <button class="btn-cancel-xml" (click)="closeEditor()">Cancel</button>
         <button class="btn-save-xml" (click)="saveEditor()">Save & Validate</button>
       </div>

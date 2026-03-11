@@ -89,6 +89,17 @@
                 <div class="panel-title">
                     <mat-icon>input</mat-icon> MT Input (SWIFT FIN)
                 </div>
+                <div class="panel-actions">
+                    <button class="icon-btn" (click)="undo('mt')" [disabled]="!canUndo('mt')" matTooltip="Undo (Ctrl+Z)">
+                        <mat-icon>undo</mat-icon>
+                    </button>
+                    <button class="icon-btn" (click)="redo('mt')" [disabled]="!canRedo('mt')" matTooltip="Redo (Ctrl+Y)">
+                        <mat-icon>redo</mat-icon>
+                    </button>
+                    <button class="icon-btn" (click)="formatMt()" [disabled]="!mtInput" matTooltip="Clean/Format">
+                        <mat-icon>auto_fix_high</mat-icon>
+                    </button>
+                </div>
             </div>
             <div class="editor-wrapper">
                 <div class="line-numbers" #mtLineNumbers>
@@ -130,6 +141,15 @@
                     <mat-icon>output</mat-icon> MX Output (ISO 20022 XML)
                 </div>
                 <div class="panel-actions" *ngIf="mxOutput.trim()">
+                    <button class="icon-btn" (click)="undo('mx')" [disabled]="!canUndo('mx')" matTooltip="Undo">
+                        <mat-icon>undo</mat-icon>
+                    </button>
+                    <button class="icon-btn" (click)="redo('mx')" [disabled]="!canRedo('mx')" matTooltip="Redo">
+                        <mat-icon>redo</mat-icon>
+                    </button>
+                    <button class="icon-btn" (click)="formatXml()" matTooltip="Prettify XML">
+                        <mat-icon>format_align_left</mat-icon>
+                    </button>
                     <button class="icon-btn" (click)="copyMxToClipboard()" matTooltip="Copy XML">
                         <mat-icon>content_copy</mat-icon>
                     </button>

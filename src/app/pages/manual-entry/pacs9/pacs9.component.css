@@ -303,6 +303,39 @@ textarea {
     box-shadow: none;
 }
 
+.action-btn-small {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    color: var(--text-muted);
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.action-btn-small mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+.action-btn-small:hover:not(:disabled) {
+    background: var(--bg-app);
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.action-btn-small:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--bg-app);
+}
+
 /* Editor Layout with Line Numbers */
 .editor-wrapper {
     display: flex;

@@ -2477,7 +2477,46 @@ body.light-theme .btn-download {
 
 .editor-actions {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-btn-sml {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-light);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.icon-btn-sml:hover:not(:disabled) {
+  background: var(--bg-card-hover);
+  color: var(--text-main);
+  border-color: var(--accent-light);
+}
+
+.icon-btn-sml:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.icon-btn-sml mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.v-sep {
+  width: 1px;
+  height: 24px;
+  background: var(--border-light);
+  margin: 0 4px;
 }
 
 .btn-cancel-xml {
