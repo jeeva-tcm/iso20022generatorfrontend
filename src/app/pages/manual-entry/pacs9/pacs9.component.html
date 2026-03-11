@@ -1,4 +1,4 @@
-<div class="container">
+﻿<div class="container">
         <header>
                 <h1>Financial Institution Credit Transfer <mat-icon class="title-icon">account_balance</mat-icon></h1>
                 <p>Visual PACS.009 Message Builder</p>
@@ -423,7 +423,8 @@
                         <input [formControlName]="prefix+'Acct'" maxlength="34">
                         <div class="validation-msg" *ngIf="err(prefix+'Acct') as e">{{e}}</div>
                 </div>
-        
+        </div>
+</ng-template>
 
     <!-- Validation Results Modal -->
     <div class="validation-overlay" *ngIf="showValidationModal" (click)="closeValidationModal()">
@@ -478,9 +479,9 @@
                     <div class="vm-layer" *ngFor="let k of getValidationLayers()" [class.layer-pass]="isLayerPass(k)"
                         [class.layer-fail]="isLayerFail(k)" [class.layer-warn]="isLayerWarn(k)">
                         <div class="vm-layer-icon">
-                            <span *ngIf="isLayerPass(k)">✅</span>
-                            <span *ngIf="isLayerFail(k)">❌</span>
-                            <span *ngIf="isLayerWarn(k)">⚠️</span>
+                            <span *ngIf="isLayerPass(k)">âœ…</span>
+                            <span *ngIf="isLayerFail(k)">âŒ</span>
+                            <span *ngIf="isLayerWarn(k)">âš ï¸</span>
                         </div>
                         <div class="vm-layer-info">
                             <strong>Layer {{k}}: {{getLayerName(k)}}</strong>
@@ -517,7 +518,7 @@
                                     <strong>Code:</strong> <code>{{issue.code}}</code>
                                 </div>
                                 <div class="vm-detail-row fix" *ngIf="issue.fix_suggestion">
-                                    <strong>💡 Fix:</strong>
+                                    <strong>ðŸ’¡ Fix:</strong>
                                     <span>{{issue.fix_suggestion}}</span>
                                     <button class="vm-copy-btn" (click)="copyFix(issue.fix_suggestion, $event)"
                                         matTooltip="Copy fix suggestion">
@@ -537,6 +538,3 @@
             </div>
         </div>
     </div>
-
-</div>
-</ng-template>
