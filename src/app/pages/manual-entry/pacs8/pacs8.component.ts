@@ -128,8 +128,18 @@ export class Pacs8Component implements OnInit {
     });
 
     this.http.get<any>(this.config.getApiUrl('/codelists/ctgyPurp')).subscribe({
-      next: (res) => { if (res && res.codes) this.categoryPurposes = res.codes; },
-      error: (err) => console.error('Failed to load category purposes', err)
+      next: (res) => { 
+        if (res && res.codes && res.codes.length > 0) {
+          this.categoryPurposes = res.codes; 
+        } else {
+          // Fallback to commonly used ISO 20022 codes
+          this.categoryPurposes = ['SALA', 'TAXS', 'SUPP', 'PENS', 'LOAN', 'DIVD', 'CASH', 'COLL', 'INTC', 'OTHR'];
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load category purposes', err);
+        this.categoryPurposes = ['SALA', 'TAXS', 'SUPP', 'PENS', 'LOAN', 'DIVD', 'CASH', 'COLL', 'INTC', 'OTHR'];
+      }
     });
     this.http.get<any>(this.config.getApiUrl('/codelists/purp')).subscribe({
       next: (res) => { if (res && res.codes) this.purposes = res.codes; },
@@ -345,7 +355,7 @@ export class Pacs8Component implements OnInit {
       initgPtyName: ['', [Validators.maxLength(140), SAFE_NAME]],
       prvsInstgAgt1Bic: ['', BIC_OPT], prvsInstgAgt2Bic: ['', BIC_OPT], prvsInstgAgt3Bic: ['', BIC_OPT],
       intrmyAgt1Bic: ['', BIC_OPT], intrmyAgt2Bic: ['', BIC_OPT], intrmyAgt3Bic: ['', BIC_OPT],
-      purpCd: [''], ctgyPurpCd: [''],
+      purpCd: [''], ctgyPurpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/)]],
 
       rmtInfType: ['none'],
       rmtInfUstrd: ['', Validators.maxLength(140)],
@@ -419,6 +429,7 @@ export class Pacs8Component implements OnInit {
       if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
       if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
       if (fl.includes('name') || fl.includes('nm')) return "Invalid characters. Only letters, numbers, spaces and . , ( ) ' - are allowed (no &, @, !, etc.)";
+      if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Must be a valid ISO 20022 code (4 uppercase letters).';
     }
     if (c.errors?.['noIdentifier']) return 'Name, LEI, or Member ID required.';
     if (c.errors?.['target2']) return 'TARGET2 payments must use EUR as the settlement currency.';

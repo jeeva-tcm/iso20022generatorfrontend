@@ -104,20 +104,29 @@
 
                                         <!-- Main Agents -->
                                         
-                    <div class="form-group">
-                        <label>Category Purpose</label>
-                        <select formControlName="ctgyPurpCd">
-                            <option value="">None</option>
-                            <option *ngFor="let c of categoryPurposes" [value]="c">{{c}}</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Purpose</label>
-                        <select formControlName="purpCd">
-                            <option value="">None</option>
-                            <option *ngFor="let p of purposes" [value]="p">{{p}}</option>
-                        </select>
-                    </div>
+                                         <div class="section-title">Payment Type Information</div>
+                                         <div class="form-group intermediary-field">
+                                                 <label
+                                                         [matTooltip]="'Category Purpose indicates the high-level business purpose of the payment.'">
+                                                         Category Purpose <span class="opt">Optional</span>
+                                                         <mat-icon
+                                                                 style="font-size: 14px; width: 14px; height: 14px; margin-left: 4px; color: var(--accent-color);">info</mat-icon>
+                                                 </label>
+                                                 <select formControlName="ctgyPurpCd">
+                                                         <option value="">None</option>
+                                                         <option *ngFor="let c of categoryPurposes" [value]="c">{{c}}
+                                                         </option>
+                                                 </select>
+                                                 <div class="validation-msg" *ngIf="err('ctgyPurpCd') as e">{{e}}</div>
+                                         </div>
+                                         <div class="form-group intermediary-field">
+                                                 <label>Purpose <span class="opt">Optional</span></label>
+                                                 <select formControlName="purpCd">
+                                                         <option value="">None</option>
+                                                         <option *ngFor="let p of purposes" [value]="p">{{p}}</option>
+                                                 </select>
+                                                 <div class="validation-msg" *ngIf="err('purpCd') as e">{{e}}</div>
+                                         </div>
                                         <div class="section-title">Main Agents</div>
                                         <div class="form-group"><label>Instructing Agent BIC <span
                                                                 class="req">*</span></label><input
@@ -510,6 +519,10 @@
                                 </mat-icon>
                             </div>
                             <div class="vm-issue-detail" *ngIf="validationExpandedIssue === issue">
+                                <div class="vm-detail-row" *ngIf="issue.severity === 'ERROR'">
+                                    <strong>Error Details:</strong>
+                                    <span>{{issue.message}}</span>
+                                </div>
                                 <div class="vm-detail-row" *ngIf="issue.path">
                                     <strong>Path:</strong> <code>{{issue.path}}</code>
                                 </div>
