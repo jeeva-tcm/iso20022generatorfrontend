@@ -1,4 +1,4 @@
-<div class="container">
+﻿<div class="container">
         <header>
                 <h1>FI Credit Transfer COV <mat-icon class="title-icon">account_balance_wallet</mat-icon></h1>
                 <p>Visual PACS.009 COV Message Builder</p>
@@ -214,7 +214,7 @@
                                         <ng-container
                                                 *ngTemplateOutlet="agentIdForm; context:{prefix:'cdtrFi',title:'Creditor FI'}"></ng-container>
 
-                                        <!-- UndrlygCstmrCdtTrf — COV Underlying Customer Credit Transfer -->
+                                        <!-- UndrlygCstmrCdtTrf â€” COV Underlying Customer Credit Transfer -->
                                         <div class="section-title cov-section">
                                                 <mat-icon>swap_vert</mat-icon>
                                                 Underlying Customer Credit Transfer (COV)
@@ -376,8 +376,7 @@
                                         </div>
                                         <div class="form-group"><label>Instructed Amount Currency <span
                                                                 class="opt">Optional</span></label>
-                                                <select formControlName="covInstdAmtCcy"
-                                                        pattern="^\d{1,18}(\.\d{1,5})?$" step="any">
+                                                <select formControlName="covInstdAmtCcy">
                                                         <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
                                                 </select>
                                                 <div class="validation-msg" *ngIf="err('covInstdAmtCcy') as e">{{e}}
@@ -671,8 +670,9 @@
                         <div class="validation-msg" *ngIf="err(prefix+'Acct') as e">{{e}}</div>
                 </div>
         
+        </div>
+</ng-template>
 
-    <!-- Validation Results Modal -->
     <div class="validation-overlay" *ngIf="showValidationModal" (click)="closeValidationModal()">
         <div class="validation-modal" (click)="$event.stopPropagation()">
             <!-- Modal Header -->
@@ -725,9 +725,9 @@
                     <div class="vm-layer" *ngFor="let k of getValidationLayers()" [class.layer-pass]="isLayerPass(k)"
                         [class.layer-fail]="isLayerFail(k)" [class.layer-warn]="isLayerWarn(k)">
                         <div class="vm-layer-icon">
-                            <span *ngIf="isLayerPass(k)">✅</span>
-                            <span *ngIf="isLayerFail(k)">❌</span>
-                            <span *ngIf="isLayerWarn(k)">⚠️</span>
+                            <span *ngIf="isLayerPass(k)">âœ…</span>
+                            <span *ngIf="isLayerFail(k)">âŒ</span>
+                            <span *ngIf="isLayerWarn(k)">âš ï¸</span>
                         </div>
                         <div class="vm-layer-info">
                             <strong>Layer {{k}}: {{getLayerName(k)}}</strong>
@@ -768,7 +768,7 @@
                                     <strong>Code:</strong> <code>{{issue.code}}</code>
                                 </div>
                                 <div class="vm-detail-row fix" *ngIf="issue.fix_suggestion">
-                                    <strong>💡 Fix:</strong>
+                                    <strong>ðŸ’¡ Fix:</strong>
                                     <span>{{issue.fix_suggestion}}</span>
                                     <button class="vm-copy-btn" (click)="copyFix(issue.fix_suggestion, $event)"
                                         matTooltip="Copy fix suggestion">
@@ -789,5 +789,3 @@
         </div>
     </div>
 
-</div>
-</ng-template>

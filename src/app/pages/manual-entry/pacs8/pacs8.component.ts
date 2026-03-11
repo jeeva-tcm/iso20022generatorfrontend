@@ -128,9 +128,9 @@ export class Pacs8Component implements OnInit {
     });
 
     this.http.get<any>(this.config.getApiUrl('/codelists/ctgyPurp')).subscribe({
-      next: (res) => { 
+      next: (res) => {
         if (res && res.codes && res.codes.length > 0) {
-          this.categoryPurposes = res.codes; 
+          this.categoryPurposes = res.codes;
         } else {
           // Fallback to commonly used ISO 20022 codes
           this.categoryPurposes = ['SALA', 'TAXS', 'SUPP', 'PENS', 'LOAN', 'DIVD', 'CASH', 'COLL', 'INTC', 'OTHR'];
@@ -248,7 +248,7 @@ export class Pacs8Component implements OnInit {
     const addtlRmtInf = this.form.get('rmtInfStrdAddtlRmtInf');
 
     if (rmtType === 'ustrd') {
-      ustrd?.setValidators([Validators.required, Validators.maxLength(140)]);
+      ustrd?.setValidators([Validators.required, Validators.maxLength(140), Validators.pattern(/^[0-9a-zA-Z\/\-\?:\(\)\.,\'\+ !#$%&\*=\^_`\{\|\}~";<>@\[\\\]]+$/)]);
       strdRef?.clearValidators();
       strdRefType?.clearValidators();
       addtlRmtInf?.clearValidators();
@@ -358,10 +358,10 @@ export class Pacs8Component implements OnInit {
       purpCd: [''], ctgyPurpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/)]],
 
       rmtInfType: ['none'],
-      rmtInfUstrd: ['', Validators.maxLength(140)],
+      rmtInfUstrd: ['', [Validators.maxLength(140), Validators.pattern(/^[0-9a-zA-Z\/\-\?:\(\)\.,\'\+ !#$%&\*=\^_`\{\|\}~";<>@\[\\\]]+$/)]],
       rmtInfStrdCdtrRefType: [''],
       rmtInfStrdCdtrRef: ['', Validators.maxLength(35)],
-      rmtInfStrdAddtlRmtInf: ['', Validators.maxLength(140)],
+      rmtInfStrdAddtlRmtInf: ['', [Validators.maxLength(140), Validators.pattern(/^[0-9a-zA-Z\/\-\?:\(\)\.,\'\+ !#$%&\*=\^_`\{\|\}~";<>@\[\\\]]+$/)]],
       rmtInfStrdRfrdDocNb: ['', Validators.maxLength(35)],
       rmtInfStrdRfrdDocCd: [''],
       rmtInfStrdRfrdDocAmt: ['', [Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],
@@ -429,6 +429,8 @@ export class Pacs8Component implements OnInit {
       if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
       if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
       if (fl.includes('name') || fl.includes('nm')) return "Invalid characters. Only letters, numbers, spaces and . , ( ) ' - are allowed (no &, @, !, etc.)";
+      if (fl.includes('ustrd') || fl.includes('adtlrmtinf')) return "Invalid character in remittance field. Only ISO 20022 MX allowed chars permitted.";
+
       if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Must be a valid ISO 20022 code (4 uppercase letters).';
     }
     if (c.errors?.['noIdentifier']) return 'Name, LEI, or Member ID required.';
