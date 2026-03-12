@@ -1,7 +1,7 @@
 ﻿<div class="container">
         <header>
                 <h1>FI Credit Transfer COV <mat-icon class="title-icon">account_balance_wallet</mat-icon></h1>
-                <p>Visual PACS.009 COV Message Builder</p>
+                <p style="margin-top: -1rem;">Visual PACS.009 COV Message Builder</p>
         </header>
 
         <div class="split-view">
@@ -514,33 +514,37 @@
                         <!-- Top Actions -->
                         <div class="bottom-actions" style="margin-top: 0; margin-bottom: 1rem;">
                                 <!-- History & Formatting -->
-                                <button class="action-btn-small" (click)="undoXml()" [disabled]="!canUndoXml()" matTooltip="Undo (Ctrl+Z)">
-                                        <mat-icon>undo</mat-icon>
-                                </button>
-                                <button class="action-btn-small" (click)="redoXml()" [disabled]="!canRedoXml()" matTooltip="Redo (Ctrl+Y)">
-                                        <mat-icon>redo</mat-icon>
-                                </button>
-                                <button class="action-btn-small" (click)="formatXml()" [disabled]="!generatedXml" matTooltip="Format XML (Ctrl+S)">
-                                        <mat-icon>format_align_left</mat-icon>
-                                </button>
-                                <button class="action-btn-small" (click)="toggleCommentXml()" [disabled]="!generatedXml" matTooltip="Comment/Uncomment (Ctrl+/)">
-                                        <mat-icon>mode_comment</mat-icon>
-                                </button>
+                                
 
-                                <div style="flex: 1"></div>
-
-                                <button class="action-btn copy-btn"
+                                <div class="down">
+                                        <button class="action-btn copy-btn"
                                         (click)="copyToClipboard()"><mat-icon>content_copy</mat-icon> Copy
                                         XML</button>
-                                <button class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon>
-                                        Download XML</button>
-                                <button class="action-btn validate-btn" (click)="validateMessage()">
-                                        <mat-icon>verified</mat-icon> Validate Message
-                                </button>
+                                        <button class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon>
+                                                Download XML</button>
+                                                <button class="action-btn validate-btn" (click)="validateMessage()">
+                                                        <mat-icon>verified</mat-icon> Validate Message
+                                                </button>
+                                        </div>
                         </div>
 
                         <!-- XML Preview & Actions -->
                         <div class="content-box preview-box">
+                                <div class="up">
+                    
+                    <button class="action-btn-small" (click)="undoXml()" [disabled]="!canUndoXml()" matTooltip="Undo (Ctrl+Z)">
+                        <mat-icon>undo</mat-icon>
+                    </button>
+                    <button class="action-btn-small" (click)="redoXml()" [disabled]="!canRedoXml()" matTooltip="Redo (Ctrl+Y)">
+                        <mat-icon>redo</mat-icon>
+                    </button>
+                    <button class="action-btn-small" (click)="formatXml()" matTooltip="Format XML (Ctrl+S)">
+                        <mat-icon>format_align_left</mat-icon>
+                    </button>
+                    <button class="action-btn-small" (click)="toggleCommentXml()" matTooltip="Comment/Uncomment (Ctrl+/)">
+                        <mat-icon>mode_comment</mat-icon>
+                    </button>
+                </div>
                                 <div class="editor-wrapper">
                                         <div class="line-numbers" #lineNumbers>
                                                 <div *ngFor="let idx of editorLineCount; let i = index">{{i + 1}}</div>

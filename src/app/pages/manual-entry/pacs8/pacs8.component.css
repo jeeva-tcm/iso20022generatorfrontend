@@ -23,6 +23,7 @@
     max-width: 1400px;
     width: 100%;
     margin: 0 auto;
+    margin-top: -0.2rem;
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -54,7 +55,8 @@
 
 header {
     text-align: center;
-    margin-bottom: 1rem;
+    margin-bottom: .5rem;
+    margin-top: -.6rem;
 }
 
 header h1 {
@@ -380,6 +382,7 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
 .bottom-actions {
     display: flex;
     justify-content: center;
+    flex-direction: column;
     gap: .6rem;
     margin-top: 1rem;
     padding: 1rem;
@@ -388,7 +391,17 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     border-radius: 10px;
     box-shadow: var(--shadow-lg);
 }
-
+.up,.down{
+    display: flex;
+    flex-direction: row;
+    gap: .6rem;
+    justify-content: center;
+}
+.up{
+    justify-content: flex-end;
+    margin-bottom: .5rem;
+    margin-top: -1rem;
+}
 /* Spinner */
 .spinner-row {
     display: flex;

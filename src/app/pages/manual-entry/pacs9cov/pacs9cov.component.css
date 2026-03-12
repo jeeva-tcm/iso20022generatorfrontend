@@ -22,7 +22,7 @@
 .container {
     max-width: 1400px;
     width: 100%;
-    margin: 0 auto;
+    margin: 0 auto;margin-top: -0.2rem;
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -55,8 +55,19 @@
 header {
     text-align: center;
     margin-bottom: 1rem;
+    margin-top: -.6rem;
 }
-
+.up,.down{
+    display: flex;
+    flex-direction: row;
+    gap: .6rem;
+    justify-content: center;
+}
+.up{
+    justify-content: flex-end;
+    margin-bottom: .5rem;
+    margin-top: -1rem;
+}
 header h1 {
     display: flex;
     align-items: center;
