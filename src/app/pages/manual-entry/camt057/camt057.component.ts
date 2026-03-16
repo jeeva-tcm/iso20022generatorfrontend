@@ -49,6 +49,7 @@ export class Camt057Component implements OnInit {
         this.generateXml();
         this.onEditorChange(this.generatedXml, true);
         this.form.valueChanges.subscribe(() => {
+            this.updateConditionalValidators();
             this.updateClearingSystemValidation();
             this.generateXml();
         });
@@ -85,6 +86,40 @@ export class Camt057Component implements OnInit {
             delete errors['chaps'];
             currencyCtrl.setErrors(Object.keys(errors).length ? errors : null);
         }
+    }
+
+    private updateConditionalValidators() {
+        this.agentPrefixes.forEach(p => {
+            const addrType = this.form.get(p + 'AddrType')?.value;
+            const ctryCtrl = this.form.get(p + 'Ctry');
+            const twnNmCtrl = this.form.get(p + 'TwnNm');
+
+            if (addrType && addrType !== 'none') {
+                if (!ctryCtrl?.hasValidator(Validators.required)) {
+                    ctryCtrl?.setValidators([Validators.required, Validators.pattern(/^[A-Z]{2,2}$/)]);
+                    ctryCtrl?.updateValueAndValidity({ emitEvent: false });
+                }
+            } else {
+                if (ctryCtrl?.hasValidator(Validators.required)) {
+                    ctryCtrl?.clearValidators();
+                    ctryCtrl?.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
+                    ctryCtrl?.updateValueAndValidity({ emitEvent: false });
+                }
+            }
+
+            if (addrType === 'structured' || addrType === 'hybrid') {
+                if (!twnNmCtrl?.hasValidator(Validators.required)) {
+                    twnNmCtrl?.setValidators([Validators.required, Validators.maxLength(140)]);
+                    twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
+                }
+            } else {
+                if (twnNmCtrl?.hasValidator(Validators.required)) {
+                    twnNmCtrl?.clearValidators();
+                    twnNmCtrl?.setValidators([Validators.maxLength(140)]);
+                    twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
+                }
+            }
+        });
     }
 
     fetchCodelists() {
@@ -130,7 +165,15 @@ export class Camt057Component implements OnInit {
         const BIC_REQ = [Validators.required, ...BIC];
 
         this.form = this.fb.group({
-            purpCd: [''], ctgyPurpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/)]],
+            purpCd: [''], 
+            ctgyPurpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/)]],
+            ctgyPurpPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
+            instrPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
+            clrChanl: ['', [Validators.pattern(/^(BOOK|MPNS|RTGS|RTNS)$/)]],
+            svcLvlCd: ['', [Validators.pattern(/^[A-Z0-9]{1,4}$/)]],
+            svcLvlPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
+            lclInstrmCd: ['', [Validators.pattern(/^[A-Z0-9]{1,4}$/)]],
+            lclInstrmPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
 
             rmtInfType: ['none'],
             rmtInfUstrd: ['', [Validators.maxLength(140), Validators.pattern(/^[0-9a-zA-Z\/\-\?:\(\)\.,\'\+ !#$%&\*=\^_`\{\|\}~";<>@\[\\\]]+$/)]],
@@ -208,6 +251,13 @@ export class Camt057Component implements OnInit {
             if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Must be a valid ISO 20022 code (4 uppercase letters).';
             if (f.toLowerCase().includes('name') || f.toLowerCase().includes('nm')) return "Invalid characters. Only letters, numbers, spaces and . , ( ) ' - are allowed (no &, @, !, etc.)";
             if (f.toLowerCase().includes('ustrd') || f.toLowerCase().includes('adtlrmtinf')) return "Invalid character in remittance field. Only ISO 20022 MX allowed chars permitted.";
+            if (f === 'instrPrty') return 'Invalid Priority. Must be HIGH or NORM.';
+            if (f === 'clrChanl') return 'Invalid Clearing Channel. Must be BOOK, MPNS, RTGS, or RTNS.';
+            if (f === 'svcLvlCd') return 'Invalid Service Level Code. Must be 1-4 alphanumeric characters.';
+            if (f === 'svcLvlPrtry') return 'Invalid Proprietary Service Level. Up to 35 characters allowed.';
+            if (f === 'lclInstrmCd') return 'Invalid Local Instrument Code. Must be 1-4 alphanumeric characters.';
+            if (f === 'lclInstrmPrtry') return 'Invalid Proprietary Local Instrument. Up to 35 characters allowed.';
+            if (f === 'ctgyPurpPrtry') return 'Invalid Proprietary Category Purpose. Up to 35 characters allowed.';
 
         }
         if (c.errors?.['target2']) return 'TARGET2 payments must use EUR as the settlement currency.';
@@ -324,8 +374,16 @@ export class Camt057Component implements OnInit {
         itmXml += this.partyAgentXml('Cdtr', 'cdtr', v, 5);
         
         // PmtTpInf
+        // PmtTpInf
         let pmtTpXml = '';
+        if (v.instrPrty?.trim()) pmtTpXml += `						<InstrPrty>${this.e(v.instrPrty)}</InstrPrty>\n`;
+        if (v.clrChanl?.trim()) pmtTpXml += `						<ClrChanl>${this.e(v.clrChanl)}</ClrChanl>\n`;
+        if (v.svcLvlCd?.trim()) pmtTpXml += `						<SvcLvl>\n							<Cd>${this.e(v.svcLvlCd)}</Cd>\n						</SvcLvl>\n`;
+        else if (v.svcLvlPrtry?.trim()) pmtTpXml += `						<SvcLvl>\n							<Prtry>${this.e(v.svcLvlPrtry)}</Prtry>\n						</SvcLvl>\n`;
+        if (v.lclInstrmCd?.trim()) pmtTpXml += `						<LclInstrm>\n							<Cd>${this.e(v.lclInstrmCd)}</Cd>\n						</LclInstrm>\n`;
+        else if (v.lclInstrmPrtry?.trim()) pmtTpXml += `						<LclInstrm>\n							<Prtry>${this.e(v.lclInstrmPrtry)}</Prtry>\n						</LclInstrm>\n`;
         if (v.ctgyPurpCd?.trim()) pmtTpXml += `						<CtgyPurp>\n							<Cd>${this.e(v.ctgyPurpCd)}</Cd>\n						</CtgyPurp>\n`;
+        else if (v.ctgyPurpPrtry?.trim()) pmtTpXml += `						<CtgyPurp>\n							<Prtry>${this.e(v.ctgyPurpPrtry)}</Prtry>\n						</CtgyPurp>\n`;
         if (pmtTpXml) itmXml += `					<PmtTpInf>\n${pmtTpXml}					</PmtTpInf>\n`;
 
         if (v.purpCd?.trim()) itmXml += `					<Purp>
@@ -553,6 +611,19 @@ ${itmXml}
                 parseAgent('DbtrAgt', 'dbtrAgt');
                 parseAgent('Cdtr', 'cdtr');
                 parseAgent('CdtrAgt', 'cdtrAgt');
+                
+                const tryTagInItm = (parentOrEl: string | Element, child: string) => {
+                    const p = typeof parentOrEl === 'string' ? itm.getElementsByTagName(parentOrEl)[0] : parentOrEl;
+                    return p ? (p.getElementsByTagName(child)[0]?.textContent || '') : '';
+                };
+                
+                setVal('instrPrty', itm.getElementsByTagName('InstrPrty')[0]?.textContent || '');
+                setVal('clrChanl', itm.getElementsByTagName('ClrChanl')[0]?.textContent || '');
+                setVal('svcLvlCd', tryTagInItm('SvcLvl', 'Cd'));
+                setVal('svcLvlPrtry', tryTagInItm('SvcLvl', 'Prtry'));
+                setVal('lclInstrmCd', tryTagInItm('LclInstrm', 'Cd'));
+                setVal('lclInstrmPrtry', tryTagInItm('LclInstrm', 'Prtry'));
+                setVal('ctgyPurpPrtry', tryTagInItm('CtgyPurp', 'Prtry'));
             } else {
                 ['itmId', 'endToEndId', 'uetr', 'amount', 'currency', 'valDt'].forEach(f => setVal(f, ''));
                 this.agentPrefixes.forEach(p => {

@@ -1,4 +1,4 @@
-﻿<div class="container">
+<div class="container">
         <header>
                 <h1>Customer Credit Transfer (pacs.008) <mat-icon class="title-icon">payments</mat-icon></h1>
                 <p style="margin-top: -1rem;">Visual PACS.008 Message Builder</p>
@@ -125,15 +125,50 @@
                                         </div>
 
                                         <div class="section-title">Payment Type Information</div>
-                                        <div class="form-group intermediary-field"><label>Service Level <span
+					<div class="form-group intermediary-field">
+						<label>Instruction Priority <span class="opt">Optional</span></label>
+						<select formControlName="instrPrty">
+							<option value="">None</option>
+							<option value="HIGH">High [HIGH]</option>
+							<option value="NORM">Normal [NORM]</option>
+						</select>
+						<div class="validation-msg" *ngIf="err('instrPrty') as e">{{e}}</div>
+					</div>
+					<div class="form-group intermediary-field">
+						<label>Clearing Channel <span class="opt">Optional</span></label>
+						<select formControlName="clrChanl">
+							<option value="">None</option>
+							<option value="BOOK">Book Transfer [BOOK]</option>
+							<option value="MPNS">Mass Payment Net System [MPNS]</option>
+							<option value="RTGS">Real Time Gross Settlement System [RTGS]</option>
+							<option value="RTNS">Real Time Net Settlement System [RTNS]</option>
+						</select>
+						<div class="validation-msg" *ngIf="err('clrChanl') as e">{{e}}</div>
+					</div>
+                                        <div class="form-group intermediary-field"><label>Service Level Code <span
                                                                 class="opt">Optional</span></label><input
                                                         formControlName="svcLvlCd" placeholder="e.g. SEPA">
                                                 <div class="validation-msg" *ngIf="err('svcLvlCd') as e">{{e}}</div>
                                         </div>
+                                        <div class="form-group intermediary-field"><label>Service Level Proprietary <span
+                                                                class="opt">Optional</span></label><input
+                                                        formControlName="svcLvlPrtry" placeholder="Max 35 chars">
+                                                <div class="validation-msg" *ngIf="err('svcLvlPrtry') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group intermediary-field"><label>Local Instrument Code <span
+                                                                class="opt">Optional</span></label><input
+                                                        formControlName="lclInstrmCd" placeholder="e.g. ONCL">
+                                                <div class="validation-msg" *ngIf="err('lclInstrmCd') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group intermediary-field"><label>Local Instrument Proprietary <span
+                                                                class="opt">Optional</span></label><input
+                                                        formControlName="lclInstrmPrtry" placeholder="Max 35 chars">
+                                                <div class="validation-msg" *ngIf="err('lclInstrmPrtry') as e">{{e}}</div>
+                                        </div>
                                         <div class="form-group intermediary-field">
                                                 <label
                                                         [matTooltip]="'Category Purpose indicates the high-level business purpose of the payment.'">
-                                                        Category Purpose <span class="opt">Optional</span>
+                                                        Category Purpose Code <span class="opt">Optional</span>
                                                         <mat-icon
                                                                 style="font-size: 14px; width: 14px; height: 14px; margin-left: 4px; color: var(--accent-color);">info</mat-icon>
                                                 </label>
@@ -143,6 +178,11 @@
                                                         </option>
                                                 </select>
                                                 <div class="validation-msg" *ngIf="err('ctgyPurpCd') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group intermediary-field"><label>Category Purpose Proprietary <span
+                                                                class="opt">Optional</span></label><input
+                                                        formControlName="ctgyPurpPrtry" placeholder="Max 35 chars">
+                                                <div class="validation-msg" *ngIf="err('ctgyPurpPrtry') as e">{{e}}</div>
                                         </div>
 
                                         <!-- Main Agents -->
@@ -561,17 +601,18 @@
                                 </div>
                         </ng-container>
 
-                        <!-- Structured / Hybrid: Full structured fields -->
-                        <ng-container *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
-                                <div class="form-group"><label>Country <span
-                                                        *ngIf="form.get(prefix+'AddrType')?.value !== 'none'"
-                                                        class="req">*</span></label>
+                        <div class="form-group"><label>Country <span
+                                                *ngIf="form.get(prefix+'AddrType')?.value !== 'none'"
+                                                class="req">*</span></label>
                                         <select [formControlName]="prefix + 'Ctry'">
                                                 <option value="">Select Country</option>
                                                 <option *ngFor="let c of countries" [value]="c">{{c}}</option>
                                         </select>
                                         <div class="validation-msg" *ngIf="err(prefix+'Ctry') as e">{{e}}</div>
-                                </div>
+                        </div>
+
+                        <!-- Structured / Hybrid: Full structured fields -->
+                        <ng-container *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                                 <div class="form-group"><label>Town Name <span
                                                         *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)"
                                                         class="req">*</span></label><input

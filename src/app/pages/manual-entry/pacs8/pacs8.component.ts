@@ -353,7 +353,11 @@ export class Pacs8Component implements OnInit {
       txId: ['TX-001', [Validators.required, Validators.maxLength(35)]],
       uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[0-9a-fA-F\-]{36}$/)]],
       amount: ['1500.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
-      sttlmDt: [new Date().toISOString().split('T')[0], Validators.required], svcLvlCd: [''],
+      sttlmDt: [new Date().toISOString().split('T')[0], Validators.required], 
+      instrPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
+      clrChanl: ['', [Validators.pattern(/^(BOOK|MPNS|RTGS|RTNS)$/)]],
+      svcLvlCd: ['', [Validators.pattern(/^[A-Z0-9]{1,4}$/)]],
+      svcLvlPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
       chrgBr: ['SHAR', Validators.required],
       dbtrBic: ['', BIC_OPT],
       dbtrAgtBic: ['BBBBUS33XXX', BIC],
@@ -364,7 +368,11 @@ export class Pacs8Component implements OnInit {
       initgPtyName: ['', [Validators.maxLength(140), SAFE_NAME]],
       prvsInstgAgt1Bic: ['', BIC_OPT], prvsInstgAgt2Bic: ['', BIC_OPT], prvsInstgAgt3Bic: ['', BIC_OPT],
       intrmyAgt1Bic: ['', BIC_OPT], intrmyAgt2Bic: ['', BIC_OPT], intrmyAgt3Bic: ['', BIC_OPT],
-      purpCd: [''], ctgyPurpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/)]],
+      purpCd: [''], 
+      ctgyPurpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/)]],
+      ctgyPurpPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
+      lclInstrmCd: ['', [Validators.pattern(/^[A-Z0-9]{1,4}$/)]],
+      lclInstrmPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
 
       rmtInfType: ['none'],
       rmtInfUstrd: ['', [Validators.maxLength(140), Validators.pattern(/^[0-9a-zA-Z\/\-\?:\(\)\.,\'\+ !#$%&\*=\^_`\{\|\}~";<>@\[\\\]]+$/)]],
@@ -441,6 +449,13 @@ export class Pacs8Component implements OnInit {
       if (fl.includes('ustrd') || fl.includes('adtlrmtinf')) return "Invalid character in remittance field. Only ISO 20022 MX allowed chars permitted.";
 
       if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Must be a valid ISO 20022 code (4 uppercase letters).';
+      if (f === 'instrPrty') return 'Invalid Priority. Must be HIGH or NORM.';
+      if (f === 'clrChanl') return 'Invalid Clearing Channel. Must be BOOK, MPNS, RTGS, or RTNS.';
+      if (f === 'svcLvlCd') return 'Invalid Service Level Code. Must be 1-4 alphanumeric characters.';
+      if (f === 'svcLvlPrtry') return 'Invalid Proprietary Service Level. Up to 35 characters allowed.';
+      if (f === 'lclInstrmCd') return 'Invalid Local Instrument Code. Must be 1-4 alphanumeric characters.';
+      if (f === 'lclInstrmPrtry') return 'Invalid Proprietary Local Instrument. Up to 35 characters allowed.';
+      if (f === 'ctgyPurpPrtry') return 'Invalid Proprietary Category Purpose. Up to 35 characters allowed.';
     }
     if (c.errors?.['noIdentifier']) return 'Name, LEI, or Member ID required.';
     if (c.errors?.['target2']) return 'TARGET2 payments must use EUR as the settlement currency.';
@@ -540,8 +555,14 @@ export class Pacs8Component implements OnInit {
     tx += this.tag('PmtId', this.el('InstrId', v.instrId) + this.el('EndToEndId', v.endToEndId) + this.el('TxId', v.txId) + this.el('UETR', v.uetr), 3);
 
     let pmtTpXml = '';
+    if (v.instrPrty?.trim()) pmtTpXml += this.el('InstrPrty', v.instrPrty, 4);
+    if (v.clrChanl?.trim()) pmtTpXml += this.el('ClrChanl', v.clrChanl, 4);
     if (v.svcLvlCd?.trim()) pmtTpXml += this.tag('SvcLvl', this.el('Cd', v.svcLvlCd, 5), 4);
+    else if (v.svcLvlPrtry?.trim()) pmtTpXml += this.tag('SvcLvl', this.el('Prtry', v.svcLvlPrtry, 5), 4);
+    if (v.lclInstrmCd?.trim()) pmtTpXml += this.tag('LclInstrm', this.el('Cd', v.lclInstrmCd, 5), 4);
+    else if (v.lclInstrmPrtry?.trim()) pmtTpXml += this.tag('LclInstrm', this.el('Prtry', v.lclInstrmPrtry, 5), 4);
     if (v.ctgyPurpCd?.trim()) pmtTpXml += this.tag('CtgyPurp', this.el('Cd', v.ctgyPurpCd, 5), 4);
+    else if (v.ctgyPurpPrtry?.trim()) pmtTpXml += this.tag('CtgyPurp', this.el('Prtry', v.ctgyPurpPrtry, 5), 4);
     if (pmtTpXml) tx += this.tag('PmtTpInf', pmtTpXml, 3);
 
     tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${v.amount}</IntrBkSttlmAmt>\n`;
@@ -1002,7 +1023,22 @@ ${tx}\t\t\t</CdtTrfTxInf>
       setVal('sttlmMtd', tval('SttlmMtd'));
       setVal('sttlmDt', tval('IntrBkSttlmDt'));
       setVal('chrgBr', tval('ChrgBr'));
-      setVal('purpCd', tval('Purp'));
+
+      const tryTag = (parentOrEl: string | Element, child: string) => {
+        const p = typeof parentOrEl === 'string' ? doc.getElementsByTagName(parentOrEl)[0] : parentOrEl;
+        return p ? (p.getElementsByTagName(child)[0]?.textContent || '') : '';
+      };
+
+      // PmtTpInf
+      setVal('instrPrty', tval('InstrPrty'));
+      setVal('clrChanl', tval('ClrChanl'));
+      setVal('svcLvlCd', tryTag('SvcLvl', 'Cd'));
+      setVal('svcLvlPrtry', tryTag('SvcLvl', 'Prtry'));
+      setVal('lclInstrmCd', tryTag('LclInstrm', 'Cd'));
+      setVal('lclInstrmPrtry', tryTag('LclInstrm', 'Prtry'));
+      setVal('ctgyPurpCd', tryTag('CtgyPurp', 'Cd'));
+      setVal('ctgyPurpPrtry', tryTag('CtgyPurp', 'Prtry'));
+      setVal('purpCd', tryTag('Purp', 'Cd') || tval('Purp'));
 
       const amtEl = doc.getElementsByTagName('IntrBkSttlmAmt')[0] || doc.getElementsByTagName('EqvtAmt')[0];
       setVal('amount', amtEl ? (amtEl.textContent || '') : '');
@@ -1010,13 +1046,6 @@ ${tx}\t\t\t</CdtTrfTxInf>
 
       const creDtTm = doc.getElementsByTagName('CreDtTm')[0] || doc.getElementsByTagName('CreDt')[0];
       setVal('creDtTm', creDtTm ? (creDtTm.textContent || '') : '');
-
-      const tryTag = (parentOrEl: string | Element, child: string) => {
-        const p = typeof parentOrEl === 'string' ? doc.getElementsByTagName(parentOrEl)[0] : parentOrEl;
-        return p ? (p.getElementsByTagName(child)[0]?.textContent || '') : '';
-      };
-
-      setVal('svcLvlCd', tryTag('SvcLvl', 'Cd'));
       const tryAcct = (group: string) => {
         const groupEl = doc.getElementsByTagName(group)[0];
         if (!groupEl) return '';
@@ -1164,9 +1193,6 @@ ${tx}\t\t\t</CdtTrfTxInf>
       mapParty('UltmtCdtr', 'ultmtCdtr');
       mapParty('InitgPty', 'initgPty');
 
-
-      setVal('purpCd', tryTag('Purp', 'Cd') || tval('Purp'));
-      setVal('ctgyPurpCd', tryTag('CtgyPurp', 'Cd') || tval('CtgyPurp'));
       this.isParsingXml = true;
       this.form.patchValue(patch, { emitEvent: false });
       this.isParsingXml = false;
