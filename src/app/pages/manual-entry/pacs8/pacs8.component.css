@@ -120,35 +120,8 @@ header p {
     box-shadow: var(--shadow-md);
 }
 
-/* Grid */
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: .6rem .9rem;
-}
 
-/* Section title */
-.section-title {
-    grid-column: 1/-1;
-    font-size: .75rem;
-    font-weight: 700;
-    color: var(--accent-color);
-    text-transform: uppercase;
-    letter-spacing: .5px;
-    margin: .85rem 0 .35rem;
-    padding: .45rem .75rem;
-    background: var(--accent-light);
-    border-radius: 6px;
-    border-left: 3px solid var(--accent-color);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-/* Form elements */
-.form-group {
-    margin-bottom: .1rem;
-}
+/* Using global .grid, .section-title, .form-group from styles.css */
 
 input,
 select,

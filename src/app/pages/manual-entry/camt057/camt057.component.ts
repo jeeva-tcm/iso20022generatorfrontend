@@ -33,7 +33,7 @@ export class Camt057Component implements OnInit {
     categoryPurposes: string[] = [];
     purposes: string[] = [];
 
-    agentPrefixes = ['dbtr', 'dbtrAgt', 'cdtr', 'cdtrAgt'];
+    agentPrefixes = ['dbtr', 'dbtrAgt', 'intrmyAgt'];
 
     constructor(
         private fb: FormBuilder,
@@ -189,8 +189,6 @@ export class Camt057Component implements OnInit {
             creDtTm: [this.isoNow(), Validators.required],
 
             ntfctnId: ['ID-057-001', [Validators.required, Validators.maxLength(35)]],
-            acctIban: ['GB33RECV1234567890', [Validators.required, Validators.pattern(/^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$/)]],
-            acctOwnrName: ['Global Receiver Corp', Validators.maxLength(140)], // Optional in CBPR+
 
             itmId: ['ITEM-001', [Validators.required, Validators.maxLength(35)]],
             amount: ['5000.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]],
@@ -230,6 +228,7 @@ export class Camt057Component implements OnInit {
             this.form.addControl(p + 'Ctry', this.fb.control('', Validators.pattern(/^[A-Z]{2}$/)));
             this.form.addControl(p + 'AdrLine1', this.fb.control(''));
             this.form.addControl(p + 'AdrLine2', this.fb.control(''));
+            this.form.addControl(p + 'Acct', this.fb.control('', Validators.maxLength(34)));
         });
 
         // Set Default Dbtr
@@ -354,11 +353,29 @@ export class Camt057Component implements OnInit {
         let creDtTm = v.creDtTm || this.isoNow();
         if (creDtTm.endsWith('Z')) creDtTm = creDtTm.replace('Z', '+00:00');
 
-        // Optional Account components
-        let acctXml = `\t\t\t\t<Acct>\n\t\t\t\t\t<Id><IBAN>${this.e(v.acctIban)}</IBAN></Id>\n\t\t\t\t</Acct>\n`;
-        if (v.acctOwnrName?.trim()) {
-            acctXml += `\t\t\t\t<AcctOwnr>\n\t\t\t\t\t<Pty>\n\t\t\t\t\t\t<Nm>${this.e(v.acctOwnrName)}</Nm>\n\t\t\t\t\t</Pty>\n\t\t\t\t</AcctOwnr>\n`;
-        }
+
+        // Parties & Agents correctly formatted with Pty wrapper for main notification level
+        const partyXml = (tag: string, prefix: string) => {
+            const inner = this.partyAgentXml(tag, prefix, v, 6);
+            if (!inner.trim()) return '';
+            let res = `${this.tabs(4)}<${tag}>\n${this.tabs(5)}<Pty>\n${inner}${this.tabs(5)}</Pty>\n${this.tabs(4)}</${tag}>\n`;
+            if (v[prefix + 'Acct']?.trim()) {
+                res += `${this.tabs(4)}<${tag}Acct>\n${this.tabs(5)}<Id>\n${this.tabs(6)}<Othr>\n${this.tabs(7)}<Id>${this.e(v[prefix + 'Acct'])}</Id>\n${this.tabs(6)}</Othr>\n${this.tabs(5)}</Id>\n${this.tabs(4)}</${tag}Acct>\n`;
+            }
+            return res;
+        };
+        
+        const agtXmlWithAcct = (tag: string, prefix: string) => {
+            let res = this.agt(tag, prefix, v, 4);
+            if (v[prefix + 'Acct']?.trim()) {
+                res += `${this.tabs(4)}<${tag}Acct>\n${this.tabs(5)}<Id>\n${this.tabs(6)}<Othr>\n${this.tabs(7)}<Id>${this.e(v[prefix + 'Acct'])}</Id>\n${this.tabs(6)}</Othr>\n${this.tabs(5)}</Id>\n${this.tabs(4)}</${tag}Acct>\n`;
+            }
+            return res;
+        };
+
+        let ntfctnPartiesXml = partyXml('Dbtr', 'dbtr');
+        ntfctnPartiesXml += agtXmlWithAcct('DbtrAgt', 'dbtrAgt');
+        ntfctnPartiesXml += agtXmlWithAcct('IntrmyAgt', 'intrmyAgt');
 
         // Optional Item components
         let itmXml = `\t\t\t\t<Itm>\n\t\t\t\t\t<Id>${this.e(v.itmId)}</Id>\n`;
@@ -367,29 +384,31 @@ export class Camt057Component implements OnInit {
         itmXml += `\t\t\t\t\t<Amt Ccy="${this.e(v.currency)}">${v.amount}</Amt>\n`;
         itmXml += `\t\t\t\t\t<XpctdValDt>${v.valDt}</XpctdValDt>\n`;
 
-        // Parties & Agents correctly formatted
-        itmXml += this.partyAgentXml('Dbtr', 'dbtr', v, 5);
-        itmXml += this.agt('DbtrAgt', 'dbtrAgt', v, 5);
-        itmXml += this.agt('CdtrAgt', 'cdtrAgt', v, 5);
-        itmXml += this.partyAgentXml('Cdtr', 'cdtr', v, 5);
+        if (v.purpCd?.trim()) itmXml += `\t\t\t\t\t<Purp>\n\t\t\t\t\t\t<Cd>${this.e(v.purpCd)}</Cd>\n\t\t\t\t\t</Purp>\n`;
         
-        // PmtTpInf
-        // PmtTpInf
-        let pmtTpXml = '';
-        if (v.instrPrty?.trim()) pmtTpXml += `						<InstrPrty>${this.e(v.instrPrty)}</InstrPrty>\n`;
-        if (v.clrChanl?.trim()) pmtTpXml += `						<ClrChanl>${this.e(v.clrChanl)}</ClrChanl>\n`;
-        if (v.svcLvlCd?.trim()) pmtTpXml += `						<SvcLvl>\n							<Cd>${this.e(v.svcLvlCd)}</Cd>\n						</SvcLvl>\n`;
-        else if (v.svcLvlPrtry?.trim()) pmtTpXml += `						<SvcLvl>\n							<Prtry>${this.e(v.svcLvlPrtry)}</Prtry>\n						</SvcLvl>\n`;
-        if (v.lclInstrmCd?.trim()) pmtTpXml += `						<LclInstrm>\n							<Cd>${this.e(v.lclInstrmCd)}</Cd>\n						</LclInstrm>\n`;
-        else if (v.lclInstrmPrtry?.trim()) pmtTpXml += `						<LclInstrm>\n							<Prtry>${this.e(v.lclInstrmPrtry)}</Prtry>\n						</LclInstrm>\n`;
-        if (v.ctgyPurpCd?.trim()) pmtTpXml += `						<CtgyPurp>\n							<Cd>${this.e(v.ctgyPurpCd)}</Cd>\n						</CtgyPurp>\n`;
-        else if (v.ctgyPurpPrtry?.trim()) pmtTpXml += `						<CtgyPurp>\n							<Prtry>${this.e(v.ctgyPurpPrtry)}</Prtry>\n						</CtgyPurp>\n`;
-        if (pmtTpXml) itmXml += `					<PmtTpInf>\n${pmtTpXml}					</PmtTpInf>\n`;
+        // Remittance
+        if (v.rmtInfType && v.rmtInfType !== 'none') {
+            let rmtXml = `\t\t\t\t\t<RmtInf>\n`;
+            if (v.rmtInfType === 'ustrd') {
+                rmtXml += `\t\t\t\t\t\t<Ustrd>${this.e(v.rmtInfUstrd)}</Ustrd>\n`;
+            } else if (v.rmtInfType === 'strd') {
+                rmtXml += `\t\t\t\t\t\t<Strd>\n`;
+                if (v.rmtInfStrdCdtrRef?.trim()) {
+                    rmtXml += `\t\t\t\t\t\t\t<CdtrRefInf>\n`;
+                    if (v.rmtInfStrdCdtrRefType?.trim()) {
+                        rmtXml += `\t\t\t\t\t\t\t\t<Tp>\n\t\t\t\t\t\t\t\t\t<CdOrPrtry>\n\t\t\t\t\t\t\t\t\t\t<Cd>${this.e(v.rmtInfStrdCdtrRefType)}</Cd>\n\t\t\t\t\t\t\t\t\t</CdOrPrtry>\n\t\t\t\t\t\t\t\t</Tp>\n`;
+                    }
+                    rmtXml += `\t\t\t\t\t\t\t\t<Ref>${this.e(v.rmtInfStrdCdtrRef)}</Ref>\n\t\t\t\t\t\t\t</CdtrRefInf>\n`;
+                }
+                if (v.rmtInfStrdAddtlRmtInf?.trim()) {
+                    rmtXml += `\t\t\t\t\t\t\t<AddtlRmtInf>${this.e(v.rmtInfStrdAddtlRmtInf)}</AddtlRmtInf>\n`;
+                }
+                rmtXml += `\t\t\t\t\t\t</Strd>\n`;
+            }
+            rmtXml += `\t\t\t\t\t</RmtInf>\n`;
+            itmXml += rmtXml;
+        }
 
-        if (v.purpCd?.trim()) itmXml += `					<Purp>
-						<Cd>${this.e(v.purpCd)}</Cd>
-					</Purp>
-`;
         itmXml += `\t\t\t\t</Itm>`;
 
 
@@ -399,11 +418,11 @@ export class Camt057Component implements OnInit {
 		<Fr><FIId><FinInstnId><BICFI>${this.e(v.fromBic)}</BICFI></FinInstnId></FIId></Fr>
 		<To><FIId><FinInstnId><BICFI>${this.e(v.toBic)}</BICFI></FinInstnId></FIId></To>
 		<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>
-		<MsgDefIdr>camt.057.001.06</MsgDefIdr>
+		<MsgDefIdr>camt.057.001.08</MsgDefIdr>
 		<BizSvc>${this.e(v.bizSvc)}</BizSvc>
 		<CreDt>${creDtTm}</CreDt>
 	</AppHdr>
-	<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.057.001.06">
+	<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.057.001.08">
 		<NtfctnToRcv>
 			<GrpHdr>
 				<MsgId>${this.e(v.msgId)}</MsgId>
@@ -411,8 +430,7 @@ export class Camt057Component implements OnInit {
 			</GrpHdr>
 			<Ntfctn>
 				<Id>${this.e(v.ntfctnId)}</Id>
-${acctXml}
-${itmXml}
+${ntfctnPartiesXml}${itmXml}
 			</Ntfctn>
 		</NtfctnToRcv>
 	</Document>
@@ -559,11 +577,12 @@ ${itmXml}
             setVal('bizMsgId', tval('BizMsgIdr'));
             setVal('bizSvc', tval('BizSvc'));
             setVal('msgId', tval('MsgId'));
-            setVal('ntfctnId', doc.getElementsByTagName('Ntfctn')[0]?.getElementsByTagName('Id')[0]?.textContent || '');
-            setVal('acctIban', tval('IBAN'));
+            const ntfctn = doc.getElementsByTagName('Ntfctn')[0];
+            if (!ntfctn) return;
 
-            const acctOwnr = doc.getElementsByTagName('AcctOwnr')[0];
-            setVal('acctOwnrName', acctOwnr ? (acctOwnr.getElementsByTagName('Nm')[0]?.textContent || '') : '');
+            setVal('ntfctnId', ntfctn.getElementsByTagName('Id')[0]?.textContent || '');
+
+            setVal('creDtTm', doc.getElementsByTagName('CreDtTm')[0]?.textContent || doc.getElementsByTagName('CreDt')[0]?.textContent || '');
 
             const itm = doc.getElementsByTagName('Itm')[0];
             if (itm) {
@@ -576,22 +595,13 @@ ${itmXml}
                 setVal('valDt', itm.getElementsByTagName('XpctdValDt')[0]?.textContent || '');
 
                 const parseAgent = (tag: string, prefix: string) => {
-                    const node = itm.getElementsByTagName(tag)[0];
+                    const node = ntfctn.getElementsByTagName(tag)[0];
                     if (!node) return;
                     if (tag === 'Dbtr' || tag === 'Cdtr') {
                         const pty = node.getElementsByTagName('Pty')[0];
                         if (pty) {
                             setVal(prefix + 'Name', pty.getElementsByTagName('Nm')[0]?.textContent || '');
-                            const id = pty.getElementsByTagName('Id')[0];
-                            if (id) {
-                                setVal(prefix + 'Bic', id.getElementsByTagName('AnyBIC')[0]?.textContent || '');
-                                setVal(prefix + 'Lei', id.getElementsByTagName('LEI')[0]?.textContent || '');
-                                const othr = id.getElementsByTagName('Othr')[0];
-                                if (othr) {
-                                    setVal(prefix + 'ClrSysMmbId', othr.getElementsByTagName('Id')[0]?.textContent || '');
-                                    setVal(prefix + 'ClrSysCd', othr.getElementsByTagName('Cd')[0]?.textContent || '');
-                                }
-                            }
+                            this.mapAddrToForm(pty, prefix, patch);
                         }
                     } else {
                         const finId = node.getElementsByTagName('FinInstnId')[0];
@@ -602,15 +612,26 @@ ${itmXml}
                             const clr = finId.getElementsByTagName('ClrSysMmbId')[0];
                             if (clr) {
                                 setVal(prefix + 'ClrSysMmbId', clr.getElementsByTagName('MmbId')[0]?.textContent || '');
-                                setVal(prefix + 'ClrSysCd', clr.getElementsByTagName('Cd')[0]?.textContent || '');
+                                const clrId = clr.getElementsByTagName('ClrSysId')[0];
+                                if (clrId) {
+                                    setVal(prefix + 'ClrSysCd', clrId.getElementsByTagName('Cd')[0]?.textContent || '');
+                                }
                             }
                         }
                     }
                 };
                 parseAgent('Dbtr', 'dbtr');
                 parseAgent('DbtrAgt', 'dbtrAgt');
-                parseAgent('Cdtr', 'cdtr');
-                parseAgent('CdtrAgt', 'cdtrAgt');
+                parseAgent('IntrmyAgt', 'intrmyAgt');
+
+                const parseAcct = (tag: string, prefix: string) => {
+                    const node = ntfctn.getElementsByTagName(tag + 'Acct')[0];
+                    if (!node) return;
+                    patch[prefix + 'Acct'] = node.getElementsByTagName('Id')[0]?.getElementsByTagName('Othr')[0]?.getElementsByTagName('Id')[0]?.textContent || '';
+                };
+                parseAcct('Dbtr', 'dbtr');
+                parseAcct('DbtrAgt', 'dbtrAgt');
+                parseAcct('IntrmyAgt', 'intrmyAgt');
                 
                 const tryTagInItm = (parentOrEl: string | Element, child: string) => {
                     const p = typeof parentOrEl === 'string' ? itm.getElementsByTagName(parentOrEl)[0] : parentOrEl;
@@ -623,16 +644,40 @@ ${itmXml}
                 setVal('svcLvlPrtry', tryTagInItm('SvcLvl', 'Prtry'));
                 setVal('lclInstrmCd', tryTagInItm('LclInstrm', 'Cd'));
                 setVal('lclInstrmPrtry', tryTagInItm('LclInstrm', 'Prtry'));
-                setVal('ctgyPurpPrtry', tryTagInItm('CtgyPurp', 'Prtry'));
+                const ctgyPurp = itm.getElementsByTagName('CtgyPurp')[0];
+                if (ctgyPurp) {
+                    setVal('ctgyPurpCd', ctgyPurp.getElementsByTagName('Cd')[0]?.textContent || '');
+                    setVal('ctgyPurpPrtry', ctgyPurp.getElementsByTagName('Prtry')[0]?.textContent || '');
+                }
+                
+                const purp = itm.getElementsByTagName('Purp')[0];
+                if (purp) setVal('purpCd', purp.getElementsByTagName('Cd')[0]?.textContent || '');
+
+                const rmt = itm.getElementsByTagName('RmtInf')[0];
+                if (rmt) {
+                    const ustrd = rmt.getElementsByTagName('Ustrd')[0];
+                    if (ustrd) {
+                        setVal('rmtInfType', 'ustrd');
+                        setVal('rmtInfUstrd', ustrd.textContent || '');
+                    }
+                    const strd = rmt.getElementsByTagName('Strd')[0];
+                    if (strd) {
+                        setVal('rmtInfType', 'strd');
+                        const ref = strd.getElementsByTagName('CdtrRefInf')[0];
+                        if (ref) {
+                            setVal('rmtInfStrdCdtrRefType', ref.getElementsByTagName('Cd')[0]?.textContent || '');
+                            setVal('rmtInfStrdCdtrRef', ref.getElementsByTagName('Ref')[0]?.textContent || '');
+                        }
+                        setVal('rmtInfStrdAddtlRmtInf', strd.getElementsByTagName('AddtlRmtInf')[0]?.textContent || '');
+                    }
+                } else {
+                    setVal('rmtInfType', 'none');
+                }
             } else {
                 ['itmId', 'endToEndId', 'uetr', 'amount', 'currency', 'valDt'].forEach(f => setVal(f, ''));
                 this.agentPrefixes.forEach(p => {
-                    setVal(p + 'Bic', '');
-                    setVal(p + 'Name', '');
-                    setVal(p + 'Lei', '');
-                    setVal(p + 'ClrSysCd', '');
-                    setVal(p + 'ClrSysMmbId', '');
-                    setVal(p + 'Acct', '');
+                    setVal(p + 'Bic', ''); setVal(p + 'Name', ''); setVal(p + 'Lei', '');
+                    setVal(p + 'ClrSysCd', ''); setVal(p + 'ClrSysMmbId', ''); setVal(p + 'Acct', '');
                 });
             }
 
@@ -643,17 +688,73 @@ ${itmXml}
             setVal('fromBic', tryTag('Fr', 'BICFI'));
             setVal('toBic', tryTag('To', 'BICFI'));
 
-            const creDtTm = doc.getElementsByTagName('CreDtTm')[0] || doc.getElementsByTagName('CreDt')[0];
-            setVal('creDtTm', creDtTm ? (creDtTm.textContent || '') : '');
-
-
-            setVal('purpCd', tryTag('Purp', 'Cd') || tval('Purp'));
-            setVal('ctgyPurpCd', tryTag('CtgyPurp', 'Cd') || tval('CtgyPurp'));
             this.isParsingXml = true;
             this.form.patchValue(patch, { emitEvent: false });
             this.isParsingXml = false;
         } catch (e) {
             this.isParsingXml = false;
+        }
+    }
+
+    private mapAddrToForm(p: Element, prefix: string, patch: any) {
+        const addr = p.getElementsByTagName('PstlAdr')[0];
+        if (addr) {
+            const aV = (t: string) => addr.getElementsByTagName(t)[0]?.textContent || '';
+            const isStructured = ['StrtNm', 'TwnNm', 'Ctry', 'PstCd'].some(t => !!aV(t));
+            if (isStructured) {
+                patch[prefix + 'AddrType'] = 'structured';
+                ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry'].forEach(f => patch[prefix + f] = aV(f));
+                const adrTp = addr.getElementsByTagName('AdrTp')[0];
+                if (adrTp) {
+                    patch[prefix + 'AdrTpCd'] = adrTp.getElementsByTagName('Cd')[0]?.textContent || '';
+                    patch[prefix + 'AdrTpPrtry'] = adrTp.getElementsByTagName('Prtry')[0]?.textContent || '';
+                }
+            } else if (addr.getElementsByTagName('AdrLine').length > 0) {
+                patch[prefix + 'AddrType'] = 'unstructured';
+                const lines = addr.getElementsByTagName('AdrLine');
+                patch[prefix + 'AdrLine1'] = lines[0]?.textContent || '';
+                patch[prefix + 'AdrLine2'] = lines[1]?.textContent || '';
+            }
+        }
+
+        const idNode = p.getElementsByTagName('Id')[0];
+        if (idNode) {
+            const orgId = idNode.getElementsByTagName('OrgId')[0];
+            if (orgId) {
+                patch[prefix + 'IdType'] = 'org';
+                patch[prefix + 'OrgAnyBIC'] = orgId.getElementsByTagName('AnyBIC')[0]?.textContent || '';
+                patch[prefix + 'OrgLEI'] = orgId.getElementsByTagName('LEI')[0]?.textContent || '';
+                const othr = orgId.getElementsByTagName('Othr')[0];
+                if (othr) {
+                    patch[prefix + 'OrgOthrId'] = othr.getElementsByTagName('Id')[0]?.textContent || '';
+                    patch[prefix + 'OrgOthrIssr'] = othr.getElementsByTagName('Issr')[0]?.textContent || '';
+                    const schmeNm = othr.getElementsByTagName('SchmeNm')[0];
+                    if (schmeNm) {
+                        patch[prefix + 'OrgOthrSchmeNmCd'] = schmeNm.getElementsByTagName('Cd')[0]?.textContent || '';
+                        patch[prefix + 'OrgOthrSchmeNmPrtry'] = schmeNm.getElementsByTagName('Prtry')[0]?.textContent || '';
+                    }
+                }
+            }
+            const prvtId = idNode.getElementsByTagName('PrvtId')[0];
+            if (prvtId) {
+                patch[prefix + 'IdType'] = 'prvt';
+                const dob = prvtId.getElementsByTagName('DtAndPlcOfBirth')[0];
+                if (dob) {
+                    patch[prefix + 'PrvtDtAndPlcOfBirthDt'] = dob.getElementsByTagName('BirthDt')[0]?.textContent || '';
+                    patch[prefix + 'PrvtDtAndPlcOfBirthCity'] = dob.getElementsByTagName('CityOfBirth')[0]?.textContent || '';
+                    patch[prefix + 'PrvtDtAndPlcOfBirthCtry'] = dob.getElementsByTagName('CtryOfBirth')[0]?.textContent || '';
+                }
+                const othr = prvtId.getElementsByTagName('Othr')[0];
+                if (othr) {
+                    patch[prefix + 'PrvtOthrId'] = othr.getElementsByTagName('Id')[0]?.textContent || '';
+                    patch[prefix + 'PrvtOthrIssr'] = othr.getElementsByTagName('Issr')[0]?.textContent || '';
+                    const schmeNm = othr.getElementsByTagName('SchmeNm')[0];
+                    if (schmeNm) {
+                        patch[prefix + 'PrvtOthrSchmeNmCd'] = schmeNm.getElementsByTagName('Cd')[0]?.textContent || '';
+                        patch[prefix + 'PrvtOthrSchmeNmPrtry'] = schmeNm.getElementsByTagName('Prtry')[0]?.textContent || '';
+                    }
+                }
+            }
         }
     }
 
@@ -681,9 +782,9 @@ ${itmXml}
             content += `${this.tabs(indent + 3)}<MmbId>${this.e(clrMmb)}</MmbId>\n`;
             content += `${this.tabs(indent + 2)}</ClrSysMmbId>\n`;
         }
+        if (lei) content += `${this.tabs(indent + 2)}<LEI>${this.e(lei)}</LEI>\n`;
         if (name) content += `${this.tabs(indent + 2)}<Nm>${this.e(name)}</Nm>\n`;
         content += this.addrXml(v, prefix, indent + 2);
-        if (lei) content += `${this.tabs(indent + 2)}<LEI>${this.e(lei)}</LEI>\n`;
 
         return `${this.tabs(indent)}<${tag}>\n${this.tabs(indent + 1)}<FinInstnId>\n${content}${this.tabs(indent + 1)}</FinInstnId>\n${this.tabs(indent)}</${tag}>\n`;
     }
@@ -698,25 +799,25 @@ ${itmXml}
         if (!bic && !name && !lei && !clrMmb && v[prefix + 'AddrType'] === 'none') return '';
 
         let content = '';
-        if (name) content += `${this.tabs(indent + 1)}<Nm>${this.e(name)}</Nm>\n`;
-        content += this.addrXml(v, prefix, indent + 1);
+        if (name) content += `${this.tabs(indent)}<Nm>${this.e(name)}</Nm>\n`;
+        content += this.addrXml(v, prefix, indent);
 
         let org = '';
-        if (bic) org += `${this.tabs(indent + 3)}<AnyBIC>${this.e(bic)}</AnyBIC>\n`;
-        if (lei) org += `${this.tabs(indent + 3)}<LEI>${this.e(lei)}</LEI>\n`;
+        if (bic) org += `${this.tabs(indent + 2)}<AnyBIC>${this.e(bic)}</AnyBIC>\n`;
+        if (lei) org += `${this.tabs(indent + 2)}<LEI>${this.e(lei)}</LEI>\n`;
         if (clrMmb) {
-            org += `${this.tabs(indent + 3)}<Othr>\n${this.tabs(indent + 4)}<Id>${this.e(clrMmb)}</Id>\n`;
+            org += `${this.tabs(indent + 2)}<Othr>\n${this.tabs(indent + 3)}<Id>${this.e(clrMmb)}</Id>\n`;
             if (clrCd) {
-                org += `${this.tabs(indent + 4)}<SchmeNm>\n${this.tabs(indent + 5)}<Cd>${this.e(clrCd)}</Cd>\n${this.tabs(indent + 4)}</SchmeNm>\n`;
+                org += `${this.tabs(indent + 3)}<SchmeNm>\n${this.tabs(indent + 4)}<Cd>${this.e(clrCd)}</Cd>\n${this.tabs(indent + 3)}</SchmeNm>\n`;
             }
-            org += `${this.tabs(indent + 3)}</Othr>\n`;
+            org += `${this.tabs(indent + 2)}</Othr>\n`;
         }
 
         if (org) {
-            content += `${this.tabs(indent + 1)}<Id>\n${this.tabs(indent + 2)}<OrgId>\n${org}${this.tabs(indent + 2)}</OrgId>\n${this.tabs(indent + 1)}</Id>\n`;
+            content += `${this.tabs(indent)}<Id>\n${this.tabs(indent + 1)}<OrgId>\n${org}${this.tabs(indent + 1)}</OrgId>\n${this.tabs(indent)}</Id>\n`;
         }
 
-        return `${this.tabs(indent)}<${tag}>\n${content}${this.tabs(indent)}</${tag}>\n`;
+        return content;
     }
 
     addrXml(v: any, p: string, indent = 4): string {
@@ -761,7 +862,7 @@ ${itmXml}
         this.http.post(this.config.getApiUrl('/validate'), {
             xml_content: this.generatedXml,
             mode: 'Full 1-3',
-            message_type: 'camt.057.001.06',
+            message_type: 'camt.057.001.08',
             store_in_history: true
         }).subscribe({
             next: (data: any) => {
@@ -771,7 +872,7 @@ ${itmXml}
             error: (err) => {
                 this.validationReport = {
                     status: 'FAIL', errors: 1, warnings: 0,
-                    message: 'camt.057.001.06', total_time_ms: 0,
+                    message: 'camt.057.001.08', total_time_ms: 0,
                     layer_status: {},
                     details: [{
                         severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',

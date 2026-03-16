@@ -32,11 +32,11 @@ export class Pacs9CovComponent implements OnInit {
     countries: string[] = [];
     categoryPurposes: string[] = [];
     purposes: string[] = [];
-    sttlmMethods = ['COVE'];
+    sttlmMethods = ['INGA', 'INDA'];
 
     agentPrefixes = ['instgAgt', 'instdAgt', 'dbtrFi', 'cdtrFi', 'dbtrAgt', 'cdtrAgt',
         'prvsInstgAgt1', 'prvsInstgAgt2', 'prvsInstgAgt3',
-        'intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'];
+        'intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3', 'covDbtrAgt', 'covCdtrAgt'];
 
     // COV address prefixes for UndrlygCstmrCdtTrf parties
     covPartyPrefixes = ['covDbtr', 'covCdtr', 'covUltmtDbtr', 'covUltmtCdtr'];
@@ -206,6 +206,7 @@ export class Pacs9CovComponent implements OnInit {
 
             rmtInfType: ['none'],
             rmtInfUstrd: ['', [Validators.maxLength(140), Validators.pattern(/^[0-9a-zA-Z\/\-\?:\(\)\.,\'\+ !#$%&\*=\^_`\{\|\}~";<>@\[\\\]]+$/)]],
+            rmtInfUstrd2: ['', [Validators.maxLength(140), Validators.pattern(/^[0-9a-zA-Z\/\-\?:\(\)\.,\'\+ !#$%&\*=\^_`\{\|\}~";<>@\[\\\]]+$/)]],
             rmtInfStrdCdtrRefType: [''],
             rmtInfStrdCdtrRef: ['', Validators.maxLength(35)],
             rmtInfStrdAddtlRmtInf: ['', [Validators.maxLength(140), Validators.pattern(/^[0-9a-zA-Z\/\-\?:\(\)\.,\'\+ !#$%&\*=\^_`\{\|\}~";<>@\[\\\]]+$/)]],
@@ -220,77 +221,128 @@ export class Pacs9CovComponent implements OnInit {
             sttlmDt: [new Date().toISOString().split('T')[0], Validators.required],
             // Debtor FI (required)
             dbtrFiBic: ['RBOSGB2L', BIC],
+            dbtrFiAcct: [''],
             // Debtor Agent (optional)
             dbtrAgtBic: ['NDEAFIHH', BIC_OPT],
+            dbtrAgtAcct: [''],
             // Creditor Agent (optional)
             cdtrAgtBic: ['HELSFIHH', BIC_OPT],
+            cdtrAgtAcct: [''],
             // Creditor FI (required)
             cdtrFiBic: ['OKOYFIHH', BIC],
+            cdtrFiAcct: [''],
             // Optional agents
             prvsInstgAgt1Bic: ['', BIC_OPT], prvsInstgAgt2Bic: ['', BIC_OPT], prvsInstgAgt3Bic: ['', BIC_OPT],
             intrmyAgt1Bic: ['', BIC_OPT], intrmyAgt2Bic: ['', BIC_OPT], intrmyAgt3Bic: ['', BIC_OPT],
+            prvsInstgAgt1Acct: [''], prvsInstgAgt2Acct: [''], prvsInstgAgt3Acct: [''],
+            intrmyAgt1Acct: [''], intrmyAgt2Acct: [''], intrmyAgt3Acct: [''],
+
             // COV — UndrlygCstmrCdtTrf fields
             covUltmtDbtrName: [''],
             covDbtrName: ['A Debiter', [Validators.maxLength(140), SAFE_NAME]],
             covDbtrAcct: ['R85236974'],
             covDbtrAgtBic: ['RBOSGB2L', BIC_OPT],
+            covDbtrAgtAcct: [''],
             covCdtrAgtBic: ['OKOYFIHH', BIC_OPT],
+            covCdtrAgtAcct: [''],
             covCdtrName: ['Z Krediter', [Validators.maxLength(140), SAFE_NAME]],
             covCdtrAcct: ['O96325478'],
             covUltmtCdtrName: [''],
-            // InstrForCdtrAgt
-            covInstrForCdtrAgtCd: [''],
-            covInstrForCdtrAgtInstrInf: [''],
-            // InstrForNxtAgt
-            covInstrForNxtAgtInstrInf: [''],
+            covPurpCd: [''],
+
+            // InstrForCdtrAgt (COV) (0..2)
+            covInstrForCdtrAgt1Cd: [''], covInstrForCdtrAgt1InfTxt: ['', Validators.maxLength(140)],
+            covInstrForCdtrAgt2Cd: [''], covInstrForCdtrAgt2InfTxt: ['', Validators.maxLength(140)],
+            // InstrForNxtAgt (COV) (0..6)
+            covInstrForNxtAgt1Cd: [''], covInstrForNxtAgt1InfTxt: ['', Validators.maxLength(140)],
+            covInstrForNxtAgt2Cd: [''], covInstrForNxtAgt2InfTxt: ['', Validators.maxLength(140)],
+            covInstrForNxtAgt3Cd: [''], covInstrForNxtAgt3InfTxt: ['', Validators.maxLength(140)],
+            covInstrForNxtAgt4Cd: [''], covInstrForNxtAgt4InfTxt: ['', Validators.maxLength(140)],
+            covInstrForNxtAgt5Cd: [''], covInstrForNxtAgt5InfTxt: ['', Validators.maxLength(140)],
+            covInstrForNxtAgt6Cd: [''], covInstrForNxtAgt6InfTxt: ['', Validators.maxLength(140)],
+
             // RmtInf (Ustrd)
             covRmtInfUstrd: [''],
+            covRmtInfUstrd2: [''],
+            // Tax
+            covTaxRef: [''],
+            covTaxAmt: [''],
+            covTaxCcy: ['EUR'],
             // InstdAmt
             covInstdAmtCcy: ['EUR'],
             covInstdAmt: [''],
         };
         // Address prefixes for main agents
         this.agentPrefixes.forEach(p => {
-            c[p + 'AddrType'] = 'none'; c[p + 'AdrLine1'] = ['', Validators.maxLength(70)]; c[p + 'AdrLine2'] = ['', Validators.maxLength(70)];
-            c[p + 'Dept'] = ['', Validators.maxLength(70)]; c[p + 'SubDept'] = ['', Validators.maxLength(70)];
-            c[p + 'StrtNm'] = ['', Validators.maxLength(140)]; c[p + 'BldgNb'] = ['', Validators.maxLength(16)]; c[p + 'BldgNm'] = ['', Validators.maxLength(140)];
-            c[p + 'Flr'] = ['', Validators.maxLength(70)]; c[p + 'PstBx'] = ['', Validators.maxLength(16)]; c[p + 'Room'] = ['', Validators.maxLength(70)];
-            c[p + 'PstCd'] = ['', Validators.maxLength(16)]; c[p + 'TwnNm'] = ['', Validators.maxLength(140)]; c[p + 'CtrySubDvsn'] = ['', Validators.maxLength(35)]; c[p + 'Ctry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
-            c[p + 'TwnLctnNm'] = ['', Validators.maxLength(140)]; c[p + 'DstrctNm'] = ['', Validators.maxLength(140)]; c[p + 'AdrTpCd'] = ['']; c[p + 'AdrTpPrtry'] = ['', Validators.maxLength(35)];
-            c[p + 'Name'] = ['', [Validators.maxLength(140), SAFE_NAME]];
-            c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
-            c[p + 'ClrSysCd'] = ['', Validators.maxLength(4)];
-            c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
-            c[p + 'Acct'] = ['', [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
+            if (!c[p + 'AddrType']) c[p + 'AddrType'] = 'none';
+            if (!c[p + 'AdrLine1']) c[p + 'AdrLine1'] = ['', Validators.maxLength(70)];
+            if (!c[p + 'AdrLine2']) c[p + 'AdrLine2'] = ['', Validators.maxLength(70)];
+            if (!c[p + 'Dept']) c[p + 'Dept'] = ['', Validators.maxLength(70)];
+            if (!c[p + 'SubDept']) c[p + 'SubDept'] = ['', Validators.maxLength(70)];
+            if (!c[p + 'StrtNm']) c[p + 'StrtNm'] = ['', Validators.maxLength(140)];
+            if (!c[p + 'BldgNb']) c[p + 'BldgNb'] = ['', Validators.maxLength(16)];
+            if (!c[p + 'BldgNm']) c[p + 'BldgNm'] = ['', Validators.maxLength(140)];
+            if (!c[p + 'Flr']) c[p + 'Flr'] = ['', Validators.maxLength(70)];
+            if (!c[p + 'PstBx']) c[p + 'PstBx'] = ['', Validators.maxLength(16)];
+            if (!c[p + 'Room']) c[p + 'Room'] = ['', Validators.maxLength(70)];
+            if (!c[p + 'PstCd']) c[p + 'PstCd'] = ['', Validators.maxLength(16)];
+            if (!c[p + 'TwnNm']) c[p + 'TwnNm'] = ['', Validators.maxLength(140)];
+            if (!c[p + 'CtrySubDvsn']) c[p + 'CtrySubDvsn'] = ['', Validators.maxLength(35)];
+            if (!c[p + 'Ctry']) c[p + 'Ctry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
+            if (!c[p + 'TwnLctnNm']) c[p + 'TwnLctnNm'] = ['', Validators.maxLength(140)];
+            if (!c[p + 'DstrctNm']) c[p + 'DstrctNm'] = ['', Validators.maxLength(140)];
+            if (!c[p + 'AdrTpCd']) c[p + 'AdrTpCd'] = [''];
+            if (!c[p + 'AdrTpPrtry']) c[p + 'AdrTpPrtry'] = ['', Validators.maxLength(35)];
+            if (!c[p + 'Name']) c[p + 'Name'] = ['', [Validators.maxLength(140), SAFE_NAME]];
+            if (!c[p + 'Bic']) c[p + 'Bic'] = ['', [Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
+            if (!c[p + 'Lei']) c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
+            if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['', Validators.maxLength(4)];
+            if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
+            if (!c[p + 'Acct']) c[p + 'Acct'] = ['', [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
         });
         // Address prefixes for COV parties (Debtor / Creditor in UndrlygCstmrCdtTrf)
         this.covPartyPrefixes.forEach(p => {
-            c[p + 'AddrType'] = 'none'; c[p + 'AdrLine1'] = ['', Validators.maxLength(70)]; c[p + 'AdrLine2'] = ['', Validators.maxLength(70)];
-            c[p + 'Dept'] = ['', Validators.maxLength(70)]; c[p + 'SubDept'] = ['', Validators.maxLength(70)];
-            c[p + 'StrtNm'] = ['', Validators.maxLength(140)]; c[p + 'BldgNb'] = ['', Validators.maxLength(16)]; c[p + 'BldgNm'] = ['', Validators.maxLength(140)];
-            c[p + 'Flr'] = ['', Validators.maxLength(70)]; c[p + 'PstBx'] = ['', Validators.maxLength(16)]; c[p + 'Room'] = ['', Validators.maxLength(70)];
-            c[p + 'PstCd'] = ['', Validators.maxLength(16)]; c[p + 'TwnNm'] = ['', Validators.maxLength(140)]; c[p + 'CtrySubDvsn'] = ['', Validators.maxLength(35)]; c[p + 'Ctry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
-            c[p + 'TwnLctnNm'] = ['', Validators.maxLength(140)]; c[p + 'DstrctNm'] = ['', Validators.maxLength(140)]; c[p + 'AdrTpCd'] = ['']; c[p + 'AdrTpPrtry'] = ['', Validators.maxLength(35)];
-
-            c[p + 'TwnLctnNm'] = ['', Validators.maxLength(140)]; c[p + 'DstrctNm'] = ['', Validators.maxLength(140)]; c[p + 'AdrTpCd'] = ['']; c[p + 'AdrTpPrtry'] = ['', Validators.maxLength(35)];
+            if (!c[p + 'AddrType']) c[p + 'AddrType'] = 'none';
+            if (!c[p + 'AdrLine1']) c[p + 'AdrLine1'] = ['', Validators.maxLength(70)];
+            if (!c[p + 'AdrLine2']) c[p + 'AdrLine2'] = ['', Validators.maxLength(70)];
+            if (!c[p + 'Dept']) c[p + 'Dept'] = ['', Validators.maxLength(70)];
+            if (!c[p + 'SubDept']) c[p + 'SubDept'] = ['', Validators.maxLength(70)];
+            if (!c[p + 'StrtNm']) c[p + 'StrtNm'] = ['', Validators.maxLength(140)];
+            if (!c[p + 'BldgNb']) c[p + 'BldgNb'] = ['', Validators.maxLength(16)];
+            if (!c[p + 'BldgNm']) c[p + 'BldgNm'] = ['', Validators.maxLength(140)];
+            if (!c[p + 'Flr']) c[p + 'Flr'] = ['', Validators.maxLength(70)];
+            if (!c[p + 'PstBx']) c[p + 'PstBx'] = ['', Validators.maxLength(16)];
+            if (!c[p + 'Room']) c[p + 'Room'] = ['', Validators.maxLength(70)];
+            if (!c[p + 'PstCd']) c[p + 'PstCd'] = ['', Validators.maxLength(16)];
+            if (!c[p + 'TwnNm']) c[p + 'TwnNm'] = ['', Validators.maxLength(140)];
+            if (!c[p + 'CtrySubDvsn']) c[p + 'CtrySubDvsn'] = ['', Validators.maxLength(35)];
+            if (!c[p + 'Ctry']) c[p + 'Ctry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
+            if (!c[p + 'TwnLctnNm']) c[p + 'TwnLctnNm'] = ['', Validators.maxLength(140)];
+            if (!c[p + 'DstrctNm']) c[p + 'DstrctNm'] = ['', Validators.maxLength(140)];
+            if (!c[p + 'AdrTpCd']) c[p + 'AdrTpCd'] = [''];
+            if (!c[p + 'AdrTpPrtry']) c[p + 'AdrTpPrtry'] = ['', Validators.maxLength(35)];
 
             if (p === 'covUltmtDbtr' || p === 'covUltmtCdtr') {
-                c[p + 'IdType'] = 'none';
-                c[p + 'OrgAnyBIC'] = ['', [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
-                c[p + 'OrgLEI'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
-                c[p + 'OrgOthrId'] = ['', Validators.maxLength(35)];
-                c[p + 'OrgOthrSchmeNmCd'] = ['', Validators.maxLength(4)]; c[p + 'OrgOthrSchmeNmPrtry'] = ['', Validators.maxLength(35)]; c[p + 'OrgOthrIssr'] = ['', Validators.maxLength(35)];
-                c[p + 'PrvtDtAndPlcOfBirthDt'] = [''];
-                c[p + 'PrvtDtAndPlcOfBirthPrvc'] = ['', Validators.maxLength(35)];
-                c[p + 'PrvtDtAndPlcOfBirthCity'] = ['', Validators.maxLength(35)];
-                c[p + 'PrvtDtAndPlcOfBirthCtry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
-                c[p + 'PrvtOthrId'] = ['', Validators.maxLength(35)];
-                c[p + 'PrvtOthrSchmeNmCd'] = ['', Validators.maxLength(4)]; c[p + 'PrvtOthrSchmeNmPrtry'] = ['', Validators.maxLength(35)]; c[p + 'PrvtOthrIssr'] = ['', Validators.maxLength(35)];
+                if (!c[p + 'IdType']) c[p + 'IdType'] = 'none';
+                if (!c[p + 'OrgAnyBIC']) c[p + 'OrgAnyBIC'] = ['', [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
+                if (!c[p + 'OrgLEI']) c[p + 'OrgLEI'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
+                if (!c[p + 'OrgOthrId']) c[p + 'OrgOthrId'] = ['', Validators.maxLength(35)];
+                if (!c[p + 'OrgOthrSchmeNmCd']) c[p + 'OrgOthrSchmeNmCd'] = ['', Validators.maxLength(4)];
+                if (!c[p + 'OrgOthrSchmeNmPrtry']) c[p + 'OrgOthrSchmeNmPrtry'] = ['', Validators.maxLength(35)];
+                if (!c[p + 'OrgOthrIssr']) c[p + 'OrgOthrIssr'] = ['', Validators.maxLength(35)];
+                if (!c[p + 'PrvtDtAndPlcOfBirthDt']) c[p + 'PrvtDtAndPlcOfBirthDt'] = [''];
+                if (!c[p + 'PrvtDtAndPlcOfBirthPrvc']) c[p + 'PrvtDtAndPlcOfBirthPrvc'] = ['', Validators.maxLength(35)];
+                if (!c[p + 'PrvtDtAndPlcOfBirthCity']) c[p + 'PrvtDtAndPlcOfBirthCity'] = ['', Validators.maxLength(35)];
+                if (!c[p + 'PrvtDtAndPlcOfBirthCtry']) c[p + 'PrvtDtAndPlcOfBirthCtry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
+                if (!c[p + 'PrvtOthrId']) c[p + 'PrvtOthrId'] = ['', Validators.maxLength(35)];
+                if (!c[p + 'PrvtOthrSchmeNmCd']) c[p + 'PrvtOthrSchmeNmCd'] = ['', Validators.maxLength(4)];
+                if (!c[p + 'PrvtOthrSchmeNmPrtry']) c[p + 'PrvtOthrSchmeNmPrtry'] = ['', Validators.maxLength(35)];
+                if (!c[p + 'PrvtOthrIssr']) c[p + 'PrvtOthrIssr'] = ['', Validators.maxLength(35)];
             } else {
-                c[p + 'Bic'] = ['', [Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
-                c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
-                c[p + 'ClrSysCd'] = ['', Validators.maxLength(4)];
-                c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
+                if (!c[p + 'Bic']) c[p + 'Bic'] = ['', [Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
+                if (!c[p + 'Lei']) c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
+                if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['', Validators.maxLength(4)];
+                if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
             }
         });
         this.form = this.fb.group(c);
@@ -429,36 +481,35 @@ export class Pacs9CovComponent implements OnInit {
         tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${v.amount}</IntrBkSttlmAmt>\n`;
         tx += this.el('IntrBkSttlmDt', v.sttlmDt, 3);
         // PrvsInstgAgts
-        tx += this.agt('PrvsInstgAgt1', 'prvsInstgAgt1', v);
-        tx += this.agt('PrvsInstgAgt2', 'prvsInstgAgt2', v);
-        tx += this.agt('PrvsInstgAgt3', 'prvsInstgAgt3', v);
-        // InstgAgt/InstdAgt in CdtTrfTxInf
-        tx += this.agt('InstgAgt', 'instgAgt', v);
-        tx += this.agt('InstdAgt', 'instdAgt', v);
+        tx += this.agtWithAcct('PrvsInstgAgt1', 'prvsInstgAgt1', v);
+        tx += this.agtWithAcct('PrvsInstgAgt2', 'prvsInstgAgt2', v);
+        tx += this.agtWithAcct('PrvsInstgAgt3', 'prvsInstgAgt3', v);
+        // InstgAgt/InstdAgt
+        tx += this.agtWithAcct('InstgAgt', 'instgAgt', v);
+        tx += this.agtWithAcct('InstdAgt', 'instdAgt', v);
         // IntrmyAgts
-        tx += this.agt('IntrmyAgt1', 'intrmyAgt1', v);
-        tx += this.agt('IntrmyAgt2', 'intrmyAgt2', v);
-        tx += this.agt('IntrmyAgt3', 'intrmyAgt3', v);
-        // Dbtr (FI — BranchAndFinancialInstitutionIdentification8)
+        tx += this.agtWithAcct('IntrmyAgt1', 'intrmyAgt1', v);
+        tx += this.agtWithAcct('IntrmyAgt2', 'intrmyAgt2', v);
+        tx += this.agtWithAcct('IntrmyAgt3', 'intrmyAgt3', v);
+        // Dbtr
+        tx += this.agtWithAcct('Dbtr', 'dbtrFi', v);
+        // DbtrAgt
+        tx += this.agtWithAcct('DbtrAgt', 'dbtrAgt', v);
+        // CdtrAgt
+        tx += this.agtWithAcct('CdtrAgt', 'cdtrAgt', v);
+        // Cdtr (FI)
+        tx += this.agtWithAcct('Cdtr', 'cdtrFi', v);
 
         if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 4), 3);
-        tx += `\t\t\t<Dbtr>\n\t\t\t\t<FinInstnId>\n\t\t\t\t\t<BICFI>${this.e(v.dbtrFiBic)}</BICFI>\n\t\t\t\t</FinInstnId>\n\t\t\t</Dbtr>\n`;
-        if (v.dbtrFiAcct?.trim()) tx += `\t\t\t<DbtrAcct>\n\t\t\t\t<Id>\n\t\t\t\t\t<Othr>\n\t\t\t\t\t\t<Id>${this.e(v.dbtrFiAcct)}</Id>\n\t\t\t\t\t</Othr>\n\t\t\t\t</DbtrAcct>\n`;
-        // DbtrAgt (optional)
-        tx += this.agt('DbtrAgt', 'dbtrAgt', v);
-        // CdtrAgt (optional)
-        tx += this.agt('CdtrAgt', 'cdtrAgt', v);
-        // Cdtr (FI)
-        tx += this.agt('Cdtr', 'cdtrFi', v);
-        if (v.cdtrFiAcct?.trim()) tx += `\t\t\t<CdtrAcct>\n\t\t\t\t<Id>\n\t\t\t\t\t<Othr>\n\t\t\t\t\t\t<Id>${this.e(v.cdtrFiAcct)}</Id>\n\t\t\t\t\t</Othr>\n\t\t\t\t</Id>\n\t\t\t</CdtrAcct>\n`;
 
         // COV: UndrlygCstmrCdtTrf
         tx += this.buildCov(v);
 
 
         let rmtInf = '';
-        if (v.rmtInfType === 'ustrd' && v.rmtInfUstrd) {
-            rmtInf = `\n\t\t\t\t<RmtInf>\n\t\t\t\t\t<Ustrd>${this.e(v.rmtInfUstrd)}</Ustrd>\n\t\t\t\t</RmtInf>`;
+        if (v.rmtInfType === 'ustrd') {
+            if (v.rmtInfUstrd) rmtInf += `\n\t\t\t\t<RmtInf>\n\t\t\t\t\t<Ustrd>${this.e(v.rmtInfUstrd)}</Ustrd>\n\t\t\t\t</RmtInf>`;
+            if (v.rmtInfUstrd2) rmtInf += `\n\t\t\t\t<RmtInf>\n\t\t\t\t\t<Ustrd>${this.e(v.rmtInfUstrd2)}</Ustrd>\n\t\t\t\t</RmtInf>`;
         } else if (v.rmtInfType === 'strd') {
             let cdtrRef = '';
             if (v.rmtInfStrdCdtrRefType && v.rmtInfStrdCdtrRef) {
@@ -475,48 +526,47 @@ export class Pacs9CovComponent implements OnInit {
         const frBic = v.fromBic;
         const toBic = v.toBic;
 
-        this.generatedXml =
-            `<?xml version="1.0" encoding="UTF-8"?>
-<Envelope xmlns="urn:swift:xsd:envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-\t<head:AppHdr xmlns:head="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
-\t\t<head:Fr>
-\t\t\t<head:FIId>
-\t\t\t\t<head:FinInstnId>
-\t\t\t\t\t<head:BICFI>${this.e(frBic)}</head:BICFI>
-\t\t\t\t</head:FinInstnId>
-\t\t\t</head:FIId>
-\t\t</head:Fr>
-\t\t<head:To>
-\t\t\t<head:FIId>
-\t\t\t\t<head:FinInstnId>
-\t\t\t\t\t<head:BICFI>${this.e(toBic)}</head:BICFI>
-\t\t\t\t</head:FinInstnId>
-\t\t\t</head:FIId>
-\t\t</head:To>
-\t\t<head:BizMsgIdr>${this.e(v.bizMsgId)}</head:BizMsgIdr>
-\t\t<head:MsgDefIdr>pacs.009.001.08</head:MsgDefIdr>
-\t\t<head:BizSvc>swift.cbprplus.cov.04</head:BizSvc>
-\t\t<head:CreDt>${creDtTm}</head:CreDt>
-\t</head:AppHdr>
-\t<pacs:Document xmlns:pacs="urn:iso:std:iso:20022:tech:xsd:pacs.009.001.08">
-\t\t<pacs:FICdtTrf>
-\t\t\t<pacs:GrpHdr>
-\t\t\t\t<pacs:MsgId>${this.e(v.msgId)}</pacs:MsgId>
-\t\t\t\t<pacs:CreDtTm>${creDtTm}</pacs:CreDtTm>
-\t\t\t\t<pacs:NbOfTxs>${v.nbOfTxs}</pacs:NbOfTxs>
-\t\t\t\t<pacs:SttlmInf>
-\t\t\t\t\t<pacs:SttlmMtd>${this.e(v.sttlmMtd)}</pacs:SttlmMtd>
-\t\t\t\t</pacs:SttlmInf>
-\t\t\t</pacs:GrpHdr>
-\t\t\t<pacs:CdtTrfTxInf>
-${this.prefixLines(tx, 'pacs:')}\t\t\t</pacs:CdtTrfTxInf>
-\t\t</pacs:FICdtTrf>
-\t</pacs:Document>
-</Envelope>`;
+        this.generatedXml = `<?xml version="1.0" encoding="UTF-8"?>
+<BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
+	<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
+		<Fr>
+			<FIId>
+				<FinInstnId>
+					<BICFI>${this.e(frBic)}</BICFI>
+				</FinInstnId>
+			</FIId>
+		</Fr>
+		<To>
+			<FIId>
+				<FinInstnId>
+					<BICFI>${this.e(toBic)}</BICFI>
+				</FinInstnId>
+			</FIId>
+		</To>
+		<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>
+		<MsgDefIdr>pacs.009.001.08</MsgDefIdr>
+		<BizSvc>swift.cbprplus.cov.04</BizSvc>
+		<CreDt>${creDtTm}</CreDt>
+	</AppHdr>
+	<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.009.001.08">
+		<FICdtTrf>
+			<GrpHdr>
+				<MsgId>${this.e(v.msgId)}</MsgId>
+				<CreDtTm>${creDtTm}</CreDtTm>
+				<NbOfTxs>${v.nbOfTxs}</NbOfTxs>
+				<SttlmInf>
+					<SttlmMtd>${this.e(v.sttlmMtd)}</SttlmMtd>
+				</SttlmInf>
+			</GrpHdr>
+			<CdtTrfTxInf>
+${tx}\t\t\t</CdtTrfTxInf>
+		</FICdtTrf>
+	</Document>
+</BusMsgEnvlp>`;
         this.onEditorChange(this.generatedXml, true);
     }
 
-    // Prefix all XML element tags with pacs: namespace
+    // Prefix all XML element tags with pacs: namespace (Deprecated - using default namespaces now)
     private prefixLines(xml: string, ns: string): string {
         return xml.replace(/<(\/?)([\w]+)([ >])/g, `<$1${ns}$2$3`);
     }
@@ -531,6 +581,14 @@ ${this.prefixLines(tx, 'pacs:')}\t\t\t</pacs:CdtTrfTxInf>
         const bic = v[prefix + 'Bic']; if (!bic) return '';
         return `\t\t\t\t<${tag}>\n\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n${this.addrXml(v, prefix, 6)}\t\t\t\t\t</FinInstnId>\n\t\t\t\t</${tag}>\n`;
     }
+    agtWithAcct(tag: string, prefix: string, v: any) {
+        let res = this.agt(tag, prefix, v);
+        if (v[prefix + 'Acct']?.trim()) {
+            res += this.tag(tag + 'Acct', this.tag('Id', this.tag('Othr', this.el('Id', v[prefix + 'Acct'], 6), 5), 4), 3);
+        }
+        return res;
+    }
+
     agt(tag: string, prefix: string, v: any) {
         const bic = v[prefix + 'Bic'];
         const name = v[prefix + 'Name'];
@@ -548,9 +606,9 @@ ${this.prefixLines(tx, 'pacs:')}\t\t\t</pacs:CdtTrfTxInf>
             content += `\t\t\t\t\t\t<MmbId>${this.e(clrMmb)}</MmbId>\n`;
             content += `\t\t\t\t\t</ClrSysMmbId>\n`;
         }
+        if (lei) content += `\t\t\t\t\t<LEI>${this.e(lei)}</LEI>\n`;
         if (name) content += `\t\t\t\t\t<Nm>${this.e(name)}</Nm>\n`;
         content += this.addrXml(v, prefix, 5);
-        if (lei) content += `\t\t\t\t\t<LEI>${this.e(lei)}</LEI>\n`;
 
         return `\t\t\t<${tag}>\n\t\t\t\t<FinInstnId>\n${content}\t\t\t\t</FinInstnId>\n\t\t\t</${tag}>\n`;
     }
@@ -657,19 +715,12 @@ ${this.prefixLines(tx, 'pacs:')}\t\t\t</pacs:CdtTrfTxInf>
     }
 
     // COV: UndrlygCstmrCdtTrf (CreditTransferTransaction62)
-    // XSD element order: UltmtDbtr?, InitgPty?, Dbtr, DbtrAcct?, DbtrAgt, DbtrAgtAcct?,
+    // XSD element order: InitgPty?, Dbtr, DbtrAcct?, DbtrAgt, DbtrAgtAcct?,
     //   PrvsInstgAgt1..3?, IntrmyAgt1..3?, CdtrAgt, CdtrAgtAcct?, Cdtr, CdtrAcct?,
-    //   UltmtCdtr?, InstrForCdtrAgt*, InstrForNxtAgt*, RmtInf?, InstdAmt?
+    //   UltmtCdtr?, InstrForCdtrAgt*, InstrForNxtAgt*, Purp?, RmtInf?, InstdAmt?
     private buildCov(v: any): string {
         let b = `\t\t\t<UndrlygCstmrCdtTrf>\n`;
-        // UltmtDbtr (optional)
-        if (v.covUltmtDbtrName?.trim()) {
-            let ud = `\t\t\t\t\t<Nm>${this.e(v.covUltmtDbtrName)}</Nm>\n`;
-            const udAddr = this.addrXml(v, 'covUltmtDbtr', 5);
-            if (udAddr) ud += udAddr;
-            ud += this.partyIdXml(v, 'covUltmtDbtr', 5);
-            b += `\t\t\t\t<UltmtDbtr>\n${ud}\t\t\t\t</UltmtDbtr>\n`;
-        }
+        
         const formatAcct = (val: string, tabs: number) => {
             if (!val) return '';
             const ibanCountries = ['AD', 'AE', 'AL', 'AT', 'AZ', 'BA', 'BE', 'BG', 'BH', 'BR', 'BY', 'CH', 'CR', 'CY', 'CZ', 'DE', 'DK', 'DO', 'EE', 'EG', 'ES', 'FI', 'FO', 'FR', 'GB', 'GE', 'GI', 'GL', 'GR', 'GT', 'HR', 'HU', 'IE', 'IL', 'IQ', 'IS', 'IT', 'JO', 'KW', 'KZ', 'LB', 'LI', 'LT', 'LU', 'LV', 'MC', 'MD', 'ME', 'MK', 'MR', 'MT', 'MU', 'NL', 'NO', 'PK', 'PL', 'PS', 'PT', 'QA', 'RO', 'RS', 'RU', 'SA', 'SC', 'SE', 'SI', 'SK', 'SM', 'ST', 'SV', 'TL', 'TN', 'TR', 'UA', 'VA', 'VG', 'XK'];
@@ -681,7 +732,7 @@ ${this.prefixLines(tx, 'pacs:')}\t\t\t</pacs:CdtTrfTxInf>
         };
 
         // Dbtr (PartyIdentification272)
-        if (v.covDbtrName || v.covDbtrBic || v.covDbtrLei || v.covDbtrClrSysMmbId || v.covDbtrAddrType !== 'none') {
+        if (v.covDbtrName?.trim() || v.covDbtrBic?.trim() || v.covDbtrLei?.trim() || v.covDbtrClrSysMmbId?.trim() || (v.covDbtrAddrType && v.covDbtrAddrType !== 'none')) {
             b += this.partyAgentXml('Dbtr', 'covDbtr', v, 4);
         }
         // DbtrAcct
@@ -690,10 +741,18 @@ ${this.prefixLines(tx, 'pacs:')}\t\t\t</pacs:CdtTrfTxInf>
         }
         // DbtrAgt
         if (v.covDbtrAgtBic?.trim()) b += `\t\t\t\t<DbtrAgt>\n\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t<BICFI>${this.e(v.covDbtrAgtBic)}</BICFI>\n\t\t\t\t\t</FinInstnId>\n\t\t\t\t</DbtrAgt>\n`;
+        // DbtrAgtAcct
+        if (v.covDbtrAgtAcct?.trim()) {
+             b += `\t\t\t\t<DbtrAgtAcct>\n\t\t\t\t\t<Id>${formatAcct(v.covDbtrAgtAcct, 5)}\t\t\t\t\t</Id>\n\t\t\t\t</DbtrAgtAcct>\n`;
+        }
         // CdtrAgt
         if (v.covCdtrAgtBic?.trim()) b += `\t\t\t\t<CdtrAgt>\n\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t<BICFI>${this.e(v.covCdtrAgtBic)}</BICFI>\n\t\t\t\t\t</FinInstnId>\n\t\t\t\t</CdtrAgt>\n`;
+        // CdtrAgtAcct
+        if (v.covCdtrAgtAcct?.trim()) {
+             b += `\t\t\t\t<CdtrAgtAcct>\n\t\t\t\t\t<Id>${formatAcct(v.covCdtrAgtAcct, 5)}\t\t\t\t\t</Id>\n\t\t\t\t</CdtrAgtAcct>\n`;
+        }
         // Cdtr (PartyIdentification272)
-        if (v.covCdtrName || v.covCdtrBic || v.covCdtrLei || v.covCdtrClrSysMmbId || v.covCdtrAddrType !== 'none') {
+        if (v.covCdtrName?.trim() || v.covCdtrBic?.trim() || v.covCdtrLei?.trim() || v.covCdtrClrSysMmbId?.trim() || (v.covCdtrAddrType && v.covCdtrAddrType !== 'none')) {
             b += this.partyAgentXml('Cdtr', 'covCdtr', v, 4);
         }
         // CdtrAcct
@@ -701,27 +760,53 @@ ${this.prefixLines(tx, 'pacs:')}\t\t\t</pacs:CdtTrfTxInf>
             b += `\t\t\t\t<CdtrAcct>\n\t\t\t\t\t<Id>${formatAcct(v.covCdtrAcct, 5)}\t\t\t\t\t</Id>\n\t\t\t\t</CdtrAcct>\n`;
         }
         // UltmtCdtr (optional)
-        if (v.covUltmtCdtrName?.trim()) {
-            let uc = `\t\t\t\t\t<Nm>${this.e(v.covUltmtCdtrName)}</Nm>\n`;
+        if (v.covUltmtCdtrName?.trim() || (v.covUltmtCdtrAddrType && v.covUltmtCdtrAddrType !== 'none') || (v.covUltmtCdtrIdType && v.covUltmtCdtrIdType !== 'none')) {
+            let uc = this.el('Nm', v.covUltmtCdtrName, 5);
             const ucAddr = this.addrXml(v, 'covUltmtCdtr', 5);
             if (ucAddr) uc += ucAddr;
             uc += this.partyIdXml(v, 'covUltmtCdtr', 5);
             b += `\t\t\t\t<UltmtCdtr>\n${uc}\t\t\t\t</UltmtCdtr>\n`;
         }
-        // InstrForCdtrAgt (optional)
-        if (v.covInstrForCdtrAgtCd?.trim() || v.covInstrForCdtrAgtInstrInf?.trim()) {
-            let instr = '';
-            if (v.covInstrForCdtrAgtCd?.trim()) instr += `\t\t\t\t\t<Cd>${this.e(v.covInstrForCdtrAgtCd)}</Cd>\n`;
-            if (v.covInstrForCdtrAgtInstrInf?.trim()) instr += `\t\t\t\t\t<InstrInf>${this.e(v.covInstrForCdtrAgtInstrInf)}</InstrInf>\n`;
-            b += `\t\t\t\t<InstrForCdtrAgt>\n${instr}\t\t\t\t</InstrForCdtrAgt>\n`;
+        // InstrForCdtrAgt (optional, max 2)
+        for (let i = 1; i <= 2; i++) {
+            const cd = v[`covInstrForCdtrAgt${i}Cd`]?.trim();
+            const txt = v[`covInstrForCdtrAgt${i}InfTxt`]?.trim();
+            if (cd || txt) {
+                let inner = '';
+                if (cd) inner += this.el('Cd', cd, 5);
+                if (txt) inner += this.el('InstrInf', txt, 5);
+                b += `\t\t\t\t<InstrForCdtrAgt>\n${inner}\t\t\t\t</InstrForCdtrAgt>\n`;
+            }
         }
-        // InstrForNxtAgt (optional)
-        if (v.covInstrForNxtAgtInstrInf?.trim()) {
-            b += `\t\t\t\t<InstrForNxtAgt>\n\t\t\t\t\t<InstrInf>${this.e(v.covInstrForNxtAgtInstrInf)}</InstrInf>\n\t\t\t\t</InstrForNxtAgt>\n`;
+
+        // InstrForNxtAgt (optional, max 6)
+        for (let i = 1; i <= 6; i++) {
+            const cd = v[`covInstrForNxtAgt${i}Cd`]?.trim();
+            const txt = v[`covInstrForNxtAgt${i}InfTxt`]?.trim();
+            if (cd || txt) {
+                let inner = '';
+                if (cd) inner += this.el('Cd', cd, 5);
+                if (txt) inner += this.el('InstrInf', txt, 5);
+                b += `\t\t\t\t<InstrForNxtAgt>\n${inner}\t\t\t\t</InstrForNxtAgt>\n`;
+            }
+        }
+        // Purp
+        if (v.covPurpCd?.trim()) {
+            b += `\t\t\t\t<Purp>\n${this.el('Cd', v.covPurpCd, 5)}\t\t\t\t</Purp>\n`;
+        }
+        // Tax (optional)
+        if (v.covTaxRef?.trim() || v.covTaxAmt?.trim()) {
+            b += `\t\t\t\t<Tax>\n`;
+            if (v.covTaxRef?.trim()) b += `\t\t\t\t\t<RefNb>${this.e(v.covTaxRef)}</RefNb>\n`;
+            if (v.covTaxAmt?.trim()) b += `\t\t\t\t\t<TtlTaxAmt Ccy="${this.e(v.covTaxCcy || v.currency)}">${v.covTaxAmt}</TtlTaxAmt>\n`;
+            b += `\t\t\t\t</Tax>\n`;
         }
         // RmtInf (optional — Ustrd)
         if (v.covRmtInfUstrd?.trim()) {
             b += `\t\t\t\t<RmtInf>\n\t\t\t\t\t<Ustrd>${this.e(v.covRmtInfUstrd)}</Ustrd>\n\t\t\t\t</RmtInf>\n`;
+        }
+        if (v.covRmtInfUstrd2?.trim()) {
+            b += `\t\t\t\t<RmtInf>\n\t\t\t\t\t<Ustrd>${this.e(v.covRmtInfUstrd2)}</Ustrd>\n\t\t\t\t</RmtInf>\n`;
         }
         // InstdAmt (optional)
         if (v.covInstdAmt?.trim() && v.covInstdAmtCcy?.trim()) {
@@ -730,6 +815,7 @@ ${this.prefixLines(tx, 'pacs:')}\t\t\t</pacs:CdtTrfTxInf>
         b += `\t\t\t</UndrlygCstmrCdtTrf>\n`;
         return b;
     }
+
 
     // Validation
     validateMessage() {
@@ -936,6 +1022,41 @@ ${this.prefixLines(tx, 'pacs:')}\t\t\t</pacs:CdtTrfTxInf>
             setVal('amount', amtEl ? (amtEl.textContent || '') : '');
             setVal('currency', amtEl ? (amtEl.getAttribute('Ccy') || '') : '');
 
+            const mainRmts = doc.getElementsByTagName('RmtInf');
+            // Filter out rmts that are inside UndrlygCstmrCdtTrf
+            const isInsideCov = (node: Node) => {
+                let curr = node.parentNode;
+                while (curr) {
+                    if (curr.nodeName === 'UndrlygCstmrCdtTrf') return true;
+                    curr = curr.parentNode;
+                }
+                return false;
+            };
+            const coreRmts = Array.from(mainRmts).filter(r => !isInsideCov(r));
+            if (coreRmts[0]) {
+                const ustrd = coreRmts[0].getElementsByTagName('Ustrd')[0]?.textContent;
+                if (ustrd) {
+                    setVal('rmtInfType', 'ustrd');
+                    setVal('rmtInfUstrd', ustrd);
+                } else {
+                    const strd = coreRmts[0].getElementsByTagName('Strd')[0];
+                    if (strd) {
+                        setVal('rmtInfType', 'strd');
+                        const ref = strd.getElementsByTagName('CdtrRefInf')[0];
+                        if (ref) {
+                            setVal('rmtInfStrdCdtrRefType', ref.getElementsByTagName('Cd')[0]?.textContent || '');
+                            setVal('rmtInfStrdCdtrRef', ref.getElementsByTagName('Ref')[0]?.textContent || '');
+                        }
+                        setVal('rmtInfStrdAddtlRmtInf', strd.getElementsByTagName('AddtlRmtInf')[0]?.textContent || '');
+                    }
+                }
+            } else {
+                setVal('rmtInfType', 'none');
+            }
+            if (coreRmts[1] && patch['rmtInfType'] === 'ustrd') {
+                setVal('rmtInfUstrd2', coreRmts[1].getElementsByTagName('Ustrd')[0]?.textContent || '');
+            }
+
             const creDtTm = doc.getElementsByTagName('CreDtTm')[0] || doc.getElementsByTagName('CreDt')[0];
             setVal('creDtTm', creDtTm ? (creDtTm.textContent || '') : '');
 
@@ -950,8 +1071,7 @@ ${this.prefixLines(tx, 'pacs:')}\t\t\t</pacs:CdtTrfTxInf>
             setVal('svcLvlPrtry', tryTag('SvcLvl', 'Prtry'));
             setVal('lclInstrmCd', tryTag('LclInstrm', 'Cd'));
             setVal('lclInstrmPrtry', tryTag('LclInstrm', 'Prtry'));
-            setVal('ctgyPurpPrtry', tryTag('CtgyPurp', 'Prtry'));
-
+            setVal('purpCd', tryTag('Purp', 'Cd'));
 
             this.agentPrefixes.forEach(p => {
                 let tag = p.charAt(0).toUpperCase() + p.slice(1);
@@ -968,43 +1088,39 @@ ${this.prefixLines(tx, 'pacs:')}\t\t\t</pacs:CdtTrfTxInf>
                         const clr = fi.getElementsByTagName('ClrSysMmbId')[0];
                         if (clr) {
                             patch[p + 'ClrSysMmbId'] = clr.getElementsByTagName('MmbId')[0]?.textContent || '';
-                            patch[p + 'ClrSysCd'] = clr.getElementsByTagName('ClrSysId')[0]?.getElementsByTagName('Cd')[0]?.textContent || '';
+                            const clrId = clr.getElementsByTagName('ClrSysId')[0];
+                            if (clrId) {
+                                patch[p + 'ClrSysCd'] = clrId.getElementsByTagName('Cd')[0]?.textContent || '';
+                            }
                         }
                     }
                 }
             });
 
-            // Re-fetch Acct since it's mapped to a different tag structure in pacs9
-            setVal('dbtrFiAcct', tryTag('DbtrAcct', 'Id'));
-            setVal('cdtrFiAcct', tryTag('CdtrAcct', 'Id'));
-
-            const instgBic = tryTag('InstgAgt', 'BICFI');
-            setVal('instgAgtBic', instgBic || patch.fromBic);
-            const instdBic = tryTag('InstdAgt', 'BICFI');
-            setVal('instdAgtBic', instdBic || patch.toBic);
-
-            // agents
-            const mapAgt = (tag: string, prefix: string) => {
-                const n = doc.getElementsByTagName('UndrlygCstmrCdtTrf')[0];
-                let found = false;
-                if (n) {
-                    const t = n.getElementsByTagName(tag)[0];
-                    if (t) {
-                        setVal(prefix + 'Bic', t.getElementsByTagName('BICFI')[0]?.textContent || '');
-                        found = true;
-                    }
+            // Fetch accounts for all agents/actors (main)
+            this.agentPrefixes.forEach(p => {
+                let tag = p.charAt(0).toUpperCase() + p.slice(1);
+                if (p === 'dbtrFi') tag = 'Dbtr';
+                if (p === 'cdtrFi') tag = 'Cdtr';
+                const acctTag = tag + 'Acct';
+                const node = doc.getElementsByTagName(acctTag)[0];
+                if (node) {
+                    patch[p + 'Acct'] = node.getElementsByTagName('Id')[0]?.getElementsByTagName('Othr')[0]?.getElementsByTagName('Id')[0]?.textContent || '';
                 }
-                if (!found) setVal(prefix + 'Bic', tryTag(tag, 'BICFI'));
-            };
+            });
 
-            mapAgt('PrvsInstgAgt1', 'prvsInstgAgt1');
-            mapAgt('PrvsInstgAgt2', 'prvsInstgAgt2');
-            mapAgt('PrvsInstgAgt3', 'prvsInstgAgt3');
-            mapAgt('IntrmyAgt1', 'intrmyAgt1');
-            mapAgt('IntrmyAgt2', 'intrmyAgt2');
-            mapAgt('IntrmyAgt3', 'intrmyAgt3');
-            mapAgt('DbtrAgt', 'dbtrAgt');
-            mapAgt('CdtrAgt', 'cdtrAgt');
+            // Re-fetch COV specific accounts
+            const covNode = doc.getElementsByTagName('UndrlygCstmrCdtTrf')[0];
+            if (covNode) {
+                ['Dbtr', 'DbtrAgt', 'CdtrAgt', 'Cdtr'].forEach(tag => {
+                    const prefix = 'cov' + tag;
+                    const node = covNode.getElementsByTagName(tag + 'Acct')[0];
+                    if (node) {
+                        const idNode = node.getElementsByTagName('Id')[0];
+                        patch[prefix + 'Acct'] = (idNode?.getElementsByTagName('IBAN')[0]?.textContent || idNode?.getElementsByTagName('Othr')[0]?.getElementsByTagName('Id')[0]?.textContent || '');
+                    }
+                });
+            }
 
             const mapAddr = (tag: string, prefix: string) => {
                 ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry', 'AdrLine1', 'AdrLine2', 'AdrTpCd', 'AdrTpPrtry'].forEach(f => patch[prefix + f] = '');
@@ -1013,7 +1129,6 @@ ${this.prefixLines(tx, 'pacs:')}\t\t\t</pacs:CdtTrfTxInf>
                 const p = doc.getElementsByTagName(tag)[0];
                 if (!p) return;
 
-                // --- Added ID Parsing since we generate PartyId ---
                 const idNode = p.getElementsByTagName('Id')[0];
                 patch[prefix + 'IdType'] = 'none';
                 ['OrgAnyBIC', 'OrgLEI', 'OrgOthrId', 'OrgOthrSchmeNmCd', 'OrgOthrSchmeNmPrtry', 'OrgOthrIssr', 'PrvtDtAndPlcOfBirthDt', 'PrvtDtAndPlcOfBirthPrvc', 'PrvtDtAndPlcOfBirthCity', 'PrvtDtAndPlcOfBirthCtry', 'PrvtOthrId', 'PrvtOthrSchmeNmCd', 'PrvtOthrSchmeNmPrtry', 'PrvtOthrIssr', 'Bic', 'Lei', 'ClrSysCd', 'ClrSysMmbId', 'Acct'].forEach(f => patch[prefix + f] = '');
@@ -1060,7 +1175,6 @@ ${this.prefixLines(tx, 'pacs:')}\t\t\t</pacs:CdtTrfTxInf>
                         }
                     }
                 }
-                // ------------------------------------------------
 
                 const addr = p.getElementsByTagName('PstlAdr')[0];
                 if (!addr) return;
@@ -1082,43 +1196,72 @@ ${this.prefixLines(tx, 'pacs:')}\t\t\t</pacs:CdtTrfTxInf>
             };
             this.agentPrefixes.forEach(p => mapAddr(p.charAt(0).toUpperCase() + p.slice(1), p));
 
-            // CLEAR COV fields FIRST before replacing if found
-            ['covUltmtDbtrName', 'covDbtrName', 'covDbtrAcct', 'covDbtrAgtBic', 'covCdtrAgtBic', 'covCdtrName',
-                'covCdtrAcct', 'covUltmtCdtrName', 'covInstrForCdtrAgtCd', 'covInstrForCdtrAgtInstrInf',
-                'covInstrForNxtAgtInstrInf', 'covRmtInfUstrd', 'covInstdAmt', 'covInstdAmtCcy'].forEach(f => patch[f] = '');
-
             // COV fields
             const cov = doc.getElementsByTagName('UndrlygCstmrCdtTrf')[0];
             if (cov) {
-                setVal('covUltmtDbtrName', tryTag(cov, 'UltmtDbtr Nm'));
-                setVal('covDbtrName', tryTag(cov, 'Dbtr Nm'));
+                const dbtr = cov.getElementsByTagName('Dbtr')[0];
+                if (dbtr) setVal('covDbtrName', dbtr.getElementsByTagName('Nm')[0]?.textContent || '');
+
                 const covDbtrAcct = cov.getElementsByTagName('DbtrAcct')[0];
                 if (covDbtrAcct) {
                     setVal('covDbtrAcct', covDbtrAcct.getElementsByTagName('IBAN')[0]?.textContent || covDbtrAcct.getElementsByTagName('Othr')[0]?.getElementsByTagName('Id')[0]?.textContent || '');
                 }
-                setVal('covDbtrAgtBic', tryTag(cov, 'DbtrAgt BICFI'));
-                setVal('covCdtrAgtBic', tryTag(cov, 'CdtrAgt BICFI'));
-                setVal('covCdtrName', tryTag(cov, 'Cdtr Nm'));
+                
+                const dbtrAgt = cov.getElementsByTagName('DbtrAgt')[0];
+                if (dbtrAgt) setVal('covDbtrAgtBic', dbtrAgt.getElementsByTagName('BICFI')[0]?.textContent || '');
+
+                const cdtrAgt = cov.getElementsByTagName('CdtrAgt')[0];
+                if (cdtrAgt) setVal('covCdtrAgtBic', cdtrAgt.getElementsByTagName('BICFI')[0]?.textContent || '');
+
+                const cdtr = cov.getElementsByTagName('Cdtr')[0];
+                if (cdtr) setVal('covCdtrName', cdtr.getElementsByTagName('Nm')[0]?.textContent || '');
+
                 const covCdtrAcct = cov.getElementsByTagName('CdtrAcct')[0];
                 if (covCdtrAcct) {
                     setVal('covCdtrAcct', covCdtrAcct.getElementsByTagName('IBAN')[0]?.textContent || covCdtrAcct.getElementsByTagName('Othr')[0]?.getElementsByTagName('Id')[0]?.textContent || '');
                 }
-                setVal('covUltmtCdtrName', tryTag(cov, 'UltmtCdtr Nm'));
-                setVal('covInstrForCdtrAgtCd', tryTag(cov, 'InstrForCdtrAgt Cd'));
-                setVal('covInstrForCdtrAgtInstrInf', tryTag(cov, 'InstrForCdtrAgt InstrInf'));
-                setVal('covInstrForNxtAgtInstrInf', tryTag(cov, 'InstrForNxtAgt InstrInf'));
-                setVal('covRmtInfUstrd', tryTag(cov, 'RmtInf Ustrd'));
+
+                const uCdtr = cov.getElementsByTagName('UltmtCdtr')[0];
+                if (uCdtr) setVal('covUltmtCdtrName', uCdtr.getElementsByTagName('Nm')[0]?.textContent || '');
+
+                const instrs = cov.getElementsByTagName('InstrForCdtrAgt');
+                if (instrs[0]) {
+                    setVal('covInstrForCdtrAgtCd', instrs[0].getElementsByTagName('Cd')[0]?.textContent || '');
+                    setVal('covInstrForCdtrAgtInstrInf', instrs[0].getElementsByTagName('InstrInf')[0]?.textContent || '');
+                }
+                if (instrs[1]) {
+                    setVal('covInstrForCdtrAgtCd2', instrs[1].getElementsByTagName('Cd')[0]?.textContent || '');
+                    setVal('covInstrForCdtrAgtInstrInf2', instrs[1].getElementsByTagName('InstrInf')[0]?.textContent || '');
+                }
+                
+                const nxtInstrs = cov.getElementsByTagName('InstrForNxtAgt');
+                if (nxtInstrs[0]) setVal('covInstrForNxtAgtInstrInf', nxtInstrs[0].getElementsByTagName('InstrInf')[0]?.textContent || '');
+                if (nxtInstrs[1]) setVal('covInstrForNxtAgtInstrInf2', nxtInstrs[1].getElementsByTagName('InstrInf')[0]?.textContent || '');
+                if (nxtInstrs[2]) setVal('covInstrForNxtAgtInstrInf3', nxtInstrs[2].getElementsByTagName('InstrInf')[0]?.textContent || '');
+
+                const tax = cov.getElementsByTagName('Tax')[0];
+                if (tax) {
+                    setVal('covTaxRef', tax.getElementsByTagName('RefNb')[0]?.textContent || '');
+                    const taxAmt = tax.getElementsByTagName('TtlTaxAmt')[0];
+                    if (taxAmt) {
+                        setVal('covTaxAmt', taxAmt.textContent || '');
+                        setVal('covTaxCcy', taxAmt.getAttribute('Ccy') || '');
+                    }
+                }
+
+                const rmts = cov.getElementsByTagName('RmtInf');
+                if (rmts[0]) setVal('covRmtInfUstrd', rmts[0].getElementsByTagName('Ustrd')[0]?.textContent || '');
+                if (rmts[1]) setVal('covRmtInfUstrd2', rmts[1].getElementsByTagName('Ustrd')[0]?.textContent || '');
 
                 const covAmt = cov.getElementsByTagName('InstdAmt')[0];
                 setVal('covInstdAmt', covAmt ? (covAmt.textContent || '') : '');
                 setVal('covInstdAmtCcy', covAmt ? (covAmt.getAttribute('Ccy') || '') : '');
 
-                mapAddr('UltmtDbtr', 'covUltmtDbtr');
                 mapAddr('Dbtr', 'covDbtr');
                 mapAddr('Cdtr', 'covCdtr');
                 mapAddr('UltmtCdtr', 'covUltmtCdtr');
-            } else {
-                mapAddr('UltmtDbtr', 'covUltmtDbtr');
+            }
+ else {
                 mapAddr('Dbtr', 'covDbtr');
                 mapAddr('Cdtr', 'covCdtr');
                 mapAddr('UltmtCdtr', 'covUltmtCdtr');

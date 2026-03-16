@@ -1,571 +1,315 @@
-<div class="container">
+<div class="container" (click)="$event.stopPropagation()">
     <header>
         <h1>Notification To Receive (camt.057) <mat-icon class="title-icon">account_balance</mat-icon></h1>
-        <p style="margin-top: -1rem;">Generate ISO 20022 camt.057.001.06 message for manual entry</p>
+        <p style="margin-top: -1rem;">Visual camt.057 Message Builder</p>
     </header>
 
     <div class="split-view">
         <div class="left-panel">
             <form [formGroup]="form" class="content-box">
                 <div class="grid">
-                    <!-- Header Info -->
                     <div class="section-title">Message Header</div>
-                    <div class="form-group intermediary-field">
-                        <label>Fr BIC <span class="req">*</span></label>
-                        <input type="text" formControlName="fromBic" maxlength="11" pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$" required placeholder="e.g. BBXXUS33XXX"><div class="validation-msg" *ngIf="err('fromBic') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('fromBic', 11) as h">{{h}}</div>
+                    <div class="form-group"><label>Sender BIC <span class="req">*</span></label><input formControlName="fromBic" maxlength="11"></div>
+                    <div class="form-group"><label>Receiver BIC <span class="req">*</span></label><input formControlName="toBic" maxlength="11"></div>
+                    <div class="form-group"><label>Business Message ID <span class="req">*</span></label><input formControlName="bizMsgId" maxlength="35"></div>
+                    <div class="form-group"><label>Business Service <span class="req">*</span></label><input formControlName="bizSvc" maxlength="35"></div>
+                    <div class="form-group"><label>Creation Date <span class="req">*</span></label><input formControlName="creDtTm"></div>
+
+                    <div class="section-title">Item Detail</div>
+                    <div class="form-group"><label>Item ID <span class="req">*</span></label><input formControlName="itmId" maxlength="35"></div>
+                    <div class="form-group"><label>Amount <span class="req">*</span></label><input formControlName="amount"></div>
+                    <div class="form-group"><label>Currency <span class="req">*</span></label>
+                        <select formControlName="currency"><option *ngFor="let c of currencies" [value]="c">{{c}}</option></select>
                     </div>
-                    <div class="form-group intermediary-field">
-                        <label>To BIC <span class="req">*</span></label>
-                        <input type="text" formControlName="toBic" maxlength="11" pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$" required placeholder="e.g. CCXXGB2LXXX"><div class="validation-msg" *ngIf="err('toBic') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('toBic', 11) as h">{{h}}</div>
-                    </div>
-                    <div class="form-group intermediary-field">
-                        <label>Biz Message ID <span class="req">*</span></label>
-                        <input type="text" formControlName="bizMsgId" maxlength="35" required><div class="validation-msg" *ngIf="err('bizMsgId') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('bizMsgId', 35) as h">{{h}}</div>
-                    </div>
-                    <div class="form-group intermediary-field">
-                        <label>Biz Service <span class="req">*</span></label>
-                        <input type="text" formControlName="bizSvc" maxlength="35" required placeholder="e.g. swift.cbprplus.01"><div class="validation-msg" *ngIf="err('bizSvc') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('bizSvc', 35) as h">{{h}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Message ID (GrpHdr) <span class="req">*</span></label>
-                        <input type="text" formControlName="msgId" maxlength="35" required><div class="validation-msg" *ngIf="err('msgId') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('msgId', 35) as h">{{h}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Creation Date Time <span class="req">*</span></label>
-                        <input type="text" formControlName="creDtTm" required>
-                        <div class="validation-msg" *ngIf="err('creDtTm') as e">{{e}}</div>
+                    <div class="form-group"><label>Expected Value Date <span class="req">*</span></label><input type="date" formControlName="valDt"></div>
+                    <div class="form-group"><label>End to End ID</label><input formControlName="endToEndId" maxlength="35"></div>
+                    <div class="form-group"><label>UETR</label><input formControlName="uetr" maxlength="36"></div>
+                    <div class="form-group"><label>Purpose Code</label>
+                        <select formControlName="purpCd"><option value="">None</option><option *ngFor="let p of purposes" [value]="p">{{p}}</option></select>
                     </div>
 
-                    <!-- Item Info -->
-                    <div class="section-title">Item Detail (Payment Notification)</div>
-                    <div class="form-group">
-                        <label>Item ID <span class="req">*</span></label>
-                        <input type="text" formControlName="itmId" maxlength="35" required><div class="validation-msg" *ngIf="err('itmId') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('itmId', 35) as h">{{h}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>End to End ID <span class="opt">(Optional)</span></label>
-                        <input type="text" formControlName="endToEndId" maxlength="35"><div class="validation-msg" *ngIf="err('endToEndId') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('endToEndId', 35) as h">{{h}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>UETR <span class="opt">(Optional)</span></label>
-                        <input type="text" formControlName="uetr" maxlength="36" pattern="^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"><div class="validation-msg" *ngIf="err('uetr') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('uetr', 36) as h">{{h}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Amount <span class="req">*</span></label>
-                        <input type="text" formControlName="amount" pattern="^\d{1,18}(\.\d{1,5})?$" step="any"
-                            required>
-                        <div class="validation-msg" *ngIf="err('amount') as e">{{e}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Currency <span class="req">*</span></label>
-                        <select formControlName="currency" required>
-                            <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
-                        </select>
-                        <div class="validation-msg" *ngIf="err('currency') as e">{{e}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Expected Value Date <span class="req">*</span></label>
-                        <input type="date" formControlName="valDt" required>
-                        <div class="validation-msg" *ngIf="err('valDt') as e">{{e}}</div>
+                    <div class="section-title">Notification Detail</div>
+                    <div class="form-group"><label>Message ID <span class="req">*</span></label><input formControlName="msgId" maxlength="35"></div>
+                    <div class="form-group"><label>Notification ID <span class="req">*</span></label><input formControlName="ntfctnId" maxlength="35"></div>
+
+
+                    <div class="party-group">
+                        <div class="party-group-title">Expected Debtor Information</div>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtr',isAgent:false, title:'Debtor'}"></ng-container>
                     </div>
 
-                    <!-- Account Info -->
-                    <div class="section-title">Notification Account Detail</div>
-                    <div class="form-group">
-                        <label>Notification ID <span class="req">*</span></label>
-                        <input type="text" formControlName="ntfctnId" maxlength="35" required><div class="validation-msg" *ngIf="err('ntfctnId') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('ntfctnId', 35) as h">{{h}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Account IBAN <span class="req">*</span></label>
-                        <input type="text" formControlName="acctIban" maxlength="34" pattern="^[A-Z]{2}[0-9]{2}[a-zA-Z0-9]{1,30}$" required><div class="validation-msg" *ngIf="err('acctIban') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('acctIban', 34) as h">{{h}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Account Owner Name <span class="opt">(Optional)</span></label>
-                        <input type="text" formControlName="acctOwnrName" maxlength="140"><div class="validation-msg" *ngIf="err('acctOwnrName') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('acctOwnrName', 140) as h">{{h}}</div>
+                    <div class="party-group">
+                        <div class="party-group-title">Expected Debtor Account</div>
+                        <div [formGroup]="form" class="party-grid">
+                            <div class="form-group">
+                                <label>Debtor Account ID</label>
+                                <input formControlName="dbtrAcct" maxlength="34" placeholder="Account / IBAN">
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Debtor Info -->
-                    
-                     <div class="section-title">Payment Type Information</div>
-					<div class="form-group intermediary-field">
-						<label>Instruction Priority <span class="opt">Optional</span></label>
-						<select formControlName="instrPrty">
-							<option value="">None</option>
-							<option value="HIGH">High [HIGH]</option>
-							<option value="NORM">Normal [NORM]</option>
-						</select>
-						<div class="validation-msg" *ngIf="err('instrPrty') as e">{{e}}</div>
-					</div>
-					<div class="form-group intermediary-field">
-						<label>Clearing Channel <span class="opt">Optional</span></label>
-						<select formControlName="clrChanl">
-							<option value="">None</option>
-							<option value="BOOK">Book Transfer [BOOK]</option>
-							<option value="MPNS">Mass Payment Net System [MPNS]</option>
-							<option value="RTGS">Real Time Gross Settlement System [RTGS]</option>
-							<option value="RTNS">Real Time Net Settlement System [RTNS]</option>
-						</select>
-						<div class="validation-msg" *ngIf="err('clrChanl') as e">{{e}}</div>
-					</div>
-                                        <div class="form-group intermediary-field"><label>Service Level Code <span
-                                                                class="opt">Optional</span></label><input
-                                                        formControlName="svcLvlCd" placeholder="e.g. SEPA">
-                                                <div class="validation-msg" *ngIf="err('svcLvlCd') as e">{{e}}</div>
-                                        </div>
-                                        <div class="form-group intermediary-field"><label>Service Level Proprietary <span
-                                                                class="opt">Optional</span></label><input
-                                                        formControlName="svcLvlPrtry" placeholder="Max 35 chars">
-                                                <div class="validation-msg" *ngIf="err('svcLvlPrtry') as e">{{e}}</div>
-                                        </div>
-                                        <div class="form-group intermediary-field"><label>Local Instrument Code <span
-                                                                class="opt">Optional</span></label><input
-                                                        formControlName="lclInstrmCd" placeholder="e.g. ONCL">
-                                                <div class="validation-msg" *ngIf="err('lclInstrmCd') as e">{{e}}</div>
-                                        </div>
-                                        <div class="form-group intermediary-field"><label>Local Instrument Proprietary <span
-                                                                class="opt">Optional</span></label><input
-                                                        formControlName="lclInstrmPrtry" placeholder="Max 35 chars">
-                                                <div class="validation-msg" *ngIf="err('lclInstrmPrtry') as e">{{e}}</div>
-                                        </div>
-                    <div class="form-group intermediary-field">
-                        <label
-                            [matTooltip]="'Category Purpose indicates the high-level business purpose of the payment.'">
-                            Category Purpose <span class="opt">Optional</span>
-                            <mat-icon
-                                style="font-size: 14px; width: 14px; height: 14px; margin-left: 4px; color: var(--accent-color);">info</mat-icon>
-                        </label>
-                        <select formControlName="ctgyPurpCd">
-                            <option value="">None</option>
-                            <option *ngFor="let c of categoryPurposes" [value]="c">{{c}}</option>
-                        </select>
-                        <div class="validation-msg" *ngIf="err('ctgyPurpCd') as e">{{e}}</div>
+                    <div class="party-group">
+                        <div class="party-group-title">Debtor Agent</div>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtrAgt',isAgent:true, title:'Debtor Agent'}"></ng-container>
                     </div>
-                                        <div class="form-group intermediary-field"><label>Category Purpose Proprietary <span
-                                                                class="opt">Optional</span></label><input
-                                                        formControlName="ctgyPurpPrtry" placeholder="Max 35 chars">
-                                                <div class="validation-msg" *ngIf="err('ctgyPurpPrtry') as e">{{e}}</div>
-                                        </div>
-                    <div class="form-group intermediary-field">
-                        <label>Purpose <span class="opt">Optional</span></label>
-                        <select formControlName="purpCd">
-                            <option value="">None</option>
-                            <option *ngFor="let p of purposes" [value]="p">{{p}}</option>
-                        </select>
-                        <div class="validation-msg" *ngIf="err('purpCd') as e">{{e}}</div>
-                    </div>
-                    <div class="section-title">Expected Debtor Information</div>
-                    <!-- <div class="form-group">
-                        <label>Debtor Name <span class="opt">(Optional)</span></label>
-                        <input type="text" formControlName="dbtrName" maxlength="140"><div class="validation-msg" *ngIf="err('dbtrName') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('dbtrName', 140) as h">{{h}}</div>
-                    </div> -->
-                    <!-- <div class="form-group">
-                        <label>Debtor Agent BIC <span class="opt">(Optional)</span></label>
-                        <input type="text" formControlName="dbtrBic" maxlength="11" pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$"><div class="validation-msg" *ngIf="err('dbtrBic') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('dbtrBic', 11) as h">{{h}}</div> -->
-                    <div class="form-group intermediary-field">
-                        <label>Debtor BIC <span class="opt">(Optional)</span></label>
-                        <input type="text" formControlName="dbtrBic" maxlength="11"
-                            pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$">
-                        <div class="validation-msg" *ngIf="err('dbtrBic') as e">{{e}}</div>
-                    </div>
-                    <ng-container
-                        *ngTemplateOutlet="addressForm; context:{prefix:'dbtr',title:'Debtor'}"></ng-container>
-                    <ng-container
-                        *ngTemplateOutlet="agentIdForm; context:{prefix:'dbtr',title:'Debtor'}"></ng-container>
 
-                    <div class="section-title">Expected Debtor Agent <span class="opt">(Optional)</span></div>
-                    <div class="form-group intermediary-field">
-                        <label>Debtor Agent BIC</label>
-                        <input type="text" formControlName="dbtrAgtBic" maxlength="11"
-                            pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$">
-                        <div class="validation-msg" *ngIf="err('dbtrAgtBic') as e">{{e}}</div>
+                    <div class="party-group">
+                        <div class="party-group-title">Debtor Agent Account</div>
+                        <div [formGroup]="form" class="party-grid">
+                            <div class="form-group">
+                                <label>Debtor Agent Account ID</label>
+                                <input formControlName="dbtrAgtAcct" maxlength="34" placeholder="Account">
+                            </div>
+                        </div>
                     </div>
-                    <ng-container
-                        *ngTemplateOutlet="addressForm; context:{prefix:'dbtrAgt',title:'Debtor Agent'}"></ng-container>
-                    <ng-container
-                        *ngTemplateOutlet="agentIdForm; context:{prefix:'dbtrAgt',title:'Debtor Agent'}"></ng-container>
 
-                    <!-- Creditor Info -->
-                    <div class="section-title">Expected Creditor Information <span class="opt">(Optional)</span></div>
-                    <div class="form-group intermediary-field">
-                        <label>Creditor BIC</label>
-                        <input type="text" formControlName="cdtrBic" maxlength="11"
-                            pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$">
-                        <div class="validation-msg" *ngIf="err('cdtrBic') as e">{{e}}</div>
+                    <div class="party-group">
+                        <div class="party-group-title">Intermediary Agent</div>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'intrmyAgt',isAgent:true, title:'Intermediary Agent'}"></ng-container>
                     </div>
-                    <ng-container
-                        *ngTemplateOutlet="addressForm; context:{prefix:'cdtr',title:'Creditor'}"></ng-container>
-                    <ng-container
-                        *ngTemplateOutlet="agentIdForm; context:{prefix:'cdtr',title:'Creditor'}"></ng-container>
 
-                    <div class="section-title">Expected Creditor Agent <span class="opt">(Optional)</span></div>
-                    <div class="form-group intermediary-field">
-                        <label>Creditor Agent BIC</label>
-                        <input type="text" formControlName="cdtrAgtBic" maxlength="11"
-                            pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$">
-                        <div class="validation-msg" *ngIf="err('cdtrAgtBic') as e">{{e}}</div>
+                    <div class="party-group">
+                        <div class="party-group-title">Intermediary Agent Account</div>
+                        <div [formGroup]="form" class="party-grid">
+                            <div class="form-group">
+                                <label>Intermediary Agent Account ID</label>
+                                <input formControlName="intrmyAgtAcct" maxlength="34" placeholder="Account">
+                            </div>
+                        </div>
                     </div>
-                    <ng-container
-                        *ngTemplateOutlet="addressForm; context:{prefix:'cdtrAgt',title:'Creditor Agent'}"></ng-container>
-                    <ng-container
-                        *ngTemplateOutlet="agentIdForm; context:{prefix:'cdtrAgt',title:'Creditor Agent'}"></ng-container>
                 </div>
-            
-    <!-- Remittance Information -->
-    <div class="form-section">
-      <div class="section-header">
-        <mat-icon>receipt_long</mat-icon>
-        <h3>Remittance Information</h3>
-      </div>
-      <div class="form-row">
-        <div class="form-group full-width">
-          <label>Remittance Type</label>
-          <select formControlName="rmtInfType">
-            <option value="none">None</option>
-            <option value="ustrd">Unstructured</option>
-            <option value="strd">Structured</option>
-          </select>
-        </div>
-      </div>
-      
-      <div class="form-row" *ngIf="form.get('rmtInfType')?.value === 'ustrd'">
-        <div class="form-group full-width">
-          <label>Unstructured Remittance</label>
-          <input formControlName="rmtInfUstrd" maxlength="140" placeholder="Max 140 chars">
-          <div class="validation-msg" *ngIf="err('rmtInfUstrd') as e">{{e}}</div>
-        </div>
-      </div>
 
-      <ng-container *ngIf="form.get('rmtInfType')?.value === 'strd'">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Creditor Reference Type (ISO)</label>
-            <select formControlName="rmtInfStrdCdtrRefType">
-              <option value="">None</option>
-              <option value="SCOR">SCOR (Structured Creditor Ref)</option>
-              <option value="CUST">CUST (Customer Ref)</option>
-            </select>
-            <div class="validation-msg" *ngIf="err('rmtInfStrdCdtrRefType') as e">{{e}}</div>
-          </div>
-          <div class="form-group">
-            <label>Creditor Reference</label>
-            <input formControlName="rmtInfStrdCdtrRef" maxlength="35" placeholder="E.g., RF1853900000000">
-            <div class="validation-msg" *ngIf="err('rmtInfStrdCdtrRef') as e">{{e}}</div>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group full-width">
-            <label>Additional Remittance Information</label>
-            <input formControlName="rmtInfStrdAddtlRmtInf" maxlength="140">
-            <div class="validation-msg" *ngIf="err('rmtInfStrdAddtlRmtInf') as e">{{e}}</div>
-          </div>
-        </div>
-      </ng-container>
-    </div>
-
-
-</form>
+                <div class="form-section" style="margin-top: 2rem;">
+                    <div class="section-header"><mat-icon>receipt_long</mat-icon><h3>Remittance Information</h3></div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Type</label>
+                            <select formControlName="rmtInfType"><option value="none">None</option><option value="ustrd">Unstructured</option><option value="strd">Structured</option></select>
+                        </div>
+                    </div>
+                    <div class="form-row" *ngIf="form.get('rmtInfType')?.value === 'ustrd'">
+                        <div class="form-group full-width"><label>Unstructured Remittance</label><input formControlName="rmtInfUstrd" maxlength="140"></div>
+                    </div>
+                </div>
+            </form>
         </div>
 
         <div class="right-panel">
-            <!-- Top Actions -->
-
             <div class="bottom-actions" style="margin-top: 0; margin-bottom: 1rem;">
-                <!-- History & Formatting -->
-                 
-
-                <div class="down" >
-
-                    
-                    <button class="action-btn copy-btn" (click)="copyToClipboard()"><mat-icon>content_copy</mat-icon> Copy
-                        XML</button>
-                        <button class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon> Download XML</button>
-                        <button class="action-btn validate-btn" (click)="validateMessage()">
-                            <mat-icon>verified</mat-icon> Validate Message
-                        </button>
+                <div class="down">
+                    <button class="action-btn copy-btn" (click)="copyToClipboard()"><mat-icon>content_copy</mat-icon> Copy XML</button>
+                    <button class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon> Download XML</button>
+                    <button class="action-btn validate-btn" (click)="validateMessage()"><mat-icon>verified</mat-icon> Validate Message</button>
                 </div>
             </div>
-
-            <!-- XML Preview & Actions -->
             <div class="content-box preview-box">
                 <div class="up">
-                    
-                    <button class="action-btn-small" (click)="undoXml()" [disabled]="!canUndoXml()" matTooltip="Undo (Ctrl+Z)">
-                        <mat-icon>undo</mat-icon>
-                    </button>
-                    <button class="action-btn-small" (click)="redoXml()" [disabled]="!canRedoXml()" matTooltip="Redo (Ctrl+Y)">
-                        <mat-icon>redo</mat-icon>
-                    </button>
-                    <button class="action-btn-small" (click)="formatXml()" matTooltip="Format XML (Ctrl+S)">
-                        <mat-icon>format_align_left</mat-icon>
-                    </button>
-                    <button class="action-btn-small" (click)="toggleCommentXml()" matTooltip="Comment/Uncomment (Ctrl+/)">
-                        <mat-icon>mode_comment</mat-icon>
-                    </button>
+                    <button class="action-btn-small" (click)="undoXml()" [disabled]="!canUndoXml()"><mat-icon>undo</mat-icon></button>
+                    <button class="action-btn-small" (click)="redoXml()" [disabled]="!canRedoXml()"><mat-icon>redo</mat-icon></button>
+                    <button class="action-btn-small" (click)="formatXml()"><mat-icon>format_align_left</mat-icon></button>
+                    <button class="action-btn-small" (click)="toggleCommentXml()"><mat-icon>mode_comment</mat-icon></button>
                 </div>
                 <div class="editor-wrapper">
                     <div class="line-numbers" #lineNumbers>
                         <div *ngFor="let idx of editorLineCount; let i = index">{{i + 1}}</div>
                     </div>
-                    <textarea class="code-editor" [(ngModel)]="generatedXml" (ngModelChange)="onEditorChange($event)"
-                        (scroll)="syncScroll(xmlEditor, lineNumbers)" #xmlEditor spellcheck="false"
-                        wrap="off"></textarea>
+                    <textarea class="code-editor" [(ngModel)]="generatedXml" (ngModelChange)="onEditorChange($event)" (scroll)="syncScroll(xmlEditor, lineNumbers)" #xmlEditor spellcheck="false" wrap="off"></textarea>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Address Template -->
-<ng-template #addressForm let-prefix="prefix" let-title="title">
-    <div class="form-group addr-type-row" [formGroup]="form">
-        <label>{{title}} Address Type</label>
-        <select [formControlName]="prefix+'AddrType'">
-            <option value="none">None (BIC Only)</option>
-            <option value="structured">Structured</option>
-            <option value="unstructured">Unstructured</option>
-            <option value="hybrid">Hybrid</option>
-        </select>
-    </div>
-    <ng-container *ngIf="form.get(prefix+'AddrType')?.value !== 'none'" [formGroup]="form">
-        <div class="subsection addr-subsection">
-            <span class="subsection-header">{{title}} Address Details</span>
 
-            <!-- Unstructured / Hybrid: AdrLine (Forbidden in Structured) -->
-            <ng-container *ngIf="['unstructured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
-                <div class="form-group"><label>Address Line 1 <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'AdrLine1'">
-                    <div class="validation-msg" *ngIf="err(prefix+'AdrLine1') as e">{{e}}</div>
-                </div>
-                <div class="form-group"><label>Address Line 2 <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'AdrLine2'">
-                    <div class="validation-msg" *ngIf="err(prefix+'AdrLine2') as e">{{e}}</div>
-                </div>
-            </ng-container>
-
-            <div class="form-group"><label>Country <span
-                                *ngIf="form.get(prefix+'AddrType')?.value !== 'none'"
-                                class="req">*</span></label>
-                        <select [formControlName]="prefix + 'Ctry'">
-                                <option value="">Select Country</option>
-                                <option *ngFor="let c of countries" [value]="c">{{c}}</option>
-                        </select>
-                        <div class="validation-msg" *ngIf="err(prefix+'Ctry') as e">{{e}}</div>
-            </div>
-
-            <!-- Structured / Hybrid: Full structured fields -->
-            <ng-container *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
-                <div class="form-group"><label>Town Name <span
-                            *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)"
-                            class="req">*</span></label><input [formControlName]="prefix+'TwnNm'"
-                        placeholder="e.g. New York">
-                    <div class="validation-msg" *ngIf="err(prefix+'TwnNm') as e">{{e}}</div>
-                </div>
-                <div class="form-group"><label>Street Name <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'StrtNm'">
-                    <div class="validation-msg" *ngIf="err(prefix+'StrtNm') as e">{{e}}</div>
-                </div>
-                <div class="form-group"><label>Building Number <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'BldgNb'">
-                    <div class="validation-msg" *ngIf="err(prefix+'BldgNb') as e">{{e}}</div>
-                </div>
-                <div class="form-group"><label>Post Code <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'PstCd'">
-                    <div class="validation-msg" *ngIf="err(prefix+'PstCd') as e">{{e}}</div>
-                </div>
-                <div class="form-group"><label>Country Sub-Division <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'CtrySubDvsn'">
-                    <div class="validation-msg" *ngIf="err(prefix+'CtrySubDvsn') as e">{{e}}</div>
-                </div>
-                <div class="form-group"><label>Building Name <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'BldgNm'">
-                    <div class="validation-msg" *ngIf="err(prefix+'BldgNm') as e">{{e}}</div>
-                </div>
-                <div class="form-group"><label>Floor <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'Flr'">
-                    <div class="validation-msg" *ngIf="err(prefix+'Flr') as e">{{e}}</div>
-                </div>
-                <div class="form-group"><label>Post Box <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'PstBx'">
-                    <div class="validation-msg" *ngIf="err(prefix+'PstBx') as e">{{e}}</div>
-                </div>
-                <div class="form-group"><label>Room <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'Room'">
-                    <div class="validation-msg" *ngIf="err(prefix+'Room') as e">{{e}}</div>
-                </div>
-                <div class="form-group"><label>Department <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'Dept'">
-                    <div class="validation-msg" *ngIf="err(prefix+'Dept') as e">{{e}}</div>
-                </div>
-                <div class="form-group"><label>Sub-Department <span class="opt">Optional</span></label><input
-                        [formControlName]="prefix+'SubDept'">
-                    <div class="validation-msg" *ngIf="err(prefix+'SubDept') as e">{{e}}</div>
-                </div>
-            </ng-container>
-
-            <div *ngIf="form.get(prefix+'AddrType')?.value === 'structured'" class="addr-notice">
-                <mat-icon>info</mat-icon> <span>AdrLine is <strong>forbidden</strong> in Structured mode.</span>
-            </div>
+<ng-template #partyForm let-prefix="prefix" let-isAgent="isAgent" let-title="title">
+    <div [formGroup]="form" class="party-grid">
+        <!-- BIC -->
+        <div class="form-group" *ngIf="isAgent">
+            <label>{{title}} BIC</label>
+            <input [formControlName]="prefix+'Bic'" maxlength="11" placeholder="e.g. NDEAFIHH">
+            <div class="validation-msg" *ngIf="err(prefix+'Bic') as e">{{e}}</div>
         </div>
-    </ng-container>
-</ng-template>
+        <div class="form-group" *ngIf="!isAgent">
+            <label>{{title}} BIC</label>
+            <input [formControlName]="prefix+'OrgAnyBIC'" maxlength="11" placeholder="e.g. NDEAFIHH">
+            <div class="validation-msg" *ngIf="err(prefix+'OrgAnyBIC') as e">{{e}}</div>
+        </div>
 
-<!-- Agent Identification Template -->
-<ng-template #agentIdForm let-prefix="prefix" let-title="title">
-    <div class="subsection agent-id-subsection" [formGroup]="form">
-        <div class="form-group intermediary-field">
+        <!-- Address Type -->
+        <div class="form-group">
+            <label>{{title}} Address Type</label>
+            <select [formControlName]="prefix+'AddrType'">
+                <option value="none">None (BIC/ID Only)</option>
+                <option value="structured">Structured</option>
+                <option value="unstructured">Unstructured</option>
+                <option value="hybrid">Hybrid</option>
+            </select>
+        </div>
+
+        <!-- Dynamic Address Fields -->
+        <ng-container *ngIf="form.get(prefix+'AddrType')?.value !== 'none'">
+            <div class="address-subgrid">
+                <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                    <label>{{title}} Building Number</label><input [formControlName]="prefix+'BldgNb'">
+                </div>
+                <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                    <label>{{title}} Building Name</label><input [formControlName]="prefix+'BldgNm'">
+                </div>
+                <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                    <label>{{title}} Street Name</label><input [formControlName]="prefix+'StrtNm'">
+                </div>
+                <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                    <label>{{title}} Post Code</label><input [formControlName]="prefix+'PstCd'">
+                </div>
+                <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                    <label>{{title}} City (Town Name) <span class="req">*</span></label>
+                    <input [formControlName]="prefix+'TwnNm'">
+                </div>
+                <div class="form-group">
+                    <label>{{title}} Country <span class="req">*</span></label>
+                    <select [formControlName]="prefix + 'Ctry'">
+                        <option value="">Select Country</option>
+                        <option *ngFor="let c of countries" [value]="c">{{c}}</option>
+                    </select>
+                </div>
+                <ng-container *ngIf="['unstructured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                    <div class="form-group"><label>{{title}} Address Line 1</label><input [formControlName]="prefix+'AdrLine1'"></div>
+                    <div class="form-group"><label>{{title}} Address Line 2</label><input [formControlName]="prefix+'AdrLine2'"></div>
+                </ng-container>
+            </div>
+        </ng-container>
+
+        <!-- Name -->
+        <div class="form-group">
             <label>{{title}} Name</label>
             <input [formControlName]="prefix+'Name'" maxlength="140">
             <div class="validation-msg" *ngIf="err(prefix+'Name') as e">{{e}}</div>
         </div>
-        <div class="form-group intermediary-field">
-            <label>{{title}} LEI</label>
-            <input [formControlName]="prefix+'Lei'" placeholder="20-char LEI" maxlength="20">
-            <div class="validation-msg" *ngIf="err(prefix+'Lei') as e">{{e}}</div>
+
+        <!-- Member ID -->
+        <div class="form-group">
+            <label>{{title}} Member ID</label>
+            <input [formControlName]="isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId'" maxlength="35" placeholder="Clearing Member ID">
+            <div class="validation-msg" *ngIf="err(isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId') as e">{{e}}</div>
         </div>
-        <div class="form-group intermediary-field">
+
+        <!-- Clearing System Code -->
+        <div class="form-group">
             <label>{{title}} Clearing System Code</label>
-            <input [formControlName]="prefix+'ClrSysCd'" placeholder="e.g. USABA" maxlength="4">
-            <div class="validation-msg" *ngIf="err(prefix+'ClrSysCd') as e">{{e}}</div>
+            <input [formControlName]="isAgent ? prefix+'ClrSysCd' : prefix+'OrgClrSysCd'" maxlength="4" placeholder="e.g. USABA, CHAPS, T2">
+            <div class="validation-msg" *ngIf="err(isAgent ? prefix+'ClrSysCd' : prefix+'OrgClrSysCd') as e">{{e}}</div>
         </div>
-        <div class="form-group intermediary-field">
-            <label>{{title}} Clearing Member ID</label>
-            <input [formControlName]="prefix+'ClrSysMmbId'" maxlength="35">
-            <div class="validation-msg" *ngIf="err(prefix+'ClrSysMmbId') as e">{{e}}</div>
+
+        <!-- LEI -->
+        <div class="form-group">
+            <label>{{title}} LEI</label>
+            <input [formControlName]="isAgent ? prefix+'Lei' : prefix+'OrgLEI'" maxlength="20" placeholder="20-char LEI">
+            <div class="validation-msg" *ngIf="err(isAgent ? prefix+'Lei' : prefix+'OrgLEI') as e">{{e}}</div>
         </div>
-        <div class="form-group full-width intermediary-field">
-            <label>{{title}} Account Number</label>
-            <input [formControlName]="prefix+'Acct'" maxlength="34">
-            <div class="validation-msg" *ngIf="err(prefix+'Acct') as e">{{e}}</div>
-        </div>
+
+        <!-- Account Number Removed from here as it is now in a separate card -->
+
     </div>
 </ng-template>
 
-    <!-- Validation Results Modal -->
-    <div class="validation-overlay" *ngIf="showValidationModal" (click)="closeValidationModal()">
+
+
+<!-- Validation Results Modal -->
+<div class="validation-overlay" *ngIf="showValidationModal" (click)="closeValidationModal()">
         <div class="validation-modal" (click)="$event.stopPropagation()">
-            <!-- Modal Header -->
-            <div class="vm-header">
-                <div class="vm-title">
-                    <mat-icon>verified</mat-icon>
-                    <span>Validation Results</span>
-                    <span class="vm-msg-type" *ngIf="validationReport?.message">{{validationReport.message}}</span>
-                </div>
-
-                <div class="vm-header-actions" *ngIf="validationStatus === 'done'">
-                    <button class="vm-action-btn" (click)="viewXmlModal()">
-                        <mat-icon>visibility</mat-icon> VIEW XML
-                    </button>
-                    <button class="vm-action-btn" (click)="editXmlModal()">
-                        <mat-icon>edit</mat-icon> EDIT
-                    </button>
-                    <button class="vm-action-btn run" (click)="runValidationModal()">
-                        <mat-icon>play_circle</mat-icon> RUN
-                    </button>
-                </div>
-
-                <button class="vm-close" (click)="closeValidationModal()">
-                    <mat-icon>close</mat-icon>
-                </button>
-            </div>
-
-            <!-- Loading State -->
-            <div class="vm-loading" *ngIf="validationStatus === 'validating'">
-                <div class="vm-spinner"></div>
-                <p>Validating your XML message...</p>
-                <span class="vm-loading-sub">Running Layer 1-3 checks</span>
-            </div>
-
-            <!-- Results -->
-            <div class="vm-body" *ngIf="validationStatus === 'done' && validationReport">
-                <!-- Status Banner -->
-                <div class="vm-status-banner" [class.pass]="validationReport.status === 'PASS'"
-                    [class.fail]="validationReport.status !== 'PASS'">
-                    <mat-icon>{{validationReport.status === 'PASS' ? 'check_circle' : 'cancel'}}</mat-icon>
-                    <div class="vm-status-text">
-                        <strong>{{validationReport.status === 'PASS' ? 'VALIDATION PASSED' : 'VALIDATION FAILED'}}</strong>
-                        <span>{{validationReport.errors || 0}} error(s), {{validationReport.warnings || 0}} warning(s)
-                            &bull; {{validationReport.total_time_ms || 0}}ms</span>
-                    </div>
-                </div>
-
-                <!-- Layer Results -->
-                <div class="vm-layers" *ngIf="getValidationLayers().length > 0">
-                    <div class="vm-layer" *ngFor="let k of getValidationLayers()" [class.layer-pass]="isLayerPass(k)"
-                        [class.layer-fail]="isLayerFail(k)" [class.layer-warn]="isLayerWarn(k)">
-                        <div class="vm-layer-icon">
-                            <span *ngIf="isLayerPass(k)">âœ…</span>
-                            <span *ngIf="isLayerFail(k)">âŒ</span>
-                            <span *ngIf="isLayerWarn(k)">âš ï¸</span>
+                <!-- Modal Header -->
+                <div class="vm-header">
+                        <div class="vm-title">
+                                <mat-icon>verified</mat-icon>
+                                <span>Validation Results</span>
+                                <span class="vm-msg-type"
+                                        *ngIf="validationReport?.message">{{validationReport.message}}</span>
                         </div>
-                        <div class="vm-layer-info">
-                            <strong>Layer {{k}}: {{getLayerName(k)}}</strong>
-                            <span class="vm-layer-time">{{getLayerTime(k)}}ms</span>
+                        <div class="vm-header-actions" *ngIf="validationStatus === 'done'">
+                                <button class="vm-action-btn run"
+                                        (click)="runValidationModal()"><mat-icon>play_circle</mat-icon> RUN</button>
                         </div>
-                    </div>
+                        <button class="vm-close" (click)="closeValidationModal()"><mat-icon>close</mat-icon></button>
                 </div>
-
-                <!-- Issues List -->
-                <div class="vm-issues" *ngIf="getValidationIssues().length > 0">
-                    <div class="vm-issues-header">
-                        <mat-icon>report</mat-icon>
-                        <span>Issues ({{getValidationIssues().length}})</span>
-                    </div>
-                    <div class="vm-issue-list">
-                        <div class="vm-issue" *ngFor="let issue of getValidationIssues()"
-                            (click)="toggleValidationIssue(issue)" [class.expanded]="validationExpandedIssue === issue">
-                            <div class="vm-issue-row">
-                                <span class="vm-issue-severity" [class.error]="issue.severity === 'ERROR'"
-                                    [class.warning]="issue.severity === 'WARNING'">
-                                    {{issue.severity}}
-                                </span>
-                                <span class="vm-issue-layer">L{{issue.layer}}</span>
-                                <span class="vm-issue-msg">{{issue.message}}</span>
-                                <mat-icon class="vm-issue-chevron">
-                                    {{validationExpandedIssue === issue ? 'expand_less' : 'expand_more'}}
-                                </mat-icon>
-                            </div>
-                            <div class="vm-issue-detail" *ngIf="validationExpandedIssue === issue">
-                                <div class="vm-detail-row" *ngIf="issue.severity === 'ERROR'">
-                                    <strong>Error Details:</strong>
-                                    <span>{{issue.message}}</span>
+                <!-- Loading State -->
+                <div class="vm-loading" *ngIf="validationStatus === 'validating'">
+                        <div class="vm-spinner"></div>
+                        <p>Validating your XML message...</p>
+                        <span class="vm-loading-sub">Running Layer 1-3 checks</span>
+                </div>
+                <!-- Results -->
+                <div class="vm-body" *ngIf="validationStatus === 'done' && validationReport">
+                        <div class="vm-status-banner" [class.pass]="validationReport.status === 'PASS'"
+                                [class.fail]="validationReport.status !== 'PASS'">
+                                <mat-icon>{{validationReport.status === 'PASS' ? 'check_circle' : 'cancel'}}</mat-icon>
+                                <div class="vm-status-text">
+                                        <strong>{{validationReport.status === 'PASS' ? 'VALIDATION PASSED' : 'VALIDATION
+                                                FAILED'}}</strong>
+                                        <span>{{validationReport.errors || 0}} error(s), {{validationReport.warnings ||
+                                                0}} warning(s) &bull; {{validationReport.total_time_ms || 0}}ms</span>
                                 </div>
-                                <div class="vm-detail-row" *ngIf="issue.path">
-                                    <strong>Path:</strong> <code>{{issue.path}}</code>
-                                </div>
-                                <div class="vm-detail-row" *ngIf="issue.code">
-                                    <strong>Code:</strong> <code>{{issue.code}}</code>
-                                </div>
-                                <div class="vm-detail-row fix" *ngIf="issue.fix_suggestion">
-                                    <strong>ðŸ’¡ Fix:</strong>
-                                    <span>{{issue.fix_suggestion}}</span>
-                                    <button class="vm-copy-btn" (click)="copyFix(issue.fix_suggestion, $event)"
-                                        matTooltip="Copy fix suggestion">
-                                        <mat-icon>content_copy</mat-icon>
-                                    </button>
-                                </div>
-                            </div>
                         </div>
-                    </div>
+                        <div class="vm-layers" *ngIf="getValidationLayers().length > 0">
+                                <div class="vm-layer" *ngFor="let k of getValidationLayers()"
+                                        [class.layer-pass]="isLayerPass(k)" [class.layer-fail]="isLayerFail(k)"
+                                        [class.layer-warn]="isLayerWarn(k)">
+                                        <div class="vm-layer-icon"><span *ngIf="isLayerPass(k)"><mat-icon style="color: #10b981; font-size: 20px;">check_circle</mat-icon></span><span
+                                                        *ngIf="isLayerFail(k)"><mat-icon style="color: #ef4444; font-size: 20px;">cancel</mat-icon></span><span
+                                                        *ngIf="isLayerWarn(k)"><mat-icon style="color: #f59e0b; font-size: 20px;">warning</mat-icon></span></div>
+                                        <div class="vm-layer-info"><strong>Layer {{k}}:
+                                                        {{getLayerName(k)}}</strong><span
+                                                        class="vm-layer-time">{{getLayerTime(k)}}ms</span></div>
+                                </div>
+                        </div>
+                        <div class="vm-issues" *ngIf="getValidationIssues().length > 0">
+                                <div class="vm-issues-header"><mat-icon>report</mat-icon><span>Issues
+                                                ({{getValidationIssues().length}})</span></div>
+                                <div class="vm-issue-list">
+                                        <div class="vm-issue" *ngFor="let issue of getValidationIssues()"
+                                                (click)="toggleValidationIssue(issue)"
+                                                [class.expanded]="validationExpandedIssue === issue">
+                                                <div class="vm-issue-row">
+                                                        <span class="vm-issue-severity"
+                                                                [class.error]="issue.severity === 'ERROR'"
+                                                                [class.warning]="issue.severity === 'WARNING'">
+                                                                {{issue.severity}}
+                                                        </span>
+                                                        <span class="vm-issue-layer">L{{issue.layer}}</span>
+                                                        <span class="vm-issue-msg">{{issue.message}}</span>
+                                                        <mat-icon class="vm-issue-chevron">
+                                                                {{validationExpandedIssue === issue ? 'expand_less' : 'expand_more'}}
+                                                        </mat-icon>
+                                                </div>
+                                                <div class="vm-issue-detail" *ngIf="validationExpandedIssue === issue">
+                                                        <div class="vm-detail-row" *ngIf="issue.severity === 'ERROR'">
+                                                                <strong>Error Details:</strong>
+                                                                <span>{{issue.message}}</span>
+                                                        </div>
+                                                        <div class="vm-detail-row" *ngIf="issue.path">
+                                                                <strong>Path:</strong>
+                                                                <code>{{issue.path}}</code>
+                                                        </div>
+                                                        <div class="vm-detail-row" *ngIf="issue.code">
+                                                                <strong>Code:</strong>
+                                                                <code>{{issue.code}}</code>
+                                                        </div>
+                                                        <div class="vm-detail-row fix" *ngIf="issue.fix_suggestion">
+                                                                <strong><mat-icon style="font-size: 16px; width: 16px; height: 16px; vertical-align: middle;">lightbulb</mat-icon> Fix:</strong>
+                                                                <span>{{issue.fix_suggestion}}</span>
+                                                                <button class="vm-copy-btn"
+                                                                        (click)="copyFix(issue.fix_suggestion, $event)"
+                                                                        matTooltip="Copy fix suggestion">
+                                                                        <mat-icon>content_copy</mat-icon>
+                                                                </button>
+                                                        </div>
+                                                </div>
+                                        </div>
+                                </div>
+                        </div>
+                        <div class="vm-no-issues" *ngIf="getValidationIssues().length === 0">
+                                <mat-icon>celebration</mat-icon>
+                                <p>No issues found! Your message is valid.</p>
+                        </div>
                 </div>
-
-                <!-- No Issues -->
-                <div class="vm-no-issues" *ngIf="getValidationIssues().length === 0">
-                    <mat-icon>celebration</mat-icon>
-                    <p>No issues found! Your message is valid.</p>
-                </div>
-            </div>
         </div>
-    </div>
+</div>

@@ -113,7 +113,7 @@ export class MtToMxComponent implements OnInit {
         'MT299': { mx: 'pacs.002.001.10', desc: 'Free Format Message (FI)' },
         'MT192': { mx: 'camt.056.001.08', desc: 'Request for Cancellation' },
         'MT196': { mx: 'camt.029.001.09', desc: 'Resolution of Investigation' },
-        'MT210': { mx: 'camt.057.001.06', desc: 'Notice to Receive' },
+        'MT210': { mx: 'camt.057.001.08', desc: 'Notice to Receive' },
     };
 
     @ViewChild('mtEditor') mtEditorRef!: ElementRef<HTMLTextAreaElement>;
@@ -752,7 +752,7 @@ export class MtToMxComponent implements OnInit {
 </BusMsgEnvlp>`;
     }
 
-    // === MT210 → camt.057.001.06 ===
+    // === MT210 → camt.057.001.08 ===
     private convertMT210ToCamt057(f: Record<string, string>): string {
         const now = this.isoNow();
         const senderBic = this.normalizeSwiftBic(f['_senderBic'] || 'BANKUS33XXX');
@@ -766,11 +766,11 @@ export class MtToMxComponent implements OnInit {
 \t\t<Fr><FIId><FinInstnId><BICFI>${this.esc(senderBic)}</BICFI></FinInstnId></FIId></Fr>
 \t\t<To><FIId><FinInstnId><BICFI>${this.esc(receiverBic)}</BICFI></FinInstnId></FIId></To>
 \t\t<BizMsgIdr>${this.esc(msgId)}</BizMsgIdr>
-\t\t<MsgDefIdr>camt.057.001.06</MsgDefIdr>
+\t\t<MsgDefIdr>camt.057.001.08</MsgDefIdr>
 \t\t<BizSvc>swift.cbprplus.02</BizSvc>
 \t\t<CreDt>${now}</CreDt>
 \t</AppHdr>
-\t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.057.001.06">
+\t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.057.001.08">
 \t\t<NtfctnToRcv>
 \t\t\t<GrpHdr>
 \t\t\t\t<MsgId>${this.esc(msgId)}</MsgId>

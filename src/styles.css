@@ -252,6 +252,172 @@ textarea:focus {
     background: var(--bg-card-hover);
 }
 
+
+/* Global Grid System */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.25rem 1.5rem;
+    align-items: start;
+}
+
+/* Manual Entry - Section titles */
+.section-title {
+    grid-column: 1 / -1;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #6366f1;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 2.5rem 0 1rem;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #cbd5e1;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ── Party Group (one agent/party section) ── */
+.party-group {
+    grid-column: 1 / -1;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 0;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 4px rgba(99,102,241,0.06);
+    overflow: hidden;
+    transition: none; /* No hover transition */
+}
+
+.party-group:hover {
+    transform: none;
+    box-shadow: 0 1px 4px rgba(99,102,241,0.06);
+}
+
+/* ── Header bar of each party group ── */
+.party-group-title {
+    background: #f8fafc;
+    padding: 10px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0;
+    border-radius: 0;
+}
+
+/* "OPTIONAL" badge pushed right */
+.party-group-title::after {
+    content: "OPTIONAL";
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: #818cf8;
+    background: #e0e7ff;
+    padding: 3px 9px;
+    border-radius: 4px;
+    margin-left: auto;
+    letter-spacing: 1px;
+}
+
+/* ── Fields grid inside each party group ── */
+.party-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+}
+
+/* Each field row */
+.party-grid .form-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 14px 20px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.party-grid .form-group:last-child {
+    border-bottom: none;
+}
+
+/* Field labels — small uppercase, slate color */
+.party-grid label {
+    font-weight: 700;
+    color: #64748b;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Inputs and selects — full width, clean white */
+.party-grid input,
+.party-grid select {
+    width: 100%;
+    max-width: 100%;
+    height: 34px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0 14px;
+    font-size: 0.95rem;
+    background: #fff;
+    color: #1e293b;
+    text-align: left;
+    box-shadow: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+}
+
+.party-grid input:focus,
+.party-grid select:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+    outline: none;
+}
+
+.party-grid input::placeholder {
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+/* Address sub-section: indented with side border */
+.address-subgrid {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0 0 0 20px;
+    border-left: 3px solid #e0e7ff;
+    margin: 4px 20px 0;
+}
+
+.address-subgrid .form-group {
+    padding: 12px 0;
+    border-bottom: 1px solid #f8fafc;
+}
+
+.address-subgrid .form-group:last-child {
+    border-bottom: none;
+}
+
+/* Ensure icons in titles are hidden */
+.party-group-title mat-icon {
+    display: none;
+}
+
+
+
+
+
 input::placeholder {
     color: var(--text-muted);
     opacity: 0.5;

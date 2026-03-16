@@ -127,38 +127,11 @@ header p {
     box-shadow: var(--shadow-md);
 }
 
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: .6rem .9rem;
-}
 
-.section-title {
-    grid-column: 1/-1;
-    font-size: .75rem;
-    font-weight: 700;
-    color: var(--accent-color);
-    text-transform: uppercase;
-    letter-spacing: .5px;
-    margin: .85rem 0 .35rem;
-    padding: .45rem .75rem;
-    background: var(--accent-light);
-    border-radius: 6px;
-    border-left: 3px solid var(--accent-color);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
+/* Using global .grid, .section-title, .form-group from styles.css */
 
-.section-title.cov-section {
-    color: #f59e0b;
-    background: rgba(245, 158, 11, 0.1);
-    border-left-color: #f59e0b;
-}
 
-.form-group {
-    margin-bottom: .1rem;
-}
+/* Using global .party-group and .party-group-title from styles.css */
 
 input,
 select,

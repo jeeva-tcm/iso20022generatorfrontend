@@ -34,7 +34,7 @@ export class Pacs9Component implements OnInit {
     purposes: string[] = [];
     sttlmMethods = ['INDA', 'INGA'];
 
-    agentPrefixes = ['instgAgt', 'instdAgt', 'dbtrFi', 'cdtrFi', 'dbtrAgt', 'cdtrAgt',
+    agentPrefixes = ['instgAgt', 'instdAgt', 'dbtrFi', 'cdtrFi', 'dbtrAgt', 'cdtrAgt', 'ultmtCdtr',
         'prvsInstgAgt1', 'prvsInstgAgt2', 'prvsInstgAgt3',
         'intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'];
 
@@ -212,7 +212,27 @@ export class Pacs9Component implements OnInit {
             // Optional agents
             prvsInstgAgt1Bic: ['', BIC_OPT], prvsInstgAgt2Bic: ['', BIC_OPT], prvsInstgAgt3Bic: ['', BIC_OPT],
             intrmyAgt1Bic: ['', BIC_OPT], intrmyAgt2Bic: ['', BIC_OPT], intrmyAgt3Bic: ['', BIC_OPT],
-
+            // Debtor/Creditor FI Accounts
+            dbtrFiAcct: [''],
+            cdtrFiAcct: [''],
+            dbtrAgtAcct: [''],
+            cdtrAgtAcct: [''],
+            // Instructions for Creditor Agent (0..2)
+            instrForCdtrAgt1Cd: [''], instrForCdtrAgt1InfTxt: ['', Validators.maxLength(140)],
+            instrForCdtrAgt2Cd: [''], instrForCdtrAgt2InfTxt: ['', Validators.maxLength(140)],
+            // Instructions for Next Agent (0..6)
+            instrForNxtAgt1Cd: [''], instrForNxtAgt1InfTxt: ['', Validators.maxLength(140)],
+            instrForNxtAgt2Cd: [''], instrForNxtAgt2InfTxt: ['', Validators.maxLength(140)],
+            instrForNxtAgt3Cd: [''], instrForNxtAgt3InfTxt: ['', Validators.maxLength(140)],
+            instrForNxtAgt4Cd: [''], instrForNxtAgt4InfTxt: ['', Validators.maxLength(140)],
+            instrForNxtAgt5Cd: [''], instrForNxtAgt5InfTxt: ['', Validators.maxLength(140)],
+            instrForNxtAgt6Cd: [''], instrForNxtAgt6InfTxt: ['', Validators.maxLength(140)],
+            // Remittance (Optional)
+            rmtInfType: ['none'],
+            rmtInfUstrd: ['', Validators.maxLength(140)],
+            rmtInfStrdCdtrRefType: [''],
+            rmtInfStrdCdtrRef: ['', Validators.maxLength(35)],
+            rmtInfStrdAddtlRmtInf: ['', Validators.maxLength(140)]
         };
         // Address prefixes for agents
         this.agentPrefixes.forEach(p => {
@@ -364,28 +384,70 @@ export class Pacs9Component implements OnInit {
         tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${v.amount}</IntrBkSttlmAmt>\n`;
         tx += this.el('IntrBkSttlmDt', v.sttlmDt, 3);
         // PrvsInstgAgts
-        tx += this.agt('PrvsInstgAgt1', 'prvsInstgAgt1', v);
-        tx += this.agt('PrvsInstgAgt2', 'prvsInstgAgt2', v);
-        tx += this.agt('PrvsInstgAgt3', 'prvsInstgAgt3', v);
-        // InstgAgt/InstdAgt in CdtTrfTxInf (CBPR+ requires these at txn level, NOT GrpHdr)
-        tx += this.agt('InstgAgt', 'instgAgt', v);
-        tx += this.agt('InstdAgt', 'instdAgt', v);
+        tx += this.agtWithAcct('PrvsInstgAgt1', 'prvsInstgAgt1', v);
+        tx += this.agtWithAcct('PrvsInstgAgt2', 'prvsInstgAgt2', v);
+        tx += this.agtWithAcct('PrvsInstgAgt3', 'prvsInstgAgt3', v);
+        // InstgAgt/InstdAgt
+        tx += this.agtWithAcct('InstgAgt', 'instgAgt', v);
+        tx += this.agtWithAcct('InstdAgt', 'instdAgt', v);
         // IntrmyAgts
-        tx += this.agt('IntrmyAgt1', 'intrmyAgt1', v);
-        tx += this.agt('IntrmyAgt2', 'intrmyAgt2', v);
-        tx += this.agt('IntrmyAgt3', 'intrmyAgt3', v);
-        // Dbtr (FI — BranchAndFinancialInstitutionIdentification8)
+        tx += this.agtWithAcct('IntrmyAgt1', 'intrmyAgt1', v);
+        tx += this.agtWithAcct('IntrmyAgt2', 'intrmyAgt2', v);
+        tx += this.agtWithAcct('IntrmyAgt3', 'intrmyAgt3', v);
+        
+        // Dbtr
+        tx += this.agtWithAcct('Dbtr', 'dbtrFi', v);
+        // DbtrAgt
+        tx += this.agtWithAcct('DbtrAgt', 'dbtrAgt', v);
+        // CdtrAgt
+        tx += this.agtWithAcct('CdtrAgt', 'cdtrAgt', v);
+        // Cdtr
+        tx += this.agtWithAcct('Cdtr', 'cdtrFi', v);
+
+        // UltmtCdtr (optional)
+        tx += this.agtWithAcct('UltmtCdtr', 'ultmtCdtr', v);
+
+        // Instructions for Creditor Agent (0..2)
+        for (let i = 1; i <= 2; i++) {
+            const cd = v[`instrForCdtrAgt${i}Cd`]?.trim();
+            const txt = v[`instrForCdtrAgt${i}InfTxt`]?.trim();
+            if (cd || txt) {
+                let inner = '';
+                if (cd) inner += this.el('Cd', cd, 4);
+                if (txt) inner += this.el('InstrInf', txt, 4);
+                tx += this.tag('InstrForCdtrAgt', inner, 3);
+            }
+        }
+        // Instructions for Next Agent (0..6)
+        for (let i = 1; i <= 6; i++) {
+            const cd = v[`instrForNxtAgt${i}Cd`]?.trim();
+            const txt = v[`instrForNxtAgt${i}InfTxt`]?.trim();
+            if (cd || txt) {
+                let inner = '';
+                if (cd) inner += this.el('Cd', cd, 4);
+                if (txt) inner += this.el('InstrInf', txt, 4);
+                tx += this.tag('InstrForNxtAgt', inner, 3);
+            }
+        }
 
         if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 4), 3);
-        tx += `\t\t\t<Dbtr>\n\t\t\t\t<FinInstnId>\n\t\t\t\t\t<BICFI>${this.e(v.dbtrFiBic)}</BICFI>\n\t\t\t\t</FinInstnId>\n\t\t\t</Dbtr>\n`;
-        if (v.dbtrFiAcct?.trim()) tx += `\t\t\t<DbtrAcct>\n\t\t\t\t<Id>\n\t\t\t\t\t<Othr>\n\t\t\t\t\t\t<Id>${this.e(v.dbtrFiAcct)}</Id>\n\t\t\t\t\t</Othr>\n\t\t\t\t</Id>\n\t\t\t</DbtrAcct>\n`;
-        // DbtrAgt (optional)
-        tx += this.agt('DbtrAgt', 'dbtrAgt', v);
-        // CdtrAgt (optional)
-        tx += this.agt('CdtrAgt', 'cdtrAgt', v);
-        // Cdtr (FI)
-        tx += this.agt('Cdtr', 'cdtrFi', v);
-        if (v.cdtrFiAcct?.trim()) tx += `\t\t\t<CdtrAcct>\n\t\t\t\t<Id>\n\t\t\t\t\t<Othr>\n\t\t\t\t\t\t<Id>${this.e(v.cdtrFiAcct)}</Id>\n\t\t\t\t\t</Othr>\n\t\t\t\t</Id>\n\t\t\t</CdtrAcct>\n`;
+
+        // Remittance Information
+        if (v.rmtInfType === 'ustrd' && v.rmtInfUstrd?.trim()) {
+            tx += this.tag('RmtInf', this.el('Ustrd', v.rmtInfUstrd, 4), 3);
+        } else if (v.rmtInfType === 'strd') {
+            let inner = '';
+            if (v.rmtInfStrdCdtrRefType || v.rmtInfStrdCdtrRef) {
+                let ref = '';
+                if (v.rmtInfStrdCdtrRefType) ref += this.tag('Tp', this.tag('CdOrPrtry', this.el('Cd', v.rmtInfStrdCdtrRefType, 7), 6), 5);
+                if (v.rmtInfStrdCdtrRef) ref += this.el('Ref', v.rmtInfStrdCdtrRef, 5);
+                inner += this.tag('CdtrRefInf', ref, 4);
+            }
+            if (v.rmtInfStrdAddtlRmtInf?.trim()) {
+                inner += this.el('AddtlRmtInf', v.rmtInfStrdAddtlRmtInf, 4);
+            }
+            if (inner) tx += this.tag('RmtInf', this.tag('Strd', inner, 4), 3);
+        }
 
 
         const frBic = v.fromBic;
@@ -430,6 +492,14 @@ ${tx}\t\t\t</CdtTrfTxInf>
         const bic = v[prefix + 'Bic']; if (!bic) return '';
         return `\t\t\t\t<${tag}>\n\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n${this.addrXml(v, prefix, 6)}\t\t\t\t\t</FinInstnId>\n\t\t\t\t</${tag}>\n`;
     }
+    agtWithAcct(tag: string, prefix: string, v: any) {
+        let res = this.agt(tag, prefix, v);
+        if (v[prefix + 'Acct']?.trim()) {
+            res += this.tag(tag + 'Acct', this.tag('Id', this.tag('Othr', this.el('Id', v[prefix + 'Acct'], 6), 5), 4), 3);
+        }
+        return res;
+    }
+
     agt(tag: string, prefix: string, v: any) {
         const bic = v[prefix + 'Bic'];
         const name = v[prefix + 'Name'];
@@ -734,9 +804,17 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 }
             });
 
-            // Re-fetch Acct since it's mapped to a different tag structure in pacs9
-            setVal('dbtrFiAcct', tryTag('DbtrAcct', 'Id'));
-            setVal('cdtrFiAcct', tryTag('CdtrAcct', 'Id'));
+            // Fetch accounts for all agents/actors
+            this.agentPrefixes.forEach(p => {
+                let tag = p.charAt(0).toUpperCase() + p.slice(1);
+                if (p === 'dbtrFi') tag = 'Dbtr';
+                if (p === 'cdtrFi') tag = 'Cdtr';
+                const acctTag = tag + 'Acct';
+                const node = doc.getElementsByTagName(acctTag)[0];
+                if (node) {
+                    patch[p + 'Acct'] = node.getElementsByTagName('Id')[0]?.getElementsByTagName('Othr')[0]?.getElementsByTagName('Id')[0]?.textContent || '';
+                }
+            });
 
             const mapAddr = (tag: string, prefix: string) => {
                 ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry', 'AdrLine1', 'AdrLine2', 'AdrTpCd', 'AdrTpPrtry'].forEach(f => patch[prefix + f] = '');
@@ -774,6 +852,28 @@ ${tx}\t\t\t</CdtTrfTxInf>
 
             setVal('purpCd', tryTag('Purp', 'Cd') || tval('Purp'));
             setVal('ctgyPurpCd', tryTag('CtgyPurp', 'Cd') || tval('CtgyPurp'));
+
+            const rmtInf = doc.getElementsByTagName('RmtInf')[0];
+            if (rmtInf) {
+                const ustrd = rmtInf.getElementsByTagName('Ustrd')[0];
+                if (ustrd) {
+                    setVal('rmtInfType', 'ustrd');
+                    setVal('rmtInfUstrd', ustrd.textContent || '');
+                } else {
+                    const strd = rmtInf.getElementsByTagName('Strd')[0];
+                    if (strd) {
+                        setVal('rmtInfType', 'strd');
+                        const ref = strd.getElementsByTagName('CdtrRefInf')[0];
+                        if (ref) {
+                            setVal('rmtInfStrdCdtrRefType', ref.getElementsByTagName('Cd')[0]?.textContent || '');
+                            setVal('rmtInfStrdCdtrRef', ref.getElementsByTagName('Ref')[0]?.textContent || '');
+                        }
+                        setVal('rmtInfStrdAddtlRmtInf', strd.getElementsByTagName('AddtlRmtInf')[0]?.textContent || '');
+                    }
+                }
+            } else {
+                setVal('rmtInfType', 'none');
+            }
             this.isParsingXml = true;
             this.form.patchValue(patch, { emitEvent: false });
             this.isParsingXml = false;

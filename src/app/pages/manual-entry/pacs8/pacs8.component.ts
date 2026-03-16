@@ -387,6 +387,21 @@ export class Pacs8Component implements OnInit {
       rmtInfStrdTaxRmtId: ['', Validators.maxLength(35)],
       rmtInfStrdGrnshmtId: ['', Validators.maxLength(35)],
 
+      // Account fields
+      dbtrAcct: ['471932901234'],
+      cdtrAcct: ['GB29NWBK60161331926819'],
+      dbtrAgtAcct: [''],
+      cdtrAgtAcct: [''],
+      // Instructions for Creditor Agent (0..2)
+      instrForCdtrAgt1Cd: [''], instrForCdtrAgt1InfTxt: ['', Validators.maxLength(140)],
+      instrForCdtrAgt2Cd: [''], instrForCdtrAgt2InfTxt: ['', Validators.maxLength(140)],
+      // Instructions for Next Agent (0..6)
+      instrForNxtAgt1Cd: [''], instrForNxtAgt1InfTxt: ['', Validators.maxLength(140)],
+      instrForNxtAgt2Cd: [''], instrForNxtAgt2InfTxt: ['', Validators.maxLength(140)],
+      instrForNxtAgt3Cd: [''], instrForNxtAgt3InfTxt: ['', Validators.maxLength(140)],
+      instrForNxtAgt4Cd: [''], instrForNxtAgt4InfTxt: ['', Validators.maxLength(140)],
+      instrForNxtAgt5Cd: [''], instrForNxtAgt5InfTxt: ['', Validators.maxLength(140)],
+      instrForNxtAgt6Cd: [''], instrForNxtAgt6InfTxt: ['', Validators.maxLength(140)],
 
     };
     [...this.agentPrefixes, ...this.partyPrefixes].forEach(p => {
@@ -421,12 +436,6 @@ export class Pacs8Component implements OnInit {
       c[p + 'PrvtOthrSchmeNmCd'] = ['', Validators.maxLength(4)]; c[p + 'PrvtOthrSchmeNmPrtry'] = ['', Validators.maxLength(35)]; c[p + 'PrvtOthrIssr'] = ['', Validators.maxLength(35)];
     });
     this.form = this.fb.group(c);
-    this.form.patchValue({
-      dbtrName: 'John Doe Corp',
-      dbtrAcct: '471932901234',
-      cdtrName: 'Jane Smith Ltd',
-      cdtrAcct: 'GB29NWBK60161331926819'
-    });
   }
 
   err(f: string): string | null {
@@ -593,21 +602,48 @@ export class Pacs8Component implements OnInit {
       }
     };
 
-    // UltmtDbtr, Dbtr, DbtrAcct, DbtrAgt
-    if (v.ultmtDbtrName?.trim() || v.ultmtDbtrAddrType !== 'none' || v.ultmtDbtrIdType !== 'none') {
+    // UltmtDbtr, Dbtr, DbtrAcct, DbtrAgt, DbtrAgtAcct
+    if (v.ultmtDbtrName?.trim() || (v.ultmtDbtrAddrType && v.ultmtDbtrAddrType !== 'none') || (v.ultmtDbtrIdType && v.ultmtDbtrIdType !== 'none')) {
       tx += this.tag('UltmtDbtr', this.el('Nm', v.ultmtDbtrName, 4) + this.addrXml(v, 'ultmtDbtr', 4) + this.partyIdXml(v, 'ultmtDbtr', 4), 3);
     }
     tx += this.partyAgentXml('Dbtr', 'dbtr', v, 3);
     if (v.dbtrAcct?.trim()) tx += this.tag('DbtrAcct', this.tag('Id', formatAcct(v.dbtrAcct, 4), 4), 3);
     tx += this.agt('DbtrAgt', 'dbtrAgt', v);
+    if (v.dbtrAgtAcct?.trim()) tx += this.tag('DbtrAgtAcct', this.tag('Id', formatAcct(v.dbtrAgtAcct, 4), 4), 3);
 
-    // CdtrAgt, Cdtr, CdtrAcct, UltmtCdtr
+    // CdtrAgt, CdtrAgtAcct, Cdtr, CdtrAcct, UltmtCdtr
     tx += this.agt('CdtrAgt', 'cdtrAgt', v);
+    if (v.cdtrAgtAcct?.trim()) tx += this.tag('CdtrAgtAcct', this.tag('Id', formatAcct(v.cdtrAgtAcct, 4), 4), 3);
     tx += this.partyAgentXml('Cdtr', 'cdtr', v, 3);
     if (v.cdtrAcct?.trim()) tx += this.tag('CdtrAcct', this.tag('Id', formatAcct(v.cdtrAcct, 4), 4), 3);
-    if (v.ultmtCdtrName?.trim() || v.ultmtCdtrAddrType !== 'none' || v.ultmtCdtrIdType !== 'none') {
+    if (v.ultmtCdtrName?.trim() || (v.ultmtCdtrAddrType && v.ultmtCdtrAddrType !== 'none') || (v.ultmtCdtrIdType && v.ultmtCdtrIdType !== 'none')) {
       tx += this.tag('UltmtCdtr', this.el('Nm', v.ultmtCdtrName, 4) + this.addrXml(v, 'ultmtCdtr', 4) + this.partyIdXml(v, 'ultmtCdtr', 4), 3);
     }
+
+    // InstrForCdtrAgt (0..2)
+    for (let i = 1; i <= 2; i++) {
+        const cd = v[`instrForCdtrAgt${i}Cd`]?.trim();
+        const txt = v[`instrForCdtrAgt${i}InfTxt`]?.trim();
+        if (cd || txt) {
+            let inner = '';
+            if (cd) inner += this.el('Cd', cd, 4);
+            if (txt) inner += this.el('InstrInf', txt, 4);
+            tx += this.tag('InstrForCdtrAgt', inner, 3);
+        }
+    }
+
+    // InstrForNxtAgt (0..6)
+    for (let i = 1; i <= 6; i++) {
+        const cd = v[`instrForNxtAgt${i}Cd`]?.trim();
+        const txt = v[`instrForNxtAgt${i}InfTxt`]?.trim();
+        if (cd || txt) {
+            let inner = '';
+            if (cd) inner += this.el('Cd', cd, 4);
+            if (txt) inner += this.el('InstrInf', txt, 4);
+            tx += this.tag('InstrForNxtAgt', inner, 3);
+        }
+    }
+
     if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 4), 3);
 
 
