@@ -203,10 +203,10 @@ export class Pacs9Component implements OnInit {
             sttlmDt: [new Date().toISOString().split('T')[0], Validators.required],
             // Debtor FI (required)
             dbtrFiBic: ['BBBBUS33XXX', BIC],
-            // Debtor Agent (optional)
-            dbtrAgtBic: ['', BIC_OPT],
-            // Creditor Agent (optional)
-            cdtrAgtBic: ['', BIC_OPT],
+            // Debtor Agent (mandatory)
+            dbtrAgtBic: ['BBBBUS33XXX', BIC],
+            // Creditor Agent (mandatory)
+            cdtrAgtBic: ['CCCCGB2LXXX', BIC],
             // Creditor FI (required)
             cdtrFiBic: ['CCCCGB2LXXX', BIC],
             // Optional agents
@@ -236,18 +236,38 @@ export class Pacs9Component implements OnInit {
         };
         // Address prefixes for agents
         this.agentPrefixes.forEach(p => {
-            c[p + 'AddrType'] = 'none'; c[p + 'AdrLine1'] = ['', Validators.maxLength(70)]; c[p + 'AdrLine2'] = ['', Validators.maxLength(70)];
-            c[p + 'Dept'] = ['', Validators.maxLength(70)]; c[p + 'SubDept'] = ['', Validators.maxLength(70)];
-            c[p + 'StrtNm'] = ['', Validators.maxLength(140)]; c[p + 'BldgNb'] = ['', Validators.maxLength(16)]; c[p + 'BldgNm'] = ['', Validators.maxLength(140)];
-            c[p + 'Flr'] = ['', Validators.maxLength(70)]; c[p + 'PstBx'] = ['', Validators.maxLength(16)]; c[p + 'Room'] = ['', Validators.maxLength(70)];
-            c[p + 'PstCd'] = ['', Validators.maxLength(16)]; c[p + 'TwnNm'] = ['', Validators.maxLength(140)]; c[p + 'CtrySubDvsn'] = ['', Validators.maxLength(35)]; c[p + 'Ctry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
-            c[p + 'TwnLctnNm'] = ['', Validators.maxLength(140)]; c[p + 'DstrctNm'] = ['', Validators.maxLength(140)]; c[p + 'AdrTpCd'] = ['']; c[p + 'AdrTpPrtry'] = ['', Validators.maxLength(35)];
-            c[p + 'Name'] = ['', [Validators.maxLength(140), SAFE_NAME]];
-            c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
-            c[p + 'ClrSysCd'] = ['', Validators.maxLength(4)];
-            c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
-            c[p + 'Acct'] = ['', [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
+            if (!c[p + 'AddrType']) c[p + 'AddrType'] = 'none';
+            if (!c[p + 'AdrLine1']) c[p + 'AdrLine1'] = ['', Validators.maxLength(70)];
+            if (!c[p + 'AdrLine2']) c[p + 'AdrLine2'] = ['', Validators.maxLength(70)];
+            if (!c[p + 'Dept']) c[p + 'Dept'] = ['', Validators.maxLength(70)];
+            if (!c[p + 'SubDept']) c[p + 'SubDept'] = ['', Validators.maxLength(70)];
+            if (!c[p + 'StrtNm']) c[p + 'StrtNm'] = ['', Validators.maxLength(140)];
+            if (!c[p + 'BldgNb']) c[p + 'BldgNb'] = ['', Validators.maxLength(16)];
+            if (!c[p + 'BldgNm']) c[p + 'BldgNm'] = ['', Validators.maxLength(140)];
+            if (!c[p + 'Flr']) c[p + 'Flr'] = ['', Validators.maxLength(70)];
+            if (!c[p + 'PstBx']) c[p + 'PstBx'] = ['', Validators.maxLength(16)];
+            if (!c[p + 'Room']) c[p + 'Room'] = ['', Validators.maxLength(70)];
+            if (!c[p + 'PstCd']) c[p + 'PstCd'] = ['', Validators.maxLength(16)];
+            if (!c[p + 'TwnNm']) c[p + 'TwnNm'] = ['', Validators.maxLength(140)];
+            if (!c[p + 'CtrySubDvsn']) c[p + 'CtrySubDvsn'] = ['', Validators.maxLength(35)];
+            if (!c[p + 'Ctry']) c[p + 'Ctry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
+            if (!c[p + 'TwnLctnNm']) c[p + 'TwnLctnNm'] = ['', Validators.maxLength(140)];
+            if (!c[p + 'DstrctNm']) c[p + 'DstrctNm'] = ['', Validators.maxLength(140)];
+            if (!c[p + 'AdrTpCd']) c[p + 'AdrTpCd'] = [''];
+            if (!c[p + 'AdrTpPrtry']) c[p + 'AdrTpPrtry'] = ['', Validators.maxLength(35)];
+            if (!c[p + 'Name']) c[p + 'Name'] = ['', [Validators.maxLength(140), SAFE_NAME]];
+            if (!c[p + 'Bic']) c[p + 'Bic'] = ['', [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
+            if (!c[p + 'Lei']) c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
+            if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['', Validators.maxLength(4)];
+            if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
+            if (!c[p + 'Acct']) c[p + 'Acct'] = ['', [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
         });
+        // Set default names for mandatory parties
+        c['dbtrFiName'] = ['Debtor FI', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
+        c['cdtrFiName'] = ['Creditor FI', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
+        c['dbtrAgtName'] = ['Debtor Agent', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
+        c['cdtrAgtName'] = ['Creditor Agent', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
+        
         this.form = this.fb.group(c);
     }
 

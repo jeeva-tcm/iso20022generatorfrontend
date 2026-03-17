@@ -66,8 +66,8 @@
                     </div>
 
                     <div class="party-group">
-                        <div class="party-group-title">Debtor Financial Institution</div>
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtrFi',isAgent:true, title:'Debtor FI'}"></ng-container>
+                        <div class="party-group-title mandatory">Debtor Financial Institution</div>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtrFi',isAgent:true, title:'Debtor FI', required: true}"></ng-container>
                     </div>
                     <div class="party-group">
                         <div class="party-group-title">Debtor FI Account</div>
@@ -77,8 +77,8 @@
                     </div>
 
                     <div class="party-group">
-                        <div class="party-group-title">Creditor Financial Institution</div>
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'cdtrFi',isAgent:true, title:'Creditor FI'}"></ng-container>
+                        <div class="party-group-title mandatory">Creditor Financial Institution</div>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'cdtrFi',isAgent:true, title:'Creditor FI', required: true}"></ng-container>
                     </div>
                     <div class="party-group">
                         <div class="party-group-title">Creditor FI Account</div>
@@ -118,8 +118,8 @@
 
                     <!-- COV Debtor -->
                     <div class="party-group">
-                        <div class="party-group-title">COV Debtor</div>
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'covDbtr',isAgent:false, title:'COV Debtor'}"></ng-container>
+                        <div class="party-group-title mandatory">COV Debtor</div>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'covDbtr',isAgent:false, title:'COV Debtor', required: true}"></ng-container>
                     </div>
 
                     <!-- COV Debtor Account -->
@@ -135,8 +135,8 @@
 
                     <!-- COV Debtor Agent -->
                     <div class="party-group">
-                        <div class="party-group-title">COV Debtor Agent</div>
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'covDbtrAgt',isAgent:true, title:'COV Debtor Agent'}"></ng-container>
+                        <div class="party-group-title mandatory">COV Debtor Agent</div>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'covDbtrAgt',isAgent:true, title:'COV Debtor Agent', required: true}"></ng-container>
                     </div>
 
                     <!-- COV Debtor Agent Account -->
@@ -152,8 +152,8 @@
 
                     <!-- COV Creditor Agent -->
                     <div class="party-group">
-                        <div class="party-group-title">COV Creditor Agent</div>
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'covCdtrAgt',isAgent:true, title:'COV Creditor Agent'}"></ng-container>
+                        <div class="party-group-title mandatory">COV Creditor Agent</div>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'covCdtrAgt',isAgent:true, title:'COV Creditor Agent', required: true}"></ng-container>
                     </div>
 
                     <!-- COV Creditor Agent Account -->
@@ -169,8 +169,8 @@
 
                     <!-- COV Creditor -->
                     <div class="party-group">
-                        <div class="party-group-title">COV Creditor</div>
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'covCdtr',isAgent:false, title:'COV Creditor'}"></ng-container>
+                        <div class="party-group-title mandatory">COV Creditor</div>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'covCdtr',isAgent:false, title:'COV Creditor', required: true}"></ng-container>
                     </div>
 
                     <!-- COV Creditor Account -->
@@ -345,16 +345,16 @@
 </div>
 
 
-<ng-template #partyForm let-prefix="prefix" let-isAgent="isAgent" let-title="title">
+<ng-template #partyForm let-prefix="prefix" let-isAgent="isAgent" let-title="title" let-required="required">
     <div [formGroup]="form" class="party-grid">
         <!-- BIC -->
         <div class="form-group" *ngIf="isAgent">
-            <label>{{title}} BIC</label>
+            <label>{{title}} BIC <span class="req" *ngIf="required">*</span></label>
             <input [formControlName]="prefix+'Bic'" maxlength="11" placeholder="e.g. NDEAFIHH">
             <div class="validation-msg" *ngIf="err(prefix+'Bic') as e">{{e}}</div>
         </div>
         <div class="form-group" *ngIf="!isAgent">
-            <label>{{title}} BIC</label>
+            <label>{{title}} BIC <span class="req" *ngIf="required">*</span></label>
             <input [formControlName]="prefix+'OrgAnyBIC'" maxlength="11" placeholder="e.g. NDEAFIHH">
             <div class="validation-msg" *ngIf="err(prefix+'OrgAnyBIC') as e">{{e}}</div>
         </div>
@@ -405,7 +405,7 @@
 
         <!-- Name -->
         <div class="form-group">
-            <label>{{title}} Name</label>
+            <label>{{title}} Name <span class="req" *ngIf="required">*</span></label>
             <input [formControlName]="prefix+'Name'" maxlength="140">
             <div class="validation-msg" *ngIf="err(prefix+'Name') as e">{{e}}</div>
         </div>

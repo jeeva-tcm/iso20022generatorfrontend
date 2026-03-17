@@ -211,8 +211,8 @@
 
                                         <!-- Debtor -->
                                         <div class="party-group">
-                                                <div class="party-group-title">Debtor</div>
-                                                <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtr',isAgent:false, title:'Debtor'}"></ng-container>
+                                                <div class="party-group-title mandatory">Debtor</div>
+                                                <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtr',isAgent:false, title:'Debtor', required: true}"></ng-container>
                                         </div>
 
                                         <!-- Debtor Account -->
@@ -229,8 +229,8 @@
 
                                         <!-- Debtor Agent -->
                                         <div class="party-group">
-                                                <div class="party-group-title">Debtor Agent</div>
-                                                <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtrAgt',isAgent:true, title:'Debtor Agent'}"></ng-container>
+                                                <div class="party-group-title mandatory">Debtor Agent</div>
+                                                <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtrAgt',isAgent:true, title:'Debtor Agent', required: true}"></ng-container>
                                         </div>
 
                                         <!-- Debtor Agent Account -->
@@ -247,8 +247,8 @@
 
                                         <!-- Creditor Agent -->
                                         <div class="party-group">
-                                                <div class="party-group-title">Creditor Agent</div>
-                                                <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'cdtrAgt',isAgent:true, title:'Creditor Agent'}"></ng-container>
+                                                <div class="party-group-title mandatory">Creditor Agent</div>
+                                                <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'cdtrAgt',isAgent:true, title:'Creditor Agent', required: true}"></ng-container>
                                         </div>
 
                                         <!-- Creditor Agent Account -->
@@ -265,8 +265,8 @@
 
                                         <!-- Creditor -->
                                         <div class="party-group">
-                                                <div class="party-group-title">Creditor</div>
-                                                <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'cdtr',isAgent:false, title:'Creditor'}"></ng-container>
+                                                <div class="party-group-title mandatory">Creditor</div>
+                                                <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'cdtr',isAgent:false, title:'Creditor', required: true}"></ng-container>
                                         </div>
 
                                         <!-- Creditor Account -->
@@ -652,16 +652,16 @@
 
 
 
-<ng-template #partyForm let-prefix="prefix" let-isAgent="isAgent" let-title="title">
+<ng-template #partyForm let-prefix="prefix" let-isAgent="isAgent" let-title="title" let-required="required">
     <div [formGroup]="form" class="party-grid">
         <!-- BIC -->
         <div class="form-group" *ngIf="isAgent">
-            <label>{{title}} BIC</label>
+            <label>{{title}} BIC <span class="req" *ngIf="required">*</span></label>
             <input [formControlName]="prefix+'Bic'" maxlength="11" placeholder="e.g. NDEAFIHH">
             <div class="validation-msg" *ngIf="err(prefix+'Bic') as e">{{e}}</div>
         </div>
         <div class="form-group" *ngIf="!isAgent">
-            <label>{{title}} BIC</label>
+            <label>{{title}} BIC <span class="req" *ngIf="required">*</span></label>
             <input [formControlName]="prefix+'OrgAnyBIC'" maxlength="11" placeholder="e.g. NDEAFIHH">
             <div class="validation-msg" *ngIf="err(prefix+'OrgAnyBIC') as e">{{e}}</div>
         </div>
@@ -712,7 +712,7 @@
 
         <!-- Name -->
         <div class="form-group">
-            <label>{{title}} Name</label>
+            <label>{{title}} Name <span class="req" *ngIf="required">*</span></label>
             <input [formControlName]="prefix+'Name'" maxlength="140">
             <div class="validation-msg" *ngIf="err(prefix+'Name') as e">{{e}}</div>
         </div>

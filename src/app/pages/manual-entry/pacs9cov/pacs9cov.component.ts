@@ -222,11 +222,11 @@ export class Pacs9CovComponent implements OnInit {
             // Debtor FI (required)
             dbtrFiBic: ['RBOSGB2L', BIC],
             dbtrFiAcct: [''],
-            // Debtor Agent (optional)
-            dbtrAgtBic: ['NDEAFIHH', BIC_OPT],
+            // Debtor Agent (mandatory)
+            dbtrAgtBic: ['NDEAFIHH', BIC],
             dbtrAgtAcct: [''],
-            // Creditor Agent (optional)
-            cdtrAgtBic: ['HELSFIHH', BIC_OPT],
+            // Creditor Agent (mandatory)
+            cdtrAgtBic: ['HELSFIHH', BIC],
             cdtrAgtAcct: [''],
             // Creditor FI (required)
             cdtrFiBic: ['OKOYFIHH', BIC],
@@ -239,13 +239,15 @@ export class Pacs9CovComponent implements OnInit {
 
             // COV — UndrlygCstmrCdtTrf fields
             covUltmtDbtrName: [''],
-            covDbtrName: ['A Debiter', [Validators.maxLength(140), SAFE_NAME]],
+            covDbtrName: ['A Debiter', [Validators.required, Validators.maxLength(140), SAFE_NAME]],
             covDbtrAcct: ['R85236974'],
-            covDbtrAgtBic: ['RBOSGB2L', BIC_OPT],
+            covDbtrOrgAnyBIC: ['RBOSGB2L', BIC],
+            covDbtrAgtBic: ['RBOSGB2L', BIC],
             covDbtrAgtAcct: [''],
-            covCdtrAgtBic: ['OKOYFIHH', BIC_OPT],
+            covCdtrAgtBic: ['OKOYFIHH', BIC],
             covCdtrAgtAcct: [''],
-            covCdtrName: ['Z Krediter', [Validators.maxLength(140), SAFE_NAME]],
+            covCdtrName: ['Z Krediter', [Validators.required, Validators.maxLength(140), SAFE_NAME]],
+            covCdtrOrgAnyBIC: ['OKOYFIHH', BIC],
             covCdtrAcct: ['O96325478'],
             covUltmtCdtrName: [''],
             covPurpCd: [''],
@@ -345,6 +347,15 @@ export class Pacs9CovComponent implements OnInit {
                 if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
             }
         });
+        // Set default names for mandatory parties
+        c['dbtrFiName'] = ['Debtor FI', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
+        c['cdtrFiName'] = ['Creditor FI', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
+        c['dbtrAgtName'] = ['Debtor Agent', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
+        c['cdtrAgtName'] = ['Creditor Agent', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
+        
+        c['covDbtrAgtName'] = ['COV Debtor Agent', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
+        c['covCdtrAgtName'] = ['COV Creditor Agent', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
+        
         this.form = this.fb.group(c);
     }
 
@@ -614,11 +625,11 @@ ${tx}\t\t\t</CdtTrfTxInf>
     }
 
     partyAgentXml(tag: string, prefix: string, v: any, indent = 4) {
-        const bic = v[prefix + 'Bic'];
+        const bic = v[prefix + 'Bic'] || v[prefix + 'OrgAnyBIC'];
         const name = v[prefix + 'Name'];
-        const lei = v[prefix + 'Lei'];
-        const clrCd = v[prefix + 'ClrSysCd'];
-        const clrMmb = v[prefix + 'ClrSysMmbId'];
+        const lei = v[prefix + 'Lei'] || v[prefix + 'OrgLEI'];
+        const clrCd = v[prefix + 'ClrSysCd'] || v[prefix + 'OrgClrSysCd'];
+        const clrMmb = v[prefix + 'ClrSysMmbId'] || v[prefix + 'OrgClrSysMmbId'];
 
         if (!bic && !name && !lei && !clrMmb && v[prefix + 'AddrType'] === 'none') return '';
 

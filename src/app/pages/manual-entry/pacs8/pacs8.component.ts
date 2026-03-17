@@ -359,9 +359,11 @@ export class Pacs8Component implements OnInit {
       svcLvlCd: ['', [Validators.pattern(/^[A-Z0-9]{1,4}$/)]],
       svcLvlPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
       chrgBr: ['SHAR', Validators.required],
-      dbtrBic: ['', BIC_OPT],
+      dbtrName: ['Debtor Name', [Validators.required, Validators.maxLength(140), SAFE_NAME]],
+      dbtrOrgAnyBIC: ['BBBBUS33XXX', BIC],
       dbtrAgtBic: ['BBBBUS33XXX', BIC],
-      cdtrBic: ['', BIC_OPT],
+      cdtrName: ['Creditor Name', [Validators.required, Validators.maxLength(140), SAFE_NAME]],
+      cdtrOrgAnyBIC: ['CCCCGB2LXXX', BIC],
       cdtrAgtBic: ['CCCCGB2LXXX', BIC],
       ultmtDbtrName: ['', [Validators.maxLength(140), SAFE_NAME]],
       ultmtCdtrName: ['', [Validators.maxLength(140), SAFE_NAME]],
@@ -403,38 +405,59 @@ export class Pacs8Component implements OnInit {
       instrForNxtAgt5Cd: [''], instrForNxtAgt5InfTxt: ['', Validators.maxLength(140)],
       instrForNxtAgt6Cd: [''], instrForNxtAgt6InfTxt: ['', Validators.maxLength(140)],
 
-    };
-    [...this.agentPrefixes, ...this.partyPrefixes].forEach(p => {
-      c[p + 'AddrType'] = 'none'; c[p + 'AdrLine1'] = ['', Validators.maxLength(70)]; c[p + 'AdrLine2'] = ['', Validators.maxLength(70)];
-      c[p + 'Dept'] = ['', Validators.maxLength(70)]; c[p + 'SubDept'] = ['', Validators.maxLength(70)];
-      c[p + 'StrtNm'] = ['', Validators.maxLength(140)]; c[p + 'BldgNb'] = ['', Validators.maxLength(16)]; c[p + 'BldgNm'] = ['', Validators.maxLength(140)];
-      c[p + 'Flr'] = ['', Validators.maxLength(70)]; c[p + 'PstBx'] = ['', Validators.maxLength(16)]; c[p + 'Room'] = ['', Validators.maxLength(70)];
-      c[p + 'PstCd'] = ['', Validators.maxLength(16)]; c[p + 'TwnNm'] = ['', Validators.maxLength(140)]; c[p + 'CtrySubDvsn'] = ['', Validators.maxLength(35)]; c[p + 'Ctry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
-      c[p + 'TwnLctnNm'] = ['', Validators.maxLength(140)]; c[p + 'DstrctNm'] = ['', Validators.maxLength(140)]; c[p + 'AdrTpCd'] = ['']; c[p + 'AdrTpPrtry'] = ['', Validators.maxLength(35)];
+    };    [...this.agentPrefixes, ...this.partyPrefixes].forEach(p => {
+      if (!c[p + 'AddrType']) c[p + 'AddrType'] = 'none';
+      if (!c[p + 'AdrLine1']) c[p + 'AdrLine1'] = ['', Validators.maxLength(70)];
+      if (!c[p + 'AdrLine2']) c[p + 'AdrLine2'] = ['', Validators.maxLength(70)];
+      if (!c[p + 'Dept']) c[p + 'Dept'] = ['', Validators.maxLength(70)];
+      if (!c[p + 'SubDept']) c[p + 'SubDept'] = ['', Validators.maxLength(70)];
+      if (!c[p + 'StrtNm']) c[p + 'StrtNm'] = ['', Validators.maxLength(140)];
+      if (!c[p + 'BldgNb']) c[p + 'BldgNb'] = ['', Validators.maxLength(16)];
+      if (!c[p + 'BldgNm']) c[p + 'BldgNm'] = ['', Validators.maxLength(140)];
+      if (!c[p + 'Flr']) c[p + 'Flr'] = ['', Validators.maxLength(70)];
+      if (!c[p + 'PstBx']) c[p + 'PstBx'] = ['', Validators.maxLength(16)];
+      if (!c[p + 'Room']) c[p + 'Room'] = ['', Validators.maxLength(70)];
+      if (!c[p + 'PstCd']) c[p + 'PstCd'] = ['', Validators.maxLength(16)];
+      if (!c[p + 'TwnNm']) c[p + 'TwnNm'] = ['', Validators.maxLength(140)];
+      if (!c[p + 'CtrySubDvsn']) c[p + 'CtrySubDvsn'] = ['', Validators.maxLength(35)];
+      if (!c[p + 'Ctry']) c[p + 'Ctry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
+      if (!c[p + 'TwnLctnNm']) c[p + 'TwnLctnNm'] = ['', Validators.maxLength(140)];
+      if (!c[p + 'DstrctNm']) c[p + 'DstrctNm'] = ['', Validators.maxLength(140)];
+      if (!c[p + 'AdrTpCd']) c[p + 'AdrTpCd'] = [''];
+      if (!c[p + 'AdrTpPrtry']) c[p + 'AdrTpPrtry'] = ['', Validators.maxLength(35)];
 
       if (this.agentPrefixes.includes(p)) {
-        c[p + 'Name'] = ['', [Validators.maxLength(140), SAFE_NAME]];
-        c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
-        c[p + 'ClrSysCd'] = ['', Validators.maxLength(4)];
-        c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
-        c[p + 'Acct'] = ['', [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
+        if (!c[p + 'Name']) c[p + 'Name'] = ['', [Validators.maxLength(140), SAFE_NAME]];
+        if (!c[p + 'Lei']) c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
+        if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['', Validators.maxLength(4)];
+        if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
+        if (!c[p + 'Acct']) c[p + 'Acct'] = ['', [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
       }
     });
     this.partyPrefixes.forEach(p => {
-      c[p + 'IdType'] = 'none';
-      c[p + 'OrgAnyBIC'] = ['', [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
-      c[p + 'OrgLEI'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
-      c[p + 'OrgClrSysCd'] = ['', Validators.maxLength(4)];
-      c[p + 'OrgClrSysMmbId'] = ['', Validators.maxLength(35)];
-      c[p + 'OrgOthrId'] = ['', Validators.maxLength(35)];
-      c[p + 'OrgOthrSchmeNmCd'] = ['', Validators.maxLength(4)]; c[p + 'OrgOthrSchmeNmPrtry'] = ['', Validators.maxLength(35)]; c[p + 'OrgOthrIssr'] = ['', Validators.maxLength(35)];
-      c[p + 'PrvtDtAndPlcOfBirthDt'] = ['', [Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]];
-      c[p + 'PrvtDtAndPlcOfBirthPrvc'] = ['', Validators.maxLength(35)];
-      c[p + 'PrvtDtAndPlcOfBirthCity'] = ['', Validators.maxLength(35)];
-      c[p + 'PrvtDtAndPlcOfBirthCtry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
-      c[p + 'PrvtOthrId'] = ['', Validators.maxLength(35)];
-      c[p + 'PrvtOthrSchmeNmCd'] = ['', Validators.maxLength(4)]; c[p + 'PrvtOthrSchmeNmPrtry'] = ['', Validators.maxLength(35)]; c[p + 'PrvtOthrIssr'] = ['', Validators.maxLength(35)];
+      if (!c[p + 'IdType']) c[p + 'IdType'] = 'none';
+      if (!c[p + 'OrgAnyBIC']) c[p + 'OrgAnyBIC'] = ['', [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
+      if (!c[p + 'OrgLEI']) c[p + 'OrgLEI'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
+      if (!c[p + 'OrgClrSysCd']) c[p + 'OrgClrSysCd'] = ['', Validators.maxLength(4)];
+      if (!c[p + 'OrgClrSysMmbId']) c[p + 'OrgClrSysMmbId'] = ['', Validators.maxLength(35)];
+      if (!c[p + 'OrgOthrId']) c[p + 'OrgOthrId'] = ['', Validators.maxLength(35)];
+      if (!c[p + 'OrgOthrSchmeNmCd']) c[p + 'OrgOthrSchmeNmCd'] = ['', Validators.maxLength(4)];
+      if (!c[p + 'OrgOthrSchmeNmPrtry']) c[p + 'OrgOthrSchmeNmPrtry'] = ['', Validators.maxLength(35)];
+      if (!c[p + 'OrgOthrIssr']) c[p + 'OrgOthrIssr'] = ['', Validators.maxLength(35)];
+      if (!c[p + 'PrvtDtAndPlcOfBirthDt']) c[p + 'PrvtDtAndPlcOfBirthDt'] = ['', [Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]];
+      if (!c[p + 'PrvtDtAndPlcOfBirthPrvc']) c[p + 'PrvtDtAndPlcOfBirthPrvc'] = ['', Validators.maxLength(35)];
+      if (!c[p + 'PrvtDtAndPlcOfBirthCity']) c[p + 'PrvtDtAndPlcOfBirthCity'] = ['', Validators.maxLength(35)];
+      if (!c[p + 'PrvtDtAndPlcOfBirthCtry']) c[p + 'PrvtDtAndPlcOfBirthCtry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
+      if (!c[p + 'PrvtOthrId']) c[p + 'PrvtOthrId'] = ['', Validators.maxLength(35)];
+      if (!c[p + 'PrvtOthrSchmeNmCd']) c[p + 'PrvtOthrSchmeNmCd'] = ['', Validators.maxLength(4)];
+      if (!c[p + 'PrvtOthrSchmeNmPrtry']) c[p + 'PrvtOthrSchmeNmPrtry'] = ['', Validators.maxLength(35)];
+      if (!c[p + 'PrvtOthrIssr']) c[p + 'PrvtOthrIssr'] = ['', Validators.maxLength(35)];
     });
+
+    // Set default names for mandatory agents
+    c['dbtrAgtName'] = ['Debtor Agent', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
+    c['cdtrAgtName'] = ['Creditor Agent', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
+
     this.form = this.fb.group(c);
   }
 
@@ -719,11 +742,11 @@ ${tx}\t\t\t</CdtTrfTxInf>
 
   // XML helpers
   partyAgentXml(tag: string, prefix: string, v: any, indent = 4) {
-    const bic = v[prefix + 'Bic'];
+    const bic = v[prefix + 'Bic'] || v[prefix + 'OrgAnyBIC'];
     const name = v[prefix + 'Name'];
-    const lei = v[prefix + 'Lei'];
-    const clrCd = v[prefix + 'ClrSysCd'];
-    const clrMmb = v[prefix + 'ClrSysMmbId'];
+    const lei = v[prefix + 'Lei'] || v[prefix + 'OrgLEI'];
+    const clrCd = v[prefix + 'ClrSysCd'] || v[prefix + 'OrgClrSysCd'];
+    const clrMmb = v[prefix + 'ClrSysMmbId'] || v[prefix + 'OrgClrSysMmbId'];
 
     if (!bic && !name && !lei && !clrMmb && v[prefix + 'AddrType'] === 'none') return '';
 

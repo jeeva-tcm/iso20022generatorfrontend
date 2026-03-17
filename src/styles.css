@@ -325,6 +325,21 @@ textarea:focus {
     letter-spacing: 1px;
 }
 
+.party-group-title.mandatory::after,
+.party-group-title.required::after {
+    content: "MANDATORY";
+    color: #ef4444;
+    background: #fee2e2;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 4px;
+    margin-left: auto;
+    vertical-align: middle;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    letter-spacing: 0.5px;
+}
+
 /* ── Fields grid inside each party group ── */
 .party-grid {
     display: flex;

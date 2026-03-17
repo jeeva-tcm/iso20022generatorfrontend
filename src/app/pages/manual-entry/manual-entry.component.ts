@@ -110,6 +110,9 @@ export class ManualEntryComponent implements OnInit {
 
         this.http.get<SchemaNode>(this.config.getApiUrl(`/messages/${type}/schema`)).subscribe({
             next: (schema) => {
+                if (schema) {
+                    this.applyMandatoryOverrides(schema, type);
+                }
                 this.schema = schema;
                 this.loading = false;
                 // Expand everything by default to show all fields as requested
@@ -133,6 +136,24 @@ export class ManualEntryComponent implements OnInit {
                 this.snackBar.open(`Error loading schema for ${type}`, 'Close', { duration: 3000, horizontalPosition: 'center', verticalPosition: 'bottom' });
             }
         });
+    }
+
+    applyMandatoryOverrides(node: SchemaNode, type: string) {
+        const t = type.toLowerCase();
+        // Skip CAMT as requested by user
+        if (t.startsWith('camt.')) return;
+
+        if (t.startsWith('pacs.') || t.startsWith('pain.')) {
+            const mandatoryNames = ['Dbtr', 'Cdtr', 'DbtrAgt', 'CdtrAgt', 'DbtrFi', 'CdtrFi'];
+            if (mandatoryNames.includes(node.name)) {
+                node.mandatory = true;
+            }
+        }
+        if (node.children) {
+            for (const child of node.children) {
+                this.applyMandatoryOverrides(child, type);
+            }
+        }
     }
 
     prepopulateDefaults(node: SchemaNode, path: string, depth: number = 0) {
@@ -163,8 +184,10 @@ export class ManualEntryComponent implements OnInit {
             else if (n === 'Ccy' || n === 'InstdAmtCcy' || n === 'IntrBkSttlmAmtCcy') {
                 this.formData[path] = 'USD';
             }
-            else if (n === 'BIC' || n === 'BICFI' || n === 'AnyBIC') {
-                this.formData[path] = 'BANKUS33XXX';
+            else if (n === 'BIC' || n === 'BICFI' || n === 'AnyBIC' || n === 'OrgAnyBIC') {
+                if (path.includes('Dbtr')) this.formData[path] = 'BBBBUS33XXX';
+                else if (path.includes('Cdtr')) this.formData[path] = 'CCCCGB2LXXX';
+                else this.formData[path] = 'BANKUS33XXX';
             }
             else if (n === 'IBAN') {
                 this.formData[path] = 'US12345678901234567890';
@@ -173,7 +196,9 @@ export class ManualEntryComponent implements OnInit {
                 this.formData[path] = 'US';
             }
             else if (n === 'Nm') {
-                this.formData[path] = 'Global Trading Corp';
+                if (path.includes('Dbtr')) this.formData[path] = 'Debtor Name';
+                else if (path.includes('Cdtr')) this.formData[path] = 'Creditor Name';
+                else this.formData[path] = 'Global Trading Corp';
             }
             else if (n === 'PstCd') {
                 this.formData[path] = '10001';
