@@ -281,71 +281,87 @@ textarea:focus {
 /* ── Party Group (one agent/party section) ── */
 .party-group {
     grid-column: 1 / -1;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 4px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
     padding: 0;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 1px 4px rgba(99,102,241,0.06);
+    margin: 0.2rem 0.5rem 1.5rem 0.2rem;
+    box-shadow: var(--shadow-sm);
     overflow: hidden;
-    transition: none; /* No hover transition */
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+body.light-theme .party-group {
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
 }
 
 .party-group:hover {
-    transform: none;
-    box-shadow: 0 1px 4px rgba(99,102,241,0.06);
+    box-shadow: var(--shadow-md);
+    border-color: var(--accent-color);
 }
 
 /* ── Header bar of each party group ── */
 .party-group-title {
-    background: #f8fafc;
-    padding: 10px 20px;
-    border-bottom: 1px solid #e2e8f0;
-    font-size: 0.72rem;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 0.8rem;
     font-weight: 700;
-    color: #475569;
+    color: var(--text-main);
     display: flex;
     align-items: center;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.8px;
     margin-bottom: 0;
-    border-radius: 0;
+}
+
+body.light-theme .party-group-title {
+    background: #f8fafc;
+    border-bottom: 1px solid #cbd5e1;
+    color: #1e293b;
 }
 
 /* "OPTIONAL" badge pushed right */
 .party-group-title::after {
     content: "OPTIONAL";
-    font-size: 0.6rem;
+    font-size: 0.65rem;
     font-weight: 700;
-    color: #818cf8;
-    background: #e0e7ff;
-    padding: 3px 9px;
-    border-radius: 4px;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-light);
+    padding: 4px 10px;
+    border-radius: 6px;
     margin-left: auto;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
+}
+
+body.light-theme .party-group-title::after {
+    color: #64748b;
+    background: #f1f5f9;
+    border-color: #cbd5e1;
 }
 
 .party-group-title.mandatory::after,
 .party-group-title.required::after {
     content: "MANDATORY";
-    color: #ef4444;
+    color: #fca5a5;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+body.light-theme .party-group-title.mandatory::after,
+body.light-theme .party-group-title.required::after {
+    color: #b91c1c;
     background: #fee2e2;
-    padding: 2px 6px;
-    font-size: 10px;
-    font-weight: 700;
-    border-radius: 4px;
-    margin-left: auto;
-    vertical-align: middle;
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    letter-spacing: 0.5px;
+    border-color: #fca5a5;
 }
 
 /* ── Fields grid inside each party group ── */
 .party-grid {
     display: flex;
     flex-direction: column;
-    gap: 0;
-    padding: 0;
+    background: transparent;
 }
 
 /* Each field row */
@@ -353,8 +369,13 @@ textarea:focus {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 6px;
-    padding: 14px 20px;
+    gap: 8px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-light);
+    width: 100%;
+}
+
+body.light-theme .party-grid .form-group {
     border-bottom: 1px solid #f1f5f9;
 }
 
@@ -362,69 +383,91 @@ textarea:focus {
     border-bottom: none;
 }
 
-/* Field labels — small uppercase, slate color */
+/* Field labels — crisp and legible */
 .party-grid label {
-    font-weight: 700;
-    color: #64748b;
-    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.75rem;
     text-transform: uppercase;
-    letter-spacing: 0.8px;
+    letter-spacing: 0.5px;
     margin: 0;
     display: flex;
     align-items: center;
     gap: 4px;
 }
 
-/* Inputs and selects — full width, clean white */
+body.light-theme .party-grid label {
+    color: #475569;
+}
+
+/* Inputs and selects */
 .party-grid input,
 .party-grid select {
     width: 100%;
     max-width: 100%;
-    height: 34px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 0 14px;
+    height: 42px; /* Taller for modern enterprise feel */
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    padding: 0 16px;
     font-size: 0.95rem;
-    background: #fff;
-    color: #1e293b;
-    text-align: left;
-    box-shadow: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    font-family: inherit;
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--text-main);
+    transition: all 0.2s ease;
+}
+
+body.light-theme .party-grid input,
+body.light-theme .party-grid select {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #0f172a;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 .party-grid input:focus,
 .party-grid select:focus {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
-    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px var(--accent-light);
+    background: rgba(0, 0, 0, 0.4);
 }
 
-.party-grid input::placeholder {
-    color: #94a3b8;
-    font-size: 0.9rem;
+body.light-theme .party-grid input:focus,
+body.light-theme .party-grid select:focus {
+    background: #ffffff;
 }
 
-/* Address sub-section: indented with side border */
+/* Address sub-section */
 .address-subgrid {
     display: flex;
     flex-direction: column;
     gap: 0;
-    padding: 0 0 0 20px;
-    border-left: 3px solid #e0e7ff;
-    margin: 4px 20px 0;
+    padding: 0 0 0 16px;
+    border-left: 3px solid var(--border-light);
+    margin: 4px 20px 12px 20px;
+    background: rgba(0,0,0,0.1);
+    border-radius: 0 6px 6px 0;
+}
+
+body.light-theme .address-subgrid {
+    border-left: 3px solid #6366f1;
+    background: rgba(99, 102, 241, 0.03);
 }
 
 .address-subgrid .form-group {
-    padding: 12px 0;
-    border-bottom: 1px solid #f8fafc;
+    padding: 12px 16px 12px 0;
+    border-bottom: 1px solid var(--border-light);
+    margin: 0;
+    width: 100%; /* Force full width on address items */
+}
+
+body.light-theme .address-subgrid .form-group {
+    border-bottom: 1px solid #e2e8f0;
 }
 
 .address-subgrid .form-group:last-child {
     border-bottom: none;
 }
 
-/* Ensure icons in titles are hidden */
+/* Hide material icons in simple headers */
 .party-group-title mat-icon {
     display: none;
 }

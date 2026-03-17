@@ -34,7 +34,7 @@
 
 
                     <div class="party-group">
-                        <div class="party-group-title">Expected Debtor Information</div>
+                        <div class="party-group-title mandatory">Expected Debtor Information</div>
                         <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtr',isAgent:false, title:'Debtor'}"></ng-container>
                     </div>
 
@@ -49,7 +49,7 @@
                     </div>
 
                     <div class="party-group">
-                        <div class="party-group-title">Debtor Agent</div>
+                        <div class="party-group-title mandatory">Debtor Agent</div>
                         <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtrAgt',isAgent:true, title:'Debtor Agent'}"></ng-container>
                     </div>
 
@@ -64,7 +64,7 @@
                     </div>
 
                     <div class="party-group">
-                        <div class="party-group-title">Intermediary Agent</div>
+                        <div class="party-group-title mandatory">Intermediary Agent</div>
                         <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'intrmyAgt',isAgent:true, title:'Intermediary Agent'}"></ng-container>
                     </div>
 
@@ -136,7 +136,7 @@
         </div>
 
         <!-- Address Type -->
-        <div class="form-group">
+        <div class="form-group" *ngIf="prefix !== 'instgAgt' && prefix !== 'instdAgt'">
             <label>{{title}} Address Type</label>
             <select [formControlName]="prefix+'AddrType'">
                 <option value="none">None (BIC/ID Only)</option>
@@ -180,7 +180,7 @@
         </ng-container>
 
         <!-- Name -->
-        <div class="form-group">
+        <div class="form-group" *ngIf="prefix !== 'instgAgt' && prefix !== 'instdAgt'">
             <label>{{title}} Name</label>
             <input [formControlName]="prefix+'Name'" maxlength="140">
             <div class="validation-msg" *ngIf="err(prefix+'Name') as e">{{e}}</div>

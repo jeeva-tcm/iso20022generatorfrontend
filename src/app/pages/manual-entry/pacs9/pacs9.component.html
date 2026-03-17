@@ -176,37 +176,17 @@
 
                                         <div class="section-title">Transaction Agents</div>
                                         <div class="party-group">
-                                                <div class="party-group-title">Instructing Agent</div>
+                                                <div class="party-group-title mandatory">Instructing Agent</div>
                                                 <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'instgAgt',isAgent:true, title:'Instructing Agent'}"></ng-container>
                                         </div>
                                         <div class="party-group">
-                                                <div class="party-group-title">Instructing Agent Account</div>
-                                                <div [formGroup]="form" class="party-grid">
-                                                        <div class="form-group">
-                                                                <label>Instructing Agent Account ID</label>
-                                                                <input formControlName="instgAgtAcct" maxlength="34" placeholder="Account">
-                                                        </div>
-                                                </div>
-                                        </div>
-
-                                        <div class="party-group">
-                                                <div class="party-group-title">Instructed Agent</div>
+                                                <div class="party-group-title mandatory">Instructed Agent</div>
                                                 <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'instdAgt',isAgent:true, title:'Instructed Agent'}"></ng-container>
                                         </div>
-                                        <div class="party-group">
-                                                <div class="party-group-title">Instructed Agent Account</div>
-                                                <div [formGroup]="form" class="party-grid">
-                                                        <div class="form-group">
-                                                                <label>Instructed Agent Account ID</label>
-                                                                <input formControlName="instdAgtAcct" maxlength="34" placeholder="Account">
-                                                        </div>
-                                                </div>
-                                        </div>
-
                                         <!-- Debtor FI -->
                                         <div class="party-group">
-                                                <div class="party-group-title mandatory">Debtor Financial Institution</div>
-                                                <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtrFi',isAgent:true, title:'Debtor FI', required: true}"></ng-container>
+                                                <div class="party-group-title mandatory">Debtor</div>
+                                                <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtrFi',isAgent:true, title:'Debtor', required: true}"></ng-container>
                                         </div>
 
                                         <!-- Debtor FI Account -->
@@ -256,8 +236,8 @@
 
                                         <!-- Creditor FI -->
                                         <div class="party-group">
-                                                <div class="party-group-title mandatory">Creditor Financial Institution</div>
-                                                <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'cdtrFi',isAgent:true, title:'Creditor FI', required: true}"></ng-container>
+                                                <div class="party-group-title mandatory">Creditor</div>
+                                                <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'cdtrFi',isAgent:true, title:'Creditor', required: true}"></ng-container>
                                         </div>
 
                                         <!-- Creditor FI Account -->
@@ -597,7 +577,7 @@
         </div>
 
         <!-- Address Type -->
-        <div class="form-group">
+        <div class="form-group" *ngIf="prefix !== 'instgAgt' && prefix !== 'instdAgt'">
             <label>{{title}} Address Type</label>
             <select [formControlName]="prefix+'AddrType'">
                 <option value="none">None (BIC/ID Only)</option>
@@ -641,7 +621,7 @@
         </ng-container>
 
         <!-- Name -->
-        <div class="form-group">
+        <div class="form-group" *ngIf="prefix !== 'instgAgt' && prefix !== 'instdAgt'">
             <label>{{title}} Name <span class="req" *ngIf="required">*</span></label>
             <input [formControlName]="prefix+'Name'" maxlength="140">
             <div class="validation-msg" *ngIf="err(prefix+'Name') as e">{{e}}</div>
@@ -669,7 +649,7 @@
         </div>
 
         <!-- Account Number -->
-        <div class="form-group">
+        <div class="form-group" *ngIf="prefix !== 'instgAgt' && prefix !== 'instdAgt'">
             <label>{{title}} Account Number</label>
             <input [formControlName]="prefix+'Acct'" maxlength="34">
         </div>

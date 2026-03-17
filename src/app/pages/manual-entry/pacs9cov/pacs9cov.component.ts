@@ -348,8 +348,8 @@ export class Pacs9CovComponent implements OnInit {
             }
         });
         // Set default names for mandatory parties
-        c['dbtrFiName'] = ['Debtor FI', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
-        c['cdtrFiName'] = ['Creditor FI', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
+        c['dbtrFiName'] = ['Debtor', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
+        c['cdtrFiName'] = ['Creditor', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
         c['dbtrAgtName'] = ['Debtor Agent', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
         c['cdtrAgtName'] = ['Creditor Agent', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
         

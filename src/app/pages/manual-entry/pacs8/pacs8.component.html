@@ -190,12 +190,12 @@
                                         <div class="section-title">Transaction Agents</div>
 
                                         <div class="party-group">
-                                                <div class="party-group-title">Instructing Agent</div>
+                                                <div class="party-group-title mandatory">Instructing Agent</div>
                                                 <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'instgAgt',isAgent:true, title:'Instructing Agent'}"></ng-container>
                                         </div>
 
                                         <div class="party-group">
-                                                <div class="party-group-title">Instructed Agent</div>
+                                                <div class="party-group-title mandatory">Instructed Agent</div>
                                                 <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'instdAgt',isAgent:true, title:'Instructed Agent'}"></ng-container>
                                         </div>
 
@@ -667,7 +667,7 @@
         </div>
 
         <!-- Address Type -->
-        <div class="form-group">
+        <div class="form-group" *ngIf="prefix !== 'instgAgt' && prefix !== 'instdAgt'">
             <label>{{title}} Address Type</label>
             <select [formControlName]="prefix+'AddrType'">
                 <option value="none">None (BIC/ID Only)</option>
@@ -711,7 +711,7 @@
         </ng-container>
 
         <!-- Name -->
-        <div class="form-group">
+        <div class="form-group" *ngIf="prefix !== 'instgAgt' && prefix !== 'instdAgt'">
             <label>{{title}} Name <span class="req" *ngIf="required">*</span></label>
             <input [formControlName]="prefix+'Name'" maxlength="140">
             <div class="validation-msg" *ngIf="err(prefix+'Name') as e">{{e}}</div>
@@ -739,7 +739,7 @@
         </div>
 
         <!-- Account Number -->
-        <div class="form-group">
+        <div class="form-group" *ngIf="prefix !== 'instgAgt' && prefix !== 'instdAgt'">
             <label>{{title}} Account Number</label>
             <input [formControlName]="prefix+'Acct'" maxlength="34">
         </div>
