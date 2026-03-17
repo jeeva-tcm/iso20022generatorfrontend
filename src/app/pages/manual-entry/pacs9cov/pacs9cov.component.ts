@@ -213,7 +213,7 @@ export class Pacs9CovComponent implements OnInit {
 
             fromBic: ['RBOSGB2L', BIC], toBic: ['NDEAFIHH', BIC], bizMsgId: ['pacs9bizmsgidr01', Validators.required],
             msgId: ['pacs9bizmsgidr01', Validators.required], creDtTm: [this.isoNow(), Validators.required],
-            nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['COVE', Validators.required],
+            nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['INGA', Validators.required],
             instgAgtBic: ['RBOSGB2L', BIC], instdAgtBic: ['NDEAFIHH', BIC],
             instrId: ['pacs9bizmsgidr01', Validators.required], endToEndId: ['pacs8bizmsgidr01', Validators.required],
             uetr: ['8a562c67-ca16-48ba-b074-65581be6f001', [Validators.required, Validators.pattern(/^[0-9a-fA-F\-]{36}$/)]],
@@ -511,27 +511,10 @@ export class Pacs9CovComponent implements OnInit {
         // Cdtr (FI)
         tx += this.agtWithAcct('Cdtr', 'cdtrFi', v);
 
-        if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 4), 3);
 
         // COV: UndrlygCstmrCdtTrf
         tx += this.buildCov(v);
 
-
-        let rmtInf = '';
-        if (v.rmtInfType === 'ustrd') {
-            if (v.rmtInfUstrd) rmtInf += `\n\t\t\t\t<RmtInf>\n\t\t\t\t\t<Ustrd>${this.e(v.rmtInfUstrd)}</Ustrd>\n\t\t\t\t</RmtInf>`;
-            if (v.rmtInfUstrd2) rmtInf += `\n\t\t\t\t<RmtInf>\n\t\t\t\t\t<Ustrd>${this.e(v.rmtInfUstrd2)}</Ustrd>\n\t\t\t\t</RmtInf>`;
-        } else if (v.rmtInfType === 'strd') {
-            let cdtrRef = '';
-            if (v.rmtInfStrdCdtrRefType && v.rmtInfStrdCdtrRef) {
-                cdtrRef = `\n\t\t\t\t\t\t<CdtrRefInf>\n\t\t\t\t\t\t\t<Tp>\n\t\t\t\t\t\t\t\t<CdOrPrtry>\n\t\t\t\t\t\t\t\t\t<Cd>${this.e(v.rmtInfStrdCdtrRefType)}</Cd>\n\t\t\t\t\t\t\t\t</CdOrPrtry>\n\t\t\t\t\t\t\t</Tp>\n\t\t\t\t\t\t\t<Ref>${this.e(v.rmtInfStrdCdtrRef)}</Ref>\n\t\t\t\t\t\t</CdtrRefInf>`;
-            }
-            let addtl = v.rmtInfStrdAddtlRmtInf ? `\n\t\t\t\t\t\t<AddtlRmtInf>${this.e(v.rmtInfStrdAddtlRmtInf)}</AddtlRmtInf>` : '';
-            if (cdtrRef || addtl) {
-                rmtInf = `\n\t\t\t\t<RmtInf>\n\t\t\t\t\t<Strd>${cdtrRef}${addtl}\n\t\t\t\t\t</Strd>\n\t\t\t\t</RmtInf>`;
-            }
-        }
-        tx += rmtInf;
 
 
         const frBic = v.fromBic;
@@ -801,24 +784,26 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 b += `\t\t\t\t<InstrForNxtAgt>\n${inner}\t\t\t\t</InstrForNxtAgt>\n`;
             }
         }
-        // Purp
-        if (v.covPurpCd?.trim()) {
-            b += `\t\t\t\t<Purp>\n${this.el('Cd', v.covPurpCd, 5)}\t\t\t\t</Purp>\n`;
+        // RmtInf (optional — inside UndrlygCstmrCdtTrf)
+        if (v.rmtInfType === 'ustrd') {
+            let ustrdContent = '';
+            if (v.rmtInfUstrd?.trim()) {
+                ustrdContent += `\t\t\t\t\t<Ustrd>${this.e(v.rmtInfUstrd)}</Ustrd>\n`;
+            }
+            if (ustrdContent) {
+                b += `\t\t\t\t<RmtInf>\n${ustrdContent}\t\t\t\t</RmtInf>\n`;
+            }
+        } else if (v.rmtInfType === 'strd') {
+            let cdtrRef = '';
+            if (v.rmtInfStrdCdtrRefType && v.rmtInfStrdCdtrRef) {
+                cdtrRef = `\n\t\t\t\t\t\t<CdtrRefInf>\n\t\t\t\t\t\t\t<Tp>\n\t\t\t\t\t\t\t\t<CdOrPrtry>\n\t\t\t\t\t\t\t\t\t<Cd>${this.e(v.rmtInfStrdCdtrRefType)}</Cd>\n\t\t\t\t\t\t\t\t</CdOrPrtry>\n\t\t\t\t\t\t\t</Tp>\n\t\t\t\t\t\t\t<Ref>${this.e(v.rmtInfStrdCdtrRef)}</Ref>\n\t\t\t\t\t\t</CdtrRefInf>`;
+            }
+            let addtl = v.rmtInfStrdAddtlRmtInf ? `\n\t\t\t\t\t\t<AddtlRmtInf>${this.e(v.rmtInfStrdAddtlRmtInf)}</AddtlRmtInf>` : '';
+            if (cdtrRef || addtl) {
+                b += `\t\t\t\t<RmtInf>\n\t\t\t\t\t<Strd>${cdtrRef}${addtl}\n\t\t\t\t\t</Strd>\n\t\t\t\t</RmtInf>\n`;
+            }
         }
-        // Tax (optional)
-        if (v.covTaxRef?.trim() || v.covTaxAmt?.trim()) {
-            b += `\t\t\t\t<Tax>\n`;
-            if (v.covTaxRef?.trim()) b += `\t\t\t\t\t<RefNb>${this.e(v.covTaxRef)}</RefNb>\n`;
-            if (v.covTaxAmt?.trim()) b += `\t\t\t\t\t<TtlTaxAmt Ccy="${this.e(v.covTaxCcy || v.currency)}">${v.covTaxAmt}</TtlTaxAmt>\n`;
-            b += `\t\t\t\t</Tax>\n`;
-        }
-        // RmtInf (optional — Ustrd)
-        if (v.covRmtInfUstrd?.trim()) {
-            b += `\t\t\t\t<RmtInf>\n\t\t\t\t\t<Ustrd>${this.e(v.covRmtInfUstrd)}</Ustrd>\n\t\t\t\t</RmtInf>\n`;
-        }
-        if (v.covRmtInfUstrd2?.trim()) {
-            b += `\t\t\t\t<RmtInf>\n\t\t\t\t\t<Ustrd>${this.e(v.covRmtInfUstrd2)}</Ustrd>\n\t\t\t\t</RmtInf>\n`;
-        }
+
         // InstdAmt (optional)
         if (v.covInstdAmt?.trim() && v.covInstdAmtCcy?.trim()) {
             b += `\t\t\t\t<InstdAmt Ccy="${this.e(v.covInstdAmtCcy)}">${v.covInstdAmt}</InstdAmt>\n`;
