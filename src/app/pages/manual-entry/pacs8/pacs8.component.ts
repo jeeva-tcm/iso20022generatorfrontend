@@ -678,9 +678,12 @@ export class Pacs8Component implements OnInit {
       if (v.rmtInfStrdCdtrRefType && v.rmtInfStrdCdtrRef) {
         cdtrRef = `\n\t\t\t\t\t\t<CdtrRefInf>\n\t\t\t\t\t\t\t<Tp>\n\t\t\t\t\t\t\t\t<CdOrPrtry>\n\t\t\t\t\t\t\t\t\t<Cd>${this.e(v.rmtInfStrdCdtrRefType)}</Cd>\n\t\t\t\t\t\t\t\t</CdOrPrtry>\n\t\t\t\t\t\t\t</Tp>\n\t\t\t\t\t\t\t<Ref>${this.e(v.rmtInfStrdCdtrRef)}</Ref>\n\t\t\t\t\t\t</CdtrRefInf>`;
       }
-      if (v.rmtInfStrdRfrdDocNb) {
-        let rd = `\n\t\t\t\t\t\t<RfrdDocInf>\n\t\t\t\t\t\t\t<Nb>${this.e(v.rmtInfStrdRfrdDocNb)}</Nb>\n`;
-        if (v.rmtInfStrdRfrdDocCd) rd += `\t\t\t\t\t\t\t<Tp>\n\t\t\t\t\t\t\t\t<CdOrPrtry>\n\t\t\t\t\t\t\t\t\t<Cd>${this.e(v.rmtInfStrdRfrdDocCd)}</Cd>\n\t\t\t\t\t\t\t\t</CdOrPrtry>\n\t\t\t\t\t\t\t</Tp>\n`;
+      if (v.rmtInfStrdRfrdDocNb || v.rmtInfStrdRfrdDocCd) {
+        let rd = `\n\t\t\t\t\t\t<RfrdDocInf>\n`;
+        if (v.rmtInfStrdRfrdDocNb) rd += `\t\t\t\t\t\t\t<Nb>${this.e(v.rmtInfStrdRfrdDocNb)}</Nb>\n`;
+        if (v.rmtInfStrdRfrdDocCd) {
+          rd += `\t\t\t\t\t\t\t<Tp>\n\t\t\t\t\t\t\t\t<CdOrPrtry>\n\t\t\t\t\t\t\t\t\t<Cd>${this.e(v.rmtInfStrdRfrdDocCd)}</Cd>\n\t\t\t\t\t\t\t\t</CdOrPrtry>\n\t\t\t\t\t\t\t</Tp>\n`;
+        }
         rd += `\t\t\t\t\t\t</RfrdDocInf>`;
         cdtrRef += rd;
       }
@@ -1064,9 +1067,24 @@ ${tx}\t\t\t</CdtTrfTxInf>
   }
 
   parseXmlToForm(content: string) {
+    if (!content?.trim()) {
+      this.isParsingXml = true;
+      const emptyPatch: any = {};
+      Object.keys(this.form.controls).forEach(key => {
+        emptyPatch[key] = '';
+      });
+      this.form.patchValue(emptyPatch, { emitEvent: false });
+      this.isParsingXml = false;
+      return;
+    }
     try {
-      const doc = new DOMParser().parseFromString(content, 'text/xml');
-      if (doc.querySelector('parsererror')) return;
+      // Strip namespaces for easier selector matching
+      const cleanXml = content.replace(/<(\/?)(?:[\w]+:)/g, '<$1');
+      const doc = new DOMParser().parseFromString(cleanXml, 'text/xml');
+      if (doc.querySelector('parsererror')) {
+        this.snackBar.open('Invalid XML: Unable to parse content.', 'Close', { duration: 3000 });
+        return;
+      }
 
       const patch: any = {};
       const tval = (t: string) => doc.getElementsByTagName(t)[0]?.textContent || '';
@@ -1088,6 +1106,17 @@ ${tx}\t\t\t</CdtTrfTxInf>
         return p ? (p.getElementsByTagName(child)[0]?.textContent || '') : '';
       };
 
+      const tryAcct = (group: string) => {
+        const groupEl = doc.getElementsByTagName(group)[0];
+        if (!groupEl) return '';
+        const idNode = groupEl.getElementsByTagName('Id')[0];
+        if (!idNode) return '';
+        const iban = idNode.getElementsByTagName('IBAN')[0]?.textContent;
+        if (iban) return iban;
+        const othr = idNode.getElementsByTagName('Othr')[0];
+        return othr?.getElementsByTagName('Id')[0]?.textContent || '';
+      };
+
       // PmtTpInf
       setVal('instrPrty', tval('InstrPrty'));
       setVal('clrChanl', tval('ClrChanl'));
@@ -1105,16 +1134,6 @@ ${tx}\t\t\t</CdtTrfTxInf>
 
       const creDtTm = doc.getElementsByTagName('CreDtTm')[0] || doc.getElementsByTagName('CreDt')[0];
       setVal('creDtTm', creDtTm ? (creDtTm.textContent || '') : '');
-      const tryAcct = (group: string) => {
-        const groupEl = doc.getElementsByTagName(group)[0];
-        if (!groupEl) return '';
-        const idNode = groupEl.getElementsByTagName('Id')[0];
-        if (!idNode) return '';
-        const iban = idNode.getElementsByTagName('IBAN')[0]?.textContent;
-        if (iban) return iban;
-        const othrNodes = idNode.getElementsByTagName('Othr');
-        return othrNodes[0]?.getElementsByTagName('Id')[0]?.textContent || '';
-      };
 
       setVal('dbtrAcct', tryAcct('DbtrAcct'));
       setVal('dbtrAgtBic', tryTag('DbtrAgt', 'BICFI'));
@@ -1122,6 +1141,39 @@ ${tx}\t\t\t</CdtTrfTxInf>
       setVal('cdtrAgtBic', tryTag('CdtrAgt', 'BICFI'));
       setVal('fromBic', tryTag('Fr', 'BICFI'));
       setVal('toBic', tryTag('To', 'BICFI'));
+
+      // Remittance
+      const rmtInf = doc.getElementsByTagName('RmtInf')[0];
+      if (rmtInf) {
+        const ustrd = rmtInf.getElementsByTagName('Ustrd')[0];
+        if (ustrd) {
+          setVal('rmtInfType', 'ustrd');
+          setVal('rmtInfUstrd', ustrd.textContent || '');
+        } else {
+          const strd = rmtInf.getElementsByTagName('Strd')[0];
+          if (strd) {
+            setVal('rmtInfType', 'strd');
+            const ref = strd.getElementsByTagName('CdtrRefInf')[0];
+            if (ref) {
+              setVal('rmtInfStrdCdtrRefType', ref.getElementsByTagName('Cd')[0]?.textContent || '');
+              setVal('rmtInfStrdCdtrRef', ref.getElementsByTagName('Ref')[0]?.textContent || '');
+            }
+            setVal('rmtInfStrdAddtlRmtInf', strd.getElementsByTagName('AddtlRmtInf')[0]?.textContent || '');
+            
+            const rfrdDoc = strd.getElementsByTagName('RfrdDocInf')[0];
+            if (rfrdDoc) {
+                setVal('rmtInfStrdRfrdDocNb', rfrdDoc.getElementsByTagName('Nb')[0]?.textContent || '');
+                setVal('rmtInfStrdRfrdDocCd', rfrdDoc.getElementsByTagName('Tp')[0]?.getElementsByTagName('CdOrPrtry')[0]?.getElementsByTagName('Cd')[0]?.textContent || '');
+            }
+            const rfrdAmtNode = strd.getElementsByTagName('RfrdDocAmt')[0];
+            if (rfrdAmtNode) {
+                setVal('rmtInfStrdRfrdDocAmt', rfrdAmtNode.getElementsByTagName('RmtAmt')[0]?.getElementsByTagName('DuePyblAmt')[0]?.textContent || '');
+            }
+          }
+        }
+      } else {
+        setVal('rmtInfType', 'none');
+      }
 
       const instgBic = tryTag('InstgAgt', 'BICFI');
       setVal('instgAgtBic', instgBic || patch.fromBic);

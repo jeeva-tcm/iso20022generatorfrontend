@@ -232,7 +232,14 @@ export class Pacs9Component implements OnInit {
             rmtInfUstrd: ['', Validators.maxLength(140)],
             rmtInfStrdCdtrRefType: [''],
             rmtInfStrdCdtrRef: ['', Validators.maxLength(35)],
-            rmtInfStrdAddtlRmtInf: ['', Validators.maxLength(140)]
+            rmtInfStrdAddtlRmtInf: ['', Validators.maxLength(140)],
+            rmtInfStrdRfrdDocNb: ['', Validators.maxLength(35)],
+            rmtInfStrdRfrdDocCd: [''],
+            rmtInfStrdRfrdDocAmt: ['', [Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],
+            rmtInfStrdInvcrNm: ['', Validators.maxLength(140)],
+            rmtInfStrdInvceeNm: ['', Validators.maxLength(140)],
+            rmtInfStrdTaxRmtId: ['', Validators.maxLength(35)],
+            rmtInfStrdGrnshmtId: ['', Validators.maxLength(35)]
         };
         // Address prefixes for agents
         this.agentPrefixes.forEach(p => {
@@ -465,6 +472,15 @@ export class Pacs9Component implements OnInit {
             }
             if (v.rmtInfStrdAddtlRmtInf?.trim()) {
                 inner += this.el('AddtlRmtInf', v.rmtInfStrdAddtlRmtInf, 4);
+            }
+            if (v.rmtInfStrdRfrdDocNb || v.rmtInfStrdRfrdDocCd) {
+                let rdi = '';
+                if (v.rmtInfStrdRfrdDocNb) rdi += this.el('Nb', v.rmtInfStrdRfrdDocNb, 5);
+                if (v.rmtInfStrdRfrdDocCd) rdi += this.tag('Tp', this.tag('CdOrPrtry', this.el('Cd', v.rmtInfStrdRfrdDocCd, 7), 6), 5);
+                inner += this.tag('RfrdDocInf', rdi, 4);
+            }
+            if (v.rmtInfStrdRfrdDocAmt) {
+                inner += this.tag('RfrdDocAmt', this.tag('RmtAmt', this.el('DuePyblAmt Ccy="' + this.e(v.currency) + '"', v.rmtInfStrdRfrdDocAmt, 6), 5), 4);
             }
             if (inner) tx += this.tag('RmtInf', this.tag('Strd', inner, 4), 3);
         }
@@ -756,9 +772,24 @@ ${tx}\t\t\t</CdtTrfTxInf>
     }
 
     parseXmlToForm(content: string) {
+        if (!content?.trim()) {
+            this.isParsingXml = true;
+            // Clear all fields to empty strings instead of defaults
+            const emptyPatch: any = {};
+            Object.keys(this.form.controls).forEach(key => {
+                emptyPatch[key] = '';
+            });
+            this.form.patchValue(emptyPatch, { emitEvent: false });
+            this.isParsingXml = false;
+            return;
+        }
         try {
-            const doc = new DOMParser().parseFromString(content, 'text/xml');
-            if (doc.querySelector('parsererror')) return;
+            const cleanXml = content.replace(/<(\/?)(?:[\w]+:)/g, '<$1');
+            const doc = new DOMParser().parseFromString(cleanXml, 'text/xml');
+            if (doc.querySelector('parsererror')) {
+                this.snackBar.open('Invalid XML: Unable to parse content.', 'Close', { duration: 3000 });
+                return;
+            }
 
             const patch: any = {};
             const tval = (t: string) => doc.getElementsByTagName(t)[0]?.textContent || '';
@@ -784,6 +815,17 @@ ${tx}\t\t\t</CdtTrfTxInf>
             const tryTag = (parentOrEl: string | Element, child: string) => {
                 const p = typeof parentOrEl === 'string' ? doc.getElementsByTagName(parentOrEl)[0] : parentOrEl;
                 return p ? (p.getElementsByTagName(child)[0]?.textContent || '') : '';
+            };
+
+            const tryAcct = (group: string) => {
+                const groupEl = doc.getElementsByTagName(group)[0];
+                if (!groupEl) return '';
+                const idNode = groupEl.getElementsByTagName('Id')[0];
+                if (!idNode) return '';
+                const iban = idNode.getElementsByTagName('IBAN')[0]?.textContent;
+                if (iban) return iban;
+                const othr = idNode.getElementsByTagName('Othr')[0];
+                return othr?.getElementsByTagName('Id')[0]?.textContent || '';
             };
 
             setVal('instrPrty', tval('InstrPrty'));
@@ -824,16 +866,14 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 }
             });
 
-            // Fetch accounts for all agents/actors
+            // Fetch accounts for all agents/actors using the robust tryAcct helper
             this.agentPrefixes.forEach(p => {
                 let tag = p.charAt(0).toUpperCase() + p.slice(1);
-                if (p === 'dbtrFi') tag = 'Dbtr';
+                if (p === 'dbtrFi') tag = 'Dbtr'; // Exception for actor/agent mapping
                 if (p === 'cdtrFi') tag = 'Cdtr';
                 const acctTag = tag + 'Acct';
-                const node = doc.getElementsByTagName(acctTag)[0];
-                if (node) {
-                    patch[p + 'Acct'] = node.getElementsByTagName('Id')[0]?.getElementsByTagName('Othr')[0]?.getElementsByTagName('Id')[0]?.textContent || '';
-                }
+                const val = tryAcct(acctTag);
+                if (val) patch[p + 'Acct'] = val;
             });
 
             const mapAddr = (tag: string, prefix: string) => {
@@ -873,6 +913,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
             setVal('purpCd', tryTag('Purp', 'Cd') || tval('Purp'));
             setVal('ctgyPurpCd', tryTag('CtgyPurp', 'Cd') || tval('CtgyPurp'));
 
+            // Remittance
             const rmtInf = doc.getElementsByTagName('RmtInf')[0];
             if (rmtInf) {
                 const ustrd = rmtInf.getElementsByTagName('Ustrd')[0];
@@ -889,6 +930,16 @@ ${tx}\t\t\t</CdtTrfTxInf>
                             setVal('rmtInfStrdCdtrRef', ref.getElementsByTagName('Ref')[0]?.textContent || '');
                         }
                         setVal('rmtInfStrdAddtlRmtInf', strd.getElementsByTagName('AddtlRmtInf')[0]?.textContent || '');
+                        
+                        const rfrdDoc = strd.getElementsByTagName('RfrdDocInf')[0];
+                        if (rfrdDoc) {
+                            setVal('rmtInfStrdRfrdDocNb', rfrdDoc.getElementsByTagName('Nb')[0]?.textContent || '');
+                            setVal('rmtInfStrdRfrdDocCd', rfrdDoc.getElementsByTagName('Tp')[0]?.getElementsByTagName('CdOrPrtry')[0]?.getElementsByTagName('Cd')[0]?.textContent || '');
+                        }
+                        const rfrdAmt = strd.getElementsByTagName('RfrdDocAmt')[0];
+                        if (rfrdAmt) {
+                            setVal('rmtInfStrdRfrdDocAmt', rfrdAmt.getElementsByTagName('RmtAmt')[0]?.getElementsByTagName('DuePyblAmt')[0]?.textContent || '');
+                        }
                     }
                 }
             } else {

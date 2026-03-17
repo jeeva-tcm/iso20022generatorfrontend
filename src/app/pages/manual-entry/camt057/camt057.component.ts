@@ -180,6 +180,13 @@ export class Camt057Component implements OnInit {
             rmtInfStrdCdtrRefType: [''],
             rmtInfStrdCdtrRef: ['', Validators.maxLength(35)],
             rmtInfStrdAddtlRmtInf: ['', [Validators.maxLength(140), Validators.pattern(/^[0-9a-zA-Z\/\-\?:\(\)\.,\'\+ !#$%&\*=\^_`\{\|\}~";<>@\[\\\]]+$/)]],
+            rmtInfStrdRfrdDocNb: ['', Validators.maxLength(35)],
+            rmtInfStrdRfrdDocCd: [''],
+            rmtInfStrdRfrdDocAmt: ['', [Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],
+            rmtInfStrdInvcrNm: ['', Validators.maxLength(140)],
+            rmtInfStrdInvceeNm: ['', Validators.maxLength(140)],
+            rmtInfStrdTaxRmtId: ['', Validators.maxLength(35)],
+            rmtInfStrdGrnshmtId: ['', Validators.maxLength(35)],
 
             fromBic: ['RECVUS33XXX', BIC_REQ],
             toBic: ['SENDGB2LXXX', BIC_REQ],
@@ -403,6 +410,15 @@ export class Camt057Component implements OnInit {
                 if (v.rmtInfStrdAddtlRmtInf?.trim()) {
                     rmtXml += `\t\t\t\t\t\t\t<AddtlRmtInf>${this.e(v.rmtInfStrdAddtlRmtInf)}</AddtlRmtInf>\n`;
                 }
+                if (v.rmtInfStrdRfrdDocNb || v.rmtInfStrdRfrdDocCd) {
+                    rmtXml += `\t\t\t\t\t\t\t<RfrdDocInf>\n`;
+                    if (v.rmtInfStrdRfrdDocNb) rmtXml += `\t\t\t\t\t\t\t\t<Nb>${this.e(v.rmtInfStrdRfrdDocNb)}</Nb>\n`;
+                    if (v.rmtInfStrdRfrdDocCd) rmtXml += `\t\t\t\t\t\t\t\t<Tp>\n\t\t\t\t\t\t\t\t\t<CdOrPrtry>\n\t\t\t\t\t\t\t\t\t\t<Cd>${this.e(v.rmtInfStrdRfrdDocCd)}</Cd>\n\t\t\t\t\t\t\t\t\t</CdOrPrtry>\n\t\t\t\t\t\t\t\t</Tp>\n`;
+                    rmtXml += `\t\t\t\t\t\t\t</RfrdDocInf>\n`;
+                }
+                if (v.rmtInfStrdRfrdDocAmt) {
+                    rmtXml += `\t\t\t\t\t\t\t<RfrdDocAmt>\n\t\t\t\t\t\t\t\t<RmtAmt>\n\t\t\t\t\t\t\t\t\t<DuePyblAmt Ccy="${this.e(v.currency)}">${v.rmtInfStrdRfrdDocAmt}</DuePyblAmt>\n\t\t\t\t\t\t\t\t</RmtAmt>\n\t\t\t\t\t\t\t</RfrdDocAmt>\n`;
+                }
                 rmtXml += `\t\t\t\t\t\t</Strd>\n`;
             }
             rmtXml += `\t\t\t\t\t</RmtInf>\n`;
@@ -565,10 +581,23 @@ ${ntfctnPartiesXml}${itmXml}
     }
 
     parseXmlToForm(content: string) {
+        if (!content?.trim()) {
+            this.isParsingXml = true;
+            const emptyPatch: any = {};
+            Object.keys(this.form.controls).forEach(key => {
+                emptyPatch[key] = '';
+            });
+            this.form.patchValue(emptyPatch, { emitEvent: false });
+            this.isParsingXml = false;
+            return;
+        }
         try {
             const cleanXml = content.replace(/<(\/?)(?:[\w]+:)/g, '<$1');
             const doc = new DOMParser().parseFromString(cleanXml, 'text/xml');
-            if (doc.querySelector('parsererror')) return;
+            if (doc.querySelector('parsererror')) {
+                this.snackBar.open('Invalid XML: Unable to parse content.', 'Close', { duration: 3000 });
+                return;
+            }
 
             const patch: any = {};
             const tval = (t: string) => doc.getElementsByTagName(t)[0]?.textContent || '';
@@ -577,6 +606,14 @@ ${ntfctnPartiesXml}${itmXml}
             setVal('bizMsgId', tval('BizMsgIdr'));
             setVal('bizSvc', tval('BizSvc'));
             setVal('msgId', tval('MsgId'));
+
+            const tryTag = (tag: string, child: string) => {
+                const p = doc.getElementsByTagName(tag)[0];
+                return p?.getElementsByTagName(child)[0]?.textContent || '';
+            };
+            setVal('fromBic', tryTag('Fr', 'BICFI'));
+            setVal('toBic', tryTag('To', 'BICFI'));
+
             const ntfctn = doc.getElementsByTagName('Ntfctn')[0];
             if (!ntfctn) return;
 
@@ -669,6 +706,15 @@ ${ntfctnPartiesXml}${itmXml}
                             setVal('rmtInfStrdCdtrRef', ref.getElementsByTagName('Ref')[0]?.textContent || '');
                         }
                         setVal('rmtInfStrdAddtlRmtInf', strd.getElementsByTagName('AddtlRmtInf')[0]?.textContent || '');
+                        const rfrdDoc = strd.getElementsByTagName('RfrdDocInf')[0];
+                        if (rfrdDoc) {
+                            setVal('rmtInfStrdRfrdDocNb', rfrdDoc.getElementsByTagName('Nb')[0]?.textContent || '');
+                            setVal('rmtInfStrdRfrdDocCd', rfrdDoc.getElementsByTagName('Tp')[0]?.getElementsByTagName('CdOrPrtry')[0]?.getElementsByTagName('Cd')[0]?.textContent || '');
+                        }
+                        const rfrdAmtNode = strd.getElementsByTagName('RfrdDocAmt')[0];
+                        if (rfrdAmtNode) {
+                            setVal('rmtInfStrdRfrdDocAmt', rfrdAmtNode.getElementsByTagName('RmtAmt')[0]?.getElementsByTagName('DuePyblAmt')[0]?.textContent || '');
+                        }
                     }
                 } else {
                     setVal('rmtInfType', 'none');
@@ -681,12 +727,6 @@ ${ntfctnPartiesXml}${itmXml}
                 });
             }
 
-            const tryTag = (parent: string, child: string) => {
-                const p = doc.getElementsByTagName(parent)[0];
-                return p ? (p.getElementsByTagName(child)[0]?.textContent || '') : '';
-            };
-            setVal('fromBic', tryTag('Fr', 'BICFI'));
-            setVal('toBic', tryTag('To', 'BICFI'));
 
             this.isParsingXml = true;
             this.form.patchValue(patch, { emitEvent: false });

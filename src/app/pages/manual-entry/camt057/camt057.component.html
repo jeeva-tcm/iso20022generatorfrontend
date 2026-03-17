@@ -90,6 +90,38 @@
                     <div class="form-row" *ngIf="form.get('rmtInfType')?.value === 'ustrd'">
                         <div class="form-group full-width"><label>Unstructured Remittance</label><input formControlName="rmtInfUstrd" maxlength="140"></div>
                     </div>
+                    <!-- Structured Remittance -->
+                    <div class="form-row" *ngIf="form.get('rmtInfType')?.value === 'strd'">
+                        <div class="form-group"><label>Creditor Ref Type</label>
+                            <select formControlName="rmtInfStrdCdtrRefType"><option value="">None</option><option value="SCOR">SCOR</option><option value="CUST">CUST</option></select>
+                        </div>
+                        <div class="form-group"><label>Creditor Reference</label><input formControlName="rmtInfStrdCdtrRef" maxlength="35">
+                            <div class="validation-msg" *ngIf="err('rmtInfStrdCdtrRef') as e">{{e}}</div>
+                        </div>
+                    </div>
+                    <div class="form-row" *ngIf="form.get('rmtInfType')?.value === 'strd'">
+                        <div class="form-group full-width"><label>Additional Remittance Info</label><input formControlName="rmtInfStrdAddtlRmtInf" maxlength="140">
+                            <div class="validation-msg" *ngIf="err('rmtInfStrdAddtlRmtInf') as e">{{e}}</div>
+                        </div>
+                    </div>
+                    <div class="form-row" *ngIf="form.get('rmtInfType')?.value === 'strd'">
+                        <div class="form-group"><label>Referred Doc Number</label><input formControlName="rmtInfStrdRfrdDocNb" maxlength="35">
+                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocNb') as e">{{e}}</div>
+                        </div>
+                        <div class="form-group"><label>Referred Doc Code</label>
+                            <select formControlName="rmtInfStrdRfrdDocCd">
+                                <option value="">None</option>
+                                <option value="CINV">CINV (Commercial Invoice)</option>
+                                <option value="CNFA">CNFA (Credit Note)</option>
+                                <option value="DNFA">DNFA (Debit Note)</option>
+                                <option value="VCHR">VCHR (Voucher)</option>
+                            </select>
+                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocCd') as e">{{e}}</div>
+                        </div>
+                        <div class="form-group"><label>Referred Doc Amount</label><input formControlName="rmtInfStrdRfrdDocAmt" type="number" step="any">
+                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmt') as e">{{e}}</div>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
