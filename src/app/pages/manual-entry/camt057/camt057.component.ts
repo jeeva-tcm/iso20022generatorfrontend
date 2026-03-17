@@ -89,6 +89,7 @@ export class Camt057Component implements OnInit {
     }
 
     private updateConditionalValidators() {
+        const ADDR_PATTERN = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
         this.agentPrefixes.forEach(p => {
             const addrType = this.form.get(p + 'AddrType')?.value;
             const ctryCtrl = this.form.get(p + 'Ctry');
@@ -109,13 +110,13 @@ export class Camt057Component implements OnInit {
 
             if (addrType === 'structured' || addrType === 'hybrid') {
                 if (!twnNmCtrl?.hasValidator(Validators.required)) {
-                    twnNmCtrl?.setValidators([Validators.required, Validators.maxLength(140)]);
+                    twnNmCtrl?.setValidators([Validators.required, Validators.maxLength(35), ADDR_PATTERN]);
                     twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
                 }
             } else {
                 if (twnNmCtrl?.hasValidator(Validators.required)) {
                     twnNmCtrl?.clearValidators();
-                    twnNmCtrl?.setValidators([Validators.maxLength(140)]);
+                    twnNmCtrl?.setValidators([Validators.maxLength(35), ADDR_PATTERN]);
                     twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
                 }
             }
@@ -176,10 +177,10 @@ export class Camt057Component implements OnInit {
             lclInstrmPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
 
             rmtInfType: ['none'],
-            rmtInfUstrd: ['', [Validators.maxLength(140), Validators.pattern(/^[0-9a-zA-Z\/\-\?:\(\)\.,\'\+ !#$%&\*=\^_`\{\|\}~";<>@\[\\\]]+$/)]],
+            rmtInfUstrd: ['', [Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/)]],
             rmtInfStrdCdtrRefType: [''],
             rmtInfStrdCdtrRef: ['', Validators.maxLength(35)],
-            rmtInfStrdAddtlRmtInf: ['', [Validators.maxLength(140), Validators.pattern(/^[0-9a-zA-Z\/\-\?:\(\)\.,\'\+ !#$%&\*=\^_`\{\|\}~";<>@\[\\\]]+$/)]],
+            rmtInfStrdAddtlRmtInf: ['', [Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/)]],
 
             fromBic: ['RECVUS33XXX', BIC_REQ],
             toBic: ['SENDGB2LXXX', BIC_REQ],
@@ -204,6 +205,7 @@ export class Camt057Component implements OnInit {
         const BIC_OPT = [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
         // Safe character set: letters, digits, space, . , ( ) ' - only. No & @ ! # $ etc.
         const SAFE_NAME = Validators.pattern(/^[a-zA-Z0-9 .,()'\-]+$/);
+        const ADDR_PATTERN = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
         this.agentPrefixes.forEach(p => {
             this.form.addControl(p + 'Name', this.fb.control('', [Validators.maxLength(140), SAFE_NAME]));
             this.form.addControl(p + 'Bic', this.fb.control('', BIC_OPT));
@@ -214,21 +216,20 @@ export class Camt057Component implements OnInit {
 
             // Address fields
             this.form.addControl(p + 'AddrType', this.fb.control('none'));
-            this.form.addControl(p + 'Dept', this.fb.control(''));
-            this.form.addControl(p + 'SubDept', this.fb.control(''));
-            this.form.addControl(p + 'StrtNm', this.fb.control(''));
-            this.form.addControl(p + 'BldgNb', this.fb.control(''));
-            this.form.addControl(p + 'BldgNm', this.fb.control(''));
-            this.form.addControl(p + 'Flr', this.fb.control(''));
-            this.form.addControl(p + 'PstBx', this.fb.control(''));
-            this.form.addControl(p + 'Room', this.fb.control(''));
-            this.form.addControl(p + 'PstCd', this.fb.control(''));
-            this.form.addControl(p + 'TwnNm', this.fb.control(''));
-            this.form.addControl(p + 'CtrySubDvsn', this.fb.control(''));
+            this.form.addControl(p + 'Dept', this.fb.control('', [Validators.maxLength(70), ADDR_PATTERN]));
+            this.form.addControl(p + 'SubDept', this.fb.control('', [Validators.maxLength(70), ADDR_PATTERN]));
+            this.form.addControl(p + 'StrtNm', this.fb.control('', [Validators.maxLength(70), ADDR_PATTERN]));
+            this.form.addControl(p + 'BldgNb', this.fb.control('', [Validators.maxLength(16), ADDR_PATTERN]));
+            this.form.addControl(p + 'BldgNm', this.fb.control('', [Validators.maxLength(35), ADDR_PATTERN]));
+            this.form.addControl(p + 'Flr', this.fb.control('', [Validators.maxLength(70), ADDR_PATTERN]));
+            this.form.addControl(p + 'PstBx', this.fb.control('', [Validators.maxLength(16), ADDR_PATTERN]));
+            this.form.addControl(p + 'Room', this.fb.control('', [Validators.maxLength(70), ADDR_PATTERN]));
+            this.form.addControl(p + 'PstCd', this.fb.control('', [Validators.maxLength(16), ADDR_PATTERN]));
+            this.form.addControl(p + 'TwnNm', this.fb.control('', [Validators.maxLength(35), ADDR_PATTERN]));
+            this.form.addControl(p + 'CtrySubDvsn', this.fb.control('', [Validators.maxLength(35), ADDR_PATTERN]));
             this.form.addControl(p + 'Ctry', this.fb.control('', Validators.pattern(/^[A-Z]{2}$/)));
-            this.form.addControl(p + 'AdrLine1', this.fb.control(''));
-            this.form.addControl(p + 'AdrLine2', this.fb.control(''));
-            this.form.addControl(p + 'Acct', this.fb.control('', Validators.maxLength(34)));
+            this.form.addControl(p + 'AdrLine1', this.fb.control('', [Validators.maxLength(70), ADDR_PATTERN]));
+            this.form.addControl(p + 'AdrLine2', this.fb.control('', [Validators.maxLength(70), ADDR_PATTERN]));
         });
 
         // Set Default Dbtr
@@ -257,7 +258,9 @@ export class Camt057Component implements OnInit {
             if (f === 'lclInstrmCd') return 'Invalid Local Instrument Code. Must be 1-4 alphanumeric characters.';
             if (f === 'lclInstrmPrtry') return 'Invalid Proprietary Local Instrument. Up to 35 characters allowed.';
             if (f === 'ctgyPurpPrtry') return 'Invalid Proprietary Category Purpose. Up to 35 characters allowed.';
-
+            if (f.toLowerCase().includes('bldgnb') || f.toLowerCase().includes('pstcd') || f.toLowerCase().includes('pstbx') || f.toLowerCase().includes('bldgnm') || f.toLowerCase().includes('twnnm') || f.toLowerCase().includes('twnlctn') || f.toLowerCase().includes('dstrctnm') || f.toLowerCase().includes('ctrysubdvsn') || f.toLowerCase().includes('strtnm') || f.toLowerCase().includes('dept') || f.toLowerCase().includes('subdept') || f.toLowerCase().includes('flr') || f.toLowerCase().includes('room') || f.toLowerCase().includes('adrline')) {
+                return 'Invalid character. Only ISO 20022 MX allowed characters permitted.';
+            }
         }
         if (c.errors?.['target2']) return 'TARGET2 payments must use EUR as the settlement currency.';
         if (c.errors?.['chaps']) return 'Invalid Currency for CHAPS clearing system. When ClrSysId/Cd = CHAPS, the transaction currency must be GBP.';
@@ -265,6 +268,25 @@ export class Camt057Component implements OnInit {
     }
     warningTimeouts: { [key: string]: any } = {};
     showMaxLenWarning: { [key: string]: boolean } = {};
+
+    @HostListener('input', ['$event'])
+    onInput(event: any) {
+        const target = event.target as HTMLInputElement;
+        if (!target) return;
+        const name = target.getAttribute('formControlName');
+        if (name && (name.toLowerCase().includes('bic') || name.toLowerCase().includes('iban'))) {
+            const start = target.selectionStart;
+            const end = target.selectionEnd;
+            const upperValue = target.value.toUpperCase();
+            if (target.value !== upperValue) {
+                target.value = upperValue;
+                if (start !== null && end !== null) {
+                    target.setSelectionRange(start, end);
+                }
+                this.form.get(name)?.patchValue(upperValue, { emitEvent: false });
+            }
+        }
+    }
 
     @HostListener('keydown', ['$event'])
     onKeydown(event: KeyboardEvent) {
@@ -422,7 +444,7 @@ export class Camt057Component implements OnInit {
 		<BizSvc>${this.e(v.bizSvc)}</BizSvc>
 		<CreDt>${creDtTm}</CreDt>
 	</AppHdr>
-	<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.057.001.08">
+	<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.057.001.06">
 		<NtfctnToRcv>
 			<GrpHdr>
 				<MsgId>${this.e(v.msgId)}</MsgId>

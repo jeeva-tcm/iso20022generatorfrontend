@@ -158,6 +158,7 @@ export class Pacs8Component implements OnInit {
   }
 
   updateConditionalValidators() {
+    const ADDR_PATTERN = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
     [...this.agentPrefixes, ...this.partyPrefixes].forEach(p => {
       const addrType = this.form.get(p + 'AddrType')?.value;
       const ctryCtrl = this.form.get(p + 'Ctry');
@@ -178,13 +179,13 @@ export class Pacs8Component implements OnInit {
 
       if (addrType === 'structured' || addrType === 'hybrid') {
         if (!twnNmCtrl?.hasValidator(Validators.required)) {
-          twnNmCtrl?.setValidators([Validators.required, Validators.maxLength(140)]);
+          twnNmCtrl?.setValidators([Validators.required, Validators.maxLength(35), ADDR_PATTERN]);
           twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
         }
       } else {
         if (twnNmCtrl?.hasValidator(Validators.required)) {
           twnNmCtrl?.clearValidators();
-          twnNmCtrl?.setValidators([Validators.maxLength(140)]);
+          twnNmCtrl?.setValidators([Validators.maxLength(35), ADDR_PATTERN]);
           twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
         }
       }
@@ -257,7 +258,7 @@ export class Pacs8Component implements OnInit {
     const addtlRmtInf = this.form.get('rmtInfStrdAddtlRmtInf');
 
     if (rmtType === 'ustrd') {
-      ustrd?.setValidators([Validators.required, Validators.maxLength(140), Validators.pattern(/^[0-9a-zA-Z\/\-\?:\(\)\.,\'\+ !#$%&\*=\^_`\{\|\}~";<>@\[\\\]]+$/)]);
+      ustrd?.setValidators([Validators.required, Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/)]);
       strdRef?.clearValidators();
       strdRefType?.clearValidators();
       addtlRmtInf?.clearValidators();
@@ -344,6 +345,8 @@ export class Pacs8Component implements OnInit {
     const BIC_OPT = [Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
     // Safe character set: letters, digits, space, . , ( ) ' - only. No & @ ! # $ etc.
     const SAFE_NAME = Validators.pattern(/^[a-zA-Z0-9 .,()'\-]+$/);
+    // ISO 20022 MX allowed character pattern for address fields
+    const ADDR_PATTERN = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
     const c: any = {
       fromBic: ['BBBBUS33XXX', BIC], toBic: ['CCCCGB2LXXX', BIC], bizMsgId: ['MSG-2026-B-001', [Validators.required, Validators.maxLength(35)]],
       msgId: ['MSG-2026-B-001', Validators.required], creDtTm: [this.isoNow(), Validators.required],
@@ -377,10 +380,10 @@ export class Pacs8Component implements OnInit {
       lclInstrmPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
 
       rmtInfType: ['none'],
-      rmtInfUstrd: ['', [Validators.maxLength(140), Validators.pattern(/^[0-9a-zA-Z\/\-\?:\(\)\.,\'\+ !#$%&\*=\^_`\{\|\}~";<>@\[\\\]]+$/)]],
+      rmtInfUstrd: ['', [Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/)]],
       rmtInfStrdCdtrRefType: [''],
       rmtInfStrdCdtrRef: ['', Validators.maxLength(35)],
-      rmtInfStrdAddtlRmtInf: ['', [Validators.maxLength(140), Validators.pattern(/^[0-9a-zA-Z\/\-\?:\(\)\.,\'\+ !#$%&\*=\^_`\{\|\}~";<>@\[\\\]]+$/)]],
+      rmtInfStrdAddtlRmtInf: ['', [Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/)]],
       rmtInfStrdRfrdDocNb: ['', Validators.maxLength(35)],
       rmtInfStrdRfrdDocCd: [''],
       rmtInfStrdRfrdDocAmt: ['', [Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],
@@ -407,22 +410,22 @@ export class Pacs8Component implements OnInit {
 
     };    [...this.agentPrefixes, ...this.partyPrefixes].forEach(p => {
       if (!c[p + 'AddrType']) c[p + 'AddrType'] = 'none';
-      if (!c[p + 'AdrLine1']) c[p + 'AdrLine1'] = ['', Validators.maxLength(70)];
-      if (!c[p + 'AdrLine2']) c[p + 'AdrLine2'] = ['', Validators.maxLength(70)];
-      if (!c[p + 'Dept']) c[p + 'Dept'] = ['', Validators.maxLength(70)];
-      if (!c[p + 'SubDept']) c[p + 'SubDept'] = ['', Validators.maxLength(70)];
-      if (!c[p + 'StrtNm']) c[p + 'StrtNm'] = ['', Validators.maxLength(140)];
-      if (!c[p + 'BldgNb']) c[p + 'BldgNb'] = ['', Validators.maxLength(16)];
-      if (!c[p + 'BldgNm']) c[p + 'BldgNm'] = ['', Validators.maxLength(140)];
-      if (!c[p + 'Flr']) c[p + 'Flr'] = ['', Validators.maxLength(70)];
-      if (!c[p + 'PstBx']) c[p + 'PstBx'] = ['', Validators.maxLength(16)];
-      if (!c[p + 'Room']) c[p + 'Room'] = ['', Validators.maxLength(70)];
-      if (!c[p + 'PstCd']) c[p + 'PstCd'] = ['', Validators.maxLength(16)];
-      if (!c[p + 'TwnNm']) c[p + 'TwnNm'] = ['', Validators.maxLength(140)];
-      if (!c[p + 'CtrySubDvsn']) c[p + 'CtrySubDvsn'] = ['', Validators.maxLength(35)];
+      if (!c[p + 'AdrLine1']) c[p + 'AdrLine1'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+      if (!c[p + 'AdrLine2']) c[p + 'AdrLine2'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+      if (!c[p + 'Dept']) c[p + 'Dept'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+      if (!c[p + 'SubDept']) c[p + 'SubDept'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+      if (!c[p + 'StrtNm']) c[p + 'StrtNm'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+      if (!c[p + 'BldgNb']) c[p + 'BldgNb'] = ['', [Validators.maxLength(16), ADDR_PATTERN]];
+      if (!c[p + 'BldgNm']) c[p + 'BldgNm'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
+      if (!c[p + 'Flr']) c[p + 'Flr'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+      if (!c[p + 'PstBx']) c[p + 'PstBx'] = ['', [Validators.maxLength(16), ADDR_PATTERN]];
+      if (!c[p + 'Room']) c[p + 'Room'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+      if (!c[p + 'PstCd']) c[p + 'PstCd'] = ['', [Validators.maxLength(16), ADDR_PATTERN]];
+      if (!c[p + 'TwnNm']) c[p + 'TwnNm'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
+      if (!c[p + 'CtrySubDvsn']) c[p + 'CtrySubDvsn'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
       if (!c[p + 'Ctry']) c[p + 'Ctry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
-      if (!c[p + 'TwnLctnNm']) c[p + 'TwnLctnNm'] = ['', Validators.maxLength(140)];
-      if (!c[p + 'DstrctNm']) c[p + 'DstrctNm'] = ['', Validators.maxLength(140)];
+      if (!c[p + 'TwnLctnNm']) c[p + 'TwnLctnNm'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
+      if (!c[p + 'DstrctNm']) c[p + 'DstrctNm'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
       if (!c[p + 'AdrTpCd']) c[p + 'AdrTpCd'] = [''];
       if (!c[p + 'AdrTpPrtry']) c[p + 'AdrTpPrtry'] = ['', Validators.maxLength(35)];
 
@@ -477,6 +480,15 @@ export class Pacs8Component implements OnInit {
       if (fl.includes('ctry') || fl.includes('country')) return '2-letter ISO code required.';
       if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
       if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
+      // Address field pattern errors (must be before the generic name/nm check)
+      if (fl.includes('bldgnb') || fl.includes('pstcd') || fl.includes('pstbx'))
+        return 'Invalid character. Only ISO 20022 MX allowed characters permitted.';
+      if (fl.includes('bldgnm') || fl.includes('twnnm') || fl.includes('twnlctn') || fl.includes('dstrctnm') || fl.includes('ctrysubdvsn'))
+        return 'Invalid character. Only ISO 20022 MX allowed characters permitted.';
+      if (fl.includes('strtnm') || fl.includes('dept') || fl.includes('subdept') || fl.includes('flr') || fl.includes('room'))
+        return 'Invalid character. Only ISO 20022 MX allowed characters permitted.';
+      if (fl.includes('adrline'))
+        return 'Invalid character. Only ISO 20022 MX allowed characters permitted.';
       if (fl.includes('name') || fl.includes('nm')) return "Invalid characters. Only letters, numbers, spaces and . , ( ) ' - are allowed (no &, @, !, etc.)";
       if (fl.includes('ustrd') || fl.includes('adtlrmtinf')) return "Invalid character in remittance field. Only ISO 20022 MX allowed chars permitted.";
 
@@ -496,6 +508,25 @@ export class Pacs8Component implements OnInit {
   }
   warningTimeouts: { [key: string]: any } = {};
   showMaxLenWarning: { [key: string]: boolean } = {};
+
+  @HostListener('input', ['$event'])
+  onInput(event: any) {
+    const target = event.target as HTMLInputElement;
+    if (!target) return;
+    const name = target.getAttribute('formControlName');
+    if (name && (name.toLowerCase().includes('bic') || name.toLowerCase().includes('iban'))) {
+      const start = target.selectionStart;
+      const end = target.selectionEnd;
+      const upperValue = target.value.toUpperCase();
+      if (target.value !== upperValue) {
+        target.value = upperValue;
+        if (start !== null && end !== null) {
+          target.setSelectionRange(start, end);
+        }
+        this.form.get(name)?.patchValue(upperValue, { emitEvent: false });
+      }
+    }
+  }
 
   @HostListener('keydown', ['$event'])
   onKeydown(event: KeyboardEvent) {
