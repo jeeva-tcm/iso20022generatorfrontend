@@ -469,6 +469,14 @@ body.light-theme textarea:focus {
     background: #fff;
 }
 
+/* Disable hover features (tooltips) globally */
+.mat-mdc-tooltip, .mdc-tooltip, .mat-tooltip {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
 /* Global Validation Messages */
 .validation-msg {
     color: #f87171;
