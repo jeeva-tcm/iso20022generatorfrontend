@@ -9,20 +9,38 @@
             <form [formGroup]="form" class="content-box">
                 <div class="grid">
                     <div class="section-title">Message Header</div>
-                    <div class="form-group"><label>Sender BIC <span class="req">*</span></label><input formControlName="fromBic" maxlength="11"></div>
-                    <div class="form-group"><label>Receiver BIC <span class="req">*</span></label><input formControlName="toBic" maxlength="11"></div>
-                    <div class="form-group"><label>Business Msg ID <span class="req">*</span></label><input formControlName="bizMsgId" maxlength="35"></div>
-                    <div class="form-group"><label>Message ID <span class="req">*</span></label><input formControlName="msgId" maxlength="35"></div>
-                    <div class="form-group"><label>Creation Date <span class="req">*</span></label><input formControlName="creDtTm"></div>
+                    <div class="form-group"><label>Sender BIC <span class="req">*</span></label><input formControlName="fromBic" maxlength="11">
+                        <div class="validation-msg" *ngIf="err('fromBic') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group"><label>Receiver BIC <span class="req">*</span></label><input formControlName="toBic" maxlength="11">
+                        <div class="validation-msg" *ngIf="err('toBic') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group"><label>Business Msg ID <span class="req">*</span></label><input formControlName="bizMsgId" maxlength="35">
+                        <div class="validation-msg" *ngIf="err('bizMsgId') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group"><label>Message ID <span class="req">*</span></label><input formControlName="msgId" maxlength="35">
+                        <div class="validation-msg" *ngIf="err('msgId') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group"><label>Creation Date <span class="req">*</span></label><input formControlName="creDtTm">
+                        <div class="validation-msg" *ngIf="err('creDtTm') as e">{{e}}</div>
+                    </div>
                     <div class="form-group"><label>Settlement Method <span class="req">*</span></label>
                         <select formControlName="sttlmMtd"><option *ngFor="let m of sttlmMethods" [value]="m">{{m}}</option></select>
                     </div>
 
                     <div class="section-title">Transaction Details</div>
-                    <div class="form-group"><label>Instruction ID <span class="req">*</span></label><input formControlName="instrId" maxlength="35"></div>
-                    <div class="form-group"><label>End To End ID <span class="req">*</span></label><input formControlName="endToEndId" maxlength="35"></div>
-                    <div class="form-group"><label>UETR <span class="req">*</span></label><input formControlName="uetr" maxlength="36"></div>
-                    <div class="form-group"><label>Amount <span class="req">*</span></label><input formControlName="amount" type="number"></div>
+                    <div class="form-group"><label>Instruction ID <span class="req">*</span></label><input formControlName="instrId" maxlength="35">
+                        <div class="validation-msg" *ngIf="err('instrId') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group"><label>End To End ID <span class="req">*</span></label><input formControlName="endToEndId" maxlength="35">
+                        <div class="validation-msg" *ngIf="err('endToEndId') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group"><label>UETR <span class="req">*</span></label><input formControlName="uetr" maxlength="36">
+                        <div class="validation-msg" *ngIf="err('uetr') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group"><label>Amount <span class="req">*</span></label><input formControlName="amount" type="number">
+                        <div class="validation-msg" *ngIf="err('amount') as e">{{e}}</div>
+                    </div>
                     <div class="form-group"><label>Currency <span class="req">*</span></label>
                         <select formControlName="currency"><option *ngFor="let c of currencies" [value]="c">{{c}}</option></select>
                     </div>
@@ -60,7 +78,9 @@
                     <div class="party-group">
                         <div class="party-group-title">Debtor Account</div>
                         <div [formGroup]="form" class="party-grid">
-                            <div class="form-group"><label>Debtor Account ID</label><input formControlName="dbtrFiAcct" maxlength="34" placeholder="Account"></div>
+                            <div class="form-group"><label>Debtor Account ID</label><input formControlName="dbtrFiAcct" maxlength="34" placeholder="Account">
+                                <div class="validation-msg" *ngIf="err('dbtrFiAcct') as e">{{e}}</div>
+                            </div>
                         </div>
                     </div>
 
@@ -71,7 +91,9 @@
                     <div class="party-group">
                         <div class="party-group-title">Debtor Agent Account</div>
                         <div [formGroup]="form" class="party-grid">
-                            <div class="form-group"><label>Debtor Agent Account ID</label><input formControlName="dbtrAgtAcct" maxlength="34" placeholder="Account"></div>
+                            <div class="form-group"><label>Debtor Agent Account ID</label><input formControlName="dbtrAgtAcct" maxlength="34" placeholder="Account">
+                                <div class="validation-msg" *ngIf="err('dbtrAgtAcct') as e">{{e}}</div>
+                            </div>
                         </div>
                     </div>
 
@@ -82,7 +104,9 @@
                     <div class="party-group">
                         <div class="party-group-title">Creditor Agent Account</div>
                         <div [formGroup]="form" class="party-grid">
-                            <div class="form-group"><label>Creditor Agent Account ID</label><input formControlName="cdtrAgtAcct" maxlength="34" placeholder="Account"></div>
+                            <div class="form-group"><label>Creditor Agent Account ID</label><input formControlName="cdtrAgtAcct" maxlength="34" placeholder="Account">
+                                <div class="validation-msg" *ngIf="err('cdtrAgtAcct') as e">{{e}}</div>
+                            </div>
                         </div>
                     </div>
 
@@ -93,7 +117,9 @@
                     <div class="party-group">
                         <div class="party-group-title">Creditor Account</div>
                         <div [formGroup]="form" class="party-grid">
-                            <div class="form-group"><label>Creditor Account ID</label><input formControlName="cdtrFiAcct" maxlength="34" placeholder="Account"></div>
+                            <div class="form-group"><label>Creditor Account ID</label><input formControlName="cdtrFiAcct" maxlength="34" placeholder="Account">
+                                <div class="validation-msg" *ngIf="err('cdtrFiAcct') as e">{{e}}</div>
+                            </div>
                         </div>
                     </div>
 
@@ -218,7 +244,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Information</label>
-                                <input formControlName="covInstrForCdtrAgt1InfTxt" maxlength="140">
+                                <input formControlName="covInstrForCdtrAgt1InfTxt" maxlength="140" placeholder="Free text (max 140)">
                             </div>
                         </div>
                     </div>
@@ -237,7 +263,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Information</label>
-                                <input formControlName="covInstrForCdtrAgt2InfTxt" maxlength="140">
+                                <input formControlName="covInstrForCdtrAgt2InfTxt" maxlength="140" placeholder="Free text (max 140)">
                             </div>
                         </div>
                     </div>
@@ -257,7 +283,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Information</label>
-                                <input [formControlName]="'covInstrForNxtAgt' + i + 'InfTxt'" maxlength="140">
+                                <input [formControlName]="'covInstrForNxtAgt' + i + 'InfTxt'" maxlength="35" placeholder="Free text (max 35)">
                             </div>
                         </div>
                     </div>

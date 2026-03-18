@@ -21,6 +21,8 @@ export class Pacs9Component implements OnInit {
     currentTab: 'form' | 'preview' = 'form';
     editorLineCount: number[] = [];
     isParsingXml = false;
+    warningTimeouts: { [key: string]: any } = {};
+    showMaxLenWarning: { [key: string]: boolean } = {};
 
     // Undo/Redo History
     private xmlHistory: string[] = [];
@@ -239,15 +241,15 @@ export class Pacs9Component implements OnInit {
             dbtrAgtAcct: [''],
             cdtrAgtAcct: [''],
             // Instructions for Creditor Agent (0..2)
-            instrForCdtrAgt1Cd: [''], instrForCdtrAgt1InfTxt: ['', Validators.maxLength(140)],
-            instrForCdtrAgt2Cd: [''], instrForCdtrAgt2InfTxt: ['', Validators.maxLength(140)],
+            instrForCdtrAgt1Cd: [''], instrForCdtrAgt1InfTxt: ['', [Validators.minLength(1), Validators.maxLength(140), ADDR_PATTERN]],
+            instrForCdtrAgt2Cd: [''], instrForCdtrAgt2InfTxt: ['', [Validators.minLength(1), Validators.maxLength(140), ADDR_PATTERN]],
             // Instructions for Next Agent (0..6)
-            instrForNxtAgt1Cd: [''], instrForNxtAgt1InfTxt: ['', Validators.maxLength(140)],
-            instrForNxtAgt2Cd: [''], instrForNxtAgt2InfTxt: ['', Validators.maxLength(140)],
-            instrForNxtAgt3Cd: [''], instrForNxtAgt3InfTxt: ['', Validators.maxLength(140)],
-            instrForNxtAgt4Cd: [''], instrForNxtAgt4InfTxt: ['', Validators.maxLength(140)],
-            instrForNxtAgt5Cd: [''], instrForNxtAgt5InfTxt: ['', Validators.maxLength(140)],
-            instrForNxtAgt6Cd: [''], instrForNxtAgt6InfTxt: ['', Validators.maxLength(140)],
+            instrForNxtAgt1Cd: [''], instrForNxtAgt1InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            instrForNxtAgt2Cd: [''], instrForNxtAgt2InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            instrForNxtAgt3Cd: [''], instrForNxtAgt3InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            instrForNxtAgt4Cd: [''], instrForNxtAgt4InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            instrForNxtAgt5Cd: [''], instrForNxtAgt5InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            instrForNxtAgt6Cd: [''], instrForNxtAgt6InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
             // Remittance (Optional)
             rmtInfType: ['none'],
             rmtInfUstrd: ['', [Validators.maxLength(140), ADDR_PATTERN]],
@@ -293,8 +295,15 @@ export class Pacs9Component implements OnInit {
     }
 
     err(f: string): string | null {
+        if (this.showMaxLenWarning[f]) {
+            const c = this.form.get(f);
+            const len = c?.value?.toString().length || 0;
+            return `Maximum limit reached (${len} characters)`;
+        }
         const c = this.form.get(f);
-        if (!c || (!c.dirty && !c.touched) || !c.invalid) return null;
+        // Remove touched/dirty requirement to show errors immediately
+        if (!c || c.valid) return null;
+        
         if (c.errors?.['required']) return 'Required field.';
         if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
         if (c.errors?.['pattern']) {
@@ -321,8 +330,8 @@ export class Pacs9Component implements OnInit {
         if (c.errors?.['chaps']) return 'Invalid Currency for CHAPS clearing system. When ClrSysId/Cd = CHAPS, the transaction currency must be GBP.';
         return 'Invalid value.';
     }
-    warningTimeouts: { [key: string]: any } = {};
-    showMaxLenWarning: { [key: string]: boolean } = {};
+
+
 
     @HostListener('keydown', ['$event'])
     onKeydown(event: KeyboardEvent) {

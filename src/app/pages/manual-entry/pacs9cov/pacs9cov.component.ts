@@ -281,15 +281,15 @@ export class Pacs9CovComponent implements OnInit {
             covPurpCd: [''],
 
             // InstrForCdtrAgt (COV) (0..2)
-            covInstrForCdtrAgt1Cd: [''], covInstrForCdtrAgt1InfTxt: ['', Validators.maxLength(140)],
-            covInstrForCdtrAgt2Cd: [''], covInstrForCdtrAgt2InfTxt: ['', Validators.maxLength(140)],
+            covInstrForCdtrAgt1Cd: [''], covInstrForCdtrAgt1InfTxt: ['', [Validators.minLength(1), Validators.maxLength(140), ADDR_PATTERN]],
+            covInstrForCdtrAgt2Cd: [''], covInstrForCdtrAgt2InfTxt: ['', [Validators.minLength(1), Validators.maxLength(140), ADDR_PATTERN]],
             // InstrForNxtAgt (COV) (0..6)
-            covInstrForNxtAgt1Cd: [''], covInstrForNxtAgt1InfTxt: ['', Validators.maxLength(140)],
-            covInstrForNxtAgt2Cd: [''], covInstrForNxtAgt2InfTxt: ['', Validators.maxLength(140)],
-            covInstrForNxtAgt3Cd: [''], covInstrForNxtAgt3InfTxt: ['', Validators.maxLength(140)],
-            covInstrForNxtAgt4Cd: [''], covInstrForNxtAgt4InfTxt: ['', Validators.maxLength(140)],
-            covInstrForNxtAgt5Cd: [''], covInstrForNxtAgt5InfTxt: ['', Validators.maxLength(140)],
-            covInstrForNxtAgt6Cd: [''], covInstrForNxtAgt6InfTxt: ['', Validators.maxLength(140)],
+            covInstrForNxtAgt1Cd: [''], covInstrForNxtAgt1InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            covInstrForNxtAgt2Cd: [''], covInstrForNxtAgt2InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            covInstrForNxtAgt3Cd: [''], covInstrForNxtAgt3InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            covInstrForNxtAgt4Cd: [''], covInstrForNxtAgt4InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            covInstrForNxtAgt5Cd: [''], covInstrForNxtAgt5InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            covInstrForNxtAgt6Cd: [''], covInstrForNxtAgt6InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
 
             // RmtInf (Ustrd)
             covRmtInfUstrd: [''],
@@ -388,8 +388,15 @@ export class Pacs9CovComponent implements OnInit {
     }
 
     err(f: string): string | null {
+        if (this.showMaxLenWarning[f]) {
+            const c = this.form.get(f);
+            const len = c?.value?.toString().length || 0;
+            return `Maximum limit reached (${len} characters)`;
+        }
         const c = this.form.get(f);
-        if (!c || (!c.dirty && !c.touched) || !c.invalid) return null;
+        // Remove touched/dirty requirement to show errors immediately
+        if (!c || c.valid) return null;
+        
         if (c.errors?.['required']) return 'Required field.';
         if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
         if (c.errors?.['pattern']) {

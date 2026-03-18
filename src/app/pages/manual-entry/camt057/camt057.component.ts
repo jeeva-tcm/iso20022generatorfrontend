@@ -244,8 +244,15 @@ export class Camt057Component implements OnInit {
     }
 
     err(f: string): string | null {
+        if (this.showMaxLenWarning[f]) {
+            const c = this.form.get(f);
+            const len = c?.value?.toString().length || 0;
+            return `Maximum limit reached (${len} characters)`;
+        }
         const c = this.form.get(f);
-        if (!c || !c.touched || !c.invalid) return null;
+        // Remove .touched requirement to show errors more aggressively
+        if (!c || c.valid) return null;
+        
         if (c.errors?.['required']) return 'Required field.';
         if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
         if (c.errors?.['pattern']) {
