@@ -68,9 +68,10 @@ export class HistoryComponent implements OnInit {
 
     loadHistory() {
         this.isLoading = true;
-        this.http.get<any[]>(this.config.getApiUrl('/history'))
+        this.http.get<any[]>(this.config.getApiUrl('/history?limit=5000'))
             .subscribe({
                 next: (data) => {
+                    console.log('Fetched raw data length from backend:', data.length);
                     // Group records by batch_id (or validation_id if missing)
                     const grouped: { [key: string]: any } = {};
                     data.forEach(item => {
