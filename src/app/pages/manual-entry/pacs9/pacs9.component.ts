@@ -396,9 +396,6 @@ export class Pacs9Component implements OnInit {
             this.validateManualUetr();
         }, 0);
     }
-    warningTimeouts: { [key: string]: any } = {};
-    showMaxLenWarning: { [key: string]: boolean } = {};
-
 
 
     @HostListener('keydown', ['$event'])
