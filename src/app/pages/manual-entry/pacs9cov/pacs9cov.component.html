@@ -21,7 +21,26 @@
                     <div class="section-title">Transaction Details</div>
                     <div class="form-group"><label>Instruction ID <span class="req">*</span></label><input formControlName="instrId" maxlength="35"></div>
                     <div class="form-group"><label>End To End ID <span class="req">*</span></label><input formControlName="endToEndId" maxlength="35"></div>
-                    <div class="form-group"><label>UETR <span class="req">*</span></label><input formControlName="uetr" maxlength="36"></div>
+                    <div class="form-group">
+                        <label>UETR <span class="req">*</span></label>
+                        <div class="uetr-control-row">
+                            <input formControlName="uetr" maxlength="36"
+                                   id="pacs9cov-uetr-input"
+                                   placeholder="xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+                                   (blur)="validateManualUetr()"
+                                   (paste)="onUetrPaste($event)"
+                                   (keydown.enter)="validateManualUetr()">
+                            <button type="button" class="uetr-refresh-btn"
+                                    id="pacs9cov-uetr-refresh"
+                                    (click)="refreshUetr()"
+                                    title="Generate new UUID v4 UETR">
+                                <mat-icon>refresh</mat-icon> Refresh
+                            </button>
+                        </div>
+                        <div class="validation-msg" *ngIf="uetrError">{{uetrError}}</div>
+                        <div class="validation-msg" *ngIf="err('uetr') as e">{{e}}</div>
+                        <div class="uetr-success" *ngIf="uetrSuccess">✔ {{uetrSuccess}}</div>
+                    </div>
                     <div class="form-group"><label>Amount <span class="req">*</span></label><input formControlName="amount" type="number"></div>
                     <div class="form-group"><label>Currency <span class="req">*</span></label>
                         <select formControlName="currency"><option *ngFor="let c of currencies" [value]="c">{{c}}</option></select>
