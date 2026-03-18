@@ -8,6 +8,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
 import { AddressValidatorService, AddressValidationResult } from '../../../services/address-validator.service';
+import { UetrService } from '../../../services/uetr.service';
 
 @Component({
   selector: 'app-pacs8',
@@ -22,6 +23,11 @@ export class Pacs8Component implements OnInit {
   currentTab: 'form' | 'preview' = 'form';
   isParsingXml = false;
   editorLineCount: number[] = [];
+
+  /** UETR Refresh state */
+  uetrError: string | null = null;
+  uetrSuccess: string | null = null;
+  private uetrSuccessTimer: any;
   
   // Undo/Redo History
   private xmlHistory: string[] = [];
@@ -51,7 +57,8 @@ export class Pacs8Component implements OnInit {
     private config: ConfigService,
     private snackBar: MatSnackBar,
     private router: Router,
-    private addressValidator: AddressValidatorService
+    private addressValidator: AddressValidatorService,
+    private uetrService: UetrService
   ) { }
 
   ngOnInit() {
@@ -354,7 +361,8 @@ export class Pacs8Component implements OnInit {
       instgAgtBic: ['BBBBUS33XXX', BIC], instdAgtBic: ['CCCCGB2LXXX', BIC],
       instrId: ['INSTR-001', [Validators.required, Validators.maxLength(35)]], endToEndId: ['E2E-001', [Validators.required, Validators.maxLength(35)]],
       txId: ['TX-001', [Validators.required, Validators.maxLength(35)]],
-      uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[0-9a-fA-F\-]{36}$/)]],
+      uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
+      // register the default UETR in the service
       amount: ['1500.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
       sttlmDt: [new Date().toISOString().split('T')[0], Validators.required], 
       instrPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
@@ -464,6 +472,78 @@ export class Pacs8Component implements OnInit {
     this.form = this.fb.group(c);
   }
 
+  /**
+   * UETR Refresh — Rule 1-8 implementation.
+   * Generates a new UUID v4, validates format, checks session uniqueness,
+   * patches the form control, shows success/error feedback.
+   */
+  refreshUetr(): void {
+    this.uetrError = null;
+    this.uetrSuccess = null;
+    clearTimeout(this.uetrSuccessTimer);
+
+    const prevUetr = this.form.get('uetr')?.value || '';
+
+    // Rule 1 & 7: Generate a new UETR that differs from previous
+    const newUetr = this.uetrService.generate();
+
+    // Rule 3: Validate UUID v4 format
+    if (!UetrService.UUID_V4_PATTERN.test(newUetr)) {
+      this.uetrError = 'Invalid UETR format';
+      return;
+    }
+
+    // Rule 4 & 7: Must not match previous UETR in same message
+    if (newUetr === prevUetr) {
+      this.uetrError = 'Duplicate UETR detected across messages';
+      return;
+    }
+
+    // Unregister old UETR, patch form with new one
+    if (prevUetr) this.uetrService.unregister(prevUetr);
+    this.form.get('uetr')?.setValue(newUetr);
+    this.form.get('uetr')?.markAsTouched();
+
+    // Rule 2: Immediate UI update — success feedback (auto-clears after 3s)
+    this.uetrSuccess = 'UETR refreshed successfully';
+    this.uetrSuccessTimer = setTimeout(() => { this.uetrSuccess = null; }, 3000);
+  }
+
+  /**
+   * Validate a manually-entered UETR value on blur.
+   * Rule 8: manually edited values must still match UUID v4 format.
+   */
+  validateManualUetr(): void {
+    const val = (this.form.get('uetr')?.value || '').trim();
+    this.uetrError = null;
+    if (!val) return;
+    if (!UetrService.UUID_V4_PATTERN.test(val)) {
+      this.uetrError = 'Invalid UETR format';
+      return;
+    }
+    // Check for duplicate (cross-message within session)
+    const result = this.uetrService.validate(val);
+    if (result === 'duplicate') {
+      this.uetrError = 'Duplicate UETR detected across messages';
+    }
+  }
+
+  /**
+   * Handle paste event on UETR field.
+   * Waits one tick for the pasted value to reach the form control,
+   * lowercases it, then validates.
+   */
+  onUetrPaste(_event: ClipboardEvent): void {
+    setTimeout(() => {
+      const ctrl = this.form.get('uetr');
+      if (!ctrl) return;
+      const raw = (ctrl.value || '').trim().toLowerCase();
+      ctrl.setValue(raw, { emitEvent: true });
+      ctrl.markAsTouched();
+      this.validateManualUetr();
+    }, 0);
+  }
+
   err(f: string): string | null {
     if (this.showMaxLenWarning[f]) {
       const c = this.form.get(f);
@@ -480,7 +560,7 @@ export class Pacs8Component implements OnInit {
       const fl = f.toLowerCase();
       if (fl.includes('bic')) return 'Valid 8 or 11-char BIC required.';
       if (fl.includes('iban')) return 'Valid 34-char IBAN required.';
-      if (fl.includes('uetr')) return 'Valid UUID required.';
+      if (fl.includes('uetr')) return 'Invalid UETR format';
       if (fl.includes('amount') || fl.includes('amt')) return 'Max 18 digits, up to 5 decimals.';
       if (fl.includes('lei')) return 'Must be 20-char LEI.';
       if (fl.includes('birthdt')) return 'Use YYYY-MM-DD format.';

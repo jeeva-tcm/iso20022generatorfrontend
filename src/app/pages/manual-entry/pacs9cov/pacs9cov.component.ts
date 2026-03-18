@@ -7,6 +7,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
+import { UetrService } from '../../../services/uetr.service';
 
 @Component({
     selector: 'app-pacs9cov',
@@ -21,6 +22,11 @@ export class Pacs9CovComponent implements OnInit {
     currentTab: 'form' | 'preview' = 'form';
     editorLineCount: number[] = [];
     isParsingXml = false;
+
+    /** UETR Refresh state */
+    uetrError: string | null = null;
+    uetrSuccess: string | null = null;
+    private uetrSuccessTimer: any;
 
     // Undo/Redo History
     private xmlHistory: string[] = [];
@@ -48,7 +54,8 @@ export class Pacs9CovComponent implements OnInit {
         private http: HttpClient,
         private config: ConfigService,
         private snackBar: MatSnackBar,
-        private router: Router
+        private router: Router,
+        private uetrService: UetrService
     ) { }
 
     ngOnInit() {
@@ -244,7 +251,7 @@ export class Pacs9CovComponent implements OnInit {
             nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['INGA', Validators.required],
             instgAgtBic: ['RBOSGB2L', BIC], instdAgtBic: ['NDEAFIHH', BIC],
             instrId: ['pacs9bizmsgidr01', Validators.required], endToEndId: ['pacs8bizmsgidr01', Validators.required],
-            uetr: ['8a562c67-ca16-48ba-b074-65581be6f001', [Validators.required, Validators.pattern(/^[0-9a-fA-F\-]{36}$/)]],
+            uetr: ['8a562c67-ca16-48ba-b074-65581be6f001', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
             amount: ['1500000', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['EUR', Validators.required],
             sttlmDt: [new Date().toISOString().split('T')[0], Validators.required],
             // Debtor FI (required)
@@ -402,7 +409,7 @@ export class Pacs9CovComponent implements OnInit {
         if (c.errors?.['pattern']) {
             if (f.toLowerCase().includes('bic')) return 'Valid 8 or 11-char BIC required.';
             if (f.toLowerCase().includes('iban')) return 'Valid 34-char IBAN required.';
-            if (f.toLowerCase().includes('uetr')) return 'Valid UUID required.';
+            if (f.toLowerCase().includes('uetr')) return 'Invalid UETR format';
             if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Amount must be > 0 (max 18 digits).';
             if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Must be a valid ISO 20022 code (4 uppercase letters).';
             if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
@@ -423,6 +430,65 @@ export class Pacs9CovComponent implements OnInit {
         if (c.errors?.['target2']) return 'TARGET2 payments must use EUR as the settlement currency.';
         if (c.errors?.['chaps']) return 'Invalid Currency for CHAPS clearing system. When ClrSysId/Cd = CHAPS, the transaction currency must be GBP.';
         return 'Invalid value.';
+    }
+
+    /**
+     * UETR Refresh — generates a new UUID v4, validates, updates form.
+     */
+    refreshUetr(): void {
+        this.uetrError = null;
+        this.uetrSuccess = null;
+        clearTimeout(this.uetrSuccessTimer);
+
+        const prevUetr = this.form.get('uetr')?.value || '';
+        const newUetr = this.uetrService.generate();
+
+        if (!UetrService.UUID_V4_PATTERN.test(newUetr)) {
+            this.uetrError = 'Invalid UETR format';
+            return;
+        }
+        if (newUetr === prevUetr) {
+            this.uetrError = 'Duplicate UETR detected across messages';
+            return;
+        }
+
+        if (prevUetr) this.uetrService.unregister(prevUetr);
+        this.form.get('uetr')?.setValue(newUetr);
+        this.form.get('uetr')?.markAsTouched();
+
+        this.uetrSuccess = 'UETR refreshed successfully';
+        this.uetrSuccessTimer = setTimeout(() => { this.uetrSuccess = null; }, 3000);
+    }
+
+    /**
+     * Validate manually edited UETR on blur (Rule 8).
+     */
+    validateManualUetr(): void {
+        const val = (this.form.get('uetr')?.value || '').trim();
+        this.uetrError = null;
+        if (!val) return;
+        if (!UetrService.UUID_V4_PATTERN.test(val)) {
+            this.uetrError = 'Invalid UETR format';
+            return;
+        }
+        const result = this.uetrService.validate(val);
+        if (result === 'duplicate') {
+            this.uetrError = 'Duplicate UETR detected across messages';
+        }
+    }
+
+    /**
+     * Handle paste event on UETR field.
+     */
+    onUetrPaste(_event: ClipboardEvent): void {
+        setTimeout(() => {
+            const ctrl = this.form.get('uetr');
+            if (!ctrl) return;
+            const raw = (ctrl.value || '').trim().toLowerCase();
+            ctrl.setValue(raw, { emitEvent: true });
+            ctrl.markAsTouched();
+            this.validateManualUetr();
+        }, 0);
     }
     warningTimeouts: { [key: string]: any } = {};
     showMaxLenWarning: { [key: string]: boolean } = {};
