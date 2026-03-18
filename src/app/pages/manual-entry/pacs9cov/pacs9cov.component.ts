@@ -80,6 +80,25 @@ export class Pacs9CovComponent implements OnInit {
         this.pushHistory();
     }
 
+    @HostListener('input', ['$event'])
+    onInput(event: any) {
+        const target = event.target as HTMLInputElement;
+        if (!target) return;
+        const name = target.getAttribute('formControlName');
+        if (name && (name.toLowerCase().includes('bic') || name.toLowerCase().includes('iban'))) {
+            const start = target.selectionStart;
+            const end = target.selectionEnd;
+            const upperValue = target.value.toUpperCase();
+            if (target.value !== upperValue) {
+                target.value = upperValue;
+                if (start !== null && end !== null) {
+                    target.setSelectionRange(start, end);
+                }
+                this.form.get(name)?.patchValue(upperValue, { emitEvent: false });
+            }
+        }
+    }
+
     private updateClearingSystemValidation() {
         const allPrefixes = [...this.agentPrefixes, ...this.covPartyPrefixes];
         const systems = allPrefixes.map(p => {
@@ -154,6 +173,7 @@ export class Pacs9CovComponent implements OnInit {
     }
 
     updateConditionalValidators() {
+        const ADDR_PATTERN = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
         const allPrefixes = [...this.agentPrefixes, ...this.covPartyPrefixes];
         allPrefixes.forEach(p => {
             const addrType = this.form.get(p + 'AddrType')?.value;
@@ -175,13 +195,13 @@ export class Pacs9CovComponent implements OnInit {
 
             if (addrType === 'structured' || addrType === 'hybrid') {
                 if (!twnNmCtrl?.hasValidator(Validators.required)) {
-                    twnNmCtrl?.setValidators([Validators.required, Validators.maxLength(140)]);
+                    twnNmCtrl?.setValidators([Validators.required, Validators.maxLength(35), ADDR_PATTERN]);
                     twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
                 }
             } else {
                 if (twnNmCtrl?.hasValidator(Validators.required)) {
                     twnNmCtrl?.clearValidators();
-                    twnNmCtrl?.setValidators([Validators.maxLength(140)]);
+                    twnNmCtrl?.setValidators([Validators.maxLength(35), ADDR_PATTERN]);
                     twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
                 }
             }
@@ -193,6 +213,7 @@ export class Pacs9CovComponent implements OnInit {
         const BIC_OPT = [Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
         // Safe character set: letters, digits, space, . , ( ) ' - only. No & @ ! # $ etc.
         const SAFE_NAME = Validators.pattern(/^[a-zA-Z0-9 .,()'\-]+$/);
+        const ADDR_PATTERN = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
         const c: any = {
             purpCd: [''], 
             ctgyPurpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/)]],
@@ -205,8 +226,8 @@ export class Pacs9CovComponent implements OnInit {
             lclInstrmPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
 
             rmtInfType: ['none'],
-            rmtInfUstrd: ['', [Validators.maxLength(140), Validators.pattern(/^[0-9a-zA-Z\/\-\?:\(\)\.,\'\+ !#$%&\*=\^_`\{\|\}~";<>@\[\\\]]+$/)]],
-            rmtInfUstrd2: ['', [Validators.maxLength(140), Validators.pattern(/^[0-9a-zA-Z\/\-\?:\(\)\.,\'\+ !#$%&\*=\^_`\{\|\}~";<>@\[\\\]]+$/)]],
+            rmtInfUstrd: ['', [Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/)]],
+            rmtInfUstrd2: ['', [Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/)]],
             rmtInfStrdCdtrRefType: [''],
             rmtInfStrdCdtrRef: ['', Validators.maxLength(35)],
             rmtInfStrdAddtlRmtInf: ['', [Validators.maxLength(140), Validators.pattern(/^[0-9a-zA-Z\/\-\?:\(\)\.,\'\+ !#$%&\*=\^_`\{\|\}~";<>@\[\\\]]+$/)]],
@@ -284,22 +305,22 @@ export class Pacs9CovComponent implements OnInit {
         // Address prefixes for main agents
         this.agentPrefixes.forEach(p => {
             if (!c[p + 'AddrType']) c[p + 'AddrType'] = 'none';
-            if (!c[p + 'AdrLine1']) c[p + 'AdrLine1'] = ['', Validators.maxLength(70)];
-            if (!c[p + 'AdrLine2']) c[p + 'AdrLine2'] = ['', Validators.maxLength(70)];
-            if (!c[p + 'Dept']) c[p + 'Dept'] = ['', Validators.maxLength(70)];
-            if (!c[p + 'SubDept']) c[p + 'SubDept'] = ['', Validators.maxLength(70)];
-            if (!c[p + 'StrtNm']) c[p + 'StrtNm'] = ['', Validators.maxLength(140)];
-            if (!c[p + 'BldgNb']) c[p + 'BldgNb'] = ['', Validators.maxLength(16)];
-            if (!c[p + 'BldgNm']) c[p + 'BldgNm'] = ['', Validators.maxLength(140)];
-            if (!c[p + 'Flr']) c[p + 'Flr'] = ['', Validators.maxLength(70)];
-            if (!c[p + 'PstBx']) c[p + 'PstBx'] = ['', Validators.maxLength(16)];
-            if (!c[p + 'Room']) c[p + 'Room'] = ['', Validators.maxLength(70)];
-            if (!c[p + 'PstCd']) c[p + 'PstCd'] = ['', Validators.maxLength(16)];
-            if (!c[p + 'TwnNm']) c[p + 'TwnNm'] = ['', Validators.maxLength(140)];
-            if (!c[p + 'CtrySubDvsn']) c[p + 'CtrySubDvsn'] = ['', Validators.maxLength(35)];
+            if (!c[p + 'AdrLine1']) c[p + 'AdrLine1'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+            if (!c[p + 'AdrLine2']) c[p + 'AdrLine2'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+            if (!c[p + 'Dept']) c[p + 'Dept'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+            if (!c[p + 'SubDept']) c[p + 'SubDept'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+            if (!c[p + 'StrtNm']) c[p + 'StrtNm'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+            if (!c[p + 'BldgNb']) c[p + 'BldgNb'] = ['', [Validators.maxLength(16), ADDR_PATTERN]];
+            if (!c[p + 'BldgNm']) c[p + 'BldgNm'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
+            if (!c[p + 'Flr']) c[p + 'Flr'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+            if (!c[p + 'PstBx']) c[p + 'PstBx'] = ['', [Validators.maxLength(16), ADDR_PATTERN]];
+            if (!c[p + 'Room']) c[p + 'Room'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+            if (!c[p + 'PstCd']) c[p + 'PstCd'] = ['', [Validators.maxLength(16), ADDR_PATTERN]];
+            if (!c[p + 'TwnNm']) c[p + 'TwnNm'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
+            if (!c[p + 'CtrySubDvsn']) c[p + 'CtrySubDvsn'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
             if (!c[p + 'Ctry']) c[p + 'Ctry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
-            if (!c[p + 'TwnLctnNm']) c[p + 'TwnLctnNm'] = ['', Validators.maxLength(140)];
-            if (!c[p + 'DstrctNm']) c[p + 'DstrctNm'] = ['', Validators.maxLength(140)];
+            if (!c[p + 'TwnLctnNm']) c[p + 'TwnLctnNm'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
+            if (!c[p + 'DstrctNm']) c[p + 'DstrctNm'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
             if (!c[p + 'AdrTpCd']) c[p + 'AdrTpCd'] = [''];
             if (!c[p + 'AdrTpPrtry']) c[p + 'AdrTpPrtry'] = ['', Validators.maxLength(35)];
             if (!c[p + 'Name']) c[p + 'Name'] = ['', [Validators.maxLength(140), SAFE_NAME]];
@@ -312,22 +333,22 @@ export class Pacs9CovComponent implements OnInit {
         // Address prefixes for COV parties (Debtor / Creditor in UndrlygCstmrCdtTrf)
         this.covPartyPrefixes.forEach(p => {
             if (!c[p + 'AddrType']) c[p + 'AddrType'] = 'none';
-            if (!c[p + 'AdrLine1']) c[p + 'AdrLine1'] = ['', Validators.maxLength(70)];
-            if (!c[p + 'AdrLine2']) c[p + 'AdrLine2'] = ['', Validators.maxLength(70)];
-            if (!c[p + 'Dept']) c[p + 'Dept'] = ['', Validators.maxLength(70)];
-            if (!c[p + 'SubDept']) c[p + 'SubDept'] = ['', Validators.maxLength(70)];
-            if (!c[p + 'StrtNm']) c[p + 'StrtNm'] = ['', Validators.maxLength(140)];
-            if (!c[p + 'BldgNb']) c[p + 'BldgNb'] = ['', Validators.maxLength(16)];
-            if (!c[p + 'BldgNm']) c[p + 'BldgNm'] = ['', Validators.maxLength(140)];
-            if (!c[p + 'Flr']) c[p + 'Flr'] = ['', Validators.maxLength(70)];
-            if (!c[p + 'PstBx']) c[p + 'PstBx'] = ['', Validators.maxLength(16)];
-            if (!c[p + 'Room']) c[p + 'Room'] = ['', Validators.maxLength(70)];
-            if (!c[p + 'PstCd']) c[p + 'PstCd'] = ['', Validators.maxLength(16)];
-            if (!c[p + 'TwnNm']) c[p + 'TwnNm'] = ['', Validators.maxLength(140)];
-            if (!c[p + 'CtrySubDvsn']) c[p + 'CtrySubDvsn'] = ['', Validators.maxLength(35)];
+            if (!c[p + 'AdrLine1']) c[p + 'AdrLine1'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+            if (!c[p + 'AdrLine2']) c[p + 'AdrLine2'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+            if (!c[p + 'Dept']) c[p + 'Dept'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+            if (!c[p + 'SubDept']) c[p + 'SubDept'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+            if (!c[p + 'StrtNm']) c[p + 'StrtNm'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+            if (!c[p + 'BldgNb']) c[p + 'BldgNb'] = ['', [Validators.maxLength(16), ADDR_PATTERN]];
+            if (!c[p + 'BldgNm']) c[p + 'BldgNm'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
+            if (!c[p + 'Flr']) c[p + 'Flr'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+            if (!c[p + 'PstBx']) c[p + 'PstBx'] = ['', [Validators.maxLength(16), ADDR_PATTERN]];
+            if (!c[p + 'Room']) c[p + 'Room'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+            if (!c[p + 'PstCd']) c[p + 'PstCd'] = ['', [Validators.maxLength(16), ADDR_PATTERN]];
+            if (!c[p + 'TwnNm']) c[p + 'TwnNm'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
+            if (!c[p + 'CtrySubDvsn']) c[p + 'CtrySubDvsn'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
             if (!c[p + 'Ctry']) c[p + 'Ctry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
-            if (!c[p + 'TwnLctnNm']) c[p + 'TwnLctnNm'] = ['', Validators.maxLength(140)];
-            if (!c[p + 'DstrctNm']) c[p + 'DstrctNm'] = ['', Validators.maxLength(140)];
+            if (!c[p + 'TwnLctnNm']) c[p + 'TwnLctnNm'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
+            if (!c[p + 'DstrctNm']) c[p + 'DstrctNm'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
             if (!c[p + 'AdrTpCd']) c[p + 'AdrTpCd'] = [''];
             if (!c[p + 'AdrTpPrtry']) c[p + 'AdrTpPrtry'] = ['', Validators.maxLength(35)];
 
@@ -388,6 +409,9 @@ export class Pacs9CovComponent implements OnInit {
             if (f === 'lclInstrmCd') return 'Invalid Local Instrument Code. Must be 1-4 alphanumeric characters.';
             if (f === 'lclInstrmPrtry') return 'Invalid Proprietary Local Instrument. Up to 35 characters allowed.';
             if (f === 'ctgyPurpPrtry') return 'Invalid Proprietary Category Purpose. Up to 35 characters allowed.';
+            if (f.toLowerCase().includes('bldgnb') || f.toLowerCase().includes('pstcd') || f.toLowerCase().includes('pstbx') || f.toLowerCase().includes('bldgnm') || f.toLowerCase().includes('twnnm') || f.toLowerCase().includes('twnlctn') || f.toLowerCase().includes('dstrctnm') || f.toLowerCase().includes('ctrysubdvsn') || f.toLowerCase().includes('strtnm') || f.toLowerCase().includes('dept') || f.toLowerCase().includes('subdept') || f.toLowerCase().includes('flr') || f.toLowerCase().includes('room') || f.toLowerCase().includes('adrline')) {
+                return 'Invalid character. Only ISO 20022 MX allowed characters permitted.';
+            }
         }
         if (c.errors?.['target2']) return 'TARGET2 payments must use EUR as the settlement currency.';
         if (c.errors?.['chaps']) return 'Invalid Currency for CHAPS clearing system. When ClrSysId/Cd = CHAPS, the transaction currency must be GBP.';

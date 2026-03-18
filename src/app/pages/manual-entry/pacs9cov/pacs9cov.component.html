@@ -390,20 +390,29 @@
         <ng-container *ngIf="form.get(prefix+'AddrType')?.value !== 'none'">
             <div class="address-subgrid">
                 <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
-                    <label>{{title}} Building Number</label><input [formControlName]="prefix+'BldgNb'">
+                    <label>{{title}} Building Number</label>
+                    <input [formControlName]="prefix+'BldgNb'">
+                    <div class="validation-msg" *ngIf="err(prefix+'BldgNb') as e">{{e}}</div>
                 </div>
                 <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
-                    <label>{{title}} Building Name</label><input [formControlName]="prefix+'BldgNm'">
+                    <label>{{title}} Building Name</label>
+                    <input [formControlName]="prefix+'BldgNm'">
+                    <div class="validation-msg" *ngIf="err(prefix+'BldgNm') as e">{{e}}</div>
                 </div>
                 <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
-                    <label>{{title}} Street Name</label><input [formControlName]="prefix+'StrtNm'">
+                    <label>{{title}} Street Name</label>
+                    <input [formControlName]="prefix+'StrtNm'">
+                    <div class="validation-msg" *ngIf="err(prefix+'StrtNm') as e">{{e}}</div>
                 </div>
                 <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
-                    <label>{{title}} Post Code</label><input [formControlName]="prefix+'PstCd'">
+                    <label>{{title}} Post Code</label>
+                    <input [formControlName]="prefix+'PstCd'">
+                    <div class="validation-msg" *ngIf="err(prefix+'PstCd') as e">{{e}}</div>
                 </div>
                 <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                     <label>{{title}} City (Town Name) <span class="req">*</span></label>
                     <input [formControlName]="prefix+'TwnNm'">
+                    <div class="validation-msg" *ngIf="err(prefix+'TwnNm') as e">{{e}}</div>
                 </div>
                 <div class="form-group">
                     <label>{{title}} Country <span class="req">*</span></label>
@@ -413,8 +422,16 @@
                     </select>
                 </div>
                 <ng-container *ngIf="['unstructured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
-                    <div class="form-group"><label>{{title}} Address Line 1</label><input [formControlName]="prefix+'AdrLine1'"></div>
-                    <div class="form-group"><label>{{title}} Address Line 2</label><input [formControlName]="prefix+'AdrLine2'"></div>
+                    <div class="form-group">
+                        <label>{{title}} Address Line 1</label>
+                        <input [formControlName]="prefix+'AdrLine1'">
+                        <div class="validation-msg" *ngIf="err(prefix+'AdrLine1') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>{{title}} Address Line 2</label>
+                        <input [formControlName]="prefix+'AdrLine2'">
+                        <div class="validation-msg" *ngIf="err(prefix+'AdrLine2') as e">{{e}}</div>
+                    </div>
                 </ng-container>
             </div>
         </ng-container>
