@@ -1251,3 +1251,65 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     color: var(--text-muted);
     font-weight: 500;
 }
+
+/* ===== UETR Refresh Control ===== */
+.uetr-control-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.uetr-control-row input {
+    flex: 1;
+    min-width: 0;
+}
+
+.uetr-refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    background: var(--accent-color, #6366f1);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.18s, transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 1px 4px rgba(99,102,241,0.25);
+    flex-shrink: 0;
+}
+
+.uetr-refresh-btn mat-icon {
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
+    transition: transform 0.4s ease;
+}
+
+.uetr-refresh-btn:hover mat-icon {
+    transform: rotate(180deg);
+}
+
+.uetr-refresh-btn:hover {
+    background: var(--accent-hover, #4f52d8);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(99,102,241,0.35);
+}
+
+.uetr-refresh-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.uetr-success {
+    color: #22c55e;
+    font-size: 0.72rem;
+    font-weight: 600;
+    margin-top: 3px;
+    animation: fadeIn 0.2s ease;
+}

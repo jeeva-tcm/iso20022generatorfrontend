@@ -488,6 +488,19 @@ body.light-theme textarea:focus {
     animation: fadeIn 0.2s ease;
 }
 
+.hint-msg {
+    color: #f59e0b;
+    font-size: 11px;
+    margin-top: 4px;
+    font-weight: 600;
+    display: block;
+    animation: fadeIn 0.2s ease;
+}
+
+body.light-theme .hint-msg {
+    color: #d97706;
+}
+
 body.light-theme .validation-msg {
     color: #dc2626;
 }

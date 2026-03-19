@@ -8,6 +8,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
 import { AddressValidatorService, AddressValidationResult } from '../../../services/address-validator.service';
+import { UetrService } from '../../../services/uetr.service';
 
 @Component({
   selector: 'app-pacs8',
@@ -22,7 +23,12 @@ export class Pacs8Component implements OnInit {
   currentTab: 'form' | 'preview' = 'form';
   isParsingXml = false;
   editorLineCount: number[] = [];
-  
+
+  /** UETR Refresh state */
+  uetrError: string | null = null;
+  uetrSuccess: string | null = null;
+  private uetrSuccessTimer: any;
+
   // Undo/Redo History
   private xmlHistory: string[] = [];
   private xmlHistoryIdx = -1;
@@ -51,7 +57,8 @@ export class Pacs8Component implements OnInit {
     private config: ConfigService,
     private snackBar: MatSnackBar,
     private router: Router,
-    private addressValidator: AddressValidatorService
+    private addressValidator: AddressValidatorService,
+    private uetrService: UetrService
   ) { }
 
   ngOnInit() {
@@ -393,10 +400,10 @@ export class Pacs8Component implements OnInit {
       instgAgtBic: ['BBBBUS33XXX', BIC], instdAgtBic: ['CCCCGB2LXXX', BIC],
       instrId: ['INSTR-001', [Validators.required, Validators.maxLength(35)]], endToEndId: ['E2E-001', [Validators.required, Validators.maxLength(35)]],
       txId: ['TX-001', [Validators.required, Validators.maxLength(35)]],
-      uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[0-9a-fA-F\-]{36}$/)]],
+      uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
       clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
       amount: ['1500.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
-      sttlmDt: [new Date().toISOString().split('T')[0], Validators.required], 
+      sttlmDt: [new Date().toISOString().split('T')[0], Validators.required],
       instrPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
       clrChanl: ['', [Validators.pattern(/^(BOOK|MPNS|RTGS|RTNS)$/)]],
       svcLvlCd: ['', [Validators.pattern(/^[A-Z0-9]{1,4}$/)]],
@@ -413,7 +420,7 @@ export class Pacs8Component implements OnInit {
       initgPtyName: ['', [Validators.maxLength(140), SAFE_NAME]],
       prvsInstgAgt1Bic: ['', BIC_OPT], prvsInstgAgt2Bic: ['', BIC_OPT], prvsInstgAgt3Bic: ['', BIC_OPT],
       intrmyAgt1Bic: ['', BIC_OPT], intrmyAgt2Bic: ['', BIC_OPT], intrmyAgt3Bic: ['', BIC_OPT],
-      purpCd: [''], 
+      purpCd: [''],
       ctgyPurpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/)]],
       ctgyPurpPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
       lclInstrmCd: ['', [Validators.pattern(/^[A-Z0-9]{1,4}$/)]],
@@ -438,17 +445,17 @@ export class Pacs8Component implements OnInit {
       dbtrAgtAcct: [''],
       cdtrAgtAcct: [''],
       // Instructions for Creditor Agent (0..2)
-      instrForCdtrAgt1Cd: [''], instrForCdtrAgt1InfTxt: ['', Validators.maxLength(140)],
-      instrForCdtrAgt2Cd: [''], instrForCdtrAgt2InfTxt: ['', Validators.maxLength(140)],
+      instrForCdtrAgt1Cd: [''], instrForCdtrAgt1InfTxt: ['', [Validators.minLength(1), Validators.maxLength(140), ADDR_PATTERN]],
+      instrForCdtrAgt2Cd: [''], instrForCdtrAgt2InfTxt: ['', [Validators.minLength(1), Validators.maxLength(140), ADDR_PATTERN]],
       // Instructions for Next Agent (0..6)
-      instrForNxtAgt1Cd: [''], instrForNxtAgt1InfTxt: ['', Validators.maxLength(140)],
-      instrForNxtAgt2Cd: [''], instrForNxtAgt2InfTxt: ['', Validators.maxLength(140)],
-      instrForNxtAgt3Cd: [''], instrForNxtAgt3InfTxt: ['', Validators.maxLength(140)],
-      instrForNxtAgt4Cd: [''], instrForNxtAgt4InfTxt: ['', Validators.maxLength(140)],
-      instrForNxtAgt5Cd: [''], instrForNxtAgt5InfTxt: ['', Validators.maxLength(140)],
-      instrForNxtAgt6Cd: [''], instrForNxtAgt6InfTxt: ['', Validators.maxLength(140)],
+      instrForNxtAgt1Cd: [''], instrForNxtAgt1InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+      instrForNxtAgt2Cd: [''], instrForNxtAgt2InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+      instrForNxtAgt3Cd: [''], instrForNxtAgt3InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+      instrForNxtAgt4Cd: [''], instrForNxtAgt4InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+      instrForNxtAgt5Cd: [''], instrForNxtAgt5InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+      instrForNxtAgt6Cd: [''], instrForNxtAgt6InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
 
-    };    [...this.agentPrefixes, ...this.partyPrefixes].forEach(p => {
+    };[...this.agentPrefixes, ...this.partyPrefixes].forEach(p => {
       if (!c[p + 'AddrType']) c[p + 'AddrType'] = 'none';
       if (!c[p + 'AdrLine1']) c[p + 'AdrLine1'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
       if (!c[p + 'AdrLine2']) c[p + 'AdrLine2'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
@@ -504,16 +511,95 @@ export class Pacs8Component implements OnInit {
     this.form = this.fb.group(c);
   }
 
+  /**
+   * UETR Refresh — Rule 1-8 implementation.
+   * Generates a new UUID v4, validates format, checks session uniqueness,
+   * patches the form control, shows success/error feedback.
+   */
+  refreshUetr(): void {
+    this.uetrError = null;
+    this.uetrSuccess = null;
+    clearTimeout(this.uetrSuccessTimer);
+
+    const prevUetr = this.form.get('uetr')?.value || '';
+
+    // Rule 1 & 7: Generate a new UETR that differs from previous
+    const newUetr = this.uetrService.generate();
+
+    // Rule 3: Validate UUID v4 format
+    if (!UetrService.UUID_V4_PATTERN.test(newUetr)) {
+      this.uetrError = 'Invalid UETR format';
+      return;
+    }
+
+    // Rule 4 & 7: Must not match previous UETR in same message
+    if (newUetr === prevUetr) {
+      this.uetrError = 'Duplicate UETR detected across messages';
+      return;
+    }
+
+    // Unregister old UETR, patch form with new one
+    if (prevUetr) this.uetrService.unregister(prevUetr);
+    this.form.get('uetr')?.setValue(newUetr);
+    this.form.get('uetr')?.markAsTouched();
+
+    // Rule 2: Immediate UI update — success feedback (auto-clears after 3s)
+    this.uetrSuccess = 'UETR refreshed successfully';
+    this.uetrSuccessTimer = setTimeout(() => { this.uetrSuccess = null; }, 3000);
+  }
+
+  /**
+   * Validate a manually-entered UETR value on blur.
+   * Rule 8: manually edited values must still match UUID v4 format.
+   */
+  validateManualUetr(): void {
+    const val = (this.form.get('uetr')?.value || '').trim();
+    this.uetrError = null;
+    if (!val) return;
+    if (!UetrService.UUID_V4_PATTERN.test(val)) {
+      this.uetrError = 'Invalid UETR format';
+      return;
+    }
+    // Check for duplicate (cross-message within session)
+    const result = this.uetrService.validate(val);
+    if (result === 'duplicate') {
+      this.uetrError = 'Duplicate UETR detected across messages';
+    }
+  }
+
+  /**
+   * Handle paste event on UETR field.
+   * Waits one tick for the pasted value to reach the form control,
+   * lowercases it, then validates.
+   */
+  onUetrPaste(_event: ClipboardEvent): void {
+    setTimeout(() => {
+      const ctrl = this.form.get('uetr');
+      if (!ctrl) return;
+      const raw = (ctrl.value || '').trim().toLowerCase();
+      ctrl.setValue(raw, { emitEvent: true });
+      ctrl.markAsTouched();
+      this.validateManualUetr();
+    }, 0);
+  }
+
   err(f: string): string | null {
+    if (this.showMaxLenWarning[f]) {
+      const c = this.form.get(f);
+      const len = c?.value?.toString().length || 0;
+      return `Maximum limit reached (${len} characters)`;
+    }
     const c = this.form.get(f);
-    if (!c || (!c.dirty && !c.touched) || !c.invalid) return null;
+    // Remove touched/dirty requirement to show errors immediately
+    if (!c || c.valid) return null;
+
     if (c.errors?.['required']) return 'Required field.';
     if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
     if (c.errors?.['pattern']) {
       const fl = f.toLowerCase();
       if (fl.includes('bic')) return 'Valid 8 or 11-char BIC required.';
       if (fl.includes('iban')) return 'Valid 34-char IBAN required.';
-      if (fl.includes('uetr')) return 'Valid UUID required.';
+      if (fl.includes('uetr')) return 'Invalid UETR format';
       if (fl.includes('amount') || fl.includes('amt')) return 'Max 18 digits, up to 5 decimals.';
       if (fl.includes('lei')) return 'Must be 20-char LEI.';
       if (fl.includes('birthdt')) return 'Use YYYY-MM-DD format.';
@@ -723,26 +809,26 @@ export class Pacs8Component implements OnInit {
 
     // InstrForCdtrAgt (0..2)
     for (let i = 1; i <= 2; i++) {
-        const cd = v[`instrForCdtrAgt${i}Cd`]?.trim();
-        const txt = v[`instrForCdtrAgt${i}InfTxt`]?.trim();
-        if (cd || txt) {
-            let inner = '';
-            if (cd) inner += this.el('Cd', cd, 4);
-            if (txt) inner += this.el('InstrInf', txt, 4);
-            tx += this.tag('InstrForCdtrAgt', inner, 3);
-        }
+      const cd = v[`instrForCdtrAgt${i}Cd`]?.trim();
+      const txt = v[`instrForCdtrAgt${i}InfTxt`]?.trim();
+      if (cd || txt) {
+        let inner = '';
+        if (cd) inner += this.el('Cd', cd, 4);
+        if (txt) inner += this.el('InstrInf', txt, 4);
+        tx += this.tag('InstrForCdtrAgt', inner, 3);
+      }
     }
 
     // InstrForNxtAgt (0..6)
     for (let i = 1; i <= 6; i++) {
-        const cd = v[`instrForNxtAgt${i}Cd`]?.trim();
-        const txt = v[`instrForNxtAgt${i}InfTxt`]?.trim();
-        if (cd || txt) {
-            let inner = '';
-            if (cd) inner += this.el('Cd', cd, 4);
-            if (txt) inner += this.el('InstrInf', txt, 4);
-            tx += this.tag('InstrForNxtAgt', inner, 3);
-        }
+      const cd = v[`instrForNxtAgt${i}Cd`]?.trim();
+      const txt = v[`instrForNxtAgt${i}InfTxt`]?.trim();
+      if (cd || txt) {
+        let inner = '';
+        if (cd) inner += this.el('Cd', cd, 4);
+        if (txt) inner += this.el('InstrInf', txt, 4);
+        tx += this.tag('InstrForNxtAgt', inner, 3);
+      }
     }
 
     if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 4), 3);
@@ -1023,7 +1109,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
     if (!this.isInternalChange && !fromForm) {
       this.pushHistory();
     }
-    
+
     this.generatedXml = content;
     const lines = content.split('\n').length;
     this.editorLineCount = Array.from({ length: lines }, (_, i) => i + 1);
@@ -1082,19 +1168,19 @@ ${tx}\t\t\t</CdtTrfTxInf>
   formatXml() {
     if (!this.generatedXml?.trim()) return;
     this.pushHistory();
-    
+
     try {
       let xml = this.generatedXml.trim();
       let formatted = '';
       let indent = '';
       const tab = '    ';
-      
+
       xml.split(/>\s*</).forEach(node => {
         if (node.match(/^\/\w/)) indent = indent.substring(tab.length);
         formatted += indent + '<' + node + '>\r\n';
         if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith('?')) indent += tab;
       });
-      
+
       this.generatedXml = formatted.substring(1, formatted.length - 3);
       this.refreshLineCount();
       this.snackBar.open('XML Formatted', '', { duration: 1500 });
@@ -1239,15 +1325,15 @@ ${tx}\t\t\t</CdtTrfTxInf>
               setVal('rmtInfStrdCdtrRef', ref.getElementsByTagName('Ref')[0]?.textContent || '');
             }
             setVal('rmtInfStrdAddtlRmtInf', strd.getElementsByTagName('AddtlRmtInf')[0]?.textContent || '');
-            
+
             const rfrdDoc = strd.getElementsByTagName('RfrdDocInf')[0];
             if (rfrdDoc) {
-                setVal('rmtInfStrdRfrdDocNb', rfrdDoc.getElementsByTagName('Nb')[0]?.textContent || '');
-                setVal('rmtInfStrdRfrdDocCd', rfrdDoc.getElementsByTagName('Tp')[0]?.getElementsByTagName('CdOrPrtry')[0]?.getElementsByTagName('Cd')[0]?.textContent || '');
+              setVal('rmtInfStrdRfrdDocNb', rfrdDoc.getElementsByTagName('Nb')[0]?.textContent || '');
+              setVal('rmtInfStrdRfrdDocCd', rfrdDoc.getElementsByTagName('Tp')[0]?.getElementsByTagName('CdOrPrtry')[0]?.getElementsByTagName('Cd')[0]?.textContent || '');
             }
             const rfrdAmtNode = strd.getElementsByTagName('RfrdDocAmt')[0];
             if (rfrdAmtNode) {
-                setVal('rmtInfStrdRfrdDocAmt', rfrdAmtNode.getElementsByTagName('RmtAmt')[0]?.getElementsByTagName('DuePyblAmt')[0]?.textContent || '');
+              setVal('rmtInfStrdRfrdDocAmt', rfrdAmtNode.getElementsByTagName('RmtAmt')[0]?.getElementsByTagName('DuePyblAmt')[0]?.textContent || '');
             }
           }
         }

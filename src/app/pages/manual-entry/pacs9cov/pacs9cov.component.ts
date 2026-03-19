@@ -7,6 +7,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
+import { UetrService } from '../../../services/uetr.service';
 
 @Component({
     selector: 'app-pacs9cov',
@@ -21,6 +22,11 @@ export class Pacs9CovComponent implements OnInit {
     currentTab: 'form' | 'preview' = 'form';
     editorLineCount: number[] = [];
     isParsingXml = false;
+
+    /** UETR Refresh state */
+    uetrError: string | null = null;
+    uetrSuccess: string | null = null;
+    private uetrSuccessTimer: any;
 
     // Undo/Redo History
     private xmlHistory: string[] = [];
@@ -48,7 +54,8 @@ export class Pacs9CovComponent implements OnInit {
         private http: HttpClient,
         private config: ConfigService,
         private snackBar: MatSnackBar,
-        private router: Router
+        private router: Router,
+        private uetrService: UetrService
     ) { }
 
     ngOnInit() {
@@ -191,9 +198,9 @@ export class Pacs9CovComponent implements OnInit {
         });
 
         this.http.get<any>(this.config.getApiUrl('/codelists/ctgyPurp')).subscribe({
-            next: (res) => { 
+            next: (res) => {
                 if (res && res.codes && res.codes.length > 0) {
-                    this.categoryPurposes = res.codes; 
+                    this.categoryPurposes = res.codes;
                 } else {
                     this.categoryPurposes = ['SALA', 'TAXS', 'SUPP', 'PENS', 'LOAN', 'DIVD', 'CASH', 'COLL', 'INTC', 'OTHR'];
                 }
@@ -253,7 +260,7 @@ export class Pacs9CovComponent implements OnInit {
         const SAFE_NAME = Validators.pattern(/^[a-zA-Z0-9 .,()'\-]+$/);
         const ADDR_PATTERN = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
         const c: any = {
-            purpCd: [''], 
+            purpCd: [''],
             ctgyPurpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/)]],
             ctgyPurpPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
             instrPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
@@ -278,12 +285,12 @@ export class Pacs9CovComponent implements OnInit {
             rmtInfStrdGrnshmtId: ['', Validators.maxLength(35)],
 
             fromBic: ['RBOSGB2L', BIC], toBic: ['NDEAFIHH', BIC], bizMsgId: ['pacs9bizmsgidr01', Validators.required],
-            msgId: ['pacs9bizmsgidr01', Validators.required],            creDtTm: [this.isoNow(), Validators.required],
+            msgId: ['pacs9bizmsgidr01', Validators.required], creDtTm: [this.isoNow(), Validators.required],
             sttlmPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
             nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['INDA', Validators.required],
             instgAgtBic: ['RBOSGB2L', BIC], instdAgtBic: ['NDEAFIHH', BIC],
             instrId: ['pacs9bizmsgidr01', Validators.required], endToEndId: ['pacs8bizmsgidr01', Validators.required],
-            uetr: ['8a562c67-ca16-48ba-b074-65581be6f001', [Validators.required, Validators.pattern(/^[0-9a-fA-F\-]{36}$/)]],
+            uetr: ['8a562c67-ca16-48ba-b074-65581be6f001', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
             clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
             amount: ['1500000', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['EUR', Validators.required],
             sttlmDt: [new Date().toISOString().split('T')[0], Validators.required],
@@ -321,15 +328,15 @@ export class Pacs9CovComponent implements OnInit {
             covPurpCd: [''],
 
             // InstrForCdtrAgt (COV) (0..2)
-            covInstrForCdtrAgt1Cd: [''], covInstrForCdtrAgt1InfTxt: ['', Validators.maxLength(140)],
-            covInstrForCdtrAgt2Cd: [''], covInstrForCdtrAgt2InfTxt: ['', Validators.maxLength(140)],
+            covInstrForCdtrAgt1Cd: [''], covInstrForCdtrAgt1InfTxt: ['', [Validators.minLength(1), Validators.maxLength(140), ADDR_PATTERN]],
+            covInstrForCdtrAgt2Cd: [''], covInstrForCdtrAgt2InfTxt: ['', [Validators.minLength(1), Validators.maxLength(140), ADDR_PATTERN]],
             // InstrForNxtAgt (COV) (0..6)
-            covInstrForNxtAgt1Cd: [''], covInstrForNxtAgt1InfTxt: ['', Validators.maxLength(140)],
-            covInstrForNxtAgt2Cd: [''], covInstrForNxtAgt2InfTxt: ['', Validators.maxLength(140)],
-            covInstrForNxtAgt3Cd: [''], covInstrForNxtAgt3InfTxt: ['', Validators.maxLength(140)],
-            covInstrForNxtAgt4Cd: [''], covInstrForNxtAgt4InfTxt: ['', Validators.maxLength(140)],
-            covInstrForNxtAgt5Cd: [''], covInstrForNxtAgt5InfTxt: ['', Validators.maxLength(140)],
-            covInstrForNxtAgt6Cd: [''], covInstrForNxtAgt6InfTxt: ['', Validators.maxLength(140)],
+            covInstrForNxtAgt1Cd: [''], covInstrForNxtAgt1InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            covInstrForNxtAgt2Cd: [''], covInstrForNxtAgt2InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            covInstrForNxtAgt3Cd: [''], covInstrForNxtAgt3InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            covInstrForNxtAgt4Cd: [''], covInstrForNxtAgt4InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            covInstrForNxtAgt5Cd: [''], covInstrForNxtAgt5InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            covInstrForNxtAgt6Cd: [''], covInstrForNxtAgt6InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
 
             // RmtInf (Ustrd)
             covRmtInfUstrd: [''],
@@ -420,22 +427,29 @@ export class Pacs9CovComponent implements OnInit {
         c['cdtrFiName'] = ['Creditor', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
         c['dbtrAgtName'] = ['Debtor Agent', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
         c['cdtrAgtName'] = ['Creditor Agent', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
-        
+
         c['covDbtrAgtName'] = ['COV Debtor Agent', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
         c['covCdtrAgtName'] = ['COV Creditor Agent', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
-        
+
         this.form = this.fb.group(c);
     }
 
     err(f: string): string | null {
+        if (this.showMaxLenWarning[f]) {
+            const c = this.form.get(f);
+            const len = c?.value?.toString().length || 0;
+            return `Maximum limit reached (${len} characters)`;
+        }
         const c = this.form.get(f);
-        if (!c || (!c.dirty && !c.touched) || !c.invalid) return null;
+        // Remove touched/dirty requirement to show errors immediately
+        if (!c || c.valid) return null;
+
         if (c.errors?.['required']) return 'Required field.';
         if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
         if (c.errors?.['pattern']) {
             if (f.toLowerCase().includes('bic')) return 'Valid 8 or 11-char BIC required.';
             if (f.toLowerCase().includes('iban')) return 'Valid 34-char IBAN required.';
-            if (f.toLowerCase().includes('uetr')) return 'Valid UUID required.';
+            if (f.toLowerCase().includes('uetr')) return 'Invalid UETR format';
             if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Amount must be > 0 (max 18 digits).';
             if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Must be a valid ISO 20022 code (4 uppercase letters).';
             if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
@@ -460,6 +474,65 @@ export class Pacs9CovComponent implements OnInit {
         if (c.errors?.['chaps']) return 'Invalid Currency for CHAPS clearing system. When ClrSysId/Cd = CHAPS, the transaction currency must be GBP.';
         if (c.errors?.['forbidden']) return 'Clearing System Reference must NOT be sent if no active clearing system is used.';
         return 'Invalid value.';
+    }
+
+    /**
+     * UETR Refresh — generates a new UUID v4, validates, updates form.
+     */
+    refreshUetr(): void {
+        this.uetrError = null;
+        this.uetrSuccess = null;
+        clearTimeout(this.uetrSuccessTimer);
+
+        const prevUetr = this.form.get('uetr')?.value || '';
+        const newUetr = this.uetrService.generate();
+
+        if (!UetrService.UUID_V4_PATTERN.test(newUetr)) {
+            this.uetrError = 'Invalid UETR format';
+            return;
+        }
+        if (newUetr === prevUetr) {
+            this.uetrError = 'Duplicate UETR detected across messages';
+            return;
+        }
+
+        if (prevUetr) this.uetrService.unregister(prevUetr);
+        this.form.get('uetr')?.setValue(newUetr);
+        this.form.get('uetr')?.markAsTouched();
+
+        this.uetrSuccess = 'UETR refreshed successfully';
+        this.uetrSuccessTimer = setTimeout(() => { this.uetrSuccess = null; }, 3000);
+    }
+
+    /**
+     * Validate manually edited UETR on blur (Rule 8).
+     */
+    validateManualUetr(): void {
+        const val = (this.form.get('uetr')?.value || '').trim();
+        this.uetrError = null;
+        if (!val) return;
+        if (!UetrService.UUID_V4_PATTERN.test(val)) {
+            this.uetrError = 'Invalid UETR format';
+            return;
+        }
+        const result = this.uetrService.validate(val);
+        if (result === 'duplicate') {
+            this.uetrError = 'Duplicate UETR detected across messages';
+        }
+    }
+
+    /**
+     * Handle paste event on UETR field.
+     */
+    onUetrPaste(_event: ClipboardEvent): void {
+        setTimeout(() => {
+            const ctrl = this.form.get('uetr');
+            if (!ctrl) return;
+            const raw = (ctrl.value || '').trim().toLowerCase();
+            ctrl.setValue(raw, { emitEvent: true });
+            ctrl.markAsTouched();
+            this.validateManualUetr();
+        }, 0);
     }
     warningTimeouts: { [key: string]: any } = {};
     showMaxLenWarning: { [key: string]: boolean } = {};
@@ -803,7 +876,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
     //   UltmtCdtr?, InstrForCdtrAgt*, InstrForNxtAgt*, Purp?, RmtInf?, InstdAmt?
     private buildCov(v: any): string {
         let b = `\t\t\t<UndrlygCstmrCdtTrf>\n`;
-        
+
         const formatAcct = (val: string, tabs: number) => {
             if (!val) return '';
             const ibanCountries = ['AD', 'AE', 'AL', 'AT', 'AZ', 'BA', 'BE', 'BG', 'BH', 'BR', 'BY', 'CH', 'CR', 'CY', 'CZ', 'DE', 'DK', 'DO', 'EE', 'EG', 'ES', 'FI', 'FO', 'FR', 'GB', 'GE', 'GI', 'GL', 'GR', 'GT', 'HR', 'HU', 'IE', 'IL', 'IQ', 'IS', 'IT', 'JO', 'KW', 'KZ', 'LB', 'LI', 'LT', 'LU', 'LV', 'MC', 'MD', 'ME', 'MK', 'MR', 'MT', 'MU', 'NL', 'NO', 'PK', 'PL', 'PS', 'PT', 'QA', 'RO', 'RS', 'RU', 'SA', 'SC', 'SE', 'SI', 'SK', 'SM', 'ST', 'SV', 'TL', 'TN', 'TR', 'UA', 'VA', 'VG', 'XK'];
@@ -826,13 +899,13 @@ ${tx}\t\t\t</CdtTrfTxInf>
         if (v.covDbtrAgtBic?.trim()) b += `\t\t\t\t<DbtrAgt>\n\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t<BICFI>${this.e(v.covDbtrAgtBic)}</BICFI>\n\t\t\t\t\t</FinInstnId>\n\t\t\t\t</DbtrAgt>\n`;
         // DbtrAgtAcct
         if (v.covDbtrAgtAcct?.trim()) {
-             b += `\t\t\t\t<DbtrAgtAcct>\n\t\t\t\t\t<Id>${formatAcct(v.covDbtrAgtAcct, 5)}\t\t\t\t\t</Id>\n\t\t\t\t</DbtrAgtAcct>\n`;
+            b += `\t\t\t\t<DbtrAgtAcct>\n\t\t\t\t\t<Id>${formatAcct(v.covDbtrAgtAcct, 5)}\t\t\t\t\t</Id>\n\t\t\t\t</DbtrAgtAcct>\n`;
         }
         // CdtrAgt
         if (v.covCdtrAgtBic?.trim()) b += `\t\t\t\t<CdtrAgt>\n\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t<BICFI>${this.e(v.covCdtrAgtBic)}</BICFI>\n\t\t\t\t\t</FinInstnId>\n\t\t\t\t</CdtrAgt>\n`;
         // CdtrAgtAcct
         if (v.covCdtrAgtAcct?.trim()) {
-             b += `\t\t\t\t<CdtrAgtAcct>\n\t\t\t\t\t<Id>${formatAcct(v.covCdtrAgtAcct, 5)}\t\t\t\t\t</Id>\n\t\t\t\t</CdtrAgtAcct>\n`;
+            b += `\t\t\t\t<CdtrAgtAcct>\n\t\t\t\t\t<Id>${formatAcct(v.covCdtrAgtAcct, 5)}\t\t\t\t\t</Id>\n\t\t\t\t</CdtrAgtAcct>\n`;
         }
         // Cdtr (PartyIdentification272)
         if (v.covCdtrName?.trim() || v.covCdtrBic?.trim() || v.covCdtrLei?.trim() || v.covCdtrClrSysMmbId?.trim() || (v.covCdtrAddrType && v.covCdtrAddrType !== 'none')) {
@@ -971,7 +1044,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
         if (!this.isInternalChange && !fromForm) {
             this.pushHistory();
         }
-        
+
         this.generatedXml = content;
         const lines = content.split('\n').length;
         this.editorLineCount = Array.from({ length: lines }, (_, i) => i + 1);
@@ -1030,19 +1103,19 @@ ${tx}\t\t\t</CdtTrfTxInf>
     formatXml() {
         if (!this.generatedXml?.trim()) return;
         this.pushHistory();
-        
+
         try {
             let xml = this.generatedXml.trim();
             let formatted = '';
             let indent = '';
             const tab = '    ';
-            
+
             xml.split(/>\s*</).forEach(node => {
                 if (node.match(/^\/\w/)) indent = indent.substring(tab.length);
                 formatted += indent + '<' + node + '>\r\n';
                 if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith('?')) indent += tab;
             });
-            
+
             this.generatedXml = formatted.substring(1, formatted.length - 3);
             this.refreshLineCount();
             this.snackBar.open('XML Formatted', '', { duration: 1500 });
@@ -1223,7 +1296,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 let tag = p.charAt(0).toUpperCase() + p.slice(1);
                 if (p === 'dbtrFi') tag = 'Dbtr';
                 if (p === 'cdtrFi') tag = 'Cdtr';
-                
+
                 const agentNode = mainTx.getElementsByTagName(tag)[0];
                 if (agentNode) {
                     const fi = agentNode.getElementsByTagName('FinInstnId')[0];
@@ -1278,7 +1351,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 const dbtr = covNode.getElementsByTagName('Dbtr')[0];
                 if (dbtr) setVal('covDbtrName', dbtr.getElementsByTagName('Nm')[0]?.textContent || '');
                 setVal('covDbtrAcct', tryAcct(covNode, 'DbtrAcct'));
-                
+
                 const dbtrAgt = covNode.getElementsByTagName('DbtrAgt')[0];
                 if (dbtrAgt) setVal('covDbtrAgtBic', dbtrAgt.getElementsByTagName('BICFI')[0]?.textContent || '');
                 setVal('covDbtrAgtAcct', tryAcct(covNode, 'DbtrAgtAcct'));
@@ -1299,16 +1372,16 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 const instrs = covNode.getElementsByTagName('InstrForCdtrAgt');
                 for (let i = 0; i < 2; i++) {
                     if (instrs[i]) {
-                        setVal(`covInstrForCdtrAgt${i+1}Cd`, instrs[i].getElementsByTagName('Cd')[0]?.textContent || '');
-                        setVal(`covInstrForCdtrAgt${i+1}InfTxt`, instrs[i].getElementsByTagName('InstrInf')[0]?.textContent || '');
+                        setVal(`covInstrForCdtrAgt${i + 1}Cd`, instrs[i].getElementsByTagName('Cd')[0]?.textContent || '');
+                        setVal(`covInstrForCdtrAgt${i + 1}InfTxt`, instrs[i].getElementsByTagName('InstrInf')[0]?.textContent || '');
                     }
                 }
-                
+
                 const nxtInstrs = covNode.getElementsByTagName('InstrForNxtAgt');
                 for (let i = 0; i < 6; i++) {
                     if (nxtInstrs[i]) {
-                        setVal(`covInstrForNxtAgt${i+1}Cd`, nxtInstrs[i].getElementsByTagName('Cd')[0]?.textContent || '');
-                        setVal(`covInstrForNxtAgt${i+1}InfTxt`, nxtInstrs[i].getElementsByTagName('InstrInf')[0]?.textContent || '');
+                        setVal(`covInstrForNxtAgt${i + 1}Cd`, nxtInstrs[i].getElementsByTagName('Cd')[0]?.textContent || '');
+                        setVal(`covInstrForNxtAgt${i + 1}InfTxt`, nxtInstrs[i].getElementsByTagName('InstrInf')[0]?.textContent || '');
                     }
                 }
 
