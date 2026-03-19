@@ -45,7 +45,7 @@ export class Pacs9CovComponent implements OnInit {
         'intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3', 'covDbtrAgt', 'covCdtrAgt'];
 
     // COV address prefixes for UndrlygCstmrCdtTrf parties
-    covPartyPrefixes = ['covDbtr', 'covCdtr', 'covUltmtDbtr', 'covUltmtCdtr'];
+    covPartyPrefixes = ['covDbtr', 'covCdtr'];
 
     instrForCdtrAgtCodes = ['', 'CHQB', 'HOLD', 'PHOB', 'TELB'];
 
@@ -292,6 +292,7 @@ export class Pacs9CovComponent implements OnInit {
             instrId: ['pacs9bizmsgidr01', Validators.required], endToEndId: ['pacs8bizmsgidr01', Validators.required],
             uetr: ['8a562c67-ca16-48ba-b074-65581be6f001', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
             clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
+            appHdrPriority: [''],
             amount: ['1500000', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['EUR', Validators.required],
             sttlmDt: [new Date().toISOString().split('T')[0], Validators.required],
             // Debtor FI (required)
@@ -313,7 +314,6 @@ export class Pacs9CovComponent implements OnInit {
             intrmyAgt1Acct: [''], intrmyAgt2Acct: [''], intrmyAgt3Acct: [''],
 
             // COV — UndrlygCstmrCdtTrf fields
-            covUltmtDbtrName: [''],
             covDbtrName: ['A Debiter', [Validators.required, Validators.maxLength(140), SAFE_NAME]],
             covDbtrAcct: ['R85236974'],
             covDbtrOrgAnyBIC: ['RBOSGB2L', BIC],
@@ -324,7 +324,6 @@ export class Pacs9CovComponent implements OnInit {
             covCdtrName: ['Z Krediter', [Validators.required, Validators.maxLength(140), SAFE_NAME]],
             covCdtrOrgAnyBIC: ['OKOYFIHH', BIC],
             covCdtrAcct: ['O96325478'],
-            covUltmtCdtrName: [''],
             covPurpCd: [''],
 
             // InstrForCdtrAgt (COV) (0..2)
@@ -418,7 +417,7 @@ export class Pacs9CovComponent implements OnInit {
             } else {
                 if (!c[p + 'Bic']) c[p + 'Bic'] = ['', [Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
                 if (!c[p + 'Lei']) c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
-                if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['', Validators.maxLength(4)];
+                if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['', Validators.maxLength(5)];
                 if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
             }
         });
@@ -670,8 +669,8 @@ export class Pacs9CovComponent implements OnInit {
         tx += this.agtWithAcct('Cdtr', 'cdtrFi', v);
 
 
-        // COV: UndrlygCstmrCdtTrf
-        tx += this.buildCov(v);
+        // UndrlygCstmrCdtTrf removed as per MyStandards
+        // tx += this.buildCov(v);
 
 
 
@@ -698,7 +697,7 @@ export class Pacs9CovComponent implements OnInit {
 		<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>
 		<MsgDefIdr>pacs.009.001.08</MsgDefIdr>
 		<BizSvc>swift.cbprplus.cov.04</BizSvc>
-		<CreDt>${creDtTm}</CreDt>
+		<CreDt>${creDtTm}</CreDt>${v.appHdrPriority?.trim() ? `\n\t\t<Prty>${v.appHdrPriority}</Prty>` : ''}
 	</AppHdr>
 	<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.009.001.08">
 		<FICdtTrf>
@@ -759,8 +758,12 @@ ${tx}\t\t\t</CdtTrfTxInf>
             content += `\t\t\t\t\t</ClrSysMmbId>\n`;
         }
         if (lei) content += `\t\t\t\t\t<LEI>${this.e(lei)}</LEI>\n`;
-        if (name) content += `\t\t\t\t\t<Nm>${this.e(name)}</Nm>\n`;
-        content += this.addrXml(v, prefix, 5, tag.startsWith('PrvsInstgAgt'));
+
+        // Filter: Nm and PstlAdr are NOT allowed for InstgAgt and InstdAgt as per MyStandards requirements
+        if (tag !== 'InstgAgt' && tag !== 'InstdAgt') {
+            if (name) content += `\t\t\t\t\t<Nm>${this.e(name)}</Nm>\n`;
+            content += this.addrXml(v, prefix, 5, tag.startsWith('PrvsInstgAgt'));
+        }
 
         return `\t\t\t<${tag}>\n\t\t\t\t<FinInstnId>\n${content}\t\t\t\t</FinInstnId>\n\t\t\t</${tag}>\n`;
     }
@@ -915,14 +918,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
         if (v.covCdtrAcct?.trim()) {
             b += `\t\t\t\t<CdtrAcct>\n\t\t\t\t\t<Id>${formatAcct(v.covCdtrAcct, 5)}\t\t\t\t\t</Id>\n\t\t\t\t</CdtrAcct>\n`;
         }
-        // UltmtCdtr (optional)
-        if (v.covUltmtCdtrName?.trim() || (v.covUltmtCdtrAddrType && v.covUltmtCdtrAddrType !== 'none') || (v.covUltmtCdtrIdType && v.covUltmtCdtrIdType !== 'none')) {
-            let uc = this.el('Nm', v.covUltmtCdtrName, 5);
-            const ucAddr = this.addrXml(v, 'covUltmtCdtr', 5);
-            if (ucAddr) uc += ucAddr;
-            uc += this.partyIdXml(v, 'covUltmtCdtr', 5);
-            b += `\t\t\t\t<UltmtCdtr>\n${uc}\t\t\t\t</UltmtCdtr>\n`;
-        }
+        // UltmtCdtr removed
         // InstrForCdtrAgt (optional, max 2)
         for (let i = 1; i <= 2; i++) {
             const cd = v[`covInstrForCdtrAgt${i}Cd`]?.trim();
@@ -1364,10 +1360,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 if (cdtr) setVal('covCdtrName', cdtr.getElementsByTagName('Nm')[0]?.textContent || '');
                 setVal('covCdtrAcct', tryAcct(covNode, 'CdtrAcct'));
 
-                const uDbtr = covNode.getElementsByTagName('UltmtDbtr')[0];
-                if (uDbtr) setVal('covUltmtDbtrName', uDbtr.getElementsByTagName('Nm')[0]?.textContent || '');
-                const uCdtr = covNode.getElementsByTagName('UltmtCdtr')[0];
-                if (uCdtr) setVal('covUltmtCdtrName', uCdtr.getElementsByTagName('Nm')[0]?.textContent || '');
+                // Ultimate parties removed
 
                 const instrs = covNode.getElementsByTagName('InstrForCdtrAgt');
                 for (let i = 0; i < 2; i++) {
@@ -1393,10 +1386,9 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 setVal('covInstdAmt', covAmt ? (covAmt.textContent || '') : '');
                 setVal('covInstdAmtCcy', covAmt ? (covAmt.getAttribute('Ccy') || '') : '');
 
+                // Ultmt removed
                 mapAddr(covNode, 'Dbtr', 'covDbtr');
                 mapAddr(covNode, 'Cdtr', 'covCdtr');
-                mapAddr(covNode, 'UltmtDbtr', 'covUltmtDbtr');
-                mapAddr(covNode, 'UltmtCdtr', 'covUltmtCdtr');
                 mapAddr(covNode, 'DbtrAgt', 'covDbtrAgt');
                 mapAddr(covNode, 'CdtrAgt', 'covCdtrAgt');
             } else {

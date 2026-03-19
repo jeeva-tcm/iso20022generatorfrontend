@@ -42,7 +42,7 @@ export class Pacs9Component implements OnInit {
     purposes: string[] = [];
     sttlmMethods = ['INDA', 'INGA'];
 
-    agentPrefixes = ['instgAgt', 'instdAgt', 'dbtrFi', 'cdtrFi', 'dbtrAgt', 'cdtrAgt', 'ultmtCdtr',
+    agentPrefixes = ['instgAgt', 'instdAgt', 'dbtrFi', 'cdtrFi', 'dbtrAgt', 'cdtrAgt',
         'prvsInstgAgt1', 'prvsInstgAgt2', 'prvsInstgAgt3',
         'intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'];
 
@@ -229,6 +229,7 @@ export class Pacs9Component implements OnInit {
             instrId: ['INSTR-FI-001', Validators.required], endToEndId: ['E2E-FI-001', Validators.required],
             txId: ['TX-FI-001', Validators.required],
             uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
+            appHdrPriority: [''],
             clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
             sttlmPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
             amount: ['50000.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
@@ -253,12 +254,12 @@ export class Pacs9Component implements OnInit {
             instrForCdtrAgt1Cd: [''], instrForCdtrAgt1InfTxt: ['', [Validators.minLength(1), Validators.maxLength(140), ADDR_PATTERN]],
             instrForCdtrAgt2Cd: [''], instrForCdtrAgt2InfTxt: ['', [Validators.minLength(1), Validators.maxLength(140), ADDR_PATTERN]],
             // Instructions for Next Agent (0..6)
-            instrForNxtAgt1Cd: [''], instrForNxtAgt1InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
-            instrForNxtAgt2Cd: [''], instrForNxtAgt2InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
-            instrForNxtAgt3Cd: [''], instrForNxtAgt3InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
-            instrForNxtAgt4Cd: [''], instrForNxtAgt4InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
-            instrForNxtAgt5Cd: [''], instrForNxtAgt5InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
-            instrForNxtAgt6Cd: [''], instrForNxtAgt6InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            instrForNxtAgt1InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            instrForNxtAgt2InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            instrForNxtAgt3InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            instrForNxtAgt4InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            instrForNxtAgt5InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            instrForNxtAgt6InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
             // Remittance (Optional)
             rmtInfType: ['none'],
             rmtInfUstrd: ['', [Validators.maxLength(140), ADDR_PATTERN]],
@@ -290,7 +291,7 @@ export class Pacs9Component implements OnInit {
             if (!c[p + 'Name']) c[p + 'Name'] = ['', [Validators.maxLength(140), SAFE_NAME]];
             if (!c[p + 'Bic']) c[p + 'Bic'] = ['', [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
             if (!c[p + 'Lei']) c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
-            if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['', Validators.maxLength(4)];
+            if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['', Validators.maxLength(5)];
             if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
             if (!c[p + 'Acct']) c[p + 'Acct'] = ['', [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
         });
@@ -551,9 +552,6 @@ export class Pacs9Component implements OnInit {
         // Cdtr
         tx += this.agtWithAcct('Cdtr', 'cdtrFi', v);
 
-        // UltmtCdtr (optional)
-        tx += this.agtWithAcct('UltmtCdtr', 'ultmtCdtr', v);
-
         // Instructions for Creditor Agent (0..2)
         for (let i = 1; i <= 2; i++) {
             const cd = v[`instrForCdtrAgt${i}Cd`]?.trim();
@@ -567,13 +565,9 @@ export class Pacs9Component implements OnInit {
         }
         // Instructions for Next Agent (0..6)
         for (let i = 1; i <= 6; i++) {
-            const cd = v[`instrForNxtAgt${i}Cd`]?.trim();
             const txt = v[`instrForNxtAgt${i}InfTxt`]?.trim();
-            if (cd || txt) {
-                let inner = '';
-                if (cd) inner += this.el('Cd', cd, 4);
-                if (txt) inner += this.el('InstrInf', txt, 4);
-                tx += this.tag('InstrForNxtAgt', inner, 3);
+            if (txt) {
+                tx += this.tag('InstrForNxtAgt', this.el('InstrInf', txt, 4), 3);
             }
         }
 
@@ -618,7 +612,7 @@ export class Pacs9Component implements OnInit {
 \t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>
 \t\t<MsgDefIdr>pacs.009.001.08</MsgDefIdr>
 \t\t<BizSvc>swift.cbprplus.02</BizSvc>
-\t\t<CreDt>${creDtTm}</CreDt>
+\t\t<CreDt>${creDtTm}</CreDt>${v.appHdrPriority?.trim() ? `\n\t\t<Prty>${v.appHdrPriority}</Prty>` : ''}
 \t</AppHdr>
 \t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.009.001.08">
 \t\t<FICdtTrf>
@@ -674,8 +668,12 @@ ${tx}\t\t\t</CdtTrfTxInf>
             content += `\t\t\t\t\t</ClrSysMmbId>\n`;
         }
         if (lei) content += `\t\t\t\t\t<LEI>${this.e(lei)}</LEI>\n`;
-        if (name) content += `\t\t\t\t\t<Nm>${this.e(name)}</Nm>\n`;
-        content += this.addrXml(v, prefix, 5, tag.startsWith('PrvsInstgAgt'));
+
+        // Filter: Nm and PstlAdr are NOT allowed for InstgAgt and InstdAgt as per MyStandards requirements
+        if (tag !== 'InstgAgt' && tag !== 'InstdAgt') {
+            if (name) content += `\t\t\t\t\t<Nm>${this.e(name)}</Nm>\n`;
+            content += this.addrXml(v, prefix, 5, tag.startsWith('PrvsInstgAgt'));
+        }
 
         return `\t\t\t<${tag}>\n\t\t\t\t<FinInstnId>\n${content}\t\t\t\t</FinInstnId>\n\t\t\t</${tag}>\n`;
     }
