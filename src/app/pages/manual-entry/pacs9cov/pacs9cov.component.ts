@@ -108,6 +108,8 @@ export class Pacs9CovComponent implements OnInit {
 
         const anyT2 = systems.includes('T2');
         const anyCHAPS = systems.includes('CHAPS');
+        const anyCHIPS = systems.includes('CHIPS');
+        const anyFED = systems.includes('FED');
         const currencyCtrl = this.form.get('currency');
         const ccy = currencyCtrl?.value;
 
@@ -131,6 +133,42 @@ export class Pacs9CovComponent implements OnInit {
             const errors = { ...currencyCtrl.errors };
             delete errors['chaps'];
             currencyCtrl.setErrors(Object.keys(errors).length ? errors : null);
+        }
+
+        // CHIPS Validation
+        if (anyCHIPS && ccy !== 'USD' && ccy !== '') {
+            if (!currencyCtrl?.hasError('chips')) {
+                currencyCtrl?.setErrors({ ...currencyCtrl.errors, chips: true });
+            }
+        } else if (currencyCtrl?.hasError('chips')) {
+            const errors = { ...currencyCtrl.errors };
+            delete errors['chips'];
+            currencyCtrl.setErrors(Object.keys(errors).length ? errors : null);
+        }
+
+        // FED Validation
+        if (anyFED && ccy !== 'USD' && ccy !== '') {
+            if (!currencyCtrl?.hasError('fed')) {
+                currencyCtrl?.setErrors({ ...currencyCtrl.errors, fed: true });
+            }
+        } else if (currencyCtrl?.hasError('fed')) {
+            const errors = { ...currencyCtrl.errors };
+            delete errors['fed'];
+            currencyCtrl.setErrors(Object.keys(errors).length ? errors : null);
+        }
+
+        // ClrSysRef Validation (Forbidden if no standard clearing system)
+        const standardSystems = ['T2', 'CHAPS', 'CHIPS', 'FED', 'RTGS'];
+        const hasStandardClearing = systems.some(s => standardSystems.includes(s));
+        const clrRefCtrl = this.form.get('clrSysRef');
+        if (clrRefCtrl?.value?.trim() && !hasStandardClearing) {
+            if (!clrRefCtrl.hasError('forbidden')) {
+                clrRefCtrl.setErrors({ ...clrRefCtrl.errors, forbidden: true });
+            }
+        } else if (clrRefCtrl?.hasError('forbidden')) {
+            const errors = { ...clrRefCtrl.errors };
+            delete errors['forbidden'];
+            clrRefCtrl.setErrors(Object.keys(errors).length ? errors : null);
         }
     }
 
@@ -240,11 +278,13 @@ export class Pacs9CovComponent implements OnInit {
             rmtInfStrdGrnshmtId: ['', Validators.maxLength(35)],
 
             fromBic: ['RBOSGB2L', BIC], toBic: ['NDEAFIHH', BIC], bizMsgId: ['pacs9bizmsgidr01', Validators.required],
-            msgId: ['pacs9bizmsgidr01', Validators.required], creDtTm: [this.isoNow(), Validators.required],
-            nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['INGA', Validators.required],
+            msgId: ['pacs9bizmsgidr01', Validators.required],            creDtTm: [this.isoNow(), Validators.required],
+            sttlmPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
+            nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['INDA', Validators.required],
             instgAgtBic: ['RBOSGB2L', BIC], instdAgtBic: ['NDEAFIHH', BIC],
             instrId: ['pacs9bizmsgidr01', Validators.required], endToEndId: ['pacs8bizmsgidr01', Validators.required],
             uetr: ['8a562c67-ca16-48ba-b074-65581be6f001', [Validators.required, Validators.pattern(/^[0-9a-fA-F\-]{36}$/)]],
+            clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
             amount: ['1500000', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['EUR', Validators.required],
             sttlmDt: [new Date().toISOString().split('T')[0], Validators.required],
             // Debtor FI (required)
@@ -399,10 +439,11 @@ export class Pacs9CovComponent implements OnInit {
             if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Amount must be > 0 (max 18 digits).';
             if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Must be a valid ISO 20022 code (4 uppercase letters).';
             if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
-            if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
+            if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId' || f === 'clrSysRef') return 'Invalid Pattern (Alphanumeric only, max 35 chars).';
             if (f.toLowerCase().includes('name') || f.toLowerCase().includes('nm')) return "Invalid characters. Only letters, numbers, spaces and . , ( ) ' - are allowed (no &, @, !, etc.)";
             if (f.toLowerCase().includes('ustrd') || f.toLowerCase().includes('adtlrmtinf')) return "Invalid character in remittance field. Only ISO 20022 MX allowed chars permitted.";
             if (f === 'instrPrty') return 'Invalid Priority. Must be HIGH or NORM.';
+            if (f === 'sttlmPrty') return 'Invalid Settlement Priority. Must be HIGH or NORM.';
             if (f === 'clrChanl') return 'Invalid Clearing Channel. Must be BOOK, MPNS, RTGS, or RTNS.';
             if (f === 'svcLvlCd') return 'Invalid Service Level Code. Must be 1-4 alphanumeric characters.';
             if (f === 'svcLvlPrtry') return 'Invalid Proprietary Service Level. Up to 35 characters allowed.';
@@ -413,8 +454,11 @@ export class Pacs9CovComponent implements OnInit {
                 return 'Invalid character. Only ISO 20022 MX allowed characters permitted.';
             }
         }
-        if (c.errors?.['target2']) return 'TARGET2 payments must use EUR as the settlement currency.';
+        if (c.errors?.['target2']) return 'T2 allows only EUR currency.';
+        if (c.errors?.['chips']) return 'CHIPS allows only USD currency.';
+        if (c.errors?.['fed']) return 'FED allows only USD currency.';
         if (c.errors?.['chaps']) return 'Invalid Currency for CHAPS clearing system. When ClrSysId/Cd = CHAPS, the transaction currency must be GBP.';
+        if (c.errors?.['forbidden']) return 'Clearing System Reference must NOT be sent if no active clearing system is used.';
         return 'Invalid value.';
     }
     warningTimeouts: { [key: string]: any } = {};
@@ -495,9 +539,16 @@ export class Pacs9CovComponent implements OnInit {
             return;
         }
 
-        // Stop generation if CHAPS rule is violated
-        if (this.form.get('currency')?.hasError('chaps')) {
-            this.generatedXml = '<!-- CHAPS VALIDATION ERROR: Invalid Currency for CHAPS clearing system. When ClrSysId/Cd = CHAPS, the transaction currency must be GBP. -->';
+        // Stop generation if CHIPS rule is violated
+        if (this.form.get('currency')?.hasError('chips')) {
+            this.generatedXml = '<!-- CHIPS VALIDATION ERROR: CHIPS allows only USD currency. -->';
+            this.onEditorChange(this.generatedXml, true);
+            return;
+        }
+
+        // Stop generation if FED rule is violated
+        if (this.form.get('currency')?.hasError('fed')) {
+            this.generatedXml = '<!-- FED VALIDATION ERROR: FED allows only USD currency. -->';
             this.onEditorChange(this.generatedXml, true);
             return;
         }
@@ -508,7 +559,9 @@ export class Pacs9CovComponent implements OnInit {
 
         // CdtTrfTxInf — pacs.009.001.08 COV element order
         let tx = '';
-        tx += this.tag('PmtId', this.el('InstrId', v.instrId) + this.el('EndToEndId', v.endToEndId) + this.el('UETR', v.uetr), 3);
+        let pmtIdXml = this.el('InstrId', v.instrId) + this.el('EndToEndId', v.endToEndId) + this.el('UETR', v.uetr);
+        if (v.clrSysRef?.trim()) pmtIdXml += this.el('ClrSysRef', v.clrSysRef);
+        tx += this.tag('PmtId', pmtIdXml, 3);
 
         let pmtTpXml = '';
         if (v.instrPrty?.trim()) pmtTpXml += this.el('InstrPrty', v.instrPrty, 4);
@@ -522,6 +575,7 @@ export class Pacs9CovComponent implements OnInit {
         if (pmtTpXml) tx += this.tag('PmtTpInf', pmtTpXml, 3);
         tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${v.amount}</IntrBkSttlmAmt>\n`;
         tx += this.el('IntrBkSttlmDt', v.sttlmDt, 3);
+        if (v.sttlmPrty?.trim()) tx += this.el('SttlmPrty', v.sttlmPrty, 3);
         // PrvsInstgAgts
         tx += this.agtWithAcct('PrvsInstgAgt1', 'prvsInstgAgt1', v);
         tx += this.agtWithAcct('PrvsInstgAgt2', 'prvsInstgAgt2', v);
@@ -633,7 +687,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
         }
         if (lei) content += `\t\t\t\t\t<LEI>${this.e(lei)}</LEI>\n`;
         if (name) content += `\t\t\t\t\t<Nm>${this.e(name)}</Nm>\n`;
-        content += this.addrXml(v, prefix, 5);
+        content += this.addrXml(v, prefix, 5, tag.startsWith('PrvsInstgAgt'));
 
         return `\t\t\t<${tag}>\n\t\t\t\t<FinInstnId>\n${content}\t\t\t\t</FinInstnId>\n\t\t\t</${tag}>\n`;
     }
@@ -668,11 +722,15 @@ ${tx}\t\t\t</CdtTrfTxInf>
 
         return `${this.tabs(indent)}<${tag}>\n${content}${this.tabs(indent)}</${tag}>\n`;
     }
-
-    addrXml(v: any, p: string, indent = 4): string {
+    addrXml(v: any, p: string, indent = 4, isPrvs = false): string {
         const type = v[p + 'AddrType']; if (!type || type === 'none') return '';
         const lines: string[] = []; const t = this.tabs(indent + 1);
         if (type === 'structured' || type === 'hybrid') {
+            // PostalAddress27 XSD element order
+            if (!isPrvs) {
+                if (v[p + 'AdrTpCd']) lines.push(`${t}<AdrTp>\n${t}\t<Cd>${this.e(v[p + 'AdrTpCd'])}</Cd>\n${t}</AdrTp>`);
+                else if (v[p + 'AdrTpPrtry']) lines.push(`${t}<AdrTp>\n${t}\t<Prtry>${this.e(v[p + 'AdrTpPrtry'])}</Prtry>\n${t}</AdrTp>`);
+            }
             if (v[p + 'Dept']) lines.push(`${t}<Dept>${this.e(v[p + 'Dept'])}</Dept>`);
             if (v[p + 'SubDept']) lines.push(`${t}<SubDept>${this.e(v[p + 'SubDept'])}</SubDept>`);
             if (v[p + 'StrtNm']) lines.push(`${t}<StrtNm>${this.e(v[p + 'StrtNm'])}</StrtNm>`);

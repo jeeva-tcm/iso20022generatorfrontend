@@ -220,6 +220,8 @@ export class Pacs9Component implements OnInit {
             instrId: ['INSTR-FI-001', Validators.required], endToEndId: ['E2E-FI-001', Validators.required],
             txId: ['TX-FI-001', Validators.required],
             uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[0-9a-fA-F\-]{36}$/)]],
+            clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
+            sttlmPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
             amount: ['50000.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
             sttlmDt: [new Date().toISOString().split('T')[0], Validators.required],
             // Debtor FI (required)
@@ -304,8 +306,10 @@ export class Pacs9Component implements OnInit {
             if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Amount must be > 0 (max 18 digits).';
             if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
             if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
+            if (f === 'clrSysRef') return 'Alphanumeric only (1-35 characters, no special chars).';
             if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Must be a valid ISO 20022 code (4 uppercase letters).';
             if (f === 'instrPrty') return 'Invalid Priority. Must be HIGH or NORM.';
+            if (f === 'sttlmPrty') return 'Invalid Settlement Priority. Must be HIGH or NORM.';
             if (f === 'clrChanl') return 'Invalid Clearing Channel. Must be BOOK, MPNS, RTGS, or RTNS.';
             if (f === 'svcLvlCd') return 'Invalid Service Level Code. Must be 1-4 alphanumeric characters.';
             if (f === 'svcLvlPrtry') return 'Invalid Proprietary Service Level. Up to 35 characters allowed.';
@@ -394,9 +398,23 @@ export class Pacs9Component implements OnInit {
     generateXml() {
         if (this.isParsingXml) return;
 
-        // Stop generation if TARGET2 rule is violated
+        // Stop generation if CHIPS rule is violated
+        if (this.form.get('currency')?.hasError('chips')) {
+            this.generatedXml = '<!-- CHIPS VALIDATION ERROR: CHIPS allows only USD currency. -->';
+            this.onEditorChange(this.generatedXml, true);
+            return;
+        }
+
+        // Stop generation if FED rule is violated
+        if (this.form.get('currency')?.hasError('fed')) {
+            this.generatedXml = '<!-- FED VALIDATION ERROR: FED allows only USD currency. -->';
+            this.onEditorChange(this.generatedXml, true);
+            return;
+        }
+
+        // Stop generation if target2 rule is violated
         if (this.form.get('currency')?.hasError('target2')) {
-            this.generatedXml = '<!-- TARGET2 VALIDATION ERROR: TARGET2 payments must use EUR as the settlement currency. -->';
+            this.generatedXml = '<!-- TARGET2 VALIDATION ERROR: T2 allows only EUR currency. -->';
             this.onEditorChange(this.generatedXml, true);
             return;
         }
@@ -408,13 +426,22 @@ export class Pacs9Component implements OnInit {
             return;
         }
 
+        // Stop generation if ClrSysRef is forbidden
+        if (this.form.get('clrSysRef')?.hasError('forbidden')) {
+            this.generatedXml = '<!-- CLEARING SYSTEM REFERENCE VALIDATION ERROR: Clearing System Reference must NOT be sent if no active standard clearing system is used. -->';
+            this.onEditorChange(this.generatedXml, true);
+            return;
+        }
+
         const v = this.form.value;
         let creDtTm = v.creDtTm || this.isoNow();
         if (creDtTm.endsWith('Z')) creDtTm = creDtTm.replace('Z', '+00:00');
 
         // CdtTrfTxInf — pacs.009.001.08 CBPR+ element order
         let tx = '';
-        tx += this.tag('PmtId', this.el('InstrId', v.instrId) + this.el('EndToEndId', v.endToEndId) + this.el('TxId', v.txId) + this.el('UETR', v.uetr), 3);
+        let pmtIdXml = this.el('InstrId', v.instrId) + this.el('EndToEndId', v.endToEndId) + this.el('TxId', v.txId) + this.el('UETR', v.uetr);
+        if (v.clrSysRef?.trim()) pmtIdXml += this.el('ClrSysRef', v.clrSysRef);
+        tx += this.tag('PmtId', pmtIdXml, 3);
 
         let pmtTpXml = '';
         if (v.instrPrty?.trim()) pmtTpXml += this.el('InstrPrty', v.instrPrty, 4);
@@ -428,6 +455,7 @@ export class Pacs9Component implements OnInit {
         if (pmtTpXml) tx += this.tag('PmtTpInf', pmtTpXml, 3);
         tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${v.amount}</IntrBkSttlmAmt>\n`;
         tx += this.el('IntrBkSttlmDt', v.sttlmDt, 3);
+        if (v.sttlmPrty?.trim()) tx += this.el('SttlmPrty', v.sttlmPrty, 3);
         // PrvsInstgAgts
         tx += this.agtWithAcct('PrvsInstgAgt1', 'prvsInstgAgt1', v);
         tx += this.agtWithAcct('PrvsInstgAgt2', 'prvsInstgAgt2', v);
@@ -571,19 +599,21 @@ ${tx}\t\t\t</CdtTrfTxInf>
             content += `\t\t\t\t\t\t<MmbId>${this.e(clrMmb)}</MmbId>\n`;
             content += `\t\t\t\t\t</ClrSysMmbId>\n`;
         }
-        if (name) content += `\t\t\t\t\t<Nm>${this.e(name)}</Nm>\n`;
-        content += this.addrXml(v, prefix, 5);
         if (lei) content += `\t\t\t\t\t<LEI>${this.e(lei)}</LEI>\n`;
+        if (name) content += `\t\t\t\t\t<Nm>${this.e(name)}</Nm>\n`;
+        content += this.addrXml(v, prefix, 5, tag.startsWith('PrvsInstgAgt'));
 
         return `\t\t\t<${tag}>\n\t\t\t\t<FinInstnId>\n${content}\t\t\t\t</FinInstnId>\n\t\t\t</${tag}>\n`;
     }
-    addrXml(v: any, p: string, indent = 4): string {
+    addrXml(v: any, p: string, indent = 4, isPrvs = false): string {
         const type = v[p + 'AddrType']; if (!type || type === 'none') return '';
         const lines: string[] = []; const t = this.tabs(indent + 1);
         if (type === 'structured' || type === 'hybrid') {
             // PostalAddress27 XSD element order
-            if (v[p + 'AdrTpCd']) lines.push(`${t}<AdrTp>\n${t}\t<Cd>${this.e(v[p + 'AdrTpCd'])}</Cd>\n${t}</AdrTp>`);
-            else if (v[p + 'AdrTpPrtry']) lines.push(`${t}<AdrTp>\n${t}\t<Prtry>${this.e(v[p + 'AdrTpPrtry'])}</Prtry>\n${t}</AdrTp>`);
+            if (!isPrvs) {
+                if (v[p + 'AdrTpCd']) lines.push(`${t}<AdrTp>\n${t}\t<Cd>${this.e(v[p + 'AdrTpCd'])}</Cd>\n${t}</AdrTp>`);
+                else if (v[p + 'AdrTpPrtry']) lines.push(`${t}<AdrTp>\n${t}\t<Prtry>${this.e(v[p + 'AdrTpPrtry'])}</Prtry>\n${t}</AdrTp>`);
+            }
             if (v[p + 'Dept']) lines.push(`${t}<Dept>${this.e(v[p + 'Dept'])}</Dept>`);
             if (v[p + 'SubDept']) lines.push(`${t}<SubDept>${this.e(v[p + 'SubDept'])}</SubDept>`);
             if (v[p + 'StrtNm']) lines.push(`${t}<StrtNm>${this.e(v[p + 'StrtNm'])}</StrtNm>`);

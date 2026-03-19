@@ -22,6 +22,11 @@
                     <div class="form-group"><label>Instruction ID <span class="req">*</span></label><input formControlName="instrId" maxlength="35"></div>
                     <div class="form-group"><label>End To End ID <span class="req">*</span></label><input formControlName="endToEndId" maxlength="35"></div>
                     <div class="form-group"><label>UETR <span class="req">*</span></label><input formControlName="uetr" maxlength="36"></div>
+                    <div class="form-group">
+                        <label>Clearing System Reference <span class="opt">Optional</span></label>
+                        <input formControlName="clrSysRef" maxlength="35" placeholder="Alphanumeric (1-35)">
+                        <div class="validation-msg" *ngIf="err('clrSysRef') as e">{{e}}</div>
+                    </div>
                     <div class="form-group"><label>Amount <span class="req">*</span></label><input formControlName="amount" type="number"></div>
                     <div class="form-group"><label>Currency <span class="req">*</span></label>
                         <select formControlName="currency"><option *ngFor="let c of currencies" [value]="c">{{c}}</option></select>
@@ -318,6 +323,20 @@
                                      </select>
                                      <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocCd') as e">{{e}}</div>
                                  </div>
+                                 <div class="form-group"><label>Settlement Date <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="sttlmDt" type="date">
+                                                <div class="validation-msg" *ngIf="err('sttlmDt') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Settlement Priority <span
+                                                                class="opt">Optional</span></label>
+                                                <select formControlName="sttlmPrty">
+                                                        <option value="">None</option>
+                                                        <option value="HIGH">HIGH</option>
+                                                        <option value="NORM">NORM</option>
+                                                </select>
+                                                <div class="validation-msg" *ngIf="err('sttlmPrty') as e">{{e}}</div>
+                                        </div>
                                  <div class="form-group">
                                      <label>Referred Doc Amount</label>
                                      <input formControlName="rmtInfStrdRfrdDocAmt" type="number" step="any" placeholder="Due Payable Amount">

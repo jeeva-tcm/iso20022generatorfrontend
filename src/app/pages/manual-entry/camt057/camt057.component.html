@@ -24,6 +24,11 @@
                     <div class="form-group"><label>Expected Value Date <span class="req">*</span></label><input type="date" formControlName="valDt"></div>
                     <div class="form-group"><label>End to End ID</label><input formControlName="endToEndId" maxlength="35"></div>
                     <div class="form-group"><label>UETR</label><input formControlName="uetr" maxlength="36"></div>
+                    <div class="form-group">
+                        <label>Clearing System Reference <span class="opt">Optional</span></label>
+                        <input formControlName="clrSysRef" maxlength="35" placeholder="Alphanumeric (1-35)">
+                        <div class="validation-msg" *ngIf="err('clrSysRef') as e">{{e}}</div>
+                    </div>
                     <div class="form-group"><label>Purpose Code</label>
                         <select formControlName="purpCd"><option value="">None</option><option *ngFor="let p of purposes" [value]="p">{{p}}</option></select>
                     </div>

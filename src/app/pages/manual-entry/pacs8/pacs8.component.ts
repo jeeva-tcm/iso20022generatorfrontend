@@ -91,6 +91,8 @@ export class Pacs8Component implements OnInit {
 
     const anyT2 = systems.includes('T2');
     const anyCHAPS = systems.includes('CHAPS');
+    const anyCHIPS = systems.includes('CHIPS');
+    const anyFED = systems.includes('FED');
 
     const currencyCtrl = this.form.get('currency');
     const ccy = currencyCtrl?.value;
@@ -115,6 +117,42 @@ export class Pacs8Component implements OnInit {
       const errors = { ...currencyCtrl.errors };
       delete errors['chaps'];
       currencyCtrl.setErrors(Object.keys(errors).length ? errors : null);
+    }
+
+    // CHIPS Validation
+    if (anyCHIPS && ccy !== 'USD' && ccy !== '') {
+      if (!currencyCtrl?.hasError('chips')) {
+        currencyCtrl?.setErrors({ ...currencyCtrl.errors, chips: true });
+      }
+    } else if (currencyCtrl?.hasError('chips')) {
+      const errors = { ...currencyCtrl.errors };
+      delete errors['chips'];
+      currencyCtrl.setErrors(Object.keys(errors).length ? errors : null);
+    }
+
+    // FED Validation
+    if (anyFED && ccy !== 'USD' && ccy !== '') {
+      if (!currencyCtrl?.hasError('fed')) {
+        currencyCtrl?.setErrors({ ...currencyCtrl.errors, fed: true });
+      }
+    } else if (currencyCtrl?.hasError('fed')) {
+      const errors = { ...currencyCtrl.errors };
+      delete errors['fed'];
+      currencyCtrl.setErrors(Object.keys(errors).length ? errors : null);
+    }
+
+    // ClrSysRef Validation (Forbidden if no standard clearing system)
+    const standardSystems = ['T2', 'CHAPS', 'CHIPS', 'FED', 'RTGS'];
+    const hasStandardClearing = systems.some(s => standardSystems.includes(s));
+    const clrRefCtrl = this.form.get('clrSysRef');
+    if (clrRefCtrl?.value?.trim() && !hasStandardClearing) {
+      if (!clrRefCtrl.hasError('forbidden')) {
+        clrRefCtrl.setErrors({ ...clrRefCtrl.errors, forbidden: true });
+      }
+    } else if (clrRefCtrl?.hasError('forbidden')) {
+      const errors = { ...clrRefCtrl.errors };
+      delete errors['forbidden'];
+      clrRefCtrl.setErrors(Object.keys(errors).length ? errors : null);
     }
   }
 
@@ -350,11 +388,13 @@ export class Pacs8Component implements OnInit {
     const c: any = {
       fromBic: ['BBBBUS33XXX', BIC], toBic: ['CCCCGB2LXXX', BIC], bizMsgId: ['MSG-2026-B-001', [Validators.required, Validators.maxLength(35)]],
       msgId: ['MSG-2026-B-001', Validators.required], creDtTm: [this.isoNow(), Validators.required],
+      sttlmPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
       nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['INDA', Validators.required],
       instgAgtBic: ['BBBBUS33XXX', BIC], instdAgtBic: ['CCCCGB2LXXX', BIC],
       instrId: ['INSTR-001', [Validators.required, Validators.maxLength(35)]], endToEndId: ['E2E-001', [Validators.required, Validators.maxLength(35)]],
       txId: ['TX-001', [Validators.required, Validators.maxLength(35)]],
       uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[0-9a-fA-F\-]{36}$/)]],
+      clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
       amount: ['1500.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
       sttlmDt: [new Date().toISOString().split('T')[0], Validators.required], 
       instrPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
@@ -479,7 +519,7 @@ export class Pacs8Component implements OnInit {
       if (fl.includes('birthdt')) return 'Use YYYY-MM-DD format.';
       if (fl.includes('ctry') || fl.includes('country')) return '2-letter ISO code required.';
       if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
-      if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
+      if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId' || f === 'clrSysRef') return 'Invalid Pattern (Alphanumeric only, max 35 chars).';
       // Address field pattern errors (must be before the generic name/nm check)
       if (fl.includes('bldgnb') || fl.includes('pstcd') || fl.includes('pstbx'))
         return 'Invalid character. Only ISO 20022 MX allowed characters permitted.';
@@ -494,6 +534,7 @@ export class Pacs8Component implements OnInit {
 
       if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Must be a valid ISO 20022 code (4 uppercase letters).';
       if (f === 'instrPrty') return 'Invalid Priority. Must be HIGH or NORM.';
+      if (f === 'sttlmPrty') return 'Invalid Settlement Priority. Must be HIGH or NORM.';
       if (f === 'clrChanl') return 'Invalid Clearing Channel. Must be BOOK, MPNS, RTGS, or RTNS.';
       if (f === 'svcLvlCd') return 'Invalid Service Level Code. Must be 1-4 alphanumeric characters.';
       if (f === 'svcLvlPrtry') return 'Invalid Proprietary Service Level. Up to 35 characters allowed.';
@@ -502,8 +543,11 @@ export class Pacs8Component implements OnInit {
       if (f === 'ctgyPurpPrtry') return 'Invalid Proprietary Category Purpose. Up to 35 characters allowed.';
     }
     if (c.errors?.['noIdentifier']) return 'Name, LEI, or Member ID required.';
-    if (c.errors?.['target2']) return 'TARGET2 payments must use EUR as the settlement currency.';
+    if (c.errors?.['target2']) return 'T2 allows only EUR currency.';
+    if (c.errors?.['chips']) return 'CHIPS allows only USD currency.';
+    if (c.errors?.['fed']) return 'FED allows only USD currency.';
     if (c.errors?.['chaps']) return 'Invalid Currency for CHAPS clearing system. When ClrSysId/Cd = CHAPS, the transaction currency must be GBP.';
+    if (c.errors?.['forbidden']) return 'Clearing System Reference must NOT be sent if no active clearing system is used.';
     return 'Invalid value.';
   }
   warningTimeouts: { [key: string]: any } = {};
@@ -615,7 +659,9 @@ export class Pacs8Component implements OnInit {
 
     // CdtTrfTxInf — strict XSD element order
     let tx = '';
-    tx += this.tag('PmtId', this.el('InstrId', v.instrId) + this.el('EndToEndId', v.endToEndId) + this.el('TxId', v.txId) + this.el('UETR', v.uetr), 3);
+    let pmtIdXml = this.el('InstrId', v.instrId) + this.el('EndToEndId', v.endToEndId) + this.el('TxId', v.txId) + this.el('UETR', v.uetr);
+    if (v.clrSysRef?.trim()) pmtIdXml += this.el('ClrSysRef', v.clrSysRef);
+    tx += this.tag('PmtId', pmtIdXml, 3);
 
     let pmtTpXml = '';
     if (v.instrPrty?.trim()) pmtTpXml += this.el('InstrPrty', v.instrPrty, 4);
@@ -630,6 +676,7 @@ export class Pacs8Component implements OnInit {
 
     tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${v.amount}</IntrBkSttlmAmt>\n`;
     tx += this.el('IntrBkSttlmDt', v.sttlmDt, 3);
+    if (v.sttlmPrty?.trim()) tx += this.el('SttlmPrty', v.sttlmPrty, 3);
     tx += this.el('ChrgBr', v.chrgBr, 3);
     // PrvsInstgAgts
     tx += this.agt('PrvsInstgAgt1', 'prvsInstgAgt1', v);
@@ -832,19 +879,21 @@ ${tx}\t\t\t</CdtTrfTxInf>
       content += `\t\t\t\t\t\t<MmbId>${this.e(clrMmb)}</MmbId>\n`;
       content += `\t\t\t\t\t</ClrSysMmbId>\n`;
     }
-    if (name) content += `\t\t\t\t\t<Nm>${this.e(name)}</Nm>\n`;
-    content += this.addrXml(v, prefix, 5);
     if (lei) content += `\t\t\t\t\t<LEI>${this.e(lei)}</LEI>\n`;
+    if (name) content += `\t\t\t\t\t<Nm>${this.e(name)}</Nm>\n`;
+    content += this.addrXml(v, prefix, 5, tag.startsWith('PrvsInstgAgt'));
 
     return `\t\t\t<${tag}>\n\t\t\t\t<FinInstnId>\n${content}\t\t\t\t</FinInstnId>\n\t\t\t</${tag}>\n`;
   }
-  addrXml(v: any, p: string, indent = 4): string {
+  addrXml(v: any, p: string, indent = 4, isPrvs = false): string {
     const type = v[p + 'AddrType']; if (!type || type === 'none') return '';
     const lines: string[] = []; const t = this.tabs(indent + 1);
     if (type === 'structured' || type === 'hybrid') {
       // PostalAddress27 XSD element order
-      if (v[p + 'AdrTpCd']) lines.push(`${t}<AdrTp>\n${t}\t<Cd>${this.e(v[p + 'AdrTpCd'])}</Cd>\n${t}</AdrTp>`);
-      else if (v[p + 'AdrTpPrtry']) lines.push(`${t}<AdrTp>\n${t}\t<Prtry>${this.e(v[p + 'AdrTpPrtry'])}</Prtry>\n${t}</AdrTp>`);
+      if (!isPrvs) {
+        if (v[p + 'AdrTpCd']) lines.push(`${t}<AdrTp>\n${t}\t<Cd>${this.e(v[p + 'AdrTpCd'])}</Cd>\n${t}</AdrTp>`);
+        else if (v[p + 'AdrTpPrtry']) lines.push(`${t}<AdrTp>\n${t}\t<Prtry>${this.e(v[p + 'AdrTpPrtry'])}</Prtry>\n${t}</AdrTp>`);
+      }
       if (v[p + 'Dept']) lines.push(`${t}<Dept>${this.e(v[p + 'Dept'])}</Dept>`);
       if (v[p + 'SubDept']) lines.push(`${t}<SubDept>${this.e(v[p + 'SubDept'])}</SubDept>`);
       if (v[p + 'StrtNm']) lines.push(`${t}<StrtNm>${this.e(v[p + 'StrtNm'])}</StrtNm>`);
