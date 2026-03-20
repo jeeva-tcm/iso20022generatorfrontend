@@ -1,3 +1,4 @@
+import { Pacs3Component } from './pages/manual-entry/pacs3/pacs3.component';
 import { Routes } from '@angular/router';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ValidateComponent } from './pages/validate/validate.component';
@@ -14,6 +15,8 @@ import { Pacs2Component } from './pages/manual-entry/pacs2/pacs2.component';
 import { MtToMxComponent } from './pages/mt-to-mx/mt-to-mx.component';
 
 export const routes: Routes = [
+  { path: 'generate/pacs3', component: Pacs3Component },
+
     { path: '', component: DashboardComponent },
     { path: 'validate', component: ValidateComponent },
     { path: 'history', component: HistoryComponent },
