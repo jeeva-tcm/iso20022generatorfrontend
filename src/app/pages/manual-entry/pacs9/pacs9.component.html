@@ -41,6 +41,15 @@
                                                         formControlName="creDtTm">
                                                 <div class="validation-msg" *ngIf="err('creDtTm') as e">{{e}}</div>
                                         </div>
+                                        <div class="form-group intermediary-field"><label>Priority <span
+                                                                class="opt">Optional</span></label>
+                                                <select formControlName="appHdrPriority">
+                                                        <option value="">None</option>
+                                                        <option value="HIGH">HIGH</option>
+                                                        <option value="NORM">NORM</option>
+                                                        <option value="LOW">LOW</option>
+                                                </select>
+                                        </div>
                                         <div class="form-group intermediary-field"><label>Number of Txns <span
                                                                 class="req">*</span></label><input
                                                         formControlName="nbOfTxs" maxlength="15"
@@ -98,6 +107,12 @@
                                                 <div class="uetr-success" *ngIf="uetrSuccess">✔ {{uetrSuccess}}</div>
                                                 <div class="field-hint at-limit" *ngIf="hint('uetr', 36) as h">{{h}}</div>
                                         </div>
+                                        <div class="form-group intermediary-field">
+                                                <label>Clearing System Reference <span class="opt">Optional</span></label>
+                                                <input formControlName="clrSysRef" maxlength="35" placeholder="ABC123456">
+                                                <div class="validation-msg" *ngIf="err('clrSysRef') as e">{{e}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('clrSysRef', 35) as h">{{h}}</div>
+                                        </div>
 
                                         <div class="section-title">Settlement Amounts</div>
                                         <div class="form-group intermediary-field"><label>Amount <span class="req">*</span></label><input
@@ -116,6 +131,15 @@
                                                         formControlName="sttlmDt" type="date"
                                                         min="0001-01-01" max="9999-12-31">
                                                 <div class="validation-msg" *ngIf="err('sttlmDt') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Settlement Priority <span
+                                                                class="opt">Optional</span></label>
+                                                <select formControlName="sttlmPrty">
+                                                        <option value="">None</option>
+                                                        <option value="HIGH">HIGH</option>
+                                                        <option value="NORM">NORM</option>
+                                                </select>
+                                                <div class="validation-msg" *ngIf="err('sttlmPrty') as e">{{e}}</div>
                                         </div>
 
                                         <!-- Main Agents -->
@@ -267,13 +291,7 @@
                                                 </div>
                                         </div>
 
-                                        <!-- Ultimate Creditor -->
-                                        <div class="party-group">
-                                                <div class="party-group-title">Ultimate Creditor</div>
-                                                <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'ultmtCdtr',isAgent:true, title:'Ultimate Creditor'}"></ng-container>
-                                        </div>
-
-                                        <!-- Optional Agents -->
+					<!-- Optional Agents -->
                                         <div class="section-title">Previous Instructing Agents <span class="opt">Optional</span></div>
                                         <div class="party-group">
                                                 <div class="party-group-title">Previous Instructing Agent 1</div>
@@ -413,14 +431,7 @@
                                         <div class="party-group">
                                                 <div class="party-group-title">Instr for Next Agent 1</div>
                                                 <div [formGroup]="form" class="party-grid">
-                                                        <div class="form-group">
-                                                                <label>Instruction Code</label>
-                                                                <select formControlName="instrForNxtAgt1Cd">
-                                                                        <option value="">None</option>
-                                                                        <option value="PHOA">PHOA – Phone account owner</option>
-                                                                        <option value="TELA">TELA – Telecom account owner</option>
-                                                                </select>
-                                                        </div>
+                                                        <!-- Removed Cd as per MyStandards -->
                                                         <div class="form-group">
                                                                 <label>Instruction Information</label>
                                                                  <input formControlName="instrForNxtAgt1InfTxt" maxlength="35" placeholder="Free text (max 35)">
@@ -431,14 +442,7 @@
                                         <div class="party-group">
                                                 <div class="party-group-title">Instr for Next Agent 2</div>
                                                 <div [formGroup]="form" class="party-grid">
-                                                        <div class="form-group">
-                                                                <label>Instruction Code</label>
-                                                                <select formControlName="instrForNxtAgt2Cd">
-                                                                        <option value="">None</option>
-                                                                        <option value="PHOA">PHOA – Phone account owner</option>
-                                                                        <option value="TELA">TELA – Telecom account owner</option>
-                                                                </select>
-                                                        </div>
+                                                        <!-- Removed Cd as per MyStandards -->
                                                         <div class="form-group">
                                                                 <label>Instruction Information</label>
                                                                  <input formControlName="instrForNxtAgt2InfTxt" maxlength="35" placeholder="Free text (max 35)">
@@ -449,14 +453,7 @@
                                         <div class="party-group">
                                                 <div class="party-group-title">Instr for Next Agent 3</div>
                                                 <div [formGroup]="form" class="party-grid">
-                                                        <div class="form-group">
-                                                                <label>Instruction Code</label>
-                                                                <select formControlName="instrForNxtAgt3Cd">
-                                                                        <option value="">None</option>
-                                                                        <option value="PHOA">PHOA – Phone account owner</option>
-                                                                        <option value="TELA">TELA – Telecom account owner</option>
-                                                                </select>
-                                                        </div>
+                                                        <!-- Removed Cd as per MyStandards -->
                                                         <div class="form-group">
                                                                 <label>Instruction Information</label>
                                                                  <input formControlName="instrForNxtAgt3InfTxt" maxlength="35" placeholder="Free text (max 35)">
@@ -467,14 +464,7 @@
                                         <div class="party-group">
                                                 <div class="party-group-title">Instr for Next Agent 4</div>
                                                 <div [formGroup]="form" class="party-grid">
-                                                        <div class="form-group">
-                                                                <label>Instruction Code</label>
-                                                                <select formControlName="instrForNxtAgt4Cd">
-                                                                        <option value="">None</option>
-                                                                        <option value="PHOA">PHOA – Phone account owner</option>
-                                                                        <option value="TELA">TELA – Telecom account owner</option>
-                                                                </select>
-                                                        </div>
+                                                        <!-- Removed Cd as per MyStandards -->
                                                         <div class="form-group">
                                                                 <label>Instruction Information</label>
                                                                  <input formControlName="instrForNxtAgt4InfTxt" maxlength="35" placeholder="Free text (max 35)">
@@ -648,35 +638,97 @@
         <!-- Dynamic Address Fields -->
         <ng-container *ngIf="form.get(prefix+'AddrType')?.value !== 'none'">
             <div class="address-subgrid">
+                <!-- Row 1: Dept / SubDept -->
                 <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                    <label>{{title}} Department</label>
+                    <input [formControlName]="prefix+'Dept'" placeholder="Internal Dept">
+                    <div class="validation-msg" *ngIf="err(prefix+'Dept') as e">{{e}}</div>
                     <label>{{title}} Building Number</label>
                     <input [formControlName]="prefix+'BldgNb'" maxlength="16">
                     <div class="validation-msg" *ngIf="err(prefix+'BldgNb') as e">{{e}}</div>
                     <div class="field-hint at-limit" *ngIf="hint(prefix+'BldgNb', 16) as h">{{h}}</div>
                 </div>
                 <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                    <label>{{title}} Sub-Dept</label>
+                    <input [formControlName]="prefix+'SubDept'" placeholder="Internal Sub-Dept">
+                    <div class="validation-msg" *ngIf="err(prefix+'SubDept') as e">{{e}}</div>
                     <label>{{title}} Building Name</label>
                     <input [formControlName]="prefix+'BldgNm'" maxlength="35">
                     <div class="validation-msg" *ngIf="err(prefix+'BldgNm') as e">{{e}}</div>
                     <div class="field-hint at-limit" *ngIf="hint(prefix+'BldgNm', 35) as h">{{h}}</div>
                 </div>
+
+                <!-- Row 2: StrtNm / BldgNb -->
                 <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                     <label>{{title}} Street Name</label>
+                    <input [formControlName]="prefix+'StrtNm'" placeholder="Main Street">
                     <input [formControlName]="prefix+'StrtNm'" maxlength="70">
                     <div class="validation-msg" *ngIf="err(prefix+'StrtNm') as e">{{e}}</div>
                     <div class="field-hint at-limit" *ngIf="hint(prefix+'StrtNm', 70) as h">{{h}}</div>
                 </div>
                 <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                    <label>{{title}} Bldg Number</label>
+                    <input [formControlName]="prefix+'BldgNb'" placeholder="123A">
+                    <div class="validation-msg" *ngIf="err(prefix+'BldgNb') as e">{{e}}</div>
+                </div>
+
+                <!-- Row 3: BldgNm / Flr -->
+                <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                    <label>{{title}} Bldg Name</label>
+                    <input [formControlName]="prefix+'BldgNm'" placeholder="Riverside Towers">
+                    <div class="validation-msg" *ngIf="err(prefix+'BldgNm') as e">{{e}}</div>
+                </div>
+                <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                    <label>{{title}} Floor</label>
+                    <input [formControlName]="prefix+'Flr'" placeholder="Level 4">
+                    <div class="validation-msg" *ngIf="err(prefix+'Flr') as e">{{e}}</div>
+                </div>
+
+                <!-- Row 4: PstBx / Room -->
+                <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                    <label>{{title}} Post Box</label>
+                    <input [formControlName]="prefix+'PstBx'" placeholder="PO Box 450">
+                    <div class="validation-msg" *ngIf="err(prefix+'PstBx') as e">{{e}}</div>
+                </div>
+                <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                    <label>{{title}} Room</label>
+                    <input [formControlName]="prefix+'Room'" placeholder="Suite 401">
+                    <div class="validation-msg" *ngIf="err(prefix+'Room') as e">{{e}}</div>
+                </div>
+
+                <!-- Row 5: PstCd / TwnNm -->
+                <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                     <label>{{title}} Post Code</label>
+                    <input [formControlName]="prefix+'PstCd'" placeholder="SW1A 1AA">
                     <input [formControlName]="prefix+'PstCd'" maxlength="16">
                     <div class="validation-msg" *ngIf="err(prefix+'PstCd') as e">{{e}}</div>
                     <div class="field-hint at-limit" *ngIf="hint(prefix+'PstCd', 16) as h">{{h}}</div>
                 </div>
                 <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                     <label>{{title}} City (Town Name) <span class="req">*</span></label>
+                    <input [formControlName]="prefix+'TwnNm'" placeholder="London">
                     <input [formControlName]="prefix+'TwnNm'" maxlength="35">
                     <div class="validation-msg" *ngIf="err(prefix+'TwnNm') as e">{{e}}</div>
                     <div class="field-hint at-limit" *ngIf="hint(prefix+'TwnNm', 35) as h">{{h}}</div>
+                </div>
+
+                <!-- Row 6: TwnLctnNm / DstrctNm -->
+                <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                    <label>{{title}} Town Location</label>
+                    <input [formControlName]="prefix+'TwnLctnNm'" placeholder="Westminster">
+                    <div class="validation-msg" *ngIf="err(prefix+'TwnLctnNm') as e">{{e}}</div>
+                </div>
+                <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                    <label>{{title}} District Name</label>
+                    <input [formControlName]="prefix+'DstrctNm'">
+                    <div class="validation-msg" *ngIf="err(prefix+'DstrctNm') as e">{{e}}</div>
+                </div>
+
+                <!-- Row 7: CtrySubDvsn / Ctry -->
+                <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                    <label>{{title}} State/Gov Subdiv</label>
+                    <input [formControlName]="prefix+'CtrySubDvsn'" placeholder="Greater London">
+                    <div class="validation-msg" *ngIf="err(prefix+'CtrySubDvsn') as e">{{e}}</div>
                 </div>
                 <div class="form-group">
                     <label>{{title}} Country <span class="req">*</span></label>
@@ -684,16 +736,21 @@
                         <option value="">Select Country</option>
                         <option *ngFor="let c of countries" [value]="c">{{c}}</option>
                     </select>
+                    <div class="validation-msg" *ngIf="err(prefix+'Ctry') as e">{{e}}</div>
                 </div>
+
+                <!-- Unstructured Lines -->
                 <ng-container *ngIf="['unstructured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
-                    <div class="form-group">
+                    <div class="form-group full-width">
                         <label>{{title}} Address Line 1</label>
+                        <input [formControlName]="prefix+'AdrLine1'" maxlength="70">
                         <input [formControlName]="prefix+'AdrLine1'" maxlength="70">
                         <div class="validation-msg" *ngIf="err(prefix+'AdrLine1') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint(prefix+'AdrLine1', 70) as h">{{h}}</div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group full-width">
                         <label>{{title}} Address Line 2</label>
+                        <input [formControlName]="prefix+'AdrLine2'" maxlength="70">
                         <input [formControlName]="prefix+'AdrLine2'" maxlength="70">
                         <div class="validation-msg" *ngIf="err(prefix+'AdrLine2') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint(prefix+'AdrLine2', 70) as h">{{h}}</div>
@@ -721,7 +778,7 @@
         <!-- Clearing System Code -->
         <div class="form-group">
             <label>{{title}} Clearing System Code</label>
-            <input [formControlName]="isAgent ? prefix+'ClrSysCd' : prefix+'OrgClrSysCd'" maxlength="4" placeholder="e.g. USABA, CHAPS, T2">
+            <input [formControlName]="isAgent ? prefix+'ClrSysCd' : prefix+'OrgClrSysCd'" maxlength="5" placeholder="e.g. USABA, CHAPS, T2">
             <div class="validation-msg" *ngIf="err(isAgent ? prefix+'ClrSysCd' : prefix+'OrgClrSysCd') as e">{{e}}</div>
             <div class="field-hint at-limit" *ngIf="hint(isAgent ? prefix+'ClrSysCd' : prefix+'OrgClrSysCd', 4) as h">{{h}}</div>
         </div>

@@ -73,6 +73,9 @@ export class Camt057Component implements OnInit {
         const systems = this.agentPrefixes.map(p => this.form.get(p + 'ClrSysCd')?.value?.trim()?.toUpperCase());
         const anyT2 = systems.includes('T2');
         const anyCHAPS = systems.includes('CHAPS');
+        const anyCHIPS = systems.includes('CHIPS');
+        const anyFED = systems.includes('FED');
+
         const currencyCtrl = this.form.get('currency');
         const ccy = currencyCtrl?.value;
 
@@ -96,6 +99,42 @@ export class Camt057Component implements OnInit {
             const errors = { ...currencyCtrl.errors };
             delete errors['chaps'];
             currencyCtrl.setErrors(Object.keys(errors).length ? errors : null);
+        }
+
+        // CHIPS Validation
+        if (anyCHIPS && ccy !== 'USD' && ccy !== '') {
+            if (!currencyCtrl?.hasError('chips')) {
+                currencyCtrl?.setErrors({ ...currencyCtrl.errors, chips: true });
+            }
+        } else if (currencyCtrl?.hasError('chips')) {
+            const errors = { ...currencyCtrl.errors };
+            delete errors['chips'];
+            currencyCtrl.setErrors(Object.keys(errors).length ? errors : null);
+        }
+
+        // FED Validation
+        if (anyFED && ccy !== 'USD' && ccy !== '') {
+            if (!currencyCtrl?.hasError('fed')) {
+                currencyCtrl?.setErrors({ ...currencyCtrl.errors, fed: true });
+            }
+        } else if (currencyCtrl?.hasError('fed')) {
+            const errors = { ...currencyCtrl.errors };
+            delete errors['fed'];
+            currencyCtrl.setErrors(Object.keys(errors).length ? errors : null);
+        }
+
+        // ClrSysRef Validation (Forbidden if no standard clearing system)
+        const standardSystems = ['T2', 'CHAPS', 'CHIPS', 'FED', 'RTGS'];
+        const hasStandardClearing = systems.some(s => standardSystems.includes(s));
+        const clrRefCtrl = this.form.get('clrSysRef');
+        if (clrRefCtrl?.value?.trim() && !hasStandardClearing) {
+            if (!clrRefCtrl.hasError('forbidden')) {
+                clrRefCtrl.setErrors({ ...clrRefCtrl.errors, forbidden: true });
+            }
+        } else if (clrRefCtrl?.hasError('forbidden')) {
+            const errors = { ...clrRefCtrl.errors };
+            delete errors['forbidden'];
+            clrRefCtrl.setErrors(Object.keys(errors).length ? errors : null);
         }
     }
 
@@ -153,9 +192,9 @@ export class Camt057Component implements OnInit {
         });
 
         this.http.get<any>(this.config.getApiUrl('/codelists/ctgyPurp')).subscribe({
-            next: (res) => { 
+            next: (res) => {
                 if (res && res.codes && res.codes.length > 0) {
-                    this.categoryPurposes = res.codes; 
+                    this.categoryPurposes = res.codes;
                 } else {
                     this.categoryPurposes = ['SALA', 'TAXS', 'SUPP', 'PENS', 'LOAN', 'DIVD', 'CASH', 'COLL', 'INTC', 'OTHR'];
                 }
@@ -177,7 +216,7 @@ export class Camt057Component implements OnInit {
         const BIC_REQ = [Validators.required, ...BIC];
 
         this.form = this.fb.group({
-            purpCd: [''], 
+            purpCd: [''],
             ctgyPurpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/)]],
             ctgyPurpPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
             instrPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
@@ -217,6 +256,7 @@ export class Camt057Component implements OnInit {
             // Optional but commonly used
             endToEndId: ['E2E-057-001', Validators.maxLength(35)],
             uetr: ['550e8400-e29b-41d4-a716-446655440001', [Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
+            clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
         });
 
         // Add agents
@@ -258,7 +298,7 @@ export class Camt057Component implements OnInit {
         const c = this.form.get(f);
         // Remove .touched requirement to show errors more aggressively
         if (!c || c.valid) return null;
-        
+
         if (c.errors?.['required']) return 'Required field.';
         if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
         if (c.errors?.['pattern']) {
@@ -275,7 +315,8 @@ export class Camt057Component implements OnInit {
             if (f.toLowerCase().includes('uetr')) return 'Invalid UETR format';
             if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Max 18 digits, up to 5 decimals.';
             if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
-            if (f === 'bizMsgId' || f === 'msgId' || f === 'ntfctnId' || f === 'itmId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
+            if (f === 'bizMsgId' || f === 'msgId' || f === 'ntfctnId' || f === 'itmId' || f === 'instrId' || f === 'endToEndId') return 'Invalid Pattern.';
+            if (f === 'clrSysRef') return 'Invalid Pattern (Alphanumeric only, max 35 chars).';
             if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Must be a valid ISO 20022 code (4 uppercase letters).';
             if (f.toLowerCase().includes('name') || f.toLowerCase().includes('nm')) return "Invalid characters. Only letters, numbers, spaces and . , ( ) ' - are allowed (no &, @, !, etc.)";
             if (f.toLowerCase().includes('ustrd') || f.toLowerCase().includes('adtlrmtinf')) return "Invalid character in remittance field. Only ISO 20022 MX allowed chars permitted.";
@@ -290,8 +331,11 @@ export class Camt057Component implements OnInit {
                 return 'Invalid character. Only ISO 20022 MX allowed characters permitted.';
             }
         }
-        if (c.errors?.['target2']) return 'TARGET2 payments must use EUR as the settlement currency.';
+        if (c.errors?.['target2']) return 'T2 allows only EUR currency.';
+        if (c.errors?.['chips']) return 'CHIPS allows only USD currency.';
+        if (c.errors?.['fed']) return 'FED allows only USD currency.';
         if (c.errors?.['chaps']) return 'Invalid Currency for CHAPS clearing system. When ClrSysId/Cd = CHAPS, the transaction currency must be GBP.';
+        if (c.errors?.['forbidden']) return 'Clearing System Reference must NOT be sent if no active clearing system is used.';
         return 'Invalid value.';
     }
 
@@ -469,6 +513,27 @@ export class Camt057Component implements OnInit {
             return;
         }
 
+        // Stop generation if CHIPS rule is violated
+        if (this.form.get('currency')?.hasError('chips')) {
+            this.generatedXml = '<!-- CHIPS VALIDATION ERROR: CHIPS allows only USD currency. -->';
+            this.onEditorChange(this.generatedXml, true);
+            return;
+        }
+
+        // Stop generation if FED rule is violated
+        if (this.form.get('currency')?.hasError('fed')) {
+            this.generatedXml = '<!-- FED VALIDATION ERROR: FED allows only USD currency. -->';
+            this.onEditorChange(this.generatedXml, true);
+            return;
+        }
+
+        // Stop generation if ClrSysRef is forbidden
+        if (this.form.get('clrSysRef')?.hasError('forbidden')) {
+            this.generatedXml = '<!-- CLEARING SYSTEM REFERENCE VALIDATION ERROR: Clearing System Reference must NOT be sent if no active standard clearing system is used. -->';
+            this.onEditorChange(this.generatedXml, true);
+            return;
+        }
+
         const v = this.form.value;
         let creDtTm = v.creDtTm || this.isoNow();
         if (creDtTm.endsWith('Z')) creDtTm = creDtTm.replace('Z', '+00:00');
@@ -484,7 +549,7 @@ export class Camt057Component implements OnInit {
             }
             return res;
         };
-        
+
         const agtXmlWithAcct = (tag: string, prefix: string) => {
             let res = this.agt(tag, prefix, v, 4);
             if (v[prefix + 'Acct']?.trim()) {
@@ -501,11 +566,14 @@ export class Camt057Component implements OnInit {
         let itmXml = `\t\t\t\t<Itm>\n\t\t\t\t\t<Id>${this.e(v.itmId)}</Id>\n`;
         if (v.endToEndId?.trim()) itmXml += `\t\t\t\t\t<EndToEndId>${this.e(v.endToEndId)}</EndToEndId>\n`;
         if (v.uetr?.trim()) itmXml += `\t\t\t\t\t<UETR>${this.e(v.uetr)}</UETR>\n`;
+        if (v.clrSysRef?.trim()) {
+            itmXml += `\t\t\t\t\t<PmtId>\n\t\t\t\t\t\t<ClrSysRef>${this.e(v.clrSysRef)}</ClrSysRef>\n\t\t\t\t\t</PmtId>\n`;
+        }
         itmXml += `\t\t\t\t\t<Amt Ccy="${this.e(v.currency)}">${v.amount}</Amt>\n`;
         itmXml += `\t\t\t\t\t<XpctdValDt>${v.valDt}</XpctdValDt>\n`;
 
         if (v.purpCd?.trim()) itmXml += `\t\t\t\t\t<Purp>\n\t\t\t\t\t\t<Cd>${this.e(v.purpCd)}</Cd>\n\t\t\t\t\t</Purp>\n`;
-        
+
         // Remittance
         if (v.rmtInfType && v.rmtInfType !== 'none') {
             let rmtXml = `\t\t\t\t\t<RmtInf>\n`;
@@ -799,12 +867,12 @@ ${ntfctnPartiesXml}${itmXml}
                 parseAcct('Dbtr', 'dbtr');
                 parseAcct('DbtrAgt', 'dbtrAgt');
                 parseAcct('IntrmyAgt', 'intrmyAgt');
-                
+
                 const tryTagInItm = (parentOrEl: string | Element, child: string) => {
                     const p = typeof parentOrEl === 'string' ? itm.getElementsByTagName(parentOrEl)[0] : parentOrEl;
                     return p ? (p.getElementsByTagName(child)[0]?.textContent || '') : '';
                 };
-                
+
                 setVal('instrPrty', itm.getElementsByTagName('InstrPrty')[0]?.textContent || '');
                 setVal('clrChanl', itm.getElementsByTagName('ClrChanl')[0]?.textContent || '');
                 setVal('svcLvlCd', tryTagInItm('SvcLvl', 'Cd'));
@@ -816,7 +884,7 @@ ${ntfctnPartiesXml}${itmXml}
                     setVal('ctgyPurpCd', ctgyPurp.getElementsByTagName('Cd')[0]?.textContent || '');
                     setVal('ctgyPurpPrtry', ctgyPurp.getElementsByTagName('Prtry')[0]?.textContent || '');
                 }
-                
+
                 const purp = itm.getElementsByTagName('Purp')[0];
                 if (purp) setVal('purpCd', purp.getElementsByTagName('Cd')[0]?.textContent || '');
 

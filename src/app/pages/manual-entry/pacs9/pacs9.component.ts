@@ -42,7 +42,7 @@ export class Pacs9Component implements OnInit {
     purposes: string[] = [];
     sttlmMethods = ['INDA', 'INGA'];
 
-    agentPrefixes = ['instgAgt', 'instdAgt', 'dbtrFi', 'cdtrFi', 'dbtrAgt', 'cdtrAgt', 'ultmtCdtr',
+    agentPrefixes = ['instgAgt', 'instdAgt', 'dbtrFi', 'cdtrFi', 'dbtrAgt', 'cdtrAgt',
         'prvsInstgAgt1', 'prvsInstgAgt2', 'prvsInstgAgt3',
         'intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'];
 
@@ -166,9 +166,9 @@ export class Pacs9Component implements OnInit {
         });
 
         this.http.get<any>(this.config.getApiUrl('/codelists/ctgyPurp')).subscribe({
-            next: (res) => { 
+            next: (res) => {
                 if (res && res.codes && res.codes.length > 0) {
-                    this.categoryPurposes = res.codes; 
+                    this.categoryPurposes = res.codes;
                 } else {
                     this.categoryPurposes = ['SALA', 'TAXS', 'SUPP', 'PENS', 'LOAN', 'DIVD', 'CASH', 'COLL', 'INTC', 'OTHR'];
                 }
@@ -227,7 +227,7 @@ export class Pacs9Component implements OnInit {
         const SAFE_NAME = Validators.pattern(/^[a-zA-Z0-9 .,()'\-]+$/);
         const ADDR_PATTERN = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
         const c: any = {
-            purpCd: [''], 
+            purpCd: [''],
             ctgyPurpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/)]],
             ctgyPurpPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
             instrPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
@@ -243,6 +243,9 @@ export class Pacs9Component implements OnInit {
             instrId: ['INSTR-FI-001', Validators.required], endToEndId: ['E2E-FI-001', Validators.required],
             txId: ['TX-FI-001', Validators.required],
             uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
+            appHdrPriority: [''],
+            clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
+            sttlmPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
             amount: ['50000.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
             sttlmDt: [new Date().toISOString().split('T')[0], [Validators.required, Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]],
             // Debtor FI (required)
@@ -265,12 +268,12 @@ export class Pacs9Component implements OnInit {
             instrForCdtrAgt1Cd: [''], instrForCdtrAgt1InfTxt: ['', [Validators.minLength(1), Validators.maxLength(140), ADDR_PATTERN]],
             instrForCdtrAgt2Cd: [''], instrForCdtrAgt2InfTxt: ['', [Validators.minLength(1), Validators.maxLength(140), ADDR_PATTERN]],
             // Instructions for Next Agent (0..6)
-            instrForNxtAgt1Cd: [''], instrForNxtAgt1InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
-            instrForNxtAgt2Cd: [''], instrForNxtAgt2InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
-            instrForNxtAgt3Cd: [''], instrForNxtAgt3InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
-            instrForNxtAgt4Cd: [''], instrForNxtAgt4InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
-            instrForNxtAgt5Cd: [''], instrForNxtAgt5InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
-            instrForNxtAgt6Cd: [''], instrForNxtAgt6InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            instrForNxtAgt1InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            instrForNxtAgt2InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            instrForNxtAgt3InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            instrForNxtAgt4InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            instrForNxtAgt5InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            instrForNxtAgt6InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
             // Remittance (Optional)
             rmtInfType: ['none'],
             rmtInfUstrd: ['', [Validators.maxLength(140), ADDR_PATTERN]],
@@ -302,7 +305,7 @@ export class Pacs9Component implements OnInit {
             if (!c[p + 'Name']) c[p + 'Name'] = ['', [Validators.maxLength(140), SAFE_NAME]];
             if (!c[p + 'Bic']) c[p + 'Bic'] = ['', [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
             if (!c[p + 'Lei']) c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
-            if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['', Validators.maxLength(4)];
+            if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['', Validators.maxLength(5)];
             if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
             if (!c[p + 'Acct']) c[p + 'Acct'] = ['', [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
         });
@@ -311,7 +314,7 @@ export class Pacs9Component implements OnInit {
         c['cdtrFiName'] = ['Creditor', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
         c['dbtrAgtName'] = ['Debtor Agent', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
         c['cdtrAgtName'] = ['Creditor Agent', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
-        
+
         this.form = this.fb.group(c);
     }
 
@@ -319,7 +322,7 @@ export class Pacs9Component implements OnInit {
         const c = this.form.get(f);
         // Remove touched/dirty requirement to show errors immediately
         if (!c || c.valid) return null;
-        
+
         if (c.errors?.['required']) return 'Required field.';
         if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
         if (c.errors?.['pattern']) {
@@ -337,8 +340,10 @@ export class Pacs9Component implements OnInit {
             if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Amount must be > 0 (max 18 digits).';
             if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
             if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
+            if (f === 'clrSysRef') return 'Alphanumeric only (1-35 characters, no special chars).';
             if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Must be a valid ISO 20022 code (4 uppercase letters).';
             if (f === 'instrPrty') return 'Invalid Priority. Must be HIGH or NORM.';
+            if (f === 'sttlmPrty') return 'Invalid Settlement Priority. Must be HIGH or NORM.';
             if (f === 'clrChanl') return 'Invalid Clearing Channel. Must be BOOK, MPNS, RTGS, or RTNS.';
             if (f === 'svcLvlCd') return 'Invalid Service Level Code. Must be 1-4 alphanumeric characters.';
             if (f === 'svcLvlPrtry') return 'Invalid Proprietary Service Level. Up to 35 characters allowed.';
@@ -469,9 +474,23 @@ export class Pacs9Component implements OnInit {
     generateXml() {
         if (this.isParsingXml) return;
 
-        // Stop generation if TARGET2 rule is violated
+        // Stop generation if CHIPS rule is violated
+        if (this.form.get('currency')?.hasError('chips')) {
+            this.generatedXml = '<!-- CHIPS VALIDATION ERROR: CHIPS allows only USD currency. -->';
+            this.onEditorChange(this.generatedXml, true);
+            return;
+        }
+
+        // Stop generation if FED rule is violated
+        if (this.form.get('currency')?.hasError('fed')) {
+            this.generatedXml = '<!-- FED VALIDATION ERROR: FED allows only USD currency. -->';
+            this.onEditorChange(this.generatedXml, true);
+            return;
+        }
+
+        // Stop generation if target2 rule is violated
         if (this.form.get('currency')?.hasError('target2')) {
-            this.generatedXml = '<!-- TARGET2 VALIDATION ERROR: TARGET2 payments must use EUR as the settlement currency. -->';
+            this.generatedXml = '<!-- TARGET2 VALIDATION ERROR: T2 allows only EUR currency. -->';
             this.onEditorChange(this.generatedXml, true);
             return;
         }
@@ -483,13 +502,22 @@ export class Pacs9Component implements OnInit {
             return;
         }
 
+        // Stop generation if ClrSysRef is forbidden
+        if (this.form.get('clrSysRef')?.hasError('forbidden')) {
+            this.generatedXml = '<!-- CLEARING SYSTEM REFERENCE VALIDATION ERROR: Clearing System Reference must NOT be sent if no active standard clearing system is used. -->';
+            this.onEditorChange(this.generatedXml, true);
+            return;
+        }
+
         const v = this.form.value;
         let creDtTm = v.creDtTm || this.isoNow();
         if (creDtTm.endsWith('Z')) creDtTm = creDtTm.replace('Z', '+00:00');
 
         // CdtTrfTxInf — pacs.009.001.08 CBPR+ element order
         let tx = '';
-        tx += this.tag('PmtId', this.el('InstrId', v.instrId) + this.el('EndToEndId', v.endToEndId) + this.el('TxId', v.txId) + this.el('UETR', v.uetr), 3);
+        let pmtIdXml = this.el('InstrId', v.instrId) + this.el('EndToEndId', v.endToEndId) + this.el('TxId', v.txId) + this.el('UETR', v.uetr);
+        if (v.clrSysRef?.trim()) pmtIdXml += this.el('ClrSysRef', v.clrSysRef);
+        tx += this.tag('PmtId', pmtIdXml, 3);
 
         let pmtTpXml = '';
         if (v.instrPrty?.trim()) pmtTpXml += this.el('InstrPrty', v.instrPrty, 4);
@@ -503,6 +531,7 @@ export class Pacs9Component implements OnInit {
         if (pmtTpXml) tx += this.tag('PmtTpInf', pmtTpXml, 3);
         tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${v.amount}</IntrBkSttlmAmt>\n`;
         tx += this.el('IntrBkSttlmDt', v.sttlmDt, 3);
+        if (v.sttlmPrty?.trim()) tx += this.el('SttlmPrty', v.sttlmPrty, 3);
         // PrvsInstgAgts
         tx += this.agtWithAcct('PrvsInstgAgt1', 'prvsInstgAgt1', v);
         tx += this.agtWithAcct('PrvsInstgAgt2', 'prvsInstgAgt2', v);
@@ -514,7 +543,7 @@ export class Pacs9Component implements OnInit {
         tx += this.agtWithAcct('IntrmyAgt1', 'intrmyAgt1', v);
         tx += this.agtWithAcct('IntrmyAgt2', 'intrmyAgt2', v);
         tx += this.agtWithAcct('IntrmyAgt3', 'intrmyAgt3', v);
-        
+
         // Dbtr
         tx += this.agtWithAcct('Dbtr', 'dbtrFi', v);
         // DbtrAgt
@@ -523,9 +552,6 @@ export class Pacs9Component implements OnInit {
         tx += this.agtWithAcct('CdtrAgt', 'cdtrAgt', v);
         // Cdtr
         tx += this.agtWithAcct('Cdtr', 'cdtrFi', v);
-
-        // UltmtCdtr (optional)
-        tx += this.agtWithAcct('UltmtCdtr', 'ultmtCdtr', v);
 
         // Instructions for Creditor Agent (0..2)
         for (let i = 1; i <= 2; i++) {
@@ -540,13 +566,9 @@ export class Pacs9Component implements OnInit {
         }
         // Instructions for Next Agent (0..6)
         for (let i = 1; i <= 6; i++) {
-            const cd = v[`instrForNxtAgt${i}Cd`]?.trim();
             const txt = v[`instrForNxtAgt${i}InfTxt`]?.trim();
-            if (cd || txt) {
-                let inner = '';
-                if (cd) inner += this.el('Cd', cd, 4);
-                if (txt) inner += this.el('InstrInf', txt, 4);
-                tx += this.tag('InstrForNxtAgt', inner, 3);
+            if (txt) {
+                tx += this.tag('InstrForNxtAgt', this.el('InstrInf', txt, 4), 3);
             }
         }
 
@@ -591,7 +613,7 @@ export class Pacs9Component implements OnInit {
 \t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>
 \t\t<MsgDefIdr>pacs.009.001.08</MsgDefIdr>
 \t\t<BizSvc>swift.cbprplus.02</BizSvc>
-\t\t<CreDt>${creDtTm}</CreDt>
+\t\t<CreDt>${creDtTm}</CreDt>${v.appHdrPriority?.trim() ? `\n\t\t<Prty>${v.appHdrPriority}</Prty>` : ''}
 \t</AppHdr>
 \t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.009.001.08">
 \t\t<FICdtTrf>
@@ -646,19 +668,25 @@ ${tx}\t\t\t</CdtTrfTxInf>
             content += `\t\t\t\t\t\t<MmbId>${this.e(clrMmb)}</MmbId>\n`;
             content += `\t\t\t\t\t</ClrSysMmbId>\n`;
         }
-        if (name) content += `\t\t\t\t\t<Nm>${this.e(name)}</Nm>\n`;
-        content += this.addrXml(v, prefix, 5);
         if (lei) content += `\t\t\t\t\t<LEI>${this.e(lei)}</LEI>\n`;
+
+        // Filter: Nm and PstlAdr are NOT allowed for InstgAgt and InstdAgt as per MyStandards requirements
+        if (tag !== 'InstgAgt' && tag !== 'InstdAgt') {
+            if (name) content += `\t\t\t\t\t<Nm>${this.e(name)}</Nm>\n`;
+            content += this.addrXml(v, prefix, 5, tag.startsWith('PrvsInstgAgt'));
+        }
 
         return `\t\t\t<${tag}>\n\t\t\t\t<FinInstnId>\n${content}\t\t\t\t</FinInstnId>\n\t\t\t</${tag}>\n`;
     }
-    addrXml(v: any, p: string, indent = 4): string {
+    addrXml(v: any, p: string, indent = 4, isPrvs = false): string {
         const type = v[p + 'AddrType']; if (!type || type === 'none') return '';
         const lines: string[] = []; const t = this.tabs(indent + 1);
         if (type === 'structured' || type === 'hybrid') {
             // PostalAddress27 XSD element order
-            if (v[p + 'AdrTpCd']) lines.push(`${t}<AdrTp>\n${t}\t<Cd>${this.e(v[p + 'AdrTpCd'])}</Cd>\n${t}</AdrTp>`);
-            else if (v[p + 'AdrTpPrtry']) lines.push(`${t}<AdrTp>\n${t}\t<Prtry>${this.e(v[p + 'AdrTpPrtry'])}</Prtry>\n${t}</AdrTp>`);
+            if (!isPrvs) {
+                if (v[p + 'AdrTpCd']) lines.push(`${t}<AdrTp>\n${t}\t<Cd>${this.e(v[p + 'AdrTpCd'])}</Cd>\n${t}</AdrTp>`);
+                else if (v[p + 'AdrTpPrtry']) lines.push(`${t}<AdrTp>\n${t}\t<Prtry>${this.e(v[p + 'AdrTpPrtry'])}</Prtry>\n${t}</AdrTp>`);
+            }
             if (v[p + 'Dept']) lines.push(`${t}<Dept>${this.e(v[p + 'Dept'])}</Dept>`);
             if (v[p + 'SubDept']) lines.push(`${t}<SubDept>${this.e(v[p + 'SubDept'])}</SubDept>`);
             if (v[p + 'StrtNm']) lines.push(`${t}<StrtNm>${this.e(v[p + 'StrtNm'])}</StrtNm>`);
@@ -741,7 +769,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
         if (!this.isInternalChange && !fromForm) {
             this.pushHistory();
         }
-        
+
         this.generatedXml = content;
         const lines = content.split('\n').length;
         this.editorLineCount = Array.from({ length: lines }, (_, i) => i + 1);
@@ -800,12 +828,11 @@ ${tx}\t\t\t</CdtTrfTxInf>
     formatXml() {
         if (!this.generatedXml?.trim()) return;
         this.pushHistory();
-        
+
         try {
             const tab = '    ';
             let formatted = '';
             let indent = '';
-
             // Normalize XML
             let xml = this.generatedXml.replace(/>\s+</g, '><').trim();
             
@@ -1040,7 +1067,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
                             setVal('rmtInfStrdCdtrRef', ref.getElementsByTagName('Ref')[0]?.textContent || '');
                         }
                         setVal('rmtInfStrdAddtlRmtInf', strd.getElementsByTagName('AddtlRmtInf')[0]?.textContent || '');
-                        
+
                         const rfrdDoc = strd.getElementsByTagName('RfrdDocInf')[0];
                         if (rfrdDoc) {
                             setVal('rmtInfStrdRfrdDocNb', rfrdDoc.getElementsByTagName('Nb')[0]?.textContent || '');
