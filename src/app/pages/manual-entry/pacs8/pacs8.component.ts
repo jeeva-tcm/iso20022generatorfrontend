@@ -717,6 +717,13 @@ export class Pacs8Component implements OnInit {
   }
 
 
+  fdt(dt: string): string {
+    if (!dt) return dt;
+    let s = dt.trim().replace(/\.\d+/, '').replace('Z', '+00:00');
+    if (s && !/([+-]\d{2}:\d{2})$/.test(s)) s += '+00:00';
+    return s;
+  }
+
   isoNow(): string {
     const d = new Date(), p = (n: number) => n.toString().padStart(2, '0');
     const off = -d.getTimezoneOffset(), s = off >= 0 ? '+' : '-';
@@ -741,7 +748,7 @@ export class Pacs8Component implements OnInit {
     }
 
     const v = this.form.value;
-    const creDtTm = v.creDtTm || this.isoNow();
+    const creDtTm = this.fdt(v.creDtTm || this.isoNow());
 
     // CdtTrfTxInf — strict XSD element order
     let tx = '';

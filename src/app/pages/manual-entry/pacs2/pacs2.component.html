@@ -1,0 +1,324 @@
+<div class="container">
+    <header>
+        <h1>Payment Status Report (pacs.002) <mat-icon class="title-icon">payments</mat-icon></h1>
+        <p>Visual pacs.002.001.10 Status Report Builder</p>
+    </header>
+
+    <div class="split-view">
+        <!-- Left Panel: Form -->
+        <div class="left-panel">
+            <form [formGroup]="form" class="content-box">
+                <div class="grid">
+                    
+                    <div class="section-title">Message Header (AppHdr)</div>
+                    <div class="form-group">
+                        <label>Sender BIC <span class="req">*</span></label>
+                        <input formControlName="fromBic" maxlength="11" placeholder="SENDERBICXXX">
+                        <div class="validation-msg" *ngIf="err('fromBic')">{{err('fromBic')}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Receiver BIC <span class="req">*</span></label>
+                        <input formControlName="toBic" maxlength="11" placeholder="RECEIVERBICXXX">
+                        <div class="validation-msg" *ngIf="err('toBic')">{{err('toBic')}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Business Msg ID <span class="req">*</span></label>
+                        <input formControlName="bizMsgId" placeholder="MSG-2026-FI-S-001">
+                        <div class="validation-msg" *ngIf="err('bizMsgId')">{{err('bizMsgId')}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Message ID <span class="req">*</span></label>
+                        <input formControlName="msgId" placeholder="MSG-2026-FI-S-001-GH">
+                        <div class="validation-msg" *ngIf="err('msgId')">{{err('msgId')}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Creation DateTime <span class="req">*</span></label>
+                        <input formControlName="creDtTm">
+                        <div class="validation-msg" *ngIf="err('creDtTm')">{{err('creDtTm')}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Business Service <span class="req">*</span></label>
+                        <input formControlName="bizSvc">
+                    </div>
+
+                    <div class="section-title">Original Group Information</div>
+                    <div class="form-group">
+                        <label>Original Msg ID <span class="req">*</span></label>
+                        <input formControlName="orgnlMsgId">
+                        <div class="validation-msg" *ngIf="err('orgnlMsgId')">{{err('orgnlMsgId')}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Original Msg Name ID <span class="req">*</span></label>
+                        <input formControlName="orgnlMsgNmId">
+                    </div>
+                    <div class="form-group">
+                        <label>Original Creation DateTime <span class="req">*</span></label>
+                        <input formControlName="orgnlCreDtTm">
+                    </div>
+
+                    <div class="section-title">Transaction References</div>
+                    <div class="form-group">
+                        <label>Original Instruction ID</label>
+                        <input formControlName="orgnlInstrId">
+                    </div>
+                    <div class="form-group">
+                        <label>Original EndToEnd ID</label>
+                        <input formControlName="orgnlEndToEndId">
+                    </div>
+                    <div class="form-group">
+                        <label>Original Transaction ID</label>
+                        <input formControlName="orgnlTxId">
+                    </div>
+                    <div class="form-group">
+                        <label>Original UETR <span class="req">*</span></label>
+                        <div class="uetr-control-row">
+                            <input formControlName="orgnlUETR" placeholder="UUID Format">
+                            <button type="button" class="uetr-refresh-btn" (click)="refreshUetr()" title="Regenerate UETR">
+                                <mat-icon>refresh</mat-icon>
+                            </button>
+                        </div>
+                        <div class="validation-msg" *ngIf="err('orgnlUETR')">{{err('orgnlUETR')}}</div>
+                    </div>
+
+                    <div class="section-title">Transaction Status & Reason</div>
+                    <div class="form-group">
+                        <label>Transaction Status <span class="req">*</span></label>
+                        <select formControlName="txSts">
+                            <option *ngFor="let s of statusCodes" [value]="s">{{s}}</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Clearing System Reference</label>
+                        <input formControlName="clrSysRef" maxlength="35">
+                        <div class="validation-msg" *ngIf="err('clrSysRef')">{{err('clrSysRef')}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Reason Code <span class="req" *ngIf="form.get('txSts')?.value === 'RJCT' || form.get('txSts')?.value === 'PDNG'">*</span></label>
+                        <select formControlName="stsRsnCd">
+                            <option value="">-- Select Reason --</option>
+                            <option *ngFor="let c of currentReasonCodes" [value]="c.split(' – ')[0]">{{c}}</option>
+                        </select>
+                        <div class="validation-msg" *ngIf="err('stsRsnCd')">{{err('stsRsnCd')}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Proprietary Reason</label>
+                        <input formControlName="stsRsnPrtry">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Additional Information</label>
+                        <textarea formControlName="stsRsnAddtlInf" rows="2"></textarea>
+                    </div>
+
+                    <div class="section-title">Originator (Status Reporting Party)</div>
+                    <div class="form-group full-width">
+                        <label>Originator Name</label>
+                        <input formControlName="stsRsnOrgtrName" placeholder="Bank or Entity reporting the status">
+                    </div>
+
+                    <!-- Address Section -->
+                    <div class="address-subgrid visual-row-layout">
+                        <div class="form-group row-field">
+                            <label>ORIGINATOR BUILDING NUMBER</label>
+                            <input formControlName="stsRsnOrgtrBldgNb">
+                        </div>
+                        <div class="form-group row-field">
+                            <label>ORIGINATOR BUILDING NAME</label>
+                            <input formControlName="stsRsnOrgtrBldgNm">
+                        </div>
+                        <div class="form-group row-field">
+                            <label>ORIGINATOR STREET NAME</label>
+                            <input formControlName="stsRsnOrgtrStrtNm">
+                        </div>
+                        <div class="form-group row-field">
+                            <label>ORIGINATOR POST CODE</label>
+                            <input formControlName="stsRsnOrgtrPstCd">
+                        </div>
+                        <div class="form-group row-field">
+                            <label>ORIGINATOR CITY (TOWN NAME) <span class="req">*</span></label>
+                            <div class="input-container">
+                                <input formControlName="stsRsnOrgtrTwnNm">
+                                <div class="validation-msg" *ngIf="err('stsRsnOrgtrTwnNm')">{{err('stsRsnOrgtrTwnNm')}}</div>
+                            </div>
+                        </div>
+                        <div class="form-group row-field">
+                            <label>ORIGINATOR COUNTRY <span class="req">*</span></label>
+                            <div class="input-container">
+                                <select formControlName="stsRsnOrgtrCtry">
+                                    <option value="">Select Country</option>
+                                    <option *ngFor="let c of countries" [value]="c">{{c}}</option>
+                                </select>
+                                <div class="validation-msg" *ngIf="err('stsRsnOrgtrCtry')">{{err('stsRsnOrgtrCtry')}}</div>
+                            </div>
+                        </div>
+                        <div class="form-group row-field">
+                            <label>ORIGINATOR ADDRESS LINE 1</label>
+                            <input formControlName="stsRsnOrgtrAdrLine1">
+                        </div>
+                        <div class="form-group row-field">
+                            <label>ORIGINATOR ADDRESS LINE 2</label>
+                            <input formControlName="stsRsnOrgtrAdrLine2">
+                        </div>
+                    </div>
+
+                    <div class="section-title">Effective Date & Agents</div>
+                    <div class="form-group">
+                        <label>Effective Date</label>
+                        <input formControlName="effDt" type="date">
+                    </div>
+                    <div class="form-group">
+                        <label>Effective Date Time (ISO)</label>
+                        <input formControlName="effDtTm" placeholder="2026-03-19T12:00:00Z">
+                    </div>
+
+                    <!-- Instructing Agent -->
+                    <div class="form-group full-width">
+                        <h4 style="margin: 10px 0 5px; color: var(--text-muted); font-size: 0.8rem;">INSTRUCTING AGENT</h4>
+                        <div class="grid">
+                            <div class="form-group">
+                                <label>BICFI</label>
+                                <input formControlName="instgAgtBic">
+                            </div>
+                            <div class="form-group">
+                                <label>Member ID / System Code</label>
+                                <div class="grid" style="grid-template-columns: 2fr 1fr; gap: 8px;">
+                                    <input formControlName="instgAgtMmbId" placeholder="MmbId">
+                                    <input formControlName="instgAgtClrSysCd" placeholder="Code">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Instructed Agent -->
+                    <div class="form-group full-width">
+                        <h4 style="margin: 10px 0 5px; color: var(--text-muted); font-size: 0.8rem;">INSTRUCTED AGENT</h4>
+                        <div class="grid">
+                            <div class="form-group">
+                                <label>BICFI</label>
+                                <input formControlName="instdAgtBic">
+                            </div>
+                            <div class="form-group">
+                                <label>Member ID / System Code</label>
+                                <div class="grid" style="grid-template-columns: 2fr 1fr; gap: 8px;">
+                                    <input formControlName="instdAgtMmbId" placeholder="MmbId">
+                                    <input formControlName="instdAgtClrSysCd" placeholder="Code">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+
+        <!-- Right Panel: XML Preview -->
+        <div class="right-panel">
+            <div class="bottom-actions" style="margin-top: 0; margin-bottom: 1rem; padding: 0.75rem;">
+                <div class="down">
+                    <button class="action-btn copy-btn" (click)="copyXml()">
+                        <mat-icon>content_copy</mat-icon> Copy XML
+                    </button>
+                    <button class="action-btn download-btn" (click)="downloadXml()">
+                        <mat-icon>download</mat-icon> Download XML
+                    </button>
+                    <button class="action-btn validate-btn" (click)="validateMessage()" [disabled]="validating">
+                        <mat-icon>verified</mat-icon> Validate Message
+                    </button>
+                </div>
+            </div>
+
+            <div class="content-box preview-box">
+                <div class="up">
+                    <button class="action-btn-small" (click)="undoXml()" [disabled]="!canUndoXml()" matTooltip="Undo">
+                        <mat-icon>undo</mat-icon>
+                    </button>
+                    <button class="action-btn-small" (click)="redoXml()" [disabled]="!canRedoXml()" matTooltip="Redo">
+                        <mat-icon>redo</mat-icon>
+                    </button>
+                    <button class="action-btn-small" (click)="formatXml()" matTooltip="Format XML">
+                        <mat-icon>format_align_left</mat-icon>
+                    </button>
+                </div>
+                <div class="editor-wrapper">
+                    <div class="line-numbers" #lineNumbers>
+                        <div *ngFor="let idx of editorLineCount; let i = index">{{i + 1}}</div>
+                    </div>
+                    <textarea class="code-editor" [(ngModel)]="generatedXml"
+                        (ngModelChange)="onEditorChange($event)"
+                        (scroll)="syncScroll(xmlEditor, lineNumbers)" #xmlEditor
+                        spellcheck="false" wrap="off"></textarea>
+                </div>
+            </div>
+
+            <!-- Validation Report Modal -->
+            <div class="modal-overlay" *ngIf="showValidationModal">
+                <div class="validation-modal" [class.status-ok]="validationReport?.status === 'OK'" [class.status-fail]="validationReport?.status === 'FAIL'">
+                    <div class="modal-header">
+                        <h3><mat-icon>{{validationReport?.status === 'OK' ? 'check_circle' : 'error'}}</mat-icon> Validation Result</h3>
+                        <button class="close-btn" (click)="showValidationModal = false"><mat-icon>close</mat-icon></button>
+                    </div>
+                    
+                    <div class="modal-content">
+                        <div class="status-banner" *ngIf="validationStatus === 'validating'">
+                            <div class="spinner"></div>
+                            <p>Validating ISO 20022 Structure & Rules...</p>
+                        </div>
+
+                        <div *ngIf="validationStatus === 'done' && validationReport">
+                            <div class="summary-cards">
+                                <div class="summary-card" [class.danger]="validationReport.errors > 0">
+                                    <div class="val">{{validationReport.errors}}</div>
+                                    <div class="lab">Errors</div>
+                                </div>
+                                <div class="summary-card" [class.warning]="validationReport.warnings > 0">
+                                    <div class="val">{{validationReport.warnings}}</div>
+                                    <div class="lab">Warnings</div>
+                                </div>
+                                <div class="summary-card info">
+                                    <div class="val">{{validationReport.total_time_ms}}ms</div>
+                                    <div class="lab">Response</div>
+                                </div>
+                            </div>
+
+                            <div class="validation-details-list">
+                                <div class="detail-item" *ngFor="let d of validationReport.details" 
+                                     [class.error-item]="d.severity === 'ERROR'" 
+                                     [class.warning-item]="d.severity === 'WARNING'"
+                                     (click)="validationExpandedIssue = (validationExpandedIssue === d ? null : d)">
+                                    
+                                    <div class="detail-header">
+                                        <mat-icon>{{d.severity === 'ERROR' ? 'error_outline' : 'warning_amber'}}</mat-icon>
+                                        <span class="code">{{d.code}}</span>
+                                        <span class="path" *ngIf="d.path">{{d.path}}</span>
+                                        <mat-icon class="expand-icon">{{validationExpandedIssue === d ? 'expand_less' : 'expand_more'}}</mat-icon>
+                                    </div>
+                                    
+                                    <div class="detail-body" *ngIf="validationExpandedIssue === d">
+                                        <p class="msg">{{d.message}}</p>
+                                        <div class="fix" *ngIf="d.fix_suggestion">
+                                            <strong><mat-icon style="font-size: 1rem; vertical-align: middle;">lightbulb</mat-icon> Suggestion:</strong> {{d.fix_suggestion}}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="no-issues" *ngIf="validationReport.status === 'OK'">
+                                    <mat-icon>verified</mat-icon>
+                                    <p>No structural or business rule issues found. The message is valid.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer" *ngIf="validationStatus === 'done'">
+                        <button class="primary-btn" (click)="showValidationModal = false">Close</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Validation Report (Optional) -->
+            <div class="content-box" *ngIf="validationReport" style="margin-top: 1rem; padding: 1rem;">
+                <!-- Could add report UI here if needed -->
+                 <p>Validation logic placeholder...</p>
+            </div>
+        </div>
+    </div>
+</div>

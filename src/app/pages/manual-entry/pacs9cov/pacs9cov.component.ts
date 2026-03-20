@@ -595,6 +595,13 @@ export class Pacs9CovComponent implements OnInit {
     }
 
 
+    fdt(dt: string): string {
+        if (!dt) return dt;
+        let s = dt.trim().replace(/\.\d+/, '').replace('Z', '+00:00');
+        if (s && !/([+-]\d{2}:\d{2})$/.test(s)) s += '+00:00';
+        return s;
+    }
+
     isoNow(): string {
         const d = new Date(), p = (n: number) => n.toString().padStart(2, '0');
         const off = -d.getTimezoneOffset(), s = off >= 0 ? '+' : '-';
@@ -626,8 +633,7 @@ export class Pacs9CovComponent implements OnInit {
         }
 
         const v = this.form.value;
-        let creDtTm = v.creDtTm || this.isoNow();
-        if (creDtTm.endsWith('Z')) creDtTm = creDtTm.replace('Z', '+00:00');
+        let creDtTm = this.fdt(v.creDtTm || this.isoNow());
 
         // CdtTrfTxInf — pacs.009.001.08 COV element order
         let tx = '';
