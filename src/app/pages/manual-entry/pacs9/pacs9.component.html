@@ -15,6 +15,7 @@
                                                         formControlName="fromBic" maxlength="11"
                                                         pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$">
                                                 <div class="validation-msg" *ngIf="err('fromBic') as e">{{e}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('fromBic', 11) as h">{{h}}</div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>Receiver BIC <span
                                                                 class="req">*</span></label><input
@@ -101,7 +102,7 @@
                                         <div class="section-title">Settlement Amounts</div>
                                         <div class="form-group intermediary-field"><label>Amount <span class="req">*</span></label><input
                                                         formControlName="amount" pattern="^\d{1,18}(\.\d{1,5})?$"
-                                                        step="any" required type="number">
+                                                        required type="text">
                                                 <div class="validation-msg" *ngIf="err('amount') as e">{{e}}</div>
                                         </div>
                                         <div class="form-group"><label>Currency <span class="req">*</span></label>
@@ -112,7 +113,8 @@
                                         </div>
                                         <div class="form-group"><label>Settlement Date <span
                                                                 class="req">*</span></label><input
-                                                        formControlName="sttlmDt" type="date">
+                                                        formControlName="sttlmDt" type="date"
+                                                        min="0001-01-01" max="9999-12-31">
                                                 <div class="validation-msg" *ngIf="err('sttlmDt') as e">{{e}}</div>
                                         </div>
 
@@ -296,8 +298,9 @@
                                                 <div [formGroup]="form" class="party-grid">
                                                         <div class="form-group">
                                                                 <label>Prev Instg Agent 2 Account ID</label>
-                                                                <input formControlName="prvsInstgAgt2Acct" maxlength="34" placeholder="Account">
-                                                        </div>
+                                                                 <input formControlName="prvsInstgAgt2Acct" maxlength="34" placeholder="Account">
+                                                                <div class="field-hint at-limit" *ngIf="hint('prvsInstgAgt2Acct', 34) as h">{{h}}</div>
+                                                         </div>
                                                 </div>
                                         </div>
 
@@ -310,8 +313,9 @@
                                                 <div [formGroup]="form" class="party-grid">
                                                         <div class="form-group">
                                                                 <label>Prev Instg Agent 3 Account ID</label>
-                                                                <input formControlName="prvsInstgAgt3Acct" maxlength="34" placeholder="Account">
-                                                        </div>
+                                                                 <input formControlName="prvsInstgAgt3Acct" maxlength="34" placeholder="Account">
+                                                                <div class="field-hint at-limit" *ngIf="hint('prvsInstgAgt3Acct', 34) as h">{{h}}</div>
+                                                         </div>
                                                 </div>
                                         </div>
 
@@ -325,8 +329,9 @@
                                                 <div [formGroup]="form" class="party-grid">
                                                         <div class="form-group">
                                                                 <label>Intermediary Agent 1 Account ID</label>
-                                                                <input formControlName="intrmyAgt1Acct" maxlength="34" placeholder="Account">
-                                                        </div>
+                                                                 <input formControlName="intrmyAgt1Acct" maxlength="34" placeholder="Account">
+                                                                <div class="field-hint at-limit" *ngIf="hint('intrmyAgt1Acct', 34) as h">{{h}}</div>
+                                                         </div>
                                                 </div>
                                         </div>
 
@@ -339,8 +344,9 @@
                                                 <div [formGroup]="form" class="party-grid">
                                                         <div class="form-group">
                                                                 <label>Intermediary Agent 2 Account ID</label>
-                                                                <input formControlName="intrmyAgt2Acct" maxlength="34" placeholder="Account">
-                                                        </div>
+                                                                 <input formControlName="intrmyAgt2Acct" maxlength="34" placeholder="Account">
+                                                                <div class="field-hint at-limit" *ngIf="hint('intrmyAgt2Acct', 34) as h">{{h}}</div>
+                                                         </div>
                                                 </div>
                                         </div>
 
@@ -353,8 +359,9 @@
                                                 <div [formGroup]="form" class="party-grid">
                                                         <div class="form-group">
                                                                 <label>Intermediary Agent 3 Account ID</label>
-                                                                <input formControlName="intrmyAgt3Acct" maxlength="34" placeholder="Account">
-                                                        </div>
+                                                                 <input formControlName="intrmyAgt3Acct" maxlength="34" placeholder="Account">
+                                                                <div class="field-hint at-limit" *ngIf="hint('intrmyAgt3Acct', 34) as h">{{h}}</div>
+                                                         </div>
                                                 </div>
                                         </div>
 
@@ -375,8 +382,9 @@
                                                         </div>
                                                         <div class="form-group">
                                                                 <label>Instruction Information</label>
-                                                                <input formControlName="instrForCdtrAgt1InfTxt" maxlength="140" placeholder="Free text (max 140)">
-                                                        </div>
+                                                                 <input formControlName="instrForCdtrAgt1InfTxt" maxlength="140" placeholder="Free text (max 140)">
+                                                                <div class="field-hint at-limit" *ngIf="hint('instrForCdtrAgt1InfTxt', 140) as h">{{h}}</div>
+                                                         </div>
                                                 </div>
                                         </div>
                                         <div class="party-group">
@@ -394,8 +402,9 @@
                                                         </div>
                                                         <div class="form-group">
                                                                 <label>Instruction Information</label>
-                                                                <input formControlName="instrForCdtrAgt2InfTxt" maxlength="140" placeholder="Free text (max 140)">
-                                                        </div>
+                                                                 <input formControlName="instrForCdtrAgt2InfTxt" maxlength="140" placeholder="Free text (max 140)">
+                                                                <div class="field-hint at-limit" *ngIf="hint('instrForCdtrAgt2InfTxt', 140) as h">{{h}}</div>
+                                                         </div>
                                                 </div>
                                         </div>
 
@@ -414,8 +423,9 @@
                                                         </div>
                                                         <div class="form-group">
                                                                 <label>Instruction Information</label>
-                                                                <input formControlName="instrForNxtAgt1InfTxt" maxlength="35" placeholder="Free text (max 35)">
-                                                        </div>
+                                                                 <input formControlName="instrForNxtAgt1InfTxt" maxlength="35" placeholder="Free text (max 35)">
+                                                                <div class="field-hint at-limit" *ngIf="hint('instrForNxtAgt1InfTxt', 35) as h">{{h}}</div>
+                                                         </div>
                                                 </div>
                                         </div>
                                         <div class="party-group">
@@ -431,8 +441,9 @@
                                                         </div>
                                                         <div class="form-group">
                                                                 <label>Instruction Information</label>
-                                                                <input formControlName="instrForNxtAgt2InfTxt" maxlength="35" placeholder="Free text (max 35)">
-                                                        </div>
+                                                                 <input formControlName="instrForNxtAgt2InfTxt" maxlength="35" placeholder="Free text (max 35)">
+                                                                <div class="field-hint at-limit" *ngIf="hint('instrForNxtAgt2InfTxt', 35) as h">{{h}}</div>
+                                                         </div>
                                                 </div>
                                         </div>
                                         <div class="party-group">
@@ -448,8 +459,9 @@
                                                         </div>
                                                         <div class="form-group">
                                                                 <label>Instruction Information</label>
-                                                                <input formControlName="instrForNxtAgt3InfTxt" maxlength="35" placeholder="Free text (max 35)">
-                                                        </div>
+                                                                 <input formControlName="instrForNxtAgt3InfTxt" maxlength="35" placeholder="Free text (max 35)">
+                                                                <div class="field-hint at-limit" *ngIf="hint('instrForNxtAgt3InfTxt', 35) as h">{{h}}</div>
+                                                         </div>
                                                 </div>
                                         </div>
                                         <div class="party-group">
@@ -465,8 +477,9 @@
                                                         </div>
                                                         <div class="form-group">
                                                                 <label>Instruction Information</label>
-                                                                <input formControlName="instrForNxtAgt4InfTxt" maxlength="35" placeholder="Free text (max 35)">
-                                                        </div>
+                                                                 <input formControlName="instrForNxtAgt4InfTxt" maxlength="35" placeholder="Free text (max 35)">
+                                                                <div class="field-hint at-limit" *ngIf="hint('instrForNxtAgt4InfTxt', 35) as h">{{h}}</div>
+                                                         </div>
                                                 </div>
                                         </div>
                                         <div class="party-group">
@@ -482,8 +495,9 @@
                                                         </div>
                                                         <div class="form-group">
                                                                 <label>Instruction Information</label>
-                                                                <input formControlName="instrForNxtAgt5InfTxt" maxlength="35" placeholder="Free text (max 35)">
-                                                        </div>
+                                                                 <input formControlName="instrForNxtAgt5InfTxt" maxlength="35" placeholder="Free text (max 35)">
+                                                                <div class="field-hint at-limit" *ngIf="hint('instrForNxtAgt5InfTxt', 35) as h">{{h}}</div>
+                                                         </div>
                                                 </div>
                                         </div>
                                         <div class="party-group">
@@ -499,8 +513,9 @@
                                                         </div>
                                                         <div class="form-group">
                                                                 <label>Instruction Information</label>
-                                                                <input formControlName="instrForNxtAgt6InfTxt" maxlength="35" placeholder="Free text (max 35)">
-                                                        </div>
+                                                                 <input formControlName="instrForNxtAgt6InfTxt" maxlength="35" placeholder="Free text (max 35)">
+                                                                <div class="field-hint at-limit" *ngIf="hint('instrForNxtAgt6InfTxt', 35) as h">{{h}}</div>
+                                                         </div>
                                                 </div>
                                         </div>
 
@@ -519,8 +534,9 @@
                                                         <!-- Unstructured Remittance -->
                                                         <div class="form-group full-width" style="grid-column: 1 / -1;" *ngIf="form.get('rmtInfType')?.value === 'ustrd'">
                                                                 <label>Unstructured Information</label>
-                                                                <input formControlName="rmtInfUstrd" maxlength="140" placeholder="Max 140 characters">
-                                                        </div>
+                                                                 <input formControlName="rmtInfUstrd" maxlength="140" placeholder="Max 140 characters">
+                                                                <div class="field-hint at-limit" *ngIf="hint('rmtInfUstrd', 140) as h">{{h}}</div>
+                                                         </div>
 
                                                         <!-- Structured Remittance -->
                                                         <ng-container *ngIf="form.get('rmtInfType')?.value === 'strd'">
@@ -536,16 +552,19 @@
                                                                         <label>Creditor Reference</label>
                                                                         <input formControlName="rmtInfStrdCdtrRef" maxlength="35" placeholder="Reference Number">
                                                                         <div class="validation-msg" *ngIf="err('rmtInfStrdCdtrRef') as e">{{e}}</div>
-                                                                </div>
+                                                                        <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdCdtrRef', 35) as h">{{h}}</div>
+                                                                 </div>
                                                                 <div class="form-group full-width" style="grid-column: 1 / -1;">
                                                                         <label>Additional Remittance Info</label>
                                                                         <input formControlName="rmtInfStrdAddtlRmtInf" maxlength="140" placeholder="Extra info">
                                                                         <div class="validation-msg" *ngIf="err('rmtInfStrdAddtlRmtInf') as e">{{e}}</div>
-                                                                </div>
+                                                                        <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdAddtlRmtInf', 140) as h">{{h}}</div>
+                                                                 </div>
                                                                 <div class="form-group">
                                                                     <label>Referred Doc Number</label>
                                                                     <input formControlName="rmtInfStrdRfrdDocNb" maxlength="35" placeholder="Document Number">
                                                                     <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocNb') as e">{{e}}</div>
+                                                                    <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdRfrdDocNb', 35) as h">{{h}}</div>
                                                                 </div>
                                                                 <div class="form-group">
                                                                      <label>Referred Doc Code</label>
@@ -560,7 +579,7 @@
                                                                  </div>
                                                                 <div class="form-group">
                                                                     <label>Referred Doc Amount</label>
-                                                                    <input formControlName="rmtInfStrdRfrdDocAmt" type="number" step="any" placeholder="Due Payable Amount">
+                                                                    <input formControlName="rmtInfStrdRfrdDocAmt" type="text" placeholder="Due Payable Amount">
                                                                     <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmt') as e">{{e}}</div>
                                                                 </div>
                                                         </ng-container>
@@ -577,7 +596,7 @@
                                 <div class="down">
                                         <button class="action-btn copy-btn" (click)="copyToClipboard()"><mat-icon>content_copy</mat-icon> Copy XML</button>
                                         <button class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon> Download XML</button>
-                                        <button class="action-btn validate-btn" (click)="validateMessage()"><mat-icon>verified</mat-icon> Validate Message</button>
+                                        <button class="action-btn validate-btn" (click)="validateMessage()" [disabled]="form.invalid"><mat-icon>verified</mat-icon> Validate Message</button>
                                 </div>
                         </div>
 
@@ -606,11 +625,13 @@
             <label>{{title}} BIC <span class="req" *ngIf="required">*</span></label>
             <input [formControlName]="prefix+'Bic'" maxlength="11" placeholder="e.g. NDEAFIHH">
             <div class="validation-msg" *ngIf="err(prefix+'Bic') as e">{{e}}</div>
+            <div class="field-hint at-limit" *ngIf="hint(prefix+'Bic', 11) as h">{{h}}</div>
         </div>
         <div class="form-group" *ngIf="!isAgent">
             <label>{{title}} BIC <span class="req" *ngIf="required">*</span></label>
             <input [formControlName]="prefix+'OrgAnyBIC'" maxlength="11" placeholder="e.g. NDEAFIHH">
             <div class="validation-msg" *ngIf="err(prefix+'OrgAnyBIC') as e">{{e}}</div>
+            <div class="field-hint at-limit" *ngIf="hint(prefix+'OrgAnyBIC', 11) as h">{{h}}</div>
         </div>
 
         <!-- Address Type -->
@@ -629,28 +650,33 @@
             <div class="address-subgrid">
                 <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                     <label>{{title}} Building Number</label>
-                    <input [formControlName]="prefix+'BldgNb'">
+                    <input [formControlName]="prefix+'BldgNb'" maxlength="16">
                     <div class="validation-msg" *ngIf="err(prefix+'BldgNb') as e">{{e}}</div>
+                    <div class="field-hint at-limit" *ngIf="hint(prefix+'BldgNb', 16) as h">{{h}}</div>
                 </div>
                 <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                     <label>{{title}} Building Name</label>
-                    <input [formControlName]="prefix+'BldgNm'">
+                    <input [formControlName]="prefix+'BldgNm'" maxlength="35">
                     <div class="validation-msg" *ngIf="err(prefix+'BldgNm') as e">{{e}}</div>
+                    <div class="field-hint at-limit" *ngIf="hint(prefix+'BldgNm', 35) as h">{{h}}</div>
                 </div>
                 <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                     <label>{{title}} Street Name</label>
-                    <input [formControlName]="prefix+'StrtNm'">
+                    <input [formControlName]="prefix+'StrtNm'" maxlength="70">
                     <div class="validation-msg" *ngIf="err(prefix+'StrtNm') as e">{{e}}</div>
+                    <div class="field-hint at-limit" *ngIf="hint(prefix+'StrtNm', 70) as h">{{h}}</div>
                 </div>
                 <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                     <label>{{title}} Post Code</label>
-                    <input [formControlName]="prefix+'PstCd'">
+                    <input [formControlName]="prefix+'PstCd'" maxlength="16">
                     <div class="validation-msg" *ngIf="err(prefix+'PstCd') as e">{{e}}</div>
+                    <div class="field-hint at-limit" *ngIf="hint(prefix+'PstCd', 16) as h">{{h}}</div>
                 </div>
                 <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                     <label>{{title}} City (Town Name) <span class="req">*</span></label>
-                    <input [formControlName]="prefix+'TwnNm'">
+                    <input [formControlName]="prefix+'TwnNm'" maxlength="35">
                     <div class="validation-msg" *ngIf="err(prefix+'TwnNm') as e">{{e}}</div>
+                    <div class="field-hint at-limit" *ngIf="hint(prefix+'TwnNm', 35) as h">{{h}}</div>
                 </div>
                 <div class="form-group">
                     <label>{{title}} Country <span class="req">*</span></label>
@@ -662,13 +688,15 @@
                 <ng-container *ngIf="['unstructured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                     <div class="form-group">
                         <label>{{title}} Address Line 1</label>
-                        <input [formControlName]="prefix+'AdrLine1'">
+                        <input [formControlName]="prefix+'AdrLine1'" maxlength="70">
                         <div class="validation-msg" *ngIf="err(prefix+'AdrLine1') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint(prefix+'AdrLine1', 70) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
                         <label>{{title}} Address Line 2</label>
-                        <input [formControlName]="prefix+'AdrLine2'">
+                        <input [formControlName]="prefix+'AdrLine2'" maxlength="70">
                         <div class="validation-msg" *ngIf="err(prefix+'AdrLine2') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint(prefix+'AdrLine2', 70) as h">{{h}}</div>
                     </div>
                 </ng-container>
             </div>
@@ -679,6 +707,7 @@
             <label>{{title}} Name <span class="req" *ngIf="required">*</span></label>
             <input [formControlName]="prefix+'Name'" maxlength="140">
             <div class="validation-msg" *ngIf="err(prefix+'Name') as e">{{e}}</div>
+            <div class="field-hint at-limit" *ngIf="hint(prefix+'Name', 140) as h">{{h}}</div>
         </div>
 
         <!-- Member ID -->
@@ -686,6 +715,7 @@
             <label>{{title}} Member ID</label>
             <input [formControlName]="isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId'" maxlength="35" placeholder="Clearing Member ID">
             <div class="validation-msg" *ngIf="err(isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId') as e">{{e}}</div>
+            <div class="field-hint at-limit" *ngIf="hint(isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId', 35) as h">{{h}}</div>
         </div>
 
         <!-- Clearing System Code -->
@@ -693,6 +723,7 @@
             <label>{{title}} Clearing System Code</label>
             <input [formControlName]="isAgent ? prefix+'ClrSysCd' : prefix+'OrgClrSysCd'" maxlength="4" placeholder="e.g. USABA, CHAPS, T2">
             <div class="validation-msg" *ngIf="err(isAgent ? prefix+'ClrSysCd' : prefix+'OrgClrSysCd') as e">{{e}}</div>
+            <div class="field-hint at-limit" *ngIf="hint(isAgent ? prefix+'ClrSysCd' : prefix+'OrgClrSysCd', 4) as h">{{h}}</div>
         </div>
 
         <!-- LEI -->
@@ -700,12 +731,14 @@
             <label>{{title}} LEI</label>
             <input [formControlName]="isAgent ? prefix+'Lei' : prefix+'OrgLEI'" maxlength="20" placeholder="20-char LEI">
             <div class="validation-msg" *ngIf="err(isAgent ? prefix+'Lei' : prefix+'OrgLEI') as e">{{e}}</div>
+            <div class="field-hint at-limit" *ngIf="hint(isAgent ? prefix+'Lei' : prefix+'OrgLEI', 20) as h">{{h}}</div>
         </div>
 
         <!-- Account Number -->
         <div class="form-group" *ngIf="prefix !== 'instgAgt' && prefix !== 'instdAgt'">
             <label>{{title}} Account Number</label>
             <input [formControlName]="prefix+'Acct'" maxlength="34">
+            <div class="field-hint at-limit" *ngIf="hint(prefix+'Acct', 34) as h">{{h}}</div>
         </div>
 
     </div>

@@ -92,11 +92,25 @@ export class Pacs9CovComponent implements OnInit {
         const target = event.target as HTMLInputElement;
         if (!target) return;
         const name = target.getAttribute('formControlName');
-        if (name && (name.toLowerCase().includes('bic') || name.toLowerCase().includes('iban'))) {
+        if (!name) return;
+
+        // Character limit warning logic (Immediate on-hit detection)
+        const maxLen = target.maxLength;
+        const val = target.value || '';
+        if (maxLen > 0 && val.length >= maxLen) {
+            this.showMaxLenWarning[name] = true;
+            if (this.warningTimeouts[name]) clearTimeout(this.warningTimeouts[name]);
+            this.warningTimeouts[name] = setTimeout(() => this.showMaxLenWarning[name] = false, 3000);
+        } else {
+            this.showMaxLenWarning[name] = false;
+        }
+
+        // BIC/IBAN Uppercasing
+        if (name.toLowerCase().includes('bic') || name.toLowerCase().includes('iban')) {
             const start = target.selectionStart;
             const end = target.selectionEnd;
-            const upperValue = target.value.toUpperCase();
-            if (target.value !== upperValue) {
+            const upperValue = val.toUpperCase();
+            if (val !== upperValue) {
                 target.value = upperValue;
                 if (start !== null && end !== null) {
                     target.setSelectionRange(start, end);
@@ -253,7 +267,7 @@ export class Pacs9CovComponent implements OnInit {
             instrId: ['pacs9bizmsgidr01', Validators.required], endToEndId: ['pacs8bizmsgidr01', Validators.required],
             uetr: ['8a562c67-ca16-48ba-b074-65581be6f001', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
             amount: ['1500000', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['EUR', Validators.required],
-            sttlmDt: [new Date().toISOString().split('T')[0], Validators.required],
+            sttlmDt: [new Date().toISOString().split('T')[0], [Validators.required, Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]],
             // Debtor FI (required)
             dbtrFiBic: ['RBOSGB2L', BIC],
             dbtrFiAcct: [''],
@@ -395,11 +409,6 @@ export class Pacs9CovComponent implements OnInit {
     }
 
     err(f: string): string | null {
-        if (this.showMaxLenWarning[f]) {
-            const c = this.form.get(f);
-            const len = c?.value?.toString().length || 0;
-            return `Maximum limit reached (${len} characters)`;
-        }
         const c = this.form.get(f);
         // Remove touched/dirty requirement to show errors immediately
         if (!c || c.valid) return null;
@@ -407,6 +416,14 @@ export class Pacs9CovComponent implements OnInit {
         if (c.errors?.['required']) return 'Required field.';
         if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
         if (c.errors?.['pattern']) {
+            // Precedence: If we're at the limit and pattern is invalid, let the limit hint take precedence
+            if (this.showMaxLenWarning[f]) {
+              const val = c.value?.toString() || '';
+              const limitError = c.errors?.['maxlength']?.requiredLength;
+              if (limitError && val.length >= limitError) return null;
+              if (f.toLowerCase().includes('bic') && val.length >= 11) return null;
+              if (f === 'uetr' && val.length >= 36) return null;
+            }
             if (f.toLowerCase().includes('bic')) return 'Valid 8 or 11-char BIC required.';
             if (f.toLowerCase().includes('iban')) return 'Valid 34-char IBAN required.';
             if (f.toLowerCase().includes('uetr')) return 'Invalid UETR format';
@@ -495,46 +512,30 @@ export class Pacs9CovComponent implements OnInit {
 
     @HostListener('keydown', ['$event'])
     onKeydown(event: KeyboardEvent) {
-        // 1. History & Formatting Shortcuts (Ctrl+Z, Ctrl+Y, Ctrl+S)
+        // ... Shortcuts check ...
         if (event.ctrlKey || event.metaKey) {
             if (document.activeElement?.classList.contains('code-editor')) {
                 switch (event.key.toLowerCase()) {
-                    case 'z':
-                        event.preventDefault();
-                        this.undoXml();
-                        return;
-                    case 'y':
-                        event.preventDefault();
-                        this.redoXml();
-                        return;
-                    case 's':
-                        event.preventDefault();
-                        this.formatXml();
-                        return;
-                    case '/':
-                        event.preventDefault();
-                        this.toggleCommentXml();
-                        return;
+                    case 'z': event.preventDefault(); this.undoXml(); return;
+                    case 'y': event.preventDefault(); this.redoXml(); return;
+                    case 's': event.preventDefault(); this.formatXml(); return;
+                    case '/': event.preventDefault(); this.toggleCommentXml(); return;
                 }
             }
         }
 
-        // 2. Existing MaxLength Warning logic
         const target = event.target as HTMLInputElement;
         if (!target || (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA')) return;
         const maxLen = target.maxLength;
         if (maxLen && maxLen > 0 && target.value && target.value.toString().length >= maxLen) {
+            // Still show warning on keydown if trying to type past limit
             if (target.selectionStart !== null && target.selectionStart !== target.selectionEnd) return;
             if (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey) {
                 const controlName = target.getAttribute('formControlName') || target.getAttribute('name');
                 if (controlName) {
                     this.showMaxLenWarning[controlName] = true;
-                    if (this.warningTimeouts[controlName]) {
-                        clearTimeout(this.warningTimeouts[controlName]);
-                    }
-                    this.warningTimeouts[controlName] = setTimeout(() => {
-                        this.showMaxLenWarning[controlName] = false;
-                    }, 3000);
+                    if (this.warningTimeouts[controlName]) clearTimeout(this.warningTimeouts[controlName]);
+                    this.warningTimeouts[controlName] = setTimeout(() => this.showMaxLenWarning[controlName] = false, 3000);
                 }
             }
         }
@@ -1047,18 +1048,35 @@ ${tx}\t\t\t</CdtTrfTxInf>
         this.pushHistory();
         
         try {
-            let xml = this.generatedXml.trim();
+            const tab = '    ';
             let formatted = '';
             let indent = '';
-            const tab = '    ';
+
+            // Normalize XML
+            let xml = this.generatedXml.replace(/>\s+</g, '><').trim();
             
-            xml.split(/>\s*</).forEach(node => {
-                if (node.match(/^\/\w/)) indent = indent.substring(tab.length);
-                formatted += indent + '<' + node + '>\r\n';
-                if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith('?')) indent += tab;
+            // Intelligent regex to split Tags and Comments
+            const reg = /(<[^>]+>[^<]*<\/([^>]+)>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
+            const nodes = xml.match(reg) || [];
+
+            nodes.forEach(node => {
+                const trimmed = node.trim();
+                if (!trimmed) return;
+
+                if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
+                    formatted += indent + trimmed + '\r\n';
+                } else if (trimmed.startsWith('</')) {
+                    if (indent.length >= tab.length) indent = indent.substring(tab.length);
+                    formatted += indent + trimmed + '\r\n';
+                } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
+                    formatted += indent + trimmed + '\r\n';
+                    if (!trimmed.endsWith('/>')) indent += tab;
+                } else {
+                    formatted += indent + trimmed + '\r\n';
+                }
             });
             
-            this.generatedXml = formatted.substring(1, formatted.length - 3);
+            this.generatedXml = formatted.trim();
             this.refreshLineCount();
             this.snackBar.open('XML Formatted', '', { duration: 1500 });
         } catch (e) {
