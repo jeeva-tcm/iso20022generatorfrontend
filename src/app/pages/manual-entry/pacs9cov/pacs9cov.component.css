@@ -291,6 +291,7 @@ textarea {
 
 .line-numbers {
     width: 45px;
+    height: 100%;
     background: var(--editor-gutter);
     color: var(--editor-gutter-text);
     padding: 1rem 0;
@@ -320,8 +321,9 @@ textarea.code-editor {
     padding: 1rem;
     resize: none;
     outline: none;
-    overflow-x: auto;
+    overflow: auto;
     white-space: pre;
+    tab-size: 4;
 }
 
 textarea.code-editor::-webkit-scrollbar {

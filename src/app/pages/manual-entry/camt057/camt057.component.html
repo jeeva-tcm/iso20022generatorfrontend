@@ -13,26 +13,36 @@
                         <label>Sender BIC <span class="req">*</span></label>
                         <input formControlName="fromBic" maxlength="11">
                         <div class="validation-msg" *ngIf="err('fromBic') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('fromBic', 11) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
                         <label>Receiver BIC <span class="req">*</span></label>
                         <input formControlName="toBic" maxlength="11">
                         <div class="validation-msg" *ngIf="err('toBic') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('toBic', 11) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
                         <label>Business Message ID <span class="req">*</span></label>
                         <input formControlName="bizMsgId" maxlength="35">
                         <div class="validation-msg" *ngIf="err('bizMsgId') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('bizMsgId', 35) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
                         <label>Business Service <span class="req">*</span></label>
                         <input formControlName="bizSvc" maxlength="35">
                         <div class="validation-msg" *ngIf="err('bizSvc') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('bizSvc', 35) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
                         <label>Creation Date <span class="req">*</span></label>
                         <input formControlName="creDtTm">
                         <div class="validation-msg" *ngIf="err('creDtTm') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Number of Transactions <span class="req">*</span></label>
+                        <input formControlName="nbOfTxs" maxlength="15" pattern="^[1-9]\d{0,14}$" required>
+                        <div class="validation-msg" *ngIf="err('nbOfTxs') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('nbOfTxs', 15) as h">{{h}}</div>
                     </div>
 
                     <div class="section-title">Item Detail</div>
@@ -40,10 +50,11 @@
                         <label>Item ID <span class="req">*</span></label>
                         <input formControlName="itmId" maxlength="35">
                         <div class="validation-msg" *ngIf="err('itmId') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('itmId', 35) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
                         <label>Amount <span class="req">*</span></label>
-                        <input formControlName="amount">
+                        <input formControlName="amount" type="text" placeholder="e.g. 1000.00">
                         <div class="validation-msg" *ngIf="err('amount') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
@@ -55,39 +66,16 @@
                     </div>
                     <div class="form-group">
                         <label>Expected Value Date <span class="req">*</span></label>
-                        <input type="date" formControlName="valDt">
+                        <input type="date" formControlName="valDt" min="0001-01-01" max="9999-12-31">
                         <div class="validation-msg" *ngIf="err('valDt') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
                         <label>End to End ID</label>
                         <input formControlName="endToEndId" maxlength="35">
                         <div class="validation-msg" *ngIf="err('endToEndId') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('endToEndId', 35) as h">{{h}}</div>
                     </div>
-                    <div class="form-group">
-                        <label>UETR</label>
-                        <input formControlName="uetr" maxlength="36">
-                        <div class="validation-msg" *ngIf="err('uetr') as e">{{e}}</div>
-                    </div>
-                    <div class="form-group"><label>Expected Value Date <span class="req">*</span></label><input
-                            type="date" formControlName="valDt"></div>
-                    <div class="form-group"><label>End to End ID</label><input formControlName="endToEndId"
-                            maxlength="35"></div>
-                    <div class="form-group">
-                        <label>UETR</label>
-                        <div class="uetr-control-row">
-                            <input formControlName="uetr" maxlength="36" id="camt057-uetr-input"
-                                placeholder="xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx" (blur)="validateManualUetr()"
-                                (paste)="onUetrPaste($event)" (keydown.enter)="validateManualUetr()">
-                            <button type="button" class="uetr-refresh-btn" id="camt057-uetr-refresh"
-                                (click)="refreshUetr()" title="Generate new UUID v4 UETR">
-                                <mat-icon>refresh</mat-icon>
-                            </button>
-                        </div>
-                        <div class="validation-msg" *ngIf="uetrError">{{uetrError}}</div>
-                        <div class="validation-msg" *ngIf="err('uetr') as e">{{e}}</div>
-                        <div class="uetr-success" *ngIf="uetrSuccess">✔ {{uetrSuccess}}</div>
-                    </div>
-                    <div class="form-group"><label>UETR</label><input formControlName="uetr" maxlength="36"></div>
+
                     <div class="form-group">
                         <label>Clearing System Reference <span class="opt">Optional</span></label>
                         <input formControlName="clrSysRef" maxlength="35" placeholder="Alphanumeric (1-35)">
@@ -104,11 +92,13 @@
                         <label>Message ID <span class="req">*</span></label>
                         <input formControlName="msgId" maxlength="35">
                         <div class="validation-msg" *ngIf="err('msgId') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('msgId', 35) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
                         <label>Notification ID <span class="req">*</span></label>
                         <input formControlName="ntfctnId" maxlength="35">
                         <div class="validation-msg" *ngIf="err('ntfctnId') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('ntfctnId', 35) as h">{{h}}</div>
                     </div>
 
 
@@ -215,8 +205,7 @@
                             </select>
                             <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocCd') as e">{{e}}</div>
                         </div>
-                        <div class="form-group"><label>Referred Doc Amount</label><input
-                                formControlName="rmtInfStrdRfrdDocAmt" type="number" step="any">
+                        <div class="form-group"><label>Referred Doc Amount</label><input formControlName="rmtInfStrdRfrdDocAmt" type="text" required>
                             <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmt') as e">{{e}}</div>
                         </div>
                     </div>
@@ -227,24 +216,17 @@
         <div class="right-panel">
             <div class="bottom-actions" style="margin-top: 0; margin-bottom: 1rem;">
                 <div class="down">
-                    <button class="action-btn copy-btn" (click)="copyToClipboard()"><mat-icon>content_copy</mat-icon>
-                        Copy XML</button>
-                    <button class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon> Download
-                        XML</button>
-                    <button class="action-btn validate-btn" (click)="validateMessage()"><mat-icon>verified</mat-icon>
-                        Validate Message</button>
+                    <button class="action-btn copy-btn" (click)="copyToClipboard()"><mat-icon>content_copy</mat-icon> Copy XML</button>
+                    <button class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon> Download XML</button>
+                    <button class="action-btn validate-btn" (click)="validateMessage()" [disabled]="form.invalid"><mat-icon>verified</mat-icon> Validate Message</button>
                 </div>
             </div>
             <div class="content-box preview-box">
                 <div class="up">
-                    <button class="action-btn-small" (click)="undoXml()"
-                        [disabled]="!canUndoXml()"><mat-icon>undo</mat-icon></button>
-                    <button class="action-btn-small" (click)="redoXml()"
-                        [disabled]="!canRedoXml()"><mat-icon>redo</mat-icon></button>
-                    <button class="action-btn-small"
-                        (click)="formatXml()"><mat-icon>format_align_left</mat-icon></button>
-                    <button class="action-btn-small"
-                        (click)="toggleCommentXml()"><mat-icon>mode_comment</mat-icon></button>
+                    <button class="action-btn-small" (click)="undoXml()" [disabled]="!canUndoXml()"><mat-icon>undo</mat-icon></button>
+                    <button class="action-btn-small" (click)="redoXml()" [disabled]="!canRedoXml()"><mat-icon>redo</mat-icon></button>
+                    <button class="action-btn-small" (click)="formatXml()"><mat-icon>format_align_left</mat-icon></button>
+                    <button class="action-btn-small" (click)="toggleCommentXml()"><mat-icon>mode_comment</mat-icon></button>
                 </div>
                 <div class="editor-wrapper">
                     <div class="line-numbers" #lineNumbers>
@@ -267,11 +249,13 @@
             <label>{{title}} BIC</label>
             <input [formControlName]="prefix+'Bic'" maxlength="11" placeholder="e.g. NDEAFIHH">
             <div class="validation-msg" *ngIf="err(prefix+'Bic') as e">{{e}}</div>
+            <div class="field-hint at-limit" *ngIf="hint(prefix+'Bic', 11) as h">{{h}}</div>
         </div>
         <div class="form-group" *ngIf="!isAgent">
             <label>{{title}} BIC</label>
             <input [formControlName]="prefix+'OrgAnyBIC'" maxlength="11" placeholder="e.g. NDEAFIHH">
             <div class="validation-msg" *ngIf="err(prefix+'OrgAnyBIC') as e">{{e}}</div>
+            <div class="field-hint at-limit" *ngIf="hint(prefix+'OrgAnyBIC', 11) as h">{{h}}</div>
         </div>
 
         <!-- Address Type -->
@@ -290,28 +274,33 @@
             <div class="address-subgrid">
                 <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                     <label>{{title}} Building Number</label>
-                    <input [formControlName]="prefix+'BldgNb'">
+                    <input [formControlName]="prefix+'BldgNb'" maxlength="16">
                     <div class="validation-msg" *ngIf="err(prefix+'BldgNb') as e">{{e}}</div>
+                    <div class="field-hint at-limit" *ngIf="hint(prefix+'BldgNb', 16) as h">{{h}}</div>
                 </div>
                 <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                     <label>{{title}} Building Name</label>
-                    <input [formControlName]="prefix+'BldgNm'">
+                    <input [formControlName]="prefix+'BldgNm'" maxlength="35">
                     <div class="validation-msg" *ngIf="err(prefix+'BldgNm') as e">{{e}}</div>
+                    <div class="field-hint at-limit" *ngIf="hint(prefix+'BldgNm', 35) as h">{{h}}</div>
                 </div>
                 <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                     <label>{{title}} Street Name</label>
-                    <input [formControlName]="prefix+'StrtNm'">
+                    <input [formControlName]="prefix+'StrtNm'" maxlength="70">
                     <div class="validation-msg" *ngIf="err(prefix+'StrtNm') as e">{{e}}</div>
+                    <div class="field-hint at-limit" *ngIf="hint(prefix+'StrtNm', 70) as h">{{h}}</div>
                 </div>
                 <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                     <label>{{title}} Post Code</label>
-                    <input [formControlName]="prefix+'PstCd'">
+                    <input [formControlName]="prefix+'PstCd'" maxlength="16">
                     <div class="validation-msg" *ngIf="err(prefix+'PstCd') as e">{{e}}</div>
+                    <div class="field-hint at-limit" *ngIf="hint(prefix+'PstCd', 16) as h">{{h}}</div>
                 </div>
                 <div class="form-group" *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                     <label>{{title}} City (Town Name) <span class="req">*</span></label>
-                    <input [formControlName]="prefix+'TwnNm'">
+                    <input [formControlName]="prefix+'TwnNm'" maxlength="35">
                     <div class="validation-msg" *ngIf="err(prefix+'TwnNm') as e">{{e}}</div>
+                    <div class="field-hint at-limit" *ngIf="hint(prefix+'TwnNm', 35) as h">{{h}}</div>
                 </div>
                 <div class="form-group">
                     <label>{{title}} Country <span class="req">*</span></label>
@@ -323,13 +312,15 @@
                 <ng-container *ngIf="['unstructured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                     <div class="form-group">
                         <label>{{title}} Address Line 1</label>
-                        <input [formControlName]="prefix+'AdrLine1'">
+                        <input [formControlName]="prefix+'AdrLine1'" maxlength="70">
                         <div class="validation-msg" *ngIf="err(prefix+'AdrLine1') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint(prefix+'AdrLine1', 70) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
                         <label>{{title}} Address Line 2</label>
-                        <input [formControlName]="prefix+'AdrLine2'">
+                        <input [formControlName]="prefix+'AdrLine2'" maxlength="70">
                         <div class="validation-msg" *ngIf="err(prefix+'AdrLine2') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint(prefix+'AdrLine2', 70) as h">{{h}}</div>
                     </div>
                 </ng-container>
             </div>
@@ -340,15 +331,15 @@
             <label>{{title}} Name</label>
             <input [formControlName]="prefix+'Name'" maxlength="140">
             <div class="validation-msg" *ngIf="err(prefix+'Name') as e">{{e}}</div>
+            <div class="field-hint at-limit" *ngIf="hint(prefix+'Name', 140) as h">{{h}}</div>
         </div>
 
         <!-- Member ID -->
         <div class="form-group">
             <label>{{title}} Member ID</label>
-            <input [formControlName]="isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId'" maxlength="35"
-                placeholder="Clearing Member ID">
-            <div class="validation-msg" *ngIf="err(isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId') as e">{{e}}
-            </div>
+            <input [formControlName]="isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId'" maxlength="35" placeholder="Clearing Member ID">
+            <div class="validation-msg" *ngIf="err(isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId') as e">{{e}}</div>
+            <div class="field-hint at-limit" *ngIf="hint(isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId', 35) as h">{{h}}</div>
         </div>
 
         <!-- Clearing System Code -->
@@ -357,6 +348,7 @@
             <input [formControlName]="isAgent ? prefix+'ClrSysCd' : prefix+'OrgClrSysCd'" maxlength="4"
                 placeholder="e.g. USABA, CHAPS, T2">
             <div class="validation-msg" *ngIf="err(isAgent ? prefix+'ClrSysCd' : prefix+'OrgClrSysCd') as e">{{e}}</div>
+            <div class="field-hint at-limit" *ngIf="hint(isAgent ? prefix+'ClrSysCd' : prefix+'OrgClrSysCd', 4) as h">{{h}}</div>
         </div>
 
         <!-- LEI -->
@@ -365,6 +357,7 @@
             <input [formControlName]="isAgent ? prefix+'Lei' : prefix+'OrgLEI'" maxlength="20"
                 placeholder="20-char LEI">
             <div class="validation-msg" *ngIf="err(isAgent ? prefix+'Lei' : prefix+'OrgLEI') as e">{{e}}</div>
+            <div class="field-hint at-limit" *ngIf="hint(isAgent ? prefix+'Lei' : prefix+'OrgLEI', 20) as h">{{h}}</div>
         </div>
 
         <!-- Account Number Removed from here as it is now in a separate card -->

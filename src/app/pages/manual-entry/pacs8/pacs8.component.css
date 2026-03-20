@@ -300,6 +300,7 @@ textarea {
 
 .line-numbers {
     width: 45px;
+    height: 100%;
     background: var(--editor-gutter);
     color: var(--editor-gutter-text);
     padding: 1rem 0;
