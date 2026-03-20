@@ -529,7 +529,8 @@ export class Pacs9Component implements OnInit {
         if (v.ctgyPurpCd?.trim()) pmtTpXml += this.tag('CtgyPurp', this.el('Cd', v.ctgyPurpCd, 5), 4);
         else if (v.ctgyPurpPrtry?.trim()) pmtTpXml += this.tag('CtgyPurp', this.el('Prtry', v.ctgyPurpPrtry, 5), 4);
         if (pmtTpXml) tx += this.tag('PmtTpInf', pmtTpXml, 3);
-        tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${v.amount}</IntrBkSttlmAmt>\n`;
+        const formattedAmt = v.amount ? Number(v.amount).toFixed(v.currency === 'EUR' ? 2 : 5) : '';
+        tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${formattedAmt}</IntrBkSttlmAmt>\n`;
         tx += this.el('IntrBkSttlmDt', v.sttlmDt, 3);
         if (v.sttlmPrty?.trim()) tx += this.el('SttlmPrty', v.sttlmPrty, 3);
         // PrvsInstgAgts

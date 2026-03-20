@@ -646,7 +646,8 @@ export class Pacs9CovComponent implements OnInit {
         if (v.ctgyPurpCd?.trim()) pmtTpXml += this.tag('CtgyPurp', this.el('Cd', v.ctgyPurpCd, 5), 4);
         else if (v.ctgyPurpPrtry?.trim()) pmtTpXml += this.tag('CtgyPurp', this.el('Prtry', v.ctgyPurpPrtry, 5), 4);
         if (pmtTpXml) tx += this.tag('PmtTpInf', pmtTpXml, 3);
-        tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${v.amount}</IntrBkSttlmAmt>\n`;
+        const formattedAmt = v.amount ? Number(v.amount).toFixed(v.currency === 'EUR' ? 2 : 5) : '';
+        tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${formattedAmt}</IntrBkSttlmAmt>\n`;
         tx += this.el('IntrBkSttlmDt', v.sttlmDt, 3);
         if (v.sttlmPrty?.trim()) tx += this.el('SttlmPrty', v.sttlmPrty, 3);
         // PrvsInstgAgts
@@ -1105,396 +1106,383 @@ ${tx}\t\t\t</CdtTrfTxInf>
             const tab = '    ';
             let formatted = '';
             let indent = '';
-            const tab = '    ';
 
-            xml.split(/>\s*</).forEach(node => {
-                if (node.match(/^\/\w/)) indent = indent.substring(tab.length);
-                formatted += indent + '<' + node + '>\r\n';
-                if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith('?')) indent += tab;
+            // Normalize XML
+            let xml = this.generatedXml.replace(/>\s+</g, '><').trim();
 
-                // Normalize XML
-                let xml = this.generatedXml.replace(/>\s+</g, '><').trim();
+            // Intelligent regex to split Tags and Comments
+            const reg = /(<[^>]+>[^<]*<\/([^>]+)>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
+            const nodes = xml.match(reg) || [];
 
-                // Intelligent regex to split Tags and Comments
-                const reg = /(<[^>]+>[^<]*<\/([^>]+)>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
-                const nodes = xml.match(reg) || [];
+            nodes.forEach(node => {
+                const trimmed = node.trim();
+                if (!trimmed) return;
 
-                nodes.forEach(node => {
-                    const trimmed = node.trim();
-                    if (!trimmed) return;
-
-                    if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
-                        formatted += indent + trimmed + '\r\n';
-                    } else if (trimmed.startsWith('</')) {
-                        if (indent.length >= tab.length) indent = indent.substring(tab.length);
-                        formatted += indent + trimmed + '\r\n';
-                    } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
-                        formatted += indent + trimmed + '\r\n';
-                        if (!trimmed.endsWith('/>')) indent += tab;
-                    } else {
-                        formatted += indent + trimmed + '\r\n';
-                    }
-                });
-
-                this.generatedXml = formatted.substring(1, formatted.length - 3);
-
-                this.generatedXml = formatted.trim();
-                this.refreshLineCount();
-                this.snackBar.open('XML Formatted', '', { duration: 1500 });
-            } catch (e) {
-                this.snackBar.open('Unable to format XML', '', { duration: 3000 });
-            }
-        }
-
-    toggleCommentXml() {
-            if (!this.generatedXml) return;
-
-            const textarea = document.querySelector('.code-editor') as HTMLTextAreaElement;
-            if (!textarea) return;
-
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
-            const value = textarea.value;
-
-            this.isInternalChange = true;
-            this.pushHistory();
-
-            // Identify start/end of lines
-            let lineStart = value.lastIndexOf('\n', start - 1) + 1;
-            let lineEnd = value.indexOf('\n', end);
-            if (lineEnd === -1) lineEnd = value.length;
-
-            const selection = value.substring(lineStart, lineEnd);
-            const before = value.substring(0, lineStart);
-            const after = value.substring(lineEnd);
-
-            let newResult = '';
-            const trimmed = selection.trim();
-
-            if (trimmed.startsWith('<!--') && trimmed.endsWith('-->')) {
-                // Uncomment
-                newResult = selection.replace('<!--', '').replace('-->', '');
-            } else {
-                // Comment
-                newResult = `<!-- ${selection} -->`;
-            }
-
-            this.generatedXml = before + newResult + after;
-            this.refreshLineCount();
-
-            setTimeout(() => {
-                textarea.focus();
-                textarea.setSelectionRange(lineStart, lineStart + newResult.length);
-                this.isInternalChange = false;
-            }, 0);
-        }
-
-        parseXmlToForm(content: string) {
-            if (!content?.trim()) {
-                this.isParsingXml = true;
-                const emptyPatch: any = {};
-                Object.keys(this.form.controls).forEach(key => {
-                    emptyPatch[key] = '';
-                });
-                this.form.patchValue(emptyPatch, { emitEvent: false });
-                this.isParsingXml = false;
-                return;
-            }
-            try {
-                const cleanXml = content.replace(/<(\/?)(?:[\w]+:)/g, '<$1');
-                const doc = new DOMParser().parseFromString(cleanXml, 'text/xml');
-                if (doc.querySelector('parsererror')) {
-                    this.snackBar.open('Invalid XML: Unable to parse content.', 'Close', { duration: 3000 });
-                    return;
-                }
-
-                const patch: any = {};
-                const tval = (t: string) => doc.getElementsByTagName(t)[0]?.textContent || '';
-                const setVal = (key: string, val: string) => { patch[key] = val; };
-
-                setVal('bizMsgId', tval('BizMsgIdr'));
-                setVal('msgId', tval('MsgId'));
-                setVal('nbOfTxs', tval('NbOfTxs'));
-                setVal('sttlmMtd', tval('SttlmMtd'));
-                setVal('sttlmDt', tval('IntrBkSttlmDt'));
-
-                // TX fields
-                setVal('instrId', tval('InstrId'));
-                setVal('endToEndId', tval('EndToEndId'));
-                setVal('txId', tval('TxId'));
-                setVal('uetr', tval('UETR'));
-
-                const amtEl = doc.getElementsByTagName('IntrBkSttlmAmt')[0];
-                setVal('amount', amtEl ? (amtEl.textContent || '') : '');
-                setVal('currency', amtEl ? (amtEl.getAttribute('Ccy') || '') : '');
-
-                const mainRmts = doc.getElementsByTagName('RmtInf');
-                // Filter out rmts that are inside UndrlygCstmrCdtTrf
-                const isInsideCov = (node: Node) => {
-                    let curr = node.parentNode;
-                    while (curr) {
-                        if (curr.nodeName === 'UndrlygCstmrCdtTrf') return true;
-                        curr = curr.parentNode;
-                    }
-                    return false;
-                };
-                const coreRmts = Array.from(mainRmts).filter(r => !isInsideCov(r));
-                if (coreRmts[0]) {
-                    const ustrd = coreRmts[0].getElementsByTagName('Ustrd')[0]?.textContent;
-                    if (ustrd) {
-                        setVal('rmtInfType', 'ustrd');
-                        setVal('rmtInfUstrd', ustrd);
-                    } else {
-                        const strd = coreRmts[0].getElementsByTagName('Strd')[0];
-                        if (strd) {
-                            setVal('rmtInfType', 'strd');
-                            const ref = strd.getElementsByTagName('CdtrRefInf')[0];
-                            if (ref) {
-                                setVal('rmtInfStrdCdtrRefType', ref.getElementsByTagName('Cd')[0]?.textContent || '');
-                                setVal('rmtInfStrdCdtrRef', ref.getElementsByTagName('Ref')[0]?.textContent || '');
-                            }
-                            setVal('rmtInfStrdAddtlRmtInf', strd.getElementsByTagName('AddtlRmtInf')[0]?.textContent || '');
-                            const rfrdDoc = strd.getElementsByTagName('RfrdDocInf')[0];
-                            if (rfrdDoc) {
-                                setVal('rmtInfStrdRfrdDocNb', rfrdDoc.getElementsByTagName('Nb')[0]?.textContent || '');
-                                setVal('rmtInfStrdRfrdDocCd', rfrdDoc.getElementsByTagName('Tp')[0]?.getElementsByTagName('CdOrPrtry')[0]?.getElementsByTagName('Cd')[0]?.textContent || '');
-                            }
-                            const rfrdAmtNode = strd.getElementsByTagName('RfrdDocAmt')[0];
-                            if (rfrdAmtNode) {
-                                setVal('rmtInfStrdRfrdDocAmt', rfrdAmtNode.getElementsByTagName('RmtAmt')[0]?.getElementsByTagName('DuePyblAmt')[0]?.textContent || '');
-                            }
-                        }
-                    }
+                if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
+                    formatted += indent + trimmed + '\r\n';
+                } else if (trimmed.startsWith('</')) {
+                    if (indent.length >= tab.length) indent = indent.substring(tab.length);
+                    formatted += indent + trimmed + '\r\n';
+                } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
+                    formatted += indent + trimmed + '\r\n';
+                    if (!trimmed.endsWith('/>')) indent += tab;
                 } else {
-                    setVal('rmtInfType', 'none');
+                    formatted += indent + trimmed + '\r\n';
                 }
-                if (coreRmts[1] && patch['rmtInfType'] === 'ustrd') {
-                    setVal('rmtInfUstrd2', coreRmts[1].getElementsByTagName('Ustrd')[0]?.textContent || '');
-                }
-
-                const creDtTm = doc.getElementsByTagName('CreDtTm')[0] || doc.getElementsByTagName('CreDt')[0];
-                setVal('creDtTm', creDtTm ? (creDtTm.textContent || '') : '');
-
-                const tryTag = (parentOrEl: string | Element | Document, child: string): string => {
-                    const p = typeof parentOrEl === 'string' ? doc.getElementsByTagName(parentOrEl)[0] : parentOrEl;
-                    if (!p) return '';
-                    const el = p.getElementsByTagName(child)[0];
-                    return el?.textContent || '';
-                };
-
-                const tryAcct = (parentOrEl: string | Element | Document, groupName: string): string => {
-                    const p = typeof parentOrEl === 'string' ? doc.getElementsByTagName(parentOrEl)[0] : parentOrEl;
-                    const groupEl = p ? p.getElementsByTagName(groupName)[0] : null;
-                    if (!groupEl) return '';
-                    const idNode = groupEl.getElementsByTagName('Id')[0];
-                    if (!idNode) return '';
-                    const iban = idNode.getElementsByTagName('IBAN')[0]?.textContent;
-                    if (iban) return iban;
-                    const othr = idNode.getElementsByTagName('Othr')[0];
-                    return othr?.getElementsByTagName('Id')[0]?.textContent || '';
-                };
-
-                setVal('instrPrty', tval('InstrPrty'));
-                setVal('clrChanl', tval('ClrChanl'));
-                setVal('svcLvlCd', tryTag('SvcLvl', 'Cd'));
-                setVal('svcLvlPrtry', tryTag('SvcLvl', 'Prtry'));
-                setVal('lclInstrmCd', tryTag('LclInstrm', 'Cd'));
-                setVal('lclInstrmPrtry', tryTag('LclInstrm', 'Prtry'));
-                setVal('purpCd', tryTag('Purp', 'Cd'));
-
-                const frBic = tryTag('Fr', 'BICFI');
-                const toBic = tryTag('To', 'BICFI');
-                setVal('fromBic', frBic);
-                setVal('toBic', toBic);
-
-                const instgBic = tryTag('InstgAgt', 'BICFI');
-                setVal('instgAgtBic', instgBic || frBic);
-                const instdBic = tryTag('InstdAgt', 'BICFI');
-                setVal('instdAgtBic', instdBic || toBic);
-
-                const mainTx = doc.getElementsByTagName('CdtTrfTxInf')[0] || doc;
-                this.agentPrefixes.forEach(p => {
-                    if (p.startsWith('cov')) return; // Handle COV agents separately below
-                    let tag = p.charAt(0).toUpperCase() + p.slice(1);
-                    if (p === 'dbtrFi') tag = 'Dbtr';
-                    if (p === 'cdtrFi') tag = 'Cdtr';
-
-                    const agentNode = mainTx.getElementsByTagName(tag)[0];
-                    if (agentNode) {
-                        const fi = agentNode.getElementsByTagName('FinInstnId')[0];
-                        if (fi) {
-                            patch[p + 'Bic'] = fi.getElementsByTagName('BICFI')[0]?.textContent || '';
-                            patch[p + 'Name'] = fi.getElementsByTagName('Nm')[0]?.textContent || '';
-                            patch[p + 'Lei'] = fi.getElementsByTagName('LEI')[0]?.textContent || '';
-                        }
-                    }
-                    const acctVal = tryAcct(mainTx, tag + 'Acct');
-                    if (acctVal) patch[p + 'Acct'] = acctVal;
-                });
-
-                // Re-fetch COV specific accounts
-                // Clear addresses first
-                const allPrefixes = [...this.agentPrefixes, ...this.covPartyPrefixes];
-                const mapAddr = (parent: Element | Document, tag: string, prefix: string) => {
-                    ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry', 'AdrLine1', 'AdrLine2', 'AdrTpCd', 'AdrTpPrtry'].forEach(f => patch[prefix + f] = '');
-                    patch[prefix + 'AddrType'] = 'none';
-
-                    const p = parent.getElementsByTagName(tag)[0];
-                    if (!p) return;
-
-                    // Handle ID fields
-                    const idNode = p.getElementsByTagName('Id')[0];
-                    if (idNode) {
-                        const orgId = idNode.getElementsByTagName('OrgId')[0];
-                        if (orgId) {
-                            patch[prefix + 'OrgAnyBIC'] = orgId.getElementsByTagName('AnyBIC')[0]?.textContent || '';
-                        }
-                    }
-
-                    const addr = p.getElementsByTagName('PstlAdr')[0];
-                    if (!addr) return;
-                    const aV = (t: string) => addr.getElementsByTagName(t)[0]?.textContent || '';
-                    if (aV('Ctry') || aV('TwnNm')) {
-                        patch[prefix + 'AddrType'] = 'structured';
-                        ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry'].forEach(f => patch[prefix + f] = aV(f));
-                    } else if (addr.getElementsByTagName('AdrLine').length > 0) {
-                        patch[prefix + 'AddrType'] = 'unstructured';
-                        const lines = addr.getElementsByTagName('AdrLine');
-                        patch[prefix + 'AdrLine1'] = lines[0]?.textContent || '';
-                        patch[prefix + 'AdrLine2'] = lines[1]?.textContent || '';
-                    }
-                };
-
-                this.agentPrefixes.filter(p => !p.startsWith('cov')).forEach(p => mapAddr(mainTx, p.charAt(0).toUpperCase() + p.slice(1), p));
-
-                // COV fields identification
-                const covNode = doc.getElementsByTagName('UndrlygCstmrCdtTrf')[0];
-                if (covNode) {
-                    const dbtr = covNode.getElementsByTagName('Dbtr')[0];
-                    if (dbtr) setVal('covDbtrName', dbtr.getElementsByTagName('Nm')[0]?.textContent || '');
-                    setVal('covDbtrAcct', tryAcct(covNode, 'DbtrAcct'));
-
-                    const dbtrAgt = covNode.getElementsByTagName('DbtrAgt')[0];
-                    if (dbtrAgt) setVal('covDbtrAgtBic', dbtrAgt.getElementsByTagName('BICFI')[0]?.textContent || '');
-                    setVal('covDbtrAgtAcct', tryAcct(covNode, 'DbtrAgtAcct'));
-
-                    const cdtrAgt = covNode.getElementsByTagName('CdtrAgt')[0];
-                    if (cdtrAgt) setVal('covCdtrAgtBic', cdtrAgt.getElementsByTagName('BICFI')[0]?.textContent || '');
-                    setVal('covCdtrAgtAcct', tryAcct(covNode, 'CdtrAgtAcct'));
-
-                    const cdtr = covNode.getElementsByTagName('Cdtr')[0];
-                    if (cdtr) setVal('covCdtrName', cdtr.getElementsByTagName('Nm')[0]?.textContent || '');
-                    setVal('covCdtrAcct', tryAcct(covNode, 'CdtrAcct'));
-
-                    // Ultimate parties removed
-
-                    const instrs = covNode.getElementsByTagName('InstrForCdtrAgt');
-                    for (let i = 0; i < 2; i++) {
-                        if (instrs[i]) {
-                            setVal(`covInstrForCdtrAgt${i + 1}Cd`, instrs[i].getElementsByTagName('Cd')[0]?.textContent || '');
-                            setVal(`covInstrForCdtrAgt${i + 1}InfTxt`, instrs[i].getElementsByTagName('InstrInf')[0]?.textContent || '');
-                        }
-                    }
-
-                    const nxtInstrs = covNode.getElementsByTagName('InstrForNxtAgt');
-                    for (let i = 0; i < 6; i++) {
-                        if (nxtInstrs[i]) {
-                            setVal(`covInstrForNxtAgt${i + 1}Cd`, nxtInstrs[i].getElementsByTagName('Cd')[0]?.textContent || '');
-                            setVal(`covInstrForNxtAgt${i + 1}InfTxt`, nxtInstrs[i].getElementsByTagName('InstrInf')[0]?.textContent || '');
-                        }
-                    }
-
-                    const rmts = covNode.getElementsByTagName('RmtInf');
-                    if (rmts[0]) setVal('covRmtInfUstrd', rmts[0].getElementsByTagName('Ustrd')[0]?.textContent || '');
-                    if (rmts[1]) setVal('covRmtInfUstrd2', rmts[1].getElementsByTagName('Ustrd')[0]?.textContent || '');
-
-                    const covAmt = covNode.getElementsByTagName('InstdAmt')[0];
-                    setVal('covInstdAmt', covAmt ? (covAmt.textContent || '') : '');
-                    setVal('covInstdAmtCcy', covAmt ? (covAmt.getAttribute('Ccy') || '') : '');
-
-                    // Ultmt removed
-                    mapAddr(covNode, 'Dbtr', 'covDbtr');
-                    mapAddr(covNode, 'Cdtr', 'covCdtr');
-                    mapAddr(covNode, 'DbtrAgt', 'covDbtrAgt');
-                    mapAddr(covNode, 'CdtrAgt', 'covCdtrAgt');
-                } else {
-                    mapAddr(doc, 'Dbtr', 'covDbtr');
-                    mapAddr(doc, 'Cdtr', 'covCdtr');
-                    mapAddr(doc, 'UltmtCdtr', 'covUltmtCdtr');
-                }
-
-
-                setVal('purpCd', tryTag('Purp', 'Cd') || tval('Purp'));
-                setVal('ctgyPurpCd', tryTag('CtgyPurp', 'Cd') || tval('CtgyPurp'));
-                this.isParsingXml = true;
-                this.form.patchValue(patch, { emitEvent: false });
-                this.isParsingXml = false;
-            } catch (e) {
-                this.isParsingXml = false;
-            }
-        }
-
-        syncScroll(editor: HTMLTextAreaElement, gutter: HTMLDivElement) {
-            gutter.scrollTop = editor.scrollTop;
-        }
-
-        // Validation Modal State
-        showValidationModal = false;
-        validationStatus: 'idle' | 'validating' | 'done' = 'idle';
-        validationReport: any = null;
-        validationExpandedIssue: any = null;
-
-        closeValidationModal() {
-            this.showValidationModal = false;
-            this.validationReport = null;
-            this.validationStatus = 'idle';
-            this.validationExpandedIssue = null;
-        }
-
-        getValidationLayers(): string[] {
-            if (!this.validationReport?.layer_status) return [];
-            return Object.keys(this.validationReport.layer_status).sort();
-        }
-
-        getLayerName(k: string): string {
-            const names: Record<string, string> = { '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' };
-            return names[k] ?? `Layer ${k}`;
-        }
-
-        getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
-        getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
-        isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
-        isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
-        isLayerWarn(k: string) {
-            const s = this.getLayerStatus(k);
-            return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
-        }
-
-        getValidationIssues(): any[] { return this.validationReport?.details ?? []; }
-
-        toggleValidationIssue(issue: any) {
-            this.validationExpandedIssue = this.validationExpandedIssue === issue ? null : issue;
-        }
-
-        copyFix(text: string, e: MouseEvent) {
-            e.stopPropagation();
-            navigator.clipboard.writeText(text).then(() => {
-                this.snackBar.open('Copied!', '', { duration: 1500 });
             });
-        }
 
-
-        viewXmlModal() {
-            this.closeValidationModal();
-            this.switchToPreview();
-        }
-
-        editXmlModal() {
-            this.closeValidationModal();
-            this.currentTab = 'form';
-        }
-
-        runValidationModal() {
-            this.validateMessage();
+            this.generatedXml = formatted.trim();
+            this.refreshLineCount();
+            this.snackBar.open('XML Formatted', '', { duration: 1500 });
+        } catch (e) {
+            this.snackBar.open('Unable to format XML', '', { duration: 3000 });
         }
     }
+
+    toggleCommentXml() {
+        if (!this.generatedXml) return;
+
+        const textarea = document.querySelector('.code-editor') as HTMLTextAreaElement;
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const value = textarea.value;
+
+        this.isInternalChange = true;
+        this.pushHistory();
+
+        // Identify start/end of lines
+        let lineStart = value.lastIndexOf('\n', start - 1) + 1;
+        let lineEnd = value.indexOf('\n', end);
+        if (lineEnd === -1) lineEnd = value.length;
+
+        const selection = value.substring(lineStart, lineEnd);
+        const before = value.substring(0, lineStart);
+        const after = value.substring(lineEnd);
+
+        let newResult = '';
+        const trimmed = selection.trim();
+
+        if (trimmed.startsWith('<!--') && trimmed.endsWith('-->')) {
+            // Uncomment
+            newResult = selection.replace('<!--', '').replace('-->', '');
+        } else {
+            // Comment
+            newResult = `<!-- ${selection} -->`;
+        }
+
+        this.generatedXml = before + newResult + after;
+        this.refreshLineCount();
+
+        setTimeout(() => {
+            textarea.focus();
+            textarea.setSelectionRange(lineStart, lineStart + newResult.length);
+            this.isInternalChange = false;
+        }, 0);
+    }
+
+    parseXmlToForm(content: string) {
+        if (!content?.trim()) {
+            this.isParsingXml = true;
+            const emptyPatch: any = {};
+            Object.keys(this.form.controls).forEach(key => {
+                emptyPatch[key] = '';
+            });
+            this.form.patchValue(emptyPatch, { emitEvent: false });
+            this.isParsingXml = false;
+            return;
+        }
+        try {
+            const cleanXml = content.replace(/<(\/?)(?:[\w]+:)/g, '<$1');
+            const doc = new DOMParser().parseFromString(cleanXml, 'text/xml');
+            if (doc.querySelector('parsererror')) {
+                this.snackBar.open('Invalid XML: Unable to parse content.', 'Close', { duration: 3000 });
+                return;
+            }
+
+            const patch: any = {};
+            const tval = (t: string) => doc.getElementsByTagName(t)[0]?.textContent || '';
+            const setVal = (key: string, val: string) => { patch[key] = val; };
+
+            setVal('bizMsgId', tval('BizMsgIdr'));
+            setVal('msgId', tval('MsgId'));
+            setVal('nbOfTxs', tval('NbOfTxs'));
+            setVal('sttlmMtd', tval('SttlmMtd'));
+            setVal('sttlmDt', tval('IntrBkSttlmDt'));
+
+            // TX fields
+            setVal('instrId', tval('InstrId'));
+            setVal('endToEndId', tval('EndToEndId'));
+            setVal('txId', tval('TxId'));
+            setVal('uetr', tval('UETR'));
+
+            const amtEl = doc.getElementsByTagName('IntrBkSttlmAmt')[0];
+            setVal('amount', amtEl ? (amtEl.textContent || '') : '');
+            setVal('currency', amtEl ? (amtEl.getAttribute('Ccy') || '') : '');
+
+            const mainRmts = doc.getElementsByTagName('RmtInf');
+            // Filter out rmts that are inside UndrlygCstmrCdtTrf
+            const isInsideCov = (node: Node) => {
+                let curr = node.parentNode;
+                while (curr) {
+                    if (curr.nodeName === 'UndrlygCstmrCdtTrf') return true;
+                    curr = curr.parentNode;
+                }
+                return false;
+            };
+            const coreRmts = Array.from(mainRmts).filter(r => !isInsideCov(r));
+            if (coreRmts[0]) {
+                const ustrd = coreRmts[0].getElementsByTagName('Ustrd')[0]?.textContent;
+                if (ustrd) {
+                    setVal('rmtInfType', 'ustrd');
+                    setVal('rmtInfUstrd', ustrd);
+                } else {
+                    const strd = coreRmts[0].getElementsByTagName('Strd')[0];
+                    if (strd) {
+                        setVal('rmtInfType', 'strd');
+                        const ref = strd.getElementsByTagName('CdtrRefInf')[0];
+                        if (ref) {
+                            setVal('rmtInfStrdCdtrRefType', ref.getElementsByTagName('Cd')[0]?.textContent || '');
+                            setVal('rmtInfStrdCdtrRef', ref.getElementsByTagName('Ref')[0]?.textContent || '');
+                        }
+                        setVal('rmtInfStrdAddtlRmtInf', strd.getElementsByTagName('AddtlRmtInf')[0]?.textContent || '');
+                        const rfrdDoc = strd.getElementsByTagName('RfrdDocInf')[0];
+                        if (rfrdDoc) {
+                            setVal('rmtInfStrdRfrdDocNb', rfrdDoc.getElementsByTagName('Nb')[0]?.textContent || '');
+                            setVal('rmtInfStrdRfrdDocCd', rfrdDoc.getElementsByTagName('Tp')[0]?.getElementsByTagName('CdOrPrtry')[0]?.getElementsByTagName('Cd')[0]?.textContent || '');
+                        }
+                        const rfrdAmtNode = strd.getElementsByTagName('RfrdDocAmt')[0];
+                        if (rfrdAmtNode) {
+                            setVal('rmtInfStrdRfrdDocAmt', rfrdAmtNode.getElementsByTagName('RmtAmt')[0]?.getElementsByTagName('DuePyblAmt')[0]?.textContent || '');
+                        }
+                    }
+                }
+            } else {
+                setVal('rmtInfType', 'none');
+            }
+            if (coreRmts[1] && patch['rmtInfType'] === 'ustrd') {
+                setVal('rmtInfUstrd2', coreRmts[1].getElementsByTagName('Ustrd')[0]?.textContent || '');
+            }
+
+            const creDtTm = doc.getElementsByTagName('CreDtTm')[0] || doc.getElementsByTagName('CreDt')[0];
+            setVal('creDtTm', creDtTm ? (creDtTm.textContent || '') : '');
+
+            const tryTag = (parentOrEl: string | Element | Document, child: string): string => {
+                const p = typeof parentOrEl === 'string' ? doc.getElementsByTagName(parentOrEl)[0] : parentOrEl;
+                if (!p) return '';
+                const el = p.getElementsByTagName(child)[0];
+                return el?.textContent || '';
+            };
+
+            const tryAcct = (parentOrEl: string | Element | Document, groupName: string): string => {
+                const p = typeof parentOrEl === 'string' ? doc.getElementsByTagName(parentOrEl)[0] : parentOrEl;
+                const groupEl = p ? p.getElementsByTagName(groupName)[0] : null;
+                if (!groupEl) return '';
+                const idNode = groupEl.getElementsByTagName('Id')[0];
+                if (!idNode) return '';
+                const iban = idNode.getElementsByTagName('IBAN')[0]?.textContent;
+                if (iban) return iban;
+                const othr = idNode.getElementsByTagName('Othr')[0];
+                return othr?.getElementsByTagName('Id')[0]?.textContent || '';
+            };
+
+            setVal('instrPrty', tval('InstrPrty'));
+            setVal('clrChanl', tval('ClrChanl'));
+            setVal('svcLvlCd', tryTag('SvcLvl', 'Cd'));
+            setVal('svcLvlPrtry', tryTag('SvcLvl', 'Prtry'));
+            setVal('lclInstrmCd', tryTag('LclInstrm', 'Cd'));
+            setVal('lclInstrmPrtry', tryTag('LclInstrm', 'Prtry'));
+            setVal('purpCd', tryTag('Purp', 'Cd'));
+
+            const frBic = tryTag('Fr', 'BICFI');
+            const toBic = tryTag('To', 'BICFI');
+            setVal('fromBic', frBic);
+            setVal('toBic', toBic);
+
+            const instgBic = tryTag('InstgAgt', 'BICFI');
+            setVal('instgAgtBic', instgBic || frBic);
+            const instdBic = tryTag('InstdAgt', 'BICFI');
+            setVal('instdAgtBic', instdBic || toBic);
+
+            const mainTx = doc.getElementsByTagName('CdtTrfTxInf')[0] || doc;
+            this.agentPrefixes.forEach(p => {
+                if (p.startsWith('cov')) return; // Handle COV agents separately below
+                let tag = p.charAt(0).toUpperCase() + p.slice(1);
+                if (p === 'dbtrFi') tag = 'Dbtr';
+                if (p === 'cdtrFi') tag = 'Cdtr';
+
+                const agentNode = mainTx.getElementsByTagName(tag)[0];
+                if (agentNode) {
+                    const fi = agentNode.getElementsByTagName('FinInstnId')[0];
+                    if (fi) {
+                        patch[p + 'Bic'] = fi.getElementsByTagName('BICFI')[0]?.textContent || '';
+                        patch[p + 'Name'] = fi.getElementsByTagName('Nm')[0]?.textContent || '';
+                        patch[p + 'Lei'] = fi.getElementsByTagName('LEI')[0]?.textContent || '';
+                    }
+                }
+                const acctVal = tryAcct(mainTx, tag + 'Acct');
+                if (acctVal) patch[p + 'Acct'] = acctVal;
+            });
+
+            // Re-fetch COV specific accounts
+            const allPrefixes = [...this.agentPrefixes, ...this.covPartyPrefixes];
+            const mapAddr = (parent: Element | Document, tag: string, prefix: string) => {
+                ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry', 'AdrLine1', 'AdrLine2', 'AdrTpCd', 'AdrTpPrtry'].forEach(f => patch[prefix + f] = '');
+                patch[prefix + 'AddrType'] = 'none';
+
+                const p = parent.getElementsByTagName(tag)[0];
+                if (!p) return;
+
+                // Handle ID fields
+                const idNode = p.getElementsByTagName('Id')[0];
+                if (idNode) {
+                    const orgId = idNode.getElementsByTagName('OrgId')[0];
+                    if (orgId) {
+                        patch[prefix + 'OrgAnyBIC'] = orgId.getElementsByTagName('AnyBIC')[0]?.textContent || '';
+                    }
+                }
+
+                const addr = p.getElementsByTagName('PstlAdr')[0];
+                if (!addr) return;
+                const aV = (t: string) => addr.getElementsByTagName(t)[0]?.textContent || '';
+                if (aV('Ctry') || aV('TwnNm')) {
+                    patch[prefix + 'AddrType'] = 'structured';
+                    ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry'].forEach(f => patch[prefix + f] = aV(f));
+                } else if (addr.getElementsByTagName('AdrLine').length > 0) {
+                    patch[prefix + 'AddrType'] = 'unstructured';
+                    const lines = addr.getElementsByTagName('AdrLine');
+                    patch[prefix + 'AdrLine1'] = lines[0]?.textContent || '';
+                    patch[prefix + 'AdrLine2'] = lines[1]?.textContent || '';
+                }
+            };
+
+            this.agentPrefixes.filter(p => !p.startsWith('cov')).forEach(p => mapAddr(mainTx, p.charAt(0).toUpperCase() + p.slice(1), p));
+
+            // COV fields identification
+            const covNode = doc.getElementsByTagName('UndrlygCstmrCdtTrf')[0];
+            if (covNode) {
+                const dbtr = covNode.getElementsByTagName('Dbtr')[0];
+                if (dbtr) setVal('covDbtrName', dbtr.getElementsByTagName('Nm')[0]?.textContent || '');
+                setVal('covDbtrAcct', tryAcct(covNode, 'DbtrAcct'));
+
+                const dbtrAgt = covNode.getElementsByTagName('DbtrAgt')[0];
+                if (dbtrAgt) setVal('covDbtrAgtBic', dbtrAgt.getElementsByTagName('BICFI')[0]?.textContent || '');
+                setVal('covDbtrAgtAcct', tryAcct(covNode, 'DbtrAgtAcct'));
+
+                const cdtrAgt = covNode.getElementsByTagName('CdtrAgt')[0];
+                if (cdtrAgt) setVal('covCdtrAgtBic', cdtrAgt.getElementsByTagName('BICFI')[0]?.textContent || '');
+                setVal('covCdtrAgtAcct', tryAcct(covNode, 'CdtrAgtAcct'));
+
+                const cdtr = covNode.getElementsByTagName('Cdtr')[0];
+                if (cdtr) setVal('covCdtrName', cdtr.getElementsByTagName('Nm')[0]?.textContent || '');
+                setVal('covCdtrAcct', tryAcct(covNode, 'CdtrAcct'));
+
+                const instrs = covNode.getElementsByTagName('InstrForCdtrAgt');
+                for (let i = 0; i < 2; i++) {
+                    if (instrs[i]) {
+                        setVal(`covInstrForCdtrAgt${i + 1}Cd`, instrs[i].getElementsByTagName('Cd')[0]?.textContent || '');
+                        setVal(`covInstrForCdtrAgt${i + 1}InfTxt`, instrs[i].getElementsByTagName('InstrInf')[0]?.textContent || '');
+                    }
+                }
+
+                const nxtInstrs = covNode.getElementsByTagName('InstrForNxtAgt');
+                for (let i = 0; i < 6; i++) {
+                    if (nxtInstrs[i]) {
+                        setVal(`covInstrForNxtAgt${i + 1}Cd`, nxtInstrs[i].getElementsByTagName('Cd')[0]?.textContent || '');
+                        setVal(`covInstrForNxtAgt${i + 1}InfTxt`, nxtInstrs[i].getElementsByTagName('InstrInf')[0]?.textContent || '');
+                    }
+                }
+
+                const rmts = covNode.getElementsByTagName('RmtInf');
+                if (rmts[0]) setVal('covRmtInfUstrd', rmts[0].getElementsByTagName('Ustrd')[0]?.textContent || '');
+                if (rmts[1]) setVal('covRmtInfUstrd2', rmts[1].getElementsByTagName('Ustrd')[0]?.textContent || '');
+
+                const covAmt = covNode.getElementsByTagName('InstdAmt')[0];
+                setVal('covInstdAmt', covAmt ? (covAmt.textContent || '') : '');
+                setVal('covInstdAmtCcy', covAmt ? (covAmt.getAttribute('Ccy') || '') : '');
+
+                mapAddr(covNode, 'Dbtr', 'covDbtr');
+                mapAddr(covNode, 'Cdtr', 'covCdtr');
+                mapAddr(covNode, 'DbtrAgt', 'covDbtrAgt');
+                mapAddr(covNode, 'CdtrAgt', 'covCdtrAgt');
+            } else {
+                mapAddr(doc, 'Dbtr', 'covDbtr');
+                mapAddr(doc, 'Cdtr', 'covCdtr');
+                mapAddr(doc, 'UltmtCdtr', 'covUltmtCdtr');
+            }
+
+            setVal('purpCd', tryTag('Purp', 'Cd') || tval('Purp'));
+            setVal('ctgyPurpCd', tryTag('CtgyPurp', 'Cd') || tval('CtgyPurp'));
+            this.isParsingXml = true;
+            this.form.patchValue(patch, { emitEvent: false });
+            this.isParsingXml = false;
+        } catch (e) {
+            this.isParsingXml = false;
+        }
+    }
+
+    syncScroll(editor: HTMLTextAreaElement, gutter: HTMLDivElement) {
+        gutter.scrollTop = editor.scrollTop;
+    }
+
+    // Validation Modal State
+    showValidationModal = false;
+    validationStatus: 'idle' | 'validating' | 'done' = 'idle';
+    validationReport: any = null;
+    validationExpandedIssue: any = null;
+
+    closeValidationModal() {
+        this.showValidationModal = false;
+        this.validationReport = null;
+        this.validationStatus = 'idle';
+        this.validationExpandedIssue = null;
+    }
+
+    getValidationLayers(): string[] {
+        if (!this.validationReport?.layer_status) return [];
+        return Object.keys(this.validationReport.layer_status).sort();
+    }
+
+    getLayerName(k: string): string {
+        const names: Record<string, string> = { '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' };
+        return names[k] ?? `Layer ${k}`;
+    }
+
+    getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
+    getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
+    isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
+    isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
+    isLayerWarn(k: string) {
+        const s = this.getLayerStatus(k);
+        return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+    }
+
+    getValidationIssues(): any[] { return this.validationReport?.details ?? []; }
+
+    toggleValidationIssue(issue: any) {
+        this.validationExpandedIssue = this.validationExpandedIssue === issue ? null : issue;
+    }
+
+    copyFix(text: string, e: MouseEvent) {
+        e.stopPropagation();
+        navigator.clipboard.writeText(text).then(() => {
+            this.snackBar.open('Copied!', '', { duration: 1500 });
+        });
+    }
+
+    viewXmlModal() {
+        this.closeValidationModal();
+        this.switchToPreview();
+    }
+
+    editXmlModal() {
+        this.closeValidationModal();
+        this.currentTab = 'form';
+    }
+
+    runValidationModal() {
+        this.validateMessage();
+    }
+}
+
