@@ -9,6 +9,8 @@ import { Pacs9Component } from './pages/manual-entry/pacs9/pacs9.component';
 import { Pacs9CovComponent } from './pages/manual-entry/pacs9cov/pacs9cov.component';
 import { Pacs4Component } from './pages/manual-entry/pacs4/pacs4.component';
 import { Camt057Component } from './pages/manual-entry/camt057/camt057.component';
+import { Pain001Component } from './pages/manual-entry/pain001/pain001.component';
+import { Pain002Component } from './pages/manual-entry/pain002/pain002.component';
 import { ManualEntryComponent } from './pages/manual-entry/manual-entry.component';
 import { MtToMxComponent } from './pages/mt-to-mx/mt-to-mx.component';
 
@@ -24,6 +26,8 @@ export const routes: Routes = [
     { path: 'generate/pacs9cov', component: Pacs9CovComponent },
     { path: 'generate/pacs4', component: Pacs4Component },
     { path: 'generate/camt57', component: Camt057Component },
+    { path: 'generate/pain001', component: Pain001Component },
+    { path: 'generate/pain002', component: Pain002Component },
     { path: 'mt-to-mx', component: MtToMxComponent },
     { path: '**', redirectTo: '' }
 ];

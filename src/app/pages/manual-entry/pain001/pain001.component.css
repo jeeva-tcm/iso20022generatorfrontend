@@ -9,6 +9,13 @@
     padding: 1.25rem 1.5rem 3rem;
     box-sizing: border-box;
     transition: background-color 0.3s ease, color 0.3s ease;
+    
+    --editor-bg: #1e1e1e;
+    --editor-gutter: #252525;
+    --editor-gutter-text: #858585;
+    --editor-text: #d4d4d4;
+    --editor-thumb: rgba(255, 255, 255, 0.1);
+    --editor-thumb-hover: rgba(255, 255, 255, 0.2);
 }
 
 /* Force light theme variables correctly if they are shadowed */
@@ -27,16 +34,13 @@
     --accent-color: #6366f1;
 }
 
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-}
-
-label {
-    text-transform: none !important;
 }
 
 .container {
@@ -321,7 +325,6 @@ textarea {
 .line-numbers {
     width: 45px;
     height: 100%;
-    flex-shrink: 0;
     background: var(--editor-gutter);
     color: var(--editor-gutter-text);
     padding: 1rem 0;
@@ -351,9 +354,8 @@ textarea.code-editor {
     padding: 1rem;
     resize: none;
     outline: none;
-    overflow: auto;
+    overflow-x: auto;
     white-space: pre;
-    tab-size: 4;
 }
 
 textarea.code-editor::-webkit-scrollbar {
@@ -387,16 +389,21 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     border-radius: 10px;
     box-shadow: var(--shadow-lg);
 }
-.up,.down{
+.up, .down {
     display: flex;
     flex-direction: row;
     gap: .6rem;
     justify-content: center;
 }
-.up{
+
+.down {
     justify-content: flex-end;
-    margin-bottom: .5rem;
-    margin-top: -1rem;
+}
+
+.editor-header .up {
+    justify-content: flex-end;
+    width: 100%;
+    padding: 2px 5px;
 }
 /* Spinner */
 .spinner-row {
@@ -600,6 +607,70 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     font-size: .75rem;
     color: var(--text-muted);
     margin: 0;
+}
+
+.lay.editor-wrapper {
+    display: flex;
+    background: var(--editor-bg);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    height: 600px;
+    overflow: hidden;
+    position: relative;
+}
+
+.line-numbers {
+    width: 45px;
+    height: 100%;
+    background: var(--editor-gutter);
+    color: var(--editor-gutter-text);
+    padding: 1rem 0;
+    text-align: right;
+    font-family: 'JetBrains Mono', Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.55;
+    user-select: none;
+    padding-right: 12px;
+    border-right: 1px solid var(--border-light);
+    overflow: hidden;
+}
+
+.line-numbers div {
+    padding: 0 4px;
+}
+
+.code-editor {
+    flex: 1;
+    height: 100%;
+    background: transparent;
+    border: none;
+    padding: 1rem;
+    color: var(--editor-text);
+    font-family: 'JetBrains Mono', Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.55;
+    resize: none;
+    outline: none;
+    overflow-x: auto;
+    white-space: pre;
+}
+
+.code-editor::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.code-editor::-webkit-scrollbar-track {
+    background: var(--editor-bg);
+}
+
+.code-editor::-webkit-scrollbar-thumb {
+    background: var(--editor-thumb);
+    border-radius: 5px;
+}
+
+.code-editor::-webkit-scrollbar-thumb:hover {
+    background: var(--editor-thumb-hover);
 }
 
 .layer-item {
@@ -1337,44 +1408,128 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     animation: fadeIn 0.2s ease;
 }
 
-
-/* ── Party Group (one agent/party section) ── */
-.party-group {
-    grid-column: 1 / -1;
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: 8px;
-    padding: 0;
-    margin: 0.2rem 0.5rem 1.2rem 5px; /* Added 5px left margin here */
-    overflow: hidden;
-}
-
-.party-group-title {
-    background: var(--bg-card-hover);
-    padding: 0.6rem 1rem;
-    font-size: 0.72rem;
-    font-weight: 800;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-bottom: 1px solid var(--border-light);
+/* ════ Transactions Section ════ */
+.btn-add-tx {
+    margin-left: auto;
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 700;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 12px rgba(129, 140, 248, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.party-group-title.mandatory {
-    color: var(--accent-color);
+.btn-add-tx:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 15px rgba(129, 140, 248, 0.4);
 }
 
-.party-grid {
-    padding: 1rem 1.5rem;
+.btn-add-tx:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.btn-add-tx mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.tx-array {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 0.5rem;
+}
+
+.tx-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+    animation: slideIn 0.4s ease-out;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.tx-card:hover {
+    border-color: var(--accent-color);
+    box-shadow: var(--shadow-md);
+    transform: translateX(4px);
+}
+
+.tx-card-header {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 10px 1.25rem;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tx-card-header span {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--text-main);
+    letter-spacing: 1px;
+}
+
+.btn-remove-tx {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-remove-tx:hover {
+    background: #ef4444;
+    color: white;
+    transform: rotate(90deg);
+}
+
+.btn-remove-tx mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.tx-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 0.8rem 1.25rem;
+    gap: 1rem 1.5rem;
+    padding: 1.25rem;
 }
 
-/* Ensure consistent spacing in party-grid */
-.party-grid .form-group {
-    margin-bottom: 0;
+/* Light Theme overrides for transactions */
+body.light-theme .tx-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+}
+
+body.light-theme .tx-card-header {
+    background: #f8fafc;
+}
+
+body.light-theme .tx-card:hover {
+    border-color: #6366f1;
 }
