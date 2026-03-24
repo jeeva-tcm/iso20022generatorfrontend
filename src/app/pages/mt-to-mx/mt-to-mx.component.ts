@@ -5,12 +5,14 @@ import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { ConfigService } from '../../services/config.service';
 
 @Component({
     selector: 'app-mt-to-mx',
     standalone: true,
-    imports: [CommonModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule],
+    imports: [CommonModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, MatSelectModule, MatFormFieldModule],
     templateUrl: './mt-to-mx.component.html',
     styleUrl: './mt-to-mx.component.css'
 })
