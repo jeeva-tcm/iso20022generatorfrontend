@@ -122,7 +122,7 @@
     display: flex !important;
     align-items: center;
     gap: 2px;
-    cursor: pointer;
+    cursor: default;
 }
 
 .dropdown-arrow {
@@ -138,22 +138,24 @@
 
 .dropdown-menu {
     position: absolute;
-    top: calc(100% + 8px);
+    top: calc(100% + 4px);
     left: 50%;
     transform: translateX(-50%) translateY(10px);
     width: 250px;
     background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border-light);
-    border-radius: 12px;
-    padding: 4px;
-    box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.4);
+    border-radius: 16px;
+    padding: 6px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 2000;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
 }
 
 .dropdown-wrapper:hover .dropdown-menu {
@@ -162,24 +164,32 @@
     transform: translateX(-50%) translateY(0);
 }
 
+/* Specific theme refinements for glassmorphism */
+:host-context(.light-theme) .dropdown-menu {
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+}
+
 .category-item {
     position: relative;
+    border-radius: 12px;
 }
 
 .category-link {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 8px 12px;
-    border-radius: 10px;
+    padding: 10px 14px;
+    border-radius: 12px;
     color: var(--text-muted);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .category-link:hover {
     background: var(--bg-card-hover);
     color: var(--text-main);
+    transform: translateX(2px);
 }
 
 .cat-info {
@@ -189,22 +199,23 @@
 }
 
 .cat-title {
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     font-weight: 700;
     color: var(--text-main);
 }
 
 .cat-desc {
-    font-size: 0.62rem;
+    font-size: 0.65rem;
     color: var(--text-muted);
     opacity: 0.7;
 }
 
 .cat-arrow {
-    font-size: 14px;
-    width: 14px;
-    height: 14px;
-    color: var(--border-light);
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: var(--text-muted);
+    opacity: 0.3;
 }
 
 /* Submenu Positioned to the right */
@@ -215,22 +226,29 @@
 .submenu {
     position: absolute;
     left: calc(100% + 4px);
-    top: -4px;
+    top: -6px;
     width: 280px;
     background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border-light);
-    border-radius: 12px;
-    padding: 4px;
-    box-shadow: 20px 20px 50px rgba(0, 0, 0, 0.3);
+    border-radius: 16px;
+    padding: 6px;
+    box-shadow: 20px 20px 60px rgba(0, 0, 0, 0.4);
     opacity: 0;
     visibility: hidden;
     transform: translateX(-10px);
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    max-height: 70vh;
+    gap: 4px;
+    max-height: 80vh;
     overflow-y: auto;
+}
+
+:host-context(.light-theme) .submenu {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 10px 10px 40px rgba(0, 0, 0, 0.05);
 }
 
 .category-item:hover .submenu {
@@ -242,39 +260,33 @@
 .submenu a {
     display: flex;
     align-items: center;
-    padding: 8px 12px;
-    border-radius: 10px;
+    padding: 10px 14px;
+    border-radius: 12px;
     color: var(--text-muted);
     text-decoration: none;
-    transition: all 0.15s ease;
+    transition: all 0.2s ease;
 }
 
 .submenu a:hover {
     background: var(--bg-card-hover);
     color: var(--text-main);
+    transform: translateX(4px);
 }
 
 .submenu a.active-link {
     background: var(--primary-gradient) !important;
     color: #ffffff !important;
-}
-
-.submenu a.active-link .msg-id {
-    color: #ffffff !important;
-}
-
-.submenu a.active-link .msg-desc {
-    color: rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .msg-info {
     display: flex;
     flex-direction: column;
-    gap: 0;
+    gap: 1px;
 }
 
 .msg-id {
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     font-weight: 700;
     color: var(--text-main);
 }

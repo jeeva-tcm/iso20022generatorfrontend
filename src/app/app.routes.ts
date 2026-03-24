@@ -33,9 +33,9 @@ export const routes: Routes = [
     { path: 'generate/pacs4', component: Pacs4Component },
     { path: 'generate/pacs2', component: Pacs2Component },
     { path: 'generate/camt57', component: Camt057Component },
-    { path: 'generate/:type', component: ManualEntryComponent },
     { path: 'generate/pain001', component: Pain001Component },
     { path: 'generate/pain002', component: Pain002Component },
+    { path: 'generate/:type', component: ManualEntryComponent },
     { path: 'mt-to-mx', component: MtToMxComponent },
     { path: '**', redirectTo: '' }
 ];

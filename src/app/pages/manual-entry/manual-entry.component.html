@@ -6,27 +6,7 @@
             <p>Building ISO 20022 message blueprints</p>
         </div>
 
-        <div class="me-controls">
-            <!-- Search Box -->
-            <div class="search-container">
-                <mat-icon class="search-icon">search</mat-icon>
-                <input type="text" class="search-msg-type" placeholder="Find Message Type (e.g. pacs.008)"
-                    [(ngModel)]="searchQuery" (input)="onSearchInput()" (focus)="showSuggestions = true"
-                    (blur)="onBlur()">
-
-                <div class="autocomplete-results" *ngIf="showSuggestions && filteredTypes.length > 0">
-                    <div class="autocomplete-item" *ngFor="let type of filteredTypes" (mousedown)="selectType(type)">
-                        {{type}}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Export Actions -->
-            <button class="btn-generate" [disabled]="!selectedType || loading" (click)="downloadXml()">
-                <mat-icon>download</mat-icon>
-                Export XML
-            </button>
-        </div>
+        
     </header>
 
     <!-- Toggle / Breadcrumb Bar -->

@@ -40,7 +40,7 @@ export class Pacs9AdvComponent implements OnInit {
     countries: string[] = [];
     categoryPurposes: string[] = [];
     purposes: string[] = [];
-    sttlmMethods = ['COVE'];
+    sttlmMethods = ['COVE', 'INDA', 'INGA', 'CLRG'];
 
     agentPrefixes = ['instgAgt', 'instdAgt', 'dbtrFi', 'cdtrFi', 'dbtrAgt', 'cdtrAgt',
         'prvsInstgAgt1', 'prvsInstgAgt2', 'prvsInstgAgt3',
@@ -337,13 +337,20 @@ export class Pacs9AdvComponent implements OnInit {
             if (f.toLowerCase().includes('bic')) return 'Valid 8 or 11-char BIC required.';
             if (f.toLowerCase().includes('iban')) return 'Valid 34-char IBAN required.';
             if (f.toLowerCase().includes('uetr')) return 'Invalid UETR format';
-            if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Amount must be > 0 (max 18 digits).';
-            if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
+            if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) {
+                const ccy = this.form.get('currency')?.value;
+                if (ccy === 'USD' || ccy === 'EUR' || ccy === 'GBP') {
+                    return 'Amount must be a valid number (max 2 decimals).';
+                }
+                return 'Amount must be > 0 (max 18 digits).';
+            }
+            if (f === 'nbOfTxs') return "Must be '1' for pacs.009 Advice.";
             if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId') return 'Invalid Pattern.';
             if (f === 'clrSysRef') return 'Alphanumeric only (1-35 characters, no special chars).';
             if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Must be a valid ISO 20022 code (4 uppercase letters).';
             if (f === 'instrPrty') return 'Invalid Priority. Must be HIGH or NORM.';
             if (f === 'sttlmPrty') return 'Invalid Settlement Priority. Must be HIGH or NORM.';
+            if (f === 'sttlmMtd') return "Settlement Method must be one of the standard codes (e.g., COVE, INDA, INGA, CLRG). Note: 'COVE' is required for pacs.009 Advice.";
             if (f === 'clrChanl') return 'Invalid Clearing Channel. Must be BOOK, MPNS, RTGS, or RTNS.';
             if (f === 'svcLvlCd') return 'Invalid Service Level Code. Must be 1-4 alphanumeric characters.';
             if (f === 'svcLvlPrtry') return 'Invalid Proprietary Service Level. Up to 35 characters allowed.';
@@ -535,7 +542,13 @@ export class Pacs9AdvComponent implements OnInit {
         if (v.ctgyPurpCd?.trim()) pmtTpXml += this.tag('CtgyPurp', this.el('Cd', v.ctgyPurpCd, 5), 4);
         else if (v.ctgyPurpPrtry?.trim()) pmtTpXml += this.tag('CtgyPurp', this.el('Prtry', v.ctgyPurpPrtry, 5), 4);
         if (pmtTpXml) tx += this.tag('PmtTpInf', pmtTpXml, 3);
-        const formattedAmt = v.amount ? Number(v.amount).toFixed(v.currency === 'EUR' ? 2 : 5) : '';
+        const getPrecision = (ccy: string) => {
+            if (['JPY', 'HUF', 'KRW', 'VND'].includes(ccy)) return 0;
+            if (['JOD', 'KWD', 'BHD', 'TND', 'OMR'].includes(ccy)) return 3;
+            return 2;
+        };
+        const precision = getPrecision(v.currency);
+        const formattedAmt = v.amount ? Number(v.amount).toFixed(precision) : '';
         tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${formattedAmt}</IntrBkSttlmAmt>\n`;
         tx += this.el('IntrBkSttlmDt', v.sttlmDt, 3);
         if (v.sttlmPrty?.trim()) tx += this.el('SttlmPrty', v.sttlmPrty, 3);
