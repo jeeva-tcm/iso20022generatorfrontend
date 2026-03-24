@@ -92,10 +92,10 @@
                     <mat-icon>input</mat-icon> MT Input (SWIFT FIN)
                 </div>
                 <div class="panel-actions">
-                    <button class="icon-btn" (click)="undo('mt')" [disabled]="!canUndo('mt')" matTooltip="Undo (Ctrl+Z)">
+                    <button class="icon-btn" data-tooltip="Undo (Ctrl+Z)" (click)="undo('mt')" [disabled]="!canUndo('mt')">
                         <mat-icon>undo</mat-icon>
                     </button>
-                    <button class="icon-btn" (click)="redo('mt')" [disabled]="!canRedo('mt')" matTooltip="Redo (Ctrl+Y)">
+                    <button class="icon-btn" data-tooltip="Redo (Ctrl+Y)" (click)="redo('mt')" [disabled]="!canRedo('mt')">
                         <mat-icon>redo</mat-icon>
                     </button>
                 </div>
@@ -140,22 +140,22 @@
                     <mat-icon>output</mat-icon> MX Output (ISO 20022 XML)
                 </div>
                 <div class="panel-actions" *ngIf="mxOutput.trim()">
-                    <button class="icon-btn" (click)="undo('mx')" [disabled]="!canUndo('mx')" matTooltip="Undo">
+                    <button class="icon-btn" data-tooltip="Undo" (click)="undo('mx')" [disabled]="!canUndo('mx')">
                         <mat-icon>undo</mat-icon>
                     </button>
-                    <button class="icon-btn" (click)="redo('mx')" [disabled]="!canRedo('mx')" matTooltip="Redo">
+                    <button class="icon-btn" data-tooltip="Redo" (click)="redo('mx')" [disabled]="!canRedo('mx')">
                         <mat-icon>redo</mat-icon>
                     </button>
-                    <button class="icon-btn" (click)="formatXml()" matTooltip="Prettify XML">
+                    <button class="icon-btn" data-tooltip="Prettify XML" (click)="formatXml()">
                         <mat-icon>format_align_left</mat-icon>
                     </button>
-                    <button class="icon-btn" (click)="copyMxToClipboard()" matTooltip="Copy XML">
+                    <button class="icon-btn" data-tooltip="Copy XML" (click)="copyMxToClipboard()">
                         <mat-icon>content_copy</mat-icon>
                     </button>
-                    <button class="icon-btn" (click)="downloadMx()" matTooltip="Download XML">
+                    <button class="icon-btn" data-tooltip="Download XML" (click)="downloadMx()">
                         <mat-icon>download</mat-icon>
                     </button>
-                    <button class="icon-btn validate-icon-btn" (click)="validateMx()" matTooltip="Validate MX">
+                    <button class="icon-btn validate-icon-btn" data-tooltip="Validate MX" (click)="validateMx()">
                         <mat-icon>verified</mat-icon>
                     </button>
                 </div>

@@ -743,6 +743,16 @@ export class MtToMxComponent implements OnInit {
 \t\t\t\t\t\t<BICFI>${this.esc(dbtrBic)}</BICFI>
 \t\t\t\t\t</FinInstnId>
 \t\t\t\t</Dbtr>
+\t\t\t\t<DbtrAgt>
+\t\t\t\t\t<FinInstnId>
+\t\t\t\t\t\t<BICFI>${this.esc(senderBic)}</BICFI>
+\t\t\t\t\t</FinInstnId>
+\t\t\t\t</DbtrAgt>
+\t\t\t\t<CdtrAgt>
+\t\t\t\t\t<FinInstnId>
+\t\t\t\t\t\t<BICFI>${this.esc(receiverBic)}</BICFI>
+\t\t\t\t\t</FinInstnId>
+\t\t\t\t</CdtrAgt>
 \t\t\t\t<Cdtr>
 \t\t\t\t\t<FinInstnId>
 \t\t\t\t\t\t<BICFI>${this.esc(cdtrBic)}</BICFI>
