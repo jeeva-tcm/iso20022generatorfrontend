@@ -49,9 +49,6 @@ export class ManualEntryComponent implements OnInit {
 
     previewXml = '';
 
-<<<<<<< HEAD
-    constructor(private http: HttpClient, private config: ConfigService, private snackBar: MatSnackBar, private route: ActivatedRoute) { }
-=======
     popularMessages = [
         { id: 'pacs.008.001.08', name: 'Customer Credit Transfer', type: 'pacs', route: 'pacs8' },
         { id: 'pacs.003.001.08', name: 'Customer Direct Debit', type: 'pacs', route: 'pacs3' },
@@ -64,12 +61,12 @@ export class ManualEntryComponent implements OnInit {
     ];
 
     constructor(
-        private http: HttpClient, 
-        private config: ConfigService, 
+        private http: HttpClient,
+        private config: ConfigService,
         private snackBar: MatSnackBar,
+        private route: ActivatedRoute,
         private router: Router
     ) { }
->>>>>>> ea165fc1f775981b9388ee0615db18a6eee44d64
 
     ngOnInit() {
         this.fetchMessageTypes();
@@ -79,7 +76,7 @@ export class ManualEntryComponent implements OnInit {
             }
         });
     }
-    
+
     gotoMessage(route: string) {
         this.router.navigate(['/generate', route]);
     }
