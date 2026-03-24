@@ -14,8 +14,7 @@
 
         <!-- Manual Entry Dropdown -->
         <div class="dropdown-wrapper" (mouseleave)="isMenuForcedClosed = false">
-            <a mat-button class="dropdown-trigger" routerLink="/generate" routerLinkActive="active-link"
-                [routerLinkActiveOptions]="{exact: false}" [class.active-link]="isManualEntryActive">
+            <a mat-button class="dropdown-trigger" [class.active-link]="isManualEntryActive" style="cursor: default;">
                 MANUAL ENTRY <mat-icon class="dropdown-arrow">expand_more</mat-icon>
             </a>
             <div class="dropdown-menu" [class.hide-menu]="isMenuForcedClosed">
