@@ -35,6 +35,7 @@ export class Camt057Component implements OnInit {
     private isInternalChange = false;
 
     currencies: string[] = [];
+    currencyPrecision: { [key: string]: number } = {};
     countries: string[] = [];
     categoryPurposes: string[] = [];
     purposes: string[] = [];
@@ -59,14 +60,19 @@ export class Camt057Component implements OnInit {
         this.buildForm();
         this.generateXml();
         this.onEditorChange(this.generatedXml, true);
+        this.form.get('currency')?.valueChanges.subscribe(() => {
+            this.updateAmountValidator();
+            this.updateClearingSystemValidation();
+        });
+
         this.form.valueChanges.subscribe(() => {
             this.updateConditionalValidators();
-            this.updateClearingSystemValidation();
             this.generateXml();
         });
 
         // Init history
         this.pushHistory();
+        this.updateAmountValidator();
     }
 
     private updateClearingSystemValidation() {
@@ -178,6 +184,8 @@ export class Camt057Component implements OnInit {
             next: (res) => {
                 if (res && res.codes) {
                     this.currencies = res.codes;
+                    this.currencyPrecision = res.currencies || {};
+                    this.updateAmountValidator();
                 }
             },
             error: (err) => console.error('Failed to load currencies', err)
@@ -209,6 +217,19 @@ export class Camt057Component implements OnInit {
             error: (err) => console.error('Failed to load purposes', err)
         });
 
+    }
+
+    private updateAmountValidator() {
+        const ccy = this.form.get('currency')?.value;
+        const precision = this.currencyPrecision[ccy] ?? 2;
+        const amountCtrl = this.form.get('amount');
+        
+        const pattern = precision > 0 
+            ? new RegExp(`^\\d{1,13}(\\.\\d{1,${precision}})?$`)
+            : new RegExp(`^\\d{1,13}$`);
+        
+        amountCtrl?.setValidators([Validators.required, Validators.pattern(pattern)]);
+        amountCtrl?.updateValueAndValidity({ emitEvent: false });
     }
 
     private buildForm() {
@@ -302,6 +323,11 @@ export class Camt057Component implements OnInit {
         if (c.errors?.['required']) return 'Required field.';
         if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
         if (c.errors?.['pattern']) {
+            if (f === 'amount') {
+                const ccy = this.form.get('currency')?.value;
+                const p = this.currencyPrecision[ccy] ?? 2;
+                return `Value must be a number with max ${p} decimals for ${ccy}.`;
+            }
             // Precedence: If we're at the limit and pattern is invalid, let the limit hint take precedence
             if (this.showMaxLenWarning[f]) {
               const val = c.value?.toString() || '';
@@ -574,8 +600,7 @@ export class Camt057Component implements OnInit {
         if (v.clrSysRef?.trim()) {
             itmXml += `\t\t\t\t\t<PmtId>\n\t\t\t\t\t\t<ClrSysRef>${this.e(v.clrSysRef)}</ClrSysRef>\n\t\t\t\t\t</PmtId>\n`;
         }
-        const formattedAmt = v.amount ? Number(v.amount).toFixed(v.currency === 'EUR' ? 2 : 5) : '';
-        itmXml += `\t\t\t\t\t<Amt Ccy="${this.e(v.currency)}">${formattedAmt}</Amt>\n`;
+        itmXml += `\t\t\t\t\t<Amt Ccy="${this.e(v.currency)}">${this.e(v.amount)}</Amt>\n`;
         itmXml += `\t\t\t\t\t<XpctdValDt>${v.valDt}</XpctdValDt>\n`;
 
         if (v.purpCd?.trim()) itmXml += `\t\t\t\t\t<Purp>\n\t\t\t\t\t\t<Cd>${this.e(v.purpCd)}</Cd>\n\t\t\t\t\t</Purp>\n`;
@@ -1076,8 +1101,8 @@ ${ntfctnPartiesXml}${itmXml}
             if (v[p + 'PstCd']) lines.push(`${t}<PstCd>${this.e(v[p + 'PstCd'])}</PstCd>`);
             if (v[p + 'TwnNm']) lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'])}</TwnNm>`);
             if (v[p + 'CtrySubDvsn']) lines.push(`${t}<CtrySubDvsn>${this.e(v[p + 'CtrySubDvsn'])}</CtrySubDvsn>`);
-            if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
         }
+        if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
         if (type === 'unstructured' || type === 'hybrid') {
             if (v[p + 'AdrLine1']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine1'])}</AdrLine>`);
             if (v[p + 'AdrLine2']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine2'])}</AdrLine>`);

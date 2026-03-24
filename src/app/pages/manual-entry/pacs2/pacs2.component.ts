@@ -34,6 +34,7 @@ export class Pacs2Component implements OnInit {
   editorLineCount: number[] = [1];
   xmlHistory: string[] = [];
   xmlHistoryIdx = -1;
+  maxHistory = 50;
 
   countries: string[] = [];
   statusCodes = ['ACTC', 'ACCP', 'RJCT', 'PDNG'];
@@ -86,32 +87,32 @@ export class Pacs2Component implements OnInit {
   }
 
   buildForm() {
-    const BIC = [Validators.required, Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
-    const BIC_OPT = [Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
-    const UETR_PATTERN = Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/);
+    const BIC = [Validators.required, Validators.maxLength(11), Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
+    const BIC_OPT = [Validators.maxLength(11), Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
+    const UETR_PATTERN = [Validators.required, Validators.maxLength(36), Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)];
 
     this.form = this.fb.group({
       // AppHdr
       fromBic: ['BBBBUS33XXX', BIC],
       toBic: ['CCCCGB2LXXX', BIC],
-      bizMsgId: ['MSG-2026-FI-S-001', Validators.required],
+      bizMsgId: ['MSG-2026-FI-S-001', [Validators.required, Validators.maxLength(35)]],
       msgDefIdr: ['pacs.002.001.10', Validators.required],
       bizSvc: ['swift.cbprplus.02', Validators.required],
       creDtTm: [this.isoNow(), Validators.required],
 
       // GrpHdr
-      msgId: ['MSG-2026-FI-S-001-GH', Validators.required],
+      msgId: ['MSG-2026-FI-S-001-GH', [Validators.required, Validators.maxLength(35)]],
 
       // OrgnlGrpInf
-      orgnlMsgId: ['MSG-' + Date.now() + '-ORG', Validators.required],
+      orgnlMsgId: ['MSG-' + Date.now() + '-ORG', [Validators.required, Validators.maxLength(35)]],
       orgnlMsgNmId: ['pacs.008.001.08', Validators.required],
       orgnlCreDtTm: [this.isoNow(), Validators.required],
 
       // TxRef
-      orgnlInstrId: [''],
-      orgnlEndToEndId: [''],
-      orgnlTxId: [''],
-      orgnlUETR: [this.uetrService.generate(), [Validators.required, UETR_PATTERN]],
+      orgnlInstrId: ['', Validators.maxLength(35)],
+      orgnlEndToEndId: ['', Validators.maxLength(35)],
+      orgnlTxId: ['', Validators.maxLength(35)],
+      orgnlUETR: [this.uetrService.generate(), UETR_PATTERN],
 
       // TxSts
       txSts: ['ACTC', Validators.required],
@@ -520,6 +521,21 @@ ${txInf.trimEnd()}
     this.snackBar.open('New UETR Generated', '', { duration: 1500 });
   }
 
+  onUetrPaste(event: ClipboardEvent): void {
+    event.preventDefault();
+    const pastedText = event.clipboardData?.getData('text') || '';
+    const cleanUetr = pastedText.trim().toLowerCase();
+    this.form.patchValue({ orgnlUETR: cleanUetr });
+    this.validateManualUetr();
+  }
+
+  validateManualUetr(): void {
+    const uetrValue = this.form.get('orgnlUETR')?.value;
+    if (uetrValue && !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uetrValue)) {
+      this.snackBar.open('Manual UETR might not be valid RFC 4122 v4', 'OK', { duration: 3000 });
+    }
+  }
+
   downloadXml() {
     this.generateXml();
     const blob = new Blob([this.generatedXml], { type: 'application/xml' });
@@ -534,5 +550,56 @@ ${txInf.trimEnd()}
   copyXml() {
     navigator.clipboard.writeText(this.generatedXml);
     this.snackBar.open('XML Copied!', 'Close', { duration: 2000 });
+  }
+
+  closeValidationModal() { this.showValidationModal = false; }
+  getValidationLayers() { return this.validationReport?.layer_status ? Object.keys(this.validationReport.layer_status) : []; }
+  isLayerPass(k: string) {
+    const s = this.getLayerStatus(k);
+    return s.includes('✅') || s === 'PASS' || s === 'SUCCESS';
+  }
+  isLayerFail(k: string) {
+    const s = this.getLayerStatus(k);
+    return s.includes('❌') || s === 'FAIL' || s === 'ERROR';
+  }
+  isLayerWarn(k: string) {
+    const s = this.getLayerStatus(k);
+    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+  }
+  getLayerName(k: string) { const m: any = { '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' }; return m[k] || `Layer ${k}`; }
+  getLayerTime(k: string) { return this.validationReport.layer_status[k]?.time || 0; }
+  getLayerStatus(k: string) { return this.validationReport?.layer_status[k]?.status || 'IDLE'; }
+  getValidationIssues() { return this.validationReport?.details || []; }
+  toggleValidationIssue(i: any) { this.validationExpandedIssue = this.validationExpandedIssue === i ? null : i; }
+
+  viewXmlModal() {
+    this.closeValidationModal();
+    // In pacs2, there's no tab system shown in the other files for preview, 
+  }
+
+  editXmlModal() {
+    this.closeValidationModal();
+  }
+
+  runValidationModal() {
+    this.validateMessage();
+  }
+
+  copyFix(suggestion: string, event: Event) {
+    event.stopPropagation();
+    navigator.clipboard.writeText(suggestion).then(() => {
+      this.snackBar.open('Fix suggestion copied!', 'Close', { duration: 2000 });
+    });
+  }
+
+  copyToClipboard() {
+    this.copyXml();
+  }
+
+  hint(f: string, maxLen: number): string | null {
+    const c = this.form.get(f);
+    if (!c || !c.value) return null;
+    const len = c.value.toString().length;
+    return len > maxLen ? `Maximum ${maxLen} characters reached (${len}/${maxLen})` : null;
   }
 }
