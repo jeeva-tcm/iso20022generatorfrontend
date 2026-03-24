@@ -207,6 +207,110 @@
     margin-bottom: 24px;
 }
 
+/* ──────────────── POPULAR GRID ──────────────── */
+.popular-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+    margin-top: 32px;
+}
+
+.popular-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.popular-card:hover {
+    border-color: var(--accent-color);
+    box-shadow: 0 8px 25px rgba(79, 70, 229, 0.1);
+    transform: translateY(-4px);
+}
+
+.pop-tag {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.55rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    background: rgba(0,0,0,0.05);
+}
+
+.pop-tag.pacs { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
+.pop-tag.pain { background: rgba(236, 72, 153, 0.1); color: #ec4899; }
+.pop-tag.camt { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+
+.pop-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.pop-id {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.pop-name {
+    font-size: 11px;
+    color: var(--text-muted);
+    opacity: 0.8;
+}
+
+.pop-go {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    color: var(--border-light);
+    transition: color 0.2s;
+}
+
+.popular-card:hover .pop-go {
+    color: var(--accent-color);
+}
+
+.section-divider {
+    margin: 48px 0 32px;
+    position: relative;
+    text-align: center;
+}
+
+.section-divider::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 1px;
+    background: var(--border-light);
+    z-index: 1;
+}
+
+.section-divider span {
+    background: var(--bg-app);
+    color: var(--text-muted);
+    padding: 0 16px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    position: relative;
+    z-index: 2;
+}
+
+
 .family-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));

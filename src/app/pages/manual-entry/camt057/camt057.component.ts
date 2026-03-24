@@ -574,7 +574,7 @@ export class Camt057Component implements OnInit {
         if (v.clrSysRef?.trim()) {
             itmXml += `\t\t\t\t\t<PmtId>\n\t\t\t\t\t\t<ClrSysRef>${this.e(v.clrSysRef)}</ClrSysRef>\n\t\t\t\t\t</PmtId>\n`;
         }
-        const formattedAmt = v.amount ? Number(v.amount).toFixed(v.currency === 'EUR' ? 2 : 5) : '';
+        const formattedAmt = v.amount ? Number(v.amount).toFixed(2) : '';
         itmXml += `\t\t\t\t\t<Amt Ccy="${this.e(v.currency)}">${formattedAmt}</Amt>\n`;
         itmXml += `\t\t\t\t\t<XpctdValDt>${v.valDt}</XpctdValDt>\n`;
 
