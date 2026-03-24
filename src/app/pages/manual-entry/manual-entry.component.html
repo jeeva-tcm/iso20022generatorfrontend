@@ -51,6 +51,22 @@
                 <mat-icon class="hero-icon">explore</mat-icon>
                 <h2>What would you like to build?</h2>
                 <p>Choose a message family to browse our dynamic catalog of {{allTypes.length}} XSDs</p>
+                
+                <!-- Popular Selection -->
+                <div class="popular-grid" *ngIf="!selectedFamily">
+                    <div class="popular-card" *ngFor="let m of popularMessages" (click)="gotoMessage(m.route)">
+                        <div class="pop-tag" [ngClass]="m.type">{{m.type}}</div>
+                        <div class="pop-info">
+                            <span class="pop-id">{{m.id}}</span>
+                            <span class="pop-name">{{m.name}}</span>
+                        </div>
+                        <mat-icon class="pop-go">arrow_forward_ios</mat-icon>
+                    </div>
+                </div>
+
+                <div class="section-divider" *ngIf="!selectedFamily">
+                    <span>- or browse families -</span>
+                </div>
 
                 <!-- Family Grid -->
                 <div class="family-grid" *ngIf="!selectedFamily">

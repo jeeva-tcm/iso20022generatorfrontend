@@ -7,6 +7,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
+import { FormattingService } from '../../../services/formatting.service';
 import { UetrService } from '../../../services/uetr.service';
 
 @Component({
@@ -55,7 +56,8 @@ export class Pacs9CovComponent implements OnInit {
         private config: ConfigService,
         private snackBar: MatSnackBar,
         private router: Router,
-        private uetrService: UetrService
+        private uetrService: UetrService,
+        private formatting: FormattingService
     ) { }
 
     ngOnInit() {
@@ -652,7 +654,7 @@ export class Pacs9CovComponent implements OnInit {
         if (v.ctgyPurpCd?.trim()) pmtTpXml += this.tag('CtgyPurp', this.el('Cd', v.ctgyPurpCd, 5), 4);
         else if (v.ctgyPurpPrtry?.trim()) pmtTpXml += this.tag('CtgyPurp', this.el('Prtry', v.ctgyPurpPrtry, 5), 4);
         if (pmtTpXml) tx += this.tag('PmtTpInf', pmtTpXml, 3);
-        const formattedAmt = v.amount ? Number(v.amount).toFixed(v.currency === 'EUR' ? 2 : 5) : '';
+        const formattedAmt = this.formatting.formatAmount(v.amount, v.currency);
         tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${formattedAmt}</IntrBkSttlmAmt>\n`;
         tx += this.el('IntrBkSttlmDt', v.sttlmDt, 3);
         if (v.sttlmPrty?.trim()) tx += this.el('SttlmPrty', v.sttlmPrty, 3);
@@ -976,7 +978,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
             }
             let rfrdAmt = '';
             if (v.rmtInfStrdRfrdDocAmt) {
-                rfrdAmt = `\n\t\t\t\t\t\t<RfrdDocAmt>\n\t\t\t\t\t\t\t<RmtAmt>\n\t\t\t\t\t\t\t\t<DuePyblAmt Ccy="${this.e(v.currency)}">${v.rmtInfStrdRfrdDocAmt}</DuePyblAmt>\n\t\t\t\t\t\t\t</RmtAmt>\n\t\t\t\t\t\t</RfrdDocAmt>`;
+                rfrdAmt = `\n\t\t\t\t\t\t<RfrdDocAmt>\n\t\t\t\t\t\t\t<RmtAmt>\n\t\t\t\t\t\t\t\t<DuePyblAmt Ccy="${this.e(v.currency)}">${this.formatting.formatAmount(v.rmtInfStrdRfrdDocAmt, v.currency)}</DuePyblAmt>\n\t\t\t\t\t\t\t</RmtAmt>\n\t\t\t\t\t\t</RfrdDocAmt>`;
             }
             if (cdtrRef || addtl || rfrdDoc || rfrdAmt) {
                 b += `\t\t\t\t<RmtInf>\n\t\t\t\t\t<Strd>${cdtrRef}${addtl}${rfrdDoc}${rfrdAmt}\n\t\t\t\t\t</Strd>\n\t\t\t\t</RmtInf>\n`;
@@ -985,7 +987,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
 
         // InstdAmt (optional)
         if (v.covInstdAmt?.trim() && v.covInstdAmtCcy?.trim()) {
-            b += `\t\t\t\t<InstdAmt Ccy="${this.e(v.covInstdAmtCcy)}">${v.covInstdAmt}</InstdAmt>\n`;
+            b += `\t\t\t\t<InstdAmt Ccy="${this.e(v.covInstdAmtCcy)}">${this.formatting.formatAmount(v.covInstdAmt, v.covInstdAmtCcy)}</InstdAmt>\n`;
         }
         b += `\t\t\t</UndrlygCstmrCdtTrf>\n`;
         return b;
