@@ -504,8 +504,10 @@ export class Pacs3Component implements OnInit {
       instrForNxtAgt4Cd: [''], instrForNxtAgt4InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
       instrForNxtAgt5Cd: [''], instrForNxtAgt5InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
       instrForNxtAgt6Cd: [''], instrForNxtAgt6InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+    };
 
-    };[...this.agentPrefixes, ...this.partyPrefixes].forEach(p => {
+    [...this.agentPrefixes, ...this.partyPrefixes].forEach(p => {
+      // Common fields for all agents and parties (used in partyForm template)
       if (!c[p + 'AddrType']) c[p + 'AddrType'] = 'none';
       if (!c[p + 'AdrLine1']) c[p + 'AdrLine1'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
       if (!c[p + 'AdrLine2']) c[p + 'AdrLine2'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
@@ -525,18 +527,19 @@ export class Pacs3Component implements OnInit {
       if (!c[p + 'DstrctNm']) c[p + 'DstrctNm'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
       if (!c[p + 'AdrTpCd']) c[p + 'AdrTpCd'] = [''];
       if (!c[p + 'AdrTpPrtry']) c[p + 'AdrTpPrtry'] = ['', Validators.maxLength(35)];
+      if (!c[p + 'Name']) c[p + 'Name'] = ['', [Validators.maxLength(140), SAFE_NAME]];
+      if (!c[p + 'Acct']) c[p + 'Acct'] = ['', [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
+      if (!c[p + 'CtryOfRes']) c[p + 'CtryOfRes'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
 
-      if (this.agentPrefixes.includes(p)) {
-        if (!c[p + 'Name']) c[p + 'Name'] = ['', [Validators.maxLength(140), SAFE_NAME]];
-        if (!c[p + 'Lei']) c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
-        if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['', Validators.maxLength(4)];
-        if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
-        if (!c[p + 'Acct']) c[p + 'Acct'] = ['', [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
-      }
-    });
-    this.partyPrefixes.forEach(p => {
+      // Agent-specific fields
+      if (!c[p + 'Bic']) c[p + 'Bic'] = ['', BIC_OPT];
+      if (!c[p + 'Lei']) c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
+      if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['', Validators.maxLength(4)];
+      if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
+
+      // Party-specific fields
       if (!c[p + 'IdType']) c[p + 'IdType'] = 'none';
-      if (!c[p + 'OrgAnyBIC']) c[p + 'OrgAnyBIC'] = ['', [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
+      if (!c[p + 'OrgAnyBIC']) c[p + 'OrgAnyBIC'] = ['', BIC_OPT];
       if (!c[p + 'OrgLEI']) c[p + 'OrgLEI'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
       if (!c[p + 'OrgClrSysCd']) c[p + 'OrgClrSysCd'] = ['', Validators.maxLength(4)];
       if (!c[p + 'OrgClrSysMmbId']) c[p + 'OrgClrSysMmbId'] = ['', Validators.maxLength(35)];
@@ -1168,7 +1171,7 @@ ${tx}\t\t\t</DrctDbtTxInf>
     let addr = this.addrXml(v, prefix, 5, tag.startsWith('PrvsInstgAgt'));
     // Auto-populate postal address for Creditor/Debtor Agent if missing
     if (!addr && (prefix === 'cdtrAgt' || prefix === 'dbtrAgt')) {
-      addr = `\t\t\t\t\t<PstlAdr>\n\t\t\t\t\t\t<Ctry>${prefix === 'cdtrAgt' ? 'GB' : 'US'}</Ctry>\n\t\t\t\t\t\t<TwnNm>${prefix === 'cdtrAgt' ? 'London' : 'New York'}</TwnNm>\n\t\t\t\t\t</PstlAdr>\n`;
+      addr = `\t\t\t\t\t<PstlAdr>\n\t\t\t\t\t\t<TwnNm>${prefix === 'cdtrAgt' ? 'London' : 'New York'}</TwnNm>\n\t\t\t\t\t\t<Ctry>${prefix === 'cdtrAgt' ? 'GB' : 'US'}</Ctry>\n\t\t\t\t\t\t<AdrLine>Address Line 1</AdrLine>\n\t\t\t\t\t\t<AdrLine>Address Line 2</AdrLine>\n\t\t\t\t\t</PstlAdr>\n`;
     }
     content += addr;
 
