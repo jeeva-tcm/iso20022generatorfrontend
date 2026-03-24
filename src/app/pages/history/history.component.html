@@ -149,8 +149,6 @@
                                         <h3>Issues Found</h3>
                                         <div class="mini-issue"
                                             *ngFor="let issue of $any(expandedDetail.report.details) | slice:0:(showAllMobileIssues ? expandedDetail.report.details.length : 5)">
-                                            <span>
-                                                [class]="'sev-mini ' + $any(issue).severity.toLowerCase()">{{$any(issue).severity}}</span>
                                             <span class="issue-path">Line {{$any(issue).path}}:</span>
                                             <span class="issue-msg">{{$any(issue).message}}</span>
                                         </div>
@@ -313,8 +311,7 @@
                                 <p class="sec-title">Issues ({{expandedDetail.report.details.length}})</p>
                                 <div class="m-issue-item"
                                     *ngFor="let issue of $any(expandedDetail.report.details) | slice:0:(showAllMobileIssues ? expandedDetail.report.details.length : 5)">
-                                    <span
-                                        [class]="'sev-tag ' + $any(issue).severity.toLowerCase()">{{$any(issue).severity}}</span>
+                                    <span class="issue-path" style="margin-right: 8px; font-weight: 700;">Line {{$any(issue).path}}:</span>
                                     <span class="msg text-truncate">{{$any(issue).message}}</span>
                                 </div>
 
