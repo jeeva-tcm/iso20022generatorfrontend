@@ -166,6 +166,9 @@ export class ValidateComponent implements OnInit {
   }
 
   toggleFileRow(f: FileEntry) {
+    if (this.expandedFile !== f) {
+      this.expandedIssue = null;
+    }
     this.expandedFile = this.expandedFile === f ? null : f;
   }
 
@@ -186,6 +189,7 @@ export class ValidateComponent implements OnInit {
   setIssueFilter(f: FileEntry, layerName: string, type: 'ERROR' | 'WARNING', e: Event) {
     e.stopPropagation();
     const key = f.id + '_' + layerName;
+    this.expandedIssue = null; // Clear expanded issue as the displayed list is changing
     if (this.issueFilters[key] === type) {
       this.issueFilters[key] = 'ALL';
     } else {
@@ -1029,9 +1033,11 @@ export class ValidateComponent implements OnInit {
         if (!this.selectedFile || this.selectedFile === entry) {
           this.selectedFile = entry;
         }
+        this.expandedIssue = null; // Reset stale expansion
       },
       error: () => {
         entry.status = 'failed';
+        this.expandedIssue = null;
         this.snackBar.open(`${entry.name}: Validation failed (backend error)`, 'Dismiss', { duration: 3000 });
       }
     });

@@ -90,8 +90,8 @@
     color: var(--text-muted);
     font-weight: 700;
     border-radius: 14px;
-    padding: 10px 20px;
-    font-size: 0.85rem;
+    padding: 8px 16px;
+    font-size: 0.8rem;
     letter-spacing: 0.3px;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -138,15 +138,15 @@
 
 .dropdown-menu {
     position: absolute;
-    top: calc(100% + 12px);
+    top: calc(100% + 8px);
     left: 50%;
     transform: translateX(-50%) translateY(10px);
-    width: 280px;
+    width: 250px;
     background: var(--bg-card);
     border: 1px solid var(--border-light);
-    border-radius: 16px;
-    padding: 6px;
-    box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);
+    border-radius: 12px;
+    padding: 4px;
+    box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.4);
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -214,13 +214,13 @@
 
 .submenu {
     position: absolute;
-    left: calc(100% + 6px);
-    top: -6px;
-    width: 320px;
+    left: calc(100% + 4px);
+    top: -4px;
+    width: 280px;
     background: var(--bg-card);
     border: 1px solid var(--border-light);
-    border-radius: 16px;
-    padding: 6px;
+    border-radius: 12px;
+    padding: 4px;
     box-shadow: 20px 20px 50px rgba(0, 0, 0, 0.3);
     opacity: 0;
     visibility: hidden;
@@ -255,12 +255,16 @@
 }
 
 .submenu a.active-link {
-    background: rgba(129, 140, 248, 0.1) !important;
-    color: #818cf8 !important;
+    background: var(--primary-gradient) !important;
+    color: #ffffff !important;
 }
 
 .submenu a.active-link .msg-id {
-    color: #818cf8 !important;
+    color: #ffffff !important;
+}
+
+.submenu a.active-link .msg-desc {
+    color: rgba(255, 255, 255, 0.8) !important;
 }
 
 .msg-info {
@@ -299,9 +303,9 @@
 
 body.light-theme .msg-tag { background: #f8fafc; }
 
-.msg-tag.pacs { color: #818cf8; border-color: rgba(129, 140, 248, 0.3); }
-.msg-tag.pain { color: #f472b6; border-color: rgba(244, 114, 182, 0.3); }
-.msg-tag.camt { color: #34d399; border-color: rgba(52, 211, 153, 0.3); }
+.msg-tag.pacs { color: #6366f1; border-color: rgba(99, 102, 241, 0.3); }
+.msg-tag.pain { color: #ec4899; border-color: rgba(236, 72, 153, 0.3); }
+.msg-tag.camt { color: #0ea5e9; border-color: rgba(14, 165, 233, 0.3); }
 
 .user-info {
     display: flex;

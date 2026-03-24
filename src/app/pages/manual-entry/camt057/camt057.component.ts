@@ -7,6 +7,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
+import { FormattingService } from '../../../services/formatting.service';
 import { UetrService } from '../../../services/uetr.service';
 
 @Component({
@@ -47,7 +48,8 @@ export class Camt057Component implements OnInit {
         private config: ConfigService,
         private snackBar: MatSnackBar,
         private router: Router,
-        private uetrService: UetrService
+        private uetrService: UetrService,
+        private formatting: FormattingService
     ) { }
 
     public syncScroll(editor: any, gutter: any) {
@@ -574,7 +576,7 @@ export class Camt057Component implements OnInit {
         if (v.clrSysRef?.trim()) {
             itmXml += `\t\t\t\t\t<PmtId>\n\t\t\t\t\t\t<ClrSysRef>${this.e(v.clrSysRef)}</ClrSysRef>\n\t\t\t\t\t</PmtId>\n`;
         }
-        const formattedAmt = v.amount ? Number(v.amount).toFixed(2) : '';
+        const formattedAmt = this.formatting.formatAmount(v.amount, v.currency);
         itmXml += `\t\t\t\t\t<Amt Ccy="${this.e(v.currency)}">${formattedAmt}</Amt>\n`;
         itmXml += `\t\t\t\t\t<XpctdValDt>${v.valDt}</XpctdValDt>\n`;
 

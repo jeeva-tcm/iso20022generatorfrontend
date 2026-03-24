@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ConfigService } from '../../../services/config.service';
+import { FormattingService } from '../../../services/formatting.service';
 
 @Component({
   selector: 'app-pain001',
@@ -46,7 +47,8 @@ export class Pain001Component implements OnInit {
     private fb: FormBuilder,
     private http: HttpClient,
     private config: ConfigService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private formatting: FormattingService
   ) { }
 
   ngOnInit() {
@@ -164,8 +166,7 @@ export class Pain001Component implements OnInit {
     // Payment Information
     let txsXml = '';
     v.transactions.forEach((tx: any) => {
-      const prec = 2; // Fixed standard 2 decimals for USD/EUR etc per common CBPR rules
-      const amt = Number(tx.amount || 0).toFixed(prec);
+      const amt = this.formatting.formatAmount(tx.amount || 0, tx.currency);
       
       const pmtId = this.tag('PmtId', 
         this.el('InstrId', tx.instrId, 6) + 

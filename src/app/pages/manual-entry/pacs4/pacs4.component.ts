@@ -7,6 +7,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
+import { FormattingService } from '../../../services/formatting.service';
 import { UetrService } from '../../../services/uetr.service';
 
 @Component({
@@ -60,7 +61,8 @@ export class Pacs4Component implements OnInit {
         private config: ConfigService,
         private snackBar: MatSnackBar,
         private router: Router,
-        private uetrService: UetrService
+        private uetrService: UetrService,
+        private formatting: FormattingService
     ) { }
 
     ngOnInit() {
@@ -234,12 +236,12 @@ export class Pacs4Component implements OnInit {
         
         // 3. Original Settlement Details (in TxInf)
         if (v.orgnlAmount) {
-            tx += `${this.tabs(4)}<OrgnlIntrBkSttlmAmt Ccy="${this.e(v.orgnlCurrency)}">${v.orgnlAmount}</OrgnlIntrBkSttlmAmt>\n`;
+            tx += `${this.tabs(4)}<OrgnlIntrBkSttlmAmt Ccy="${this.e(v.orgnlCurrency)}">${this.formatting.formatAmount(v.orgnlAmount, v.orgnlCurrency)}</OrgnlIntrBkSttlmAmt>\n`;
         }
         tx += this.el('OrgnlIntrBkSttlmDt', v.orgnlSttlmDt, 4);
 
         // 4. Return Details
-        tx += `\t\t\t\t<RtrdIntrBkSttlmAmt Ccy="${this.e(v.currency)}">${v.amount}</RtrdIntrBkSttlmAmt>\n`;
+        tx += `\t\t\t\t<RtrdIntrBkSttlmAmt Ccy="${this.e(v.currency)}">${this.formatting.formatAmount(v.amount, v.currency)}</RtrdIntrBkSttlmAmt>\n`;
         tx += this.el('IntrBkSttlmDt', v.sttlmDt, 4); // Return Interbank Settlement Date (Mandatory in this profile)
         tx += this.el('ChrgBr', v.chrgBr, 4);
 
