@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -47,10 +48,15 @@ export class ManualEntryComponent implements OnInit {
 
     previewXml = '';
 
-    constructor(private http: HttpClient, private config: ConfigService, private snackBar: MatSnackBar) { }
+    constructor(private http: HttpClient, private config: ConfigService, private snackBar: MatSnackBar, private route: ActivatedRoute) { }
 
     ngOnInit() {
         this.fetchMessageTypes();
+        this.route.params.subscribe(params => {
+            if (params['type']) {
+                this.selectType(params['type']);
+            }
+        });
     }
 
     fetchMessageTypes() {
