@@ -38,6 +38,7 @@ export class Pacs9Component implements OnInit {
     private isInternalChange = false;
 
     currencies: string[] = [];
+    currencyPrecision: { [key: string]: number } = {};
     countries: string[] = [];
     categoryPurposes: string[] = [];
     purposes: string[] = [];
@@ -75,15 +76,20 @@ export class Pacs9Component implements OnInit {
         this.form.get('instdAgtBic')?.valueChanges.subscribe(v => {
             this.form.patchValue({ toBic: v }, { emitEvent: false });
         });
+        this.form.get('currency')?.valueChanges.subscribe(() => {
+            this.updateAmountValidator();
+            this.updateClearingSystemValidation();
+        });
+
         // Track form changes for live XML update
         this.form.valueChanges.subscribe(() => {
             this.updateConditionalValidators();
-            this.updateClearingSystemValidation();
             this.generateXml();
         });
 
         // Init history
         this.pushHistory();
+        this.updateAmountValidator();
     }
 
     @HostListener('input', ['$event'])
@@ -154,6 +160,8 @@ export class Pacs9Component implements OnInit {
             next: (res) => {
                 if (res && res.codes) {
                     this.currencies = res.codes;
+                    this.currencyPrecision = res.currencies || {};
+                    this.updateAmountValidator();
                 }
             },
             error: (err) => console.error('Failed to load currencies', err)
@@ -221,6 +229,20 @@ export class Pacs9Component implements OnInit {
             }
         });
     }
+
+    private updateAmountValidator() {
+        const ccy = this.form.get('currency')?.value;
+        const precision = this.currencyPrecision[ccy] ?? 2;
+        const amountCtrl = this.form.get('amount');
+        
+        const pattern = precision > 0 
+            ? new RegExp(`^\\d{1,13}(\\.\\d{1,${precision}})?$`)
+            : new RegExp(`^\\d{1,13}$`);
+        
+        amountCtrl?.setValidators([Validators.required, Validators.pattern(pattern)]);
+        amountCtrl?.updateValueAndValidity({ emitEvent: false });
+    }
+
 
     private buildForm() {
         const BIC = [Validators.required, Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
@@ -328,6 +350,11 @@ export class Pacs9Component implements OnInit {
         if (c.errors?.['required']) return 'Required field.';
         if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
         if (c.errors?.['pattern']) {
+            if (f === 'amount') {
+                const ccy = this.form.get('currency')?.value;
+                const p = this.currencyPrecision[ccy] ?? 2;
+                return `Value must be a number with max ${p} decimals for ${ccy}.`;
+            }
             // Precedence: If we're at the limit and pattern is invalid, let the limit hint take precedence
             if (this.showMaxLenWarning[f]) {
               const val = c.value?.toString() || '';
@@ -521,11 +548,10 @@ export class Pacs9Component implements OnInit {
         const v = this.form.value;
         let creDtTm = this.fdt(v.creDtTm || this.isoNow());
 
-        // CdtTrfTxInf — pacs.009.001.08 CBPR+ element order
         let tx = '';
-        let pmtIdXml = this.el('InstrId', v.instrId) + this.el('EndToEndId', v.endToEndId) + this.el('TxId', v.txId) + this.el('UETR', v.uetr);
-        if (v.clrSysRef?.trim()) pmtIdXml += this.el('ClrSysRef', v.clrSysRef);
-        tx += this.tag('PmtId', pmtIdXml, 3);
+        let pmtIdXml = this.el('InstrId', v.instrId, 5) + this.el('EndToEndId', v.endToEndId, 5) + this.el('TxId', v.txId, 5) + this.el('UETR', v.uetr, 5);
+        if (v.clrSysRef?.trim()) pmtIdXml += this.el('ClrSysRef', v.clrSysRef, 5);
+        tx += this.tag('PmtId', pmtIdXml, 4);
 
         let pmtTpXml = '';
         if (v.instrPrty?.trim()) pmtTpXml += this.el('InstrPrty', v.instrPrty, 4);
@@ -570,22 +596,22 @@ export class Pacs9Component implements OnInit {
                 let inner = '';
                 if (cd) inner += this.el('Cd', cd, 4);
                 if (txt) inner += this.el('InstrInf', txt, 4);
-                tx += this.tag('InstrForCdtrAgt', inner, 3);
+                tx += this.tag('InstrForCdtrAgt', inner, 4);
             }
         }
         // Instructions for Next Agent (0..6)
         for (let i = 1; i <= 6; i++) {
             const txt = v[`instrForNxtAgt${i}InfTxt`]?.trim();
             if (txt) {
-                tx += this.tag('InstrForNxtAgt', this.el('InstrInf', txt, 4), 3);
+                tx += this.tag('InstrForNxtAgt', this.el('InstrInf', txt, 5), 4);
             }
         }
 
-        if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 4), 3);
+        if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 5), 4);
 
         // Remittance Information
         if (v.rmtInfType === 'ustrd' && v.rmtInfUstrd?.trim()) {
-            tx += this.tag('RmtInf', this.el('Ustrd', v.rmtInfUstrd, 4), 3);
+            tx += this.tag('RmtInf', this.el('Ustrd', v.rmtInfUstrd, 5), 4);
         } else if (v.rmtInfType === 'strd') {
             let inner = '';
             if (v.rmtInfStrdCdtrRefType || v.rmtInfStrdCdtrRef) {
@@ -606,7 +632,7 @@ export class Pacs9Component implements OnInit {
             if (v.rmtInfStrdRfrdDocAmt) {
                 inner += this.tag('RfrdDocAmt', this.tag('RmtAmt', this.el('DuePyblAmt Ccy="' + this.e(v.currency) + '"', v.rmtInfStrdRfrdDocAmt, 6), 5), 4);
             }
-            if (inner) tx += this.tag('RmtInf', this.tag('Strd', inner, 4), 3);
+            if (inner) tx += this.tag('RmtInf', this.tag('Strd', inner, 5), 4);
         }
 
 
@@ -655,7 +681,8 @@ ${tx}\t\t\t</CdtTrfTxInf>
     agtWithAcct(tag: string, prefix: string, v: any) {
         let res = this.agt(tag, prefix, v);
         if (v[prefix + 'Acct']?.trim()) {
-            res += this.tag(tag + 'Acct', this.tag('Id', this.tag('Othr', this.el('Id', v[prefix + 'Acct'], 6), 5), 4), 3);
+            // Indent 4 for transaction children
+            res += this.tag(tag + 'Acct', this.tag('Id', this.tag('Othr', this.el('Id', v[prefix + 'Acct'], 7), 6), 5), 4);
         }
         return res;
     }
@@ -670,22 +697,24 @@ ${tx}\t\t\t</CdtTrfTxInf>
         if (!bic && !name && !lei && !clrMmb) return '';
 
         let content = '';
-        if (bic) content += `\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n`;
+        // Indent 6 for children of FinInstnId
+        if (bic) content += `\t\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n`;
         if (clrMmb) {
-            content += `\t\t\t\t\t<ClrSysMmbId>\n`;
-            if (clrCd) content += `\t\t\t\t\t\t<ClrSysId>\n\t\t\t\t\t\t\t<Cd>${this.e(clrCd)}</Cd>\n\t\t\t\t\t\t</ClrSysId>\n`;
-            content += `\t\t\t\t\t\t<MmbId>${this.e(clrMmb)}</MmbId>\n`;
-            content += `\t\t\t\t\t</ClrSysMmbId>\n`;
+            content += `\t\t\t\t\t\t<ClrSysMmbId>\n`;
+            if (clrCd) content += `\t\t\t\t\t\t\t<ClrSysId>\n\t\t\t\t\t\t\t\t<Cd>${this.e(clrCd)}</Cd>\n\t\t\t\t\t\t\t</ClrSysId>\n`;
+            content += `\t\t\t\t\t\t\t<MmbId>${this.e(clrMmb)}</MmbId>\n`;
+            content += `\t\t\t\t\t\t</ClrSysMmbId>\n`;
         }
-        if (lei) content += `\t\t\t\t\t<LEI>${this.e(lei)}</LEI>\n`;
+        if (lei) content += `\t\t\t\t\t\t<LEI>${this.e(lei)}</LEI>\n`;
 
         // Filter: Nm and PstlAdr are NOT allowed for InstgAgt and InstdAgt as per MyStandards requirements
         if (tag !== 'InstgAgt' && tag !== 'InstdAgt') {
-            if (name) content += `\t\t\t\t\t<Nm>${this.e(name)}</Nm>\n`;
-            content += this.addrXml(v, prefix, 5, tag.startsWith('PrvsInstgAgt'));
+            if (name) content += `\t\t\t\t\t\t<Nm>${this.e(name)}</Nm>\n`;
+            content += this.addrXml(v, prefix, 6, tag.startsWith('PrvsInstgAgt'));
         }
 
-        return `\t\t\t<${tag}>\n\t\t\t\t<FinInstnId>\n${content}\t\t\t\t</FinInstnId>\n\t\t\t</${tag}>\n`;
+        // Indent 4 for transaction level agents (Dbtr, Cdtr, etc.)
+        return `\t\t\t\t<${tag}>\n\t\t\t\t\t<FinInstnId>\n${content}\t\t\t\t\t</FinInstnId>\n\t\t\t\t</${tag}>\n`;
     }
     addrXml(v: any, p: string, indent = 4, isPrvs = false): string {
         const type = v[p + 'AddrType']; if (!type || type === 'none') return '';
@@ -709,8 +738,8 @@ ${tx}\t\t\t</CdtTrfTxInf>
             if (v[p + 'TwnLctnNm']) lines.push(`${t}<TwnLctnNm>${this.e(v[p + 'TwnLctnNm'])}</TwnLctnNm>`);
             if (v[p + 'DstrctNm']) lines.push(`${t}<DstrctNm>${this.e(v[p + 'DstrctNm'])}</DstrctNm>`);
             if (v[p + 'CtrySubDvsn']) lines.push(`${t}<CtrySubDvsn>${this.e(v[p + 'CtrySubDvsn'])}</CtrySubDvsn>`);
-            if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
         }
+        if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
         // AdrLine: allowed in unstructured/hybrid, FORBIDDEN in structured
         if (type === 'unstructured' || type === 'hybrid') {
             if (v[p + 'AdrLine1']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine1'])}</AdrLine>`);

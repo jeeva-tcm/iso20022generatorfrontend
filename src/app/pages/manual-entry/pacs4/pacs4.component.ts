@@ -38,6 +38,7 @@ export class Pacs4Component implements OnInit {
     private isInternalChange = false;
 
     currencies: string[] = [];
+    currencyPrecision: { [key: string]: number } = {};
     countries: string[] = [];
     chargeBearers = ['CRED', 'SHAR', 'SLEV'];
     sttlmMethods = ['INDA', 'INGA', 'COVE', 'CLRG'];
@@ -74,11 +75,20 @@ export class Pacs4Component implements OnInit {
         this.form.get('fromBic')?.valueChanges.subscribe(v => this.form.patchValue({ instgAgtBic: v }, { emitEvent: false }));
         this.form.get('toBic')?.valueChanges.subscribe(v => this.form.patchValue({ instdAgtBic: v }, { emitEvent: false }));
 
+        this.form.get('currency')?.valueChanges.subscribe(() => {
+            this.updateAmountValidator('amount', 'currency');
+        });
+        this.form.get('orgnlCurrency')?.valueChanges.subscribe(() => {
+            this.updateAmountValidator('orgnlAmount', 'orgnlCurrency');
+        });
+
         this.form.valueChanges.subscribe(() => {
             this.generateXml();
         });
 
         this.pushHistory();
+        this.updateAmountValidator('amount', 'currency');
+        this.updateAmountValidator('orgnlAmount', 'orgnlCurrency');
     }
 
     @HostListener('input', ['$event'])
@@ -113,7 +123,16 @@ export class Pacs4Component implements OnInit {
     }
 
     fetchCodelists() {
-        this.http.get<any>(this.config.getApiUrl('/codelists/currency')).subscribe({ next: (res) => { if (res?.codes) this.currencies = res.codes; } });
+        this.http.get<any>(this.config.getApiUrl('/codelists/currency')).subscribe({
+            next: (res) => {
+                if (res?.codes) {
+                    this.currencies = res.codes;
+                    this.currencyPrecision = res.currencies || {};
+                    this.updateAmountValidator('amount', 'currency');
+                    this.updateAmountValidator('orgnlAmount', 'orgnlCurrency');
+                }
+            }
+        });
         this.http.get<any>(this.config.getApiUrl('/codelists/country')).subscribe({ next: (res) => { if (res?.codes) this.countries = res.codes; } });
     }
 
@@ -178,12 +197,31 @@ export class Pacs4Component implements OnInit {
         this.form = this.fb.group(c);
     }
 
+    private updateAmountValidator(field: string, currencyField: string) {
+        const ccy = this.form.get(currencyField)?.value;
+        const precision = this.currencyPrecision[ccy] ?? 2;
+        const amountCtrl = this.form.get(field);
+        
+        const pattern = precision > 0 
+            ? new RegExp(`^\\d{1,13}(\\.\\d{1,${precision}})?$`)
+            : new RegExp(`^\\d{1,13}$`);
+        
+        amountCtrl?.setValidators([Validators.required, Validators.pattern(pattern)]);
+        amountCtrl?.updateValueAndValidity({ emitEvent: false });
+    }
+
     err(f: string): string | null {
         const c = this.form.get(f);
         if (!c || c.valid) return null;
         if (c.errors?.['required']) return 'Required field.';
         if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
         if (c.errors?.['pattern']) {
+            if (f === 'amount' || f === 'orgnlAmount') {
+                const ccyField = f === 'amount' ? 'currency' : 'orgnlCurrency';
+                const ccy = this.form.get(ccyField)?.value;
+                const p = this.currencyPrecision[ccy] ?? 2;
+                return `Value must be a number with max ${p} decimals for ${ccy}.`;
+            }
             // Precedence: If we're at the limit and pattern is invalid, let the limit hint take precedence
             if (this.showMaxLenWarning[f]) {
               const val = c.value?.toString() || '';
