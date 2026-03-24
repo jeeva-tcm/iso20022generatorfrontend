@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ConfigService } from '../../services/config.service';
@@ -47,10 +48,30 @@ export class ManualEntryComponent implements OnInit {
 
     previewXml = '';
 
-    constructor(private http: HttpClient, private config: ConfigService, private snackBar: MatSnackBar) { }
+    popularMessages = [
+        { id: 'pacs.008.001.08', name: 'Customer Credit Transfer', type: 'pacs', route: 'pacs8' },
+        { id: 'pacs.003.001.08', name: 'Customer Direct Debit', type: 'pacs', route: 'pacs3' },
+        { id: 'pacs.009.001.08', name: 'FI Credit Transfer', type: 'pacs', route: 'pacs9' },
+        { id: 'pacs.004.001.09', name: 'Payment Return', type: 'pacs', route: 'pacs4' },
+        { id: 'pacs.002.001.10', name: 'Payment Status Report', type: 'pacs', route: 'pacs2' },
+        { id: 'camt.057.001.08', name: 'Notification to Receive', type: 'camt', route: 'camt57' },
+        { id: 'pain.001.001.09', name: 'Credit Transfer Init', type: 'pain', route: 'pain001' },
+        { id: 'pain.002.001.10', name: 'Pmt Status Report', type: 'pain', route: 'pain002' }
+    ];
+
+    constructor(
+        private http: HttpClient, 
+        private config: ConfigService, 
+        private snackBar: MatSnackBar,
+        private router: Router
+    ) { }
 
     ngOnInit() {
         this.fetchMessageTypes();
+    }
+    
+    gotoMessage(route: string) {
+        this.router.navigate(['/generate', route]);
     }
 
     fetchMessageTypes() {
