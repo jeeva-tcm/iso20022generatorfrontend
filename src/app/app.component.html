@@ -14,11 +14,111 @@
 
         <!-- Manual Entry Dropdown -->
         <div class="dropdown-wrapper" (mouseleave)="isMenuForcedClosed = false">
-            <a mat-button class="dropdown-trigger" routerLinkActive="active-link"
-                [routerLinkActiveOptions]="{exact: false}" [class.active-link]="isManualEntryActive">
+            <a mat-button class="dropdown-trigger" [class.active-link]="isManualEntryActive" style="cursor: default;">
                 MANUAL ENTRY <mat-icon class="dropdown-arrow">expand_more</mat-icon>
             </a>
             <div class="dropdown-menu" [class.hide-menu]="isMenuForcedClosed">
+                <!-- PACS Category -->
+                <div class="category-item">
+                    <div class="category-link">
+                        <span class="msg-tag pacs">PACS</span>
+                        <div class="cat-info">
+                            <span class="cat-title">Payments Clearing</span>
+                            <span class="cat-desc">Credit Transfer & Returns</span>
+                        </div>
+                        <mat-icon class="cat-arrow">chevron_right</mat-icon>
+                    </div>
+                    <div class="submenu">
+                        <a routerLink="/generate/pacs8" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                            <div class="msg-info">
+                                <span class="msg-id">pacs.008.001.08</span>
+                                <span class="msg-desc">Customer Credit Transfer</span>
+                            </div>
+                        </a>
+                        <a routerLink="/generate/pacs3" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                            <div class="msg-info">
+                                <span class="msg-id">pacs.003.001.08</span>
+                                <span class="msg-desc">Customer Direct Debit</span>
+                            </div>
+                        </a>
+                        <a routerLink="/generate/pacs9" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                            <div class="msg-info">
+                                <span class="msg-id">pacs.009.001.08</span>
+                                <span class="msg-desc">FI Credit Transfer</span>
+                            </div>
+                        </a>
+                        <a routerLink="/generate/pacs9adv" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                            <div class="msg-info">
+                                <span class="msg-id">pacs.009.001.08_ADV</span>
+                                <span class="msg-desc">FI Credit Transfer (Adv)</span>
+                            </div>
+                        </a>
+                        <a routerLink="/generate/pacs9cov" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                            <div class="msg-info">
+                                <span class="msg-id">pacs.009.001.08 COV</span>
+                                <span class="msg-desc">FI Credit Transfer (Cov)</span>
+                            </div>
+                        </a>
+                        <a routerLink="/generate/pacs4" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                            <div class="msg-info">
+                                <span class="msg-id">pacs.004.001.09</span>
+                                <span class="msg-desc">Payment Return</span>
+                            </div>
+                        </a>
+                        <a routerLink="/generate/pacs2" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                            <div class="msg-info">
+                                <span class="msg-id">pacs.002.001.10</span>
+                                <span class="msg-desc">Payment Status Report</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- CAMT Category -->
+                <div class="category-item">
+                    <div class="category-link">
+                        <span class="msg-tag camt">CAMT</span>
+                        <div class="cat-info">
+                            <span class="cat-title">Cash Management</span>
+                            <span class="cat-desc">Reports & Notifications</span>
+                        </div>
+                        <mat-icon class="cat-arrow">chevron_right</mat-icon>
+                    </div>
+                    <div class="submenu">
+                        <a routerLink="/generate/camt57" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                            <div class="msg-info">
+                                <span class="msg-id">camt.057.001.08</span>
+                                <span class="msg-desc">Notification to Receive</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- PAIN Category -->
+                <div class="category-item">
+                    <div class="category-link">
+                        <span class="msg-tag pain">PAIN</span>
+                        <div class="cat-info">
+                            <span class="cat-title">Payments Initiation</span>
+                            <span class="cat-desc">Customer to Bank</span>
+                        </div>
+                        <mat-icon class="cat-arrow">chevron_right</mat-icon>
+                    </div>
+                    <div class="submenu">
+                        <a routerLink="/generate/pain001" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                            <div class="msg-info">
+                                <span class="msg-id">pain.001.001.09</span>
+                                <span class="msg-desc">Credit Transfer Init</span>
+                            </div>
+                        </a>
+                        <a routerLink="/generate/pain002" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                            <div class="msg-info">
+                                <span class="msg-id">pain.002.001.10</span>
+                                <span class="msg-desc">Pmt Status Report</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
                 <!-- <a routerLink="/generate" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}"
                     (click)="isMenuForcedClosed = true">
                     <span class="msg-tag dynamic">FULL</span> MX EXPLORER (700+ TYPES)

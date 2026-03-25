@@ -5,12 +5,14 @@ import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { ConfigService } from '../../services/config.service';
 
 @Component({
     selector: 'app-mt-to-mx',
     standalone: true,
-    imports: [CommonModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule],
+    imports: [CommonModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, MatSelectModule, MatFormFieldModule],
     templateUrl: './mt-to-mx.component.html',
     styleUrl: './mt-to-mx.component.css'
 })
@@ -741,6 +743,16 @@ export class MtToMxComponent implements OnInit {
 \t\t\t\t\t\t<BICFI>${this.esc(dbtrBic)}</BICFI>
 \t\t\t\t\t</FinInstnId>
 \t\t\t\t</Dbtr>
+\t\t\t\t<DbtrAgt>
+\t\t\t\t\t<FinInstnId>
+\t\t\t\t\t\t<BICFI>${this.esc(senderBic)}</BICFI>
+\t\t\t\t\t</FinInstnId>
+\t\t\t\t</DbtrAgt>
+\t\t\t\t<CdtrAgt>
+\t\t\t\t\t<FinInstnId>
+\t\t\t\t\t\t<BICFI>${this.esc(receiverBic)}</BICFI>
+\t\t\t\t\t</FinInstnId>
+\t\t\t\t</CdtrAgt>
 \t\t\t\t<Cdtr>
 \t\t\t\t\t<FinInstnId>
 \t\t\t\t\t\t<BICFI>${this.esc(cdtrBic)}</BICFI>

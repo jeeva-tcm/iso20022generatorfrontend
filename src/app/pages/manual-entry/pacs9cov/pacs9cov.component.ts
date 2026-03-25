@@ -7,6 +7,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
+import { FormattingService } from '../../../services/formatting.service';
 import { UetrService } from '../../../services/uetr.service';
 import { ISO_PURPOSE_CODES } from '../../../constants/purpose-codes';
 
@@ -36,6 +37,7 @@ export class Pacs9CovComponent implements OnInit {
     private isInternalChange = false;
 
     currencies: string[] = [];
+    currencyPrecision: { [key: string]: number } = {};
     countries: string[] = [];
     categoryPurposes: string[] = [];
     purposes: string[] = [];
@@ -56,7 +58,8 @@ export class Pacs9CovComponent implements OnInit {
         private config: ConfigService,
         private snackBar: MatSnackBar,
         private router: Router,
-        private uetrService: UetrService
+        private uetrService: UetrService,
+        private formatting: FormattingService
     ) { }
 
     ngOnInit() {
@@ -77,15 +80,20 @@ export class Pacs9CovComponent implements OnInit {
         this.form.get('instdAgtBic')?.valueChanges.subscribe(v => {
             this.form.patchValue({ toBic: v }, { emitEvent: false });
         });
+        this.form.get('currency')?.valueChanges.subscribe(() => {
+            this.updateAmountValidator();
+            this.updateClearingSystemValidation();
+        });
+
         // Track form changes for live XML update
         this.form.valueChanges.subscribe(() => {
             this.updateConditionalValidators();
-            this.updateClearingSystemValidation();
             this.generateXml();
         });
 
         // Init history
         this.pushHistory();
+        this.updateAmountValidator();
     }
 
     @HostListener('input', ['$event'])
@@ -93,11 +101,25 @@ export class Pacs9CovComponent implements OnInit {
         const target = event.target as HTMLInputElement;
         if (!target) return;
         const name = target.getAttribute('formControlName');
-        if (name && (name.toLowerCase().includes('bic') || name.toLowerCase().includes('iban'))) {
+        if (!name) return;
+
+        // Character limit warning logic (Immediate on-hit detection)
+        const maxLen = target.maxLength;
+        const val = target.value || '';
+        if (maxLen > 0 && val.length >= maxLen) {
+            this.showMaxLenWarning[name] = true;
+            if (this.warningTimeouts[name]) clearTimeout(this.warningTimeouts[name]);
+            this.warningTimeouts[name] = setTimeout(() => this.showMaxLenWarning[name] = false, 3000);
+        } else {
+            this.showMaxLenWarning[name] = false;
+        }
+
+        // BIC/IBAN Uppercasing
+        if (name.toLowerCase().includes('bic') || name.toLowerCase().includes('iban')) {
             const start = target.selectionStart;
             const end = target.selectionEnd;
-            const upperValue = target.value.toUpperCase();
-            if (target.value !== upperValue) {
+            const upperValue = val.toUpperCase();
+            if (val !== upperValue) {
                 target.value = upperValue;
                 if (start !== null && end !== null) {
                     target.setSelectionRange(start, end);
@@ -185,6 +207,8 @@ export class Pacs9CovComponent implements OnInit {
             next: (res) => {
                 if (res && res.codes) {
                     this.currencies = res.codes;
+                    this.currencyPrecision = res.currencies || {};
+                    this.updateAmountValidator();
                 }
             },
             error: (err) => console.error('Failed to load currencies', err)
@@ -260,6 +284,19 @@ export class Pacs9CovComponent implements OnInit {
         });
     }
 
+    private updateAmountValidator() {
+        const ccy = this.form.get('currency')?.value;
+        const precision = this.currencyPrecision[ccy] ?? 2;
+        const amountCtrl = this.form.get('amount');
+        
+        const pattern = precision > 0 
+            ? new RegExp(`^\\d{1,13}(\\.\\d{1,${precision}})?$`)
+            : new RegExp(`^\\d{1,13}$`);
+        
+        amountCtrl?.setValidators([Validators.required, Validators.pattern(pattern)]);
+        amountCtrl?.updateValueAndValidity({ emitEvent: false });
+    }
+
     private buildForm() {
         const BIC = [Validators.required, Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
         const BIC_OPT = [Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
@@ -304,7 +341,7 @@ export class Pacs9CovComponent implements OnInit {
             clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
             appHdrPriority: [''],
             amount: ['1500000', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['EUR', Validators.required],
-            sttlmDt: [new Date().toISOString().split('T')[0], Validators.required],
+            sttlmDt: [new Date().toISOString().split('T')[0], [Validators.required, Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]],
             // Debtor FI (required)
             dbtrFiBic: ['BBBBUS33XXX', BIC],
             dbtrFiAcct: ['471932901234'],
@@ -447,11 +484,6 @@ export class Pacs9CovComponent implements OnInit {
     }
 
     err(f: string): string | null {
-        if (this.showMaxLenWarning[f]) {
-            const c = this.form.get(f);
-            const len = c?.value?.toString().length || 0;
-            return `Maximum limit reached (${len} characters)`;
-        }
         const c = this.form.get(f);
         // Remove touched/dirty requirement to show errors immediately
         if (!c || c.valid) return null;
@@ -459,6 +491,19 @@ export class Pacs9CovComponent implements OnInit {
         if (c.errors?.['required']) return 'Required field.';
         if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
         if (c.errors?.['pattern']) {
+            if (f === 'amount') {
+                const ccy = this.form.get('currency')?.value;
+                const p = this.currencyPrecision[ccy] ?? 2;
+                return `Value must be a number with max ${p} decimals for ${ccy}.`;
+            }
+            // Precedence: If we're at the limit and pattern is invalid, let the limit hint take precedence
+            if (this.showMaxLenWarning[f]) {
+                const val = c.value?.toString() || '';
+                const limitError = c.errors?.['maxlength']?.requiredLength;
+                if (limitError && val.length >= limitError) return null;
+                if (f.toLowerCase().includes('bic') && val.length >= 11) return null;
+                if (f === 'uetr' && val.length >= 36) return null;
+            }
             if (f.toLowerCase().includes('bic')) return 'Valid 8 or 11-char BIC required.';
             if (f.toLowerCase().includes('iban')) return 'Valid 34-char IBAN required.';
             if (f.toLowerCase().includes('uetr')) return 'Invalid UETR format';
@@ -553,46 +598,30 @@ export class Pacs9CovComponent implements OnInit {
 
     @HostListener('keydown', ['$event'])
     onKeydown(event: KeyboardEvent) {
-        // 1. History & Formatting Shortcuts (Ctrl+Z, Ctrl+Y, Ctrl+S)
+        // ... Shortcuts check ...
         if (event.ctrlKey || event.metaKey) {
             if (document.activeElement?.classList.contains('code-editor')) {
                 switch (event.key.toLowerCase()) {
-                    case 'z':
-                        event.preventDefault();
-                        this.undoXml();
-                        return;
-                    case 'y':
-                        event.preventDefault();
-                        this.redoXml();
-                        return;
-                    case 's':
-                        event.preventDefault();
-                        this.formatXml();
-                        return;
-                    case '/':
-                        event.preventDefault();
-                        this.toggleCommentXml();
-                        return;
+                    case 'z': event.preventDefault(); this.undoXml(); return;
+                    case 'y': event.preventDefault(); this.redoXml(); return;
+                    case 's': event.preventDefault(); this.formatXml(); return;
+                    case '/': event.preventDefault(); this.toggleCommentXml(); return;
                 }
             }
         }
 
-        // 2. Existing MaxLength Warning logic
         const target = event.target as HTMLInputElement;
         if (!target || (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA')) return;
         const maxLen = target.maxLength;
         if (maxLen && maxLen > 0 && target.value && target.value.toString().length >= maxLen) {
+            // Still show warning on keydown if trying to type past limit
             if (target.selectionStart !== null && target.selectionStart !== target.selectionEnd) return;
             if (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey) {
                 const controlName = target.getAttribute('formControlName') || target.getAttribute('name');
                 if (controlName) {
                     this.showMaxLenWarning[controlName] = true;
-                    if (this.warningTimeouts[controlName]) {
-                        clearTimeout(this.warningTimeouts[controlName]);
-                    }
-                    this.warningTimeouts[controlName] = setTimeout(() => {
-                        this.showMaxLenWarning[controlName] = false;
-                    }, 3000);
+                    if (this.warningTimeouts[controlName]) clearTimeout(this.warningTimeouts[controlName]);
+                    this.warningTimeouts[controlName] = setTimeout(() => this.showMaxLenWarning[controlName] = false, 3000);
                 }
             }
         }
@@ -609,6 +638,13 @@ export class Pacs9CovComponent implements OnInit {
         return null;
     }
 
+
+    fdt(dt: string): string {
+        if (!dt) return dt;
+        let s = dt.trim().replace(/\.\d+/, '').replace('Z', '+00:00');
+        if (s && !/([+-]\d{2}:\d{2})$/.test(s)) s += '+00:00';
+        return s;
+    }
 
     isoNow(): string {
         const d = new Date(), p = (n: number) => n.toString().padStart(2, '0');
@@ -655,7 +691,7 @@ export class Pacs9CovComponent implements OnInit {
         }
 
         const v = this.form.value;
-        const creDtTm = this.formatCbprDateTime(v.creDtTm);
+        let creDtTm = this.fdt(v.creDtTm || this.isoNow());
 
         // CdtTrfTxInf — pacs.009.001.08 COV element order
         let tx = '';
@@ -673,7 +709,8 @@ export class Pacs9CovComponent implements OnInit {
         if (v.ctgyPurpCd?.trim()) pmtTpXml += this.tag('CtgyPurp', this.el('Cd', v.ctgyPurpCd, 5), 4);
         else if (v.ctgyPurpPrtry?.trim()) pmtTpXml += this.tag('CtgyPurp', this.el('Prtry', v.ctgyPurpPrtry, 5), 4);
         if (pmtTpXml) tx += this.tag('PmtTpInf', pmtTpXml, 3);
-        tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${v.amount}</IntrBkSttlmAmt>\n`;
+        const formattedAmt = this.formatting.formatAmount(v.amount, v.currency);
+        tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${formattedAmt}</IntrBkSttlmAmt>\n`;
         tx += this.el('IntrBkSttlmDt', v.sttlmDt, 3);
         if (v.sttlmPrty?.trim()) tx += this.el('SttlmPrty', v.sttlmPrty, 3);
         // PrvsInstgAgts
@@ -697,8 +734,8 @@ export class Pacs9CovComponent implements OnInit {
         tx += this.agtWithAcct('Cdtr', 'cdtrFi', v);
 
 
-        // UndrlygCstmrCdtTrf removed as per MyStandards
-        // tx += this.buildCov(v);
+        // UndrlygCstmrCdtTrf (COV)
+        tx += this.buildCov(v);
 
 
 
@@ -846,8 +883,8 @@ ${tx}\t\t\t</CdtTrfTxInf>
             if (v[p + 'PstCd']) lines.push(`${t}<PstCd>${this.e(v[p + 'PstCd'])}</PstCd>`);
             if (v[p + 'TwnNm']) lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'])}</TwnNm>`);
             if (v[p + 'CtrySubDvsn']) lines.push(`${t}<CtrySubDvsn>${this.e(v[p + 'CtrySubDvsn'])}</CtrySubDvsn>`);
-            if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
         }
+        if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
         if (type === 'unstructured' || type === 'hybrid') {
             if (v[p + 'AdrLine1']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine1'])}</AdrLine>`);
             if (v[p + 'AdrLine2']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine2'])}</AdrLine>`);
@@ -996,7 +1033,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
             }
             let rfrdAmt = '';
             if (v.rmtInfStrdRfrdDocAmt) {
-                rfrdAmt = `\n\t\t\t\t\t\t<RfrdDocAmt>\n\t\t\t\t\t\t\t<RmtAmt>\n\t\t\t\t\t\t\t\t<DuePyblAmt Ccy="${this.e(v.currency)}">${v.rmtInfStrdRfrdDocAmt}</DuePyblAmt>\n\t\t\t\t\t\t\t</RmtAmt>\n\t\t\t\t\t\t</RfrdDocAmt>`;
+                rfrdAmt = `\n\t\t\t\t\t\t<RfrdDocAmt>\n\t\t\t\t\t\t\t<RmtAmt>\n\t\t\t\t\t\t\t\t<DuePyblAmt Ccy="${this.e(v.currency)}">${this.formatting.formatAmount(v.rmtInfStrdRfrdDocAmt, v.currency)}</DuePyblAmt>\n\t\t\t\t\t\t\t</RmtAmt>\n\t\t\t\t\t\t</RfrdDocAmt>`;
             }
             if (cdtrRef || addtl || rfrdDoc || rfrdAmt) {
                 b += `\t\t\t\t<RmtInf>\n\t\t\t\t\t<Strd>${cdtrRef}${addtl}${rfrdDoc}${rfrdAmt}\n\t\t\t\t\t</Strd>\n\t\t\t\t</RmtInf>\n`;
@@ -1005,7 +1042,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
 
         // InstdAmt (optional)
         if (v.covInstdAmt?.trim() && v.covInstdAmtCcy?.trim()) {
-            b += `\t\t\t\t<InstdAmt Ccy="${this.e(v.covInstdAmtCcy)}">${v.covInstdAmt}</InstdAmt>\n`;
+            b += `\t\t\t\t<InstdAmt Ccy="${this.e(v.covInstdAmtCcy)}">${this.formatting.formatAmount(v.covInstdAmt, v.covInstdAmtCcy)}</InstdAmt>\n`;
         }
         b += `\t\t\t</UndrlygCstmrCdtTrf>\n`;
         return b;
@@ -1030,7 +1067,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
         this.http.post(this.config.getApiUrl('/validate'), {
             xml_content: this.generatedXml,
             mode: 'Full 1-3',
-            message_type: 'pacs.009.001.08',
+            message_type: 'Auto-detect',
             store_in_history: true
         }).subscribe({
             next: (data: any) => {
@@ -1129,18 +1166,35 @@ ${tx}\t\t\t</CdtTrfTxInf>
         this.pushHistory();
 
         try {
-            let xml = this.generatedXml.trim();
+            const tab = '    ';
             let formatted = '';
             let indent = '';
-            const tab = '    ';
 
-            xml.split(/>\s*</).forEach(node => {
-                if (node.match(/^\/\w/)) indent = indent.substring(tab.length);
-                formatted += indent + '<' + node + '>\r\n';
-                if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith('?')) indent += tab;
+            // Normalize XML
+            let xml = this.generatedXml.replace(/>\s+</g, '><').trim();
+
+            // Intelligent regex to split Tags and Comments
+            const reg = /(<[^>]+>[^<]*<\/([^>]+)>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
+            const nodes = xml.match(reg) || [];
+
+            nodes.forEach(node => {
+                const trimmed = node.trim();
+                if (!trimmed) return;
+
+                if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
+                    formatted += indent + trimmed + '\r\n';
+                } else if (trimmed.startsWith('</')) {
+                    if (indent.length >= tab.length) indent = indent.substring(tab.length);
+                    formatted += indent + trimmed + '\r\n';
+                } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
+                    formatted += indent + trimmed + '\r\n';
+                    if (!trimmed.endsWith('/>')) indent += tab;
+                } else {
+                    formatted += indent + trimmed + '\r\n';
+                }
             });
 
-            this.generatedXml = formatted.substring(1, formatted.length - 3);
+            this.generatedXml = formatted.trim();
             this.refreshLineCount();
             this.snackBar.open('XML Formatted', '', { duration: 1500 });
         } catch (e) {
@@ -1335,7 +1389,6 @@ ${tx}\t\t\t</CdtTrfTxInf>
             });
 
             // Re-fetch COV specific accounts
-            // Clear addresses first
             const allPrefixes = [...this.agentPrefixes, ...this.covPartyPrefixes];
             const mapAddr = (parent: Element | Document, tag: string, prefix: string) => {
                 ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry', 'AdrLine1', 'AdrLine2', 'AdrTpCd', 'AdrTpPrtry'].forEach(f => patch[prefix + f] = '');
@@ -1388,8 +1441,6 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 if (cdtr) setVal('covCdtrName', cdtr.getElementsByTagName('Nm')[0]?.textContent || '');
                 setVal('covCdtrAcct', tryAcct(covNode, 'CdtrAcct'));
 
-                // Ultimate parties removed
-
                 const instrs = covNode.getElementsByTagName('InstrForCdtrAgt');
                 for (let i = 0; i < 2; i++) {
                     if (instrs[i]) {
@@ -1414,7 +1465,6 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 setVal('covInstdAmt', covAmt ? (covAmt.textContent || '') : '');
                 setVal('covInstdAmtCcy', covAmt ? (covAmt.getAttribute('Ccy') || '') : '');
 
-                // Ultmt removed
                 mapAddr(covNode, 'Dbtr', 'covDbtr');
                 mapAddr(covNode, 'Cdtr', 'covCdtr');
                 mapAddr(covNode, 'DbtrAgt', 'covDbtrAgt');
@@ -1424,7 +1474,6 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 mapAddr(doc, 'Cdtr', 'covCdtr');
                 mapAddr(doc, 'UltmtCdtr', 'covUltmtCdtr');
             }
-
 
             setVal('purpCd', tryTag('Purp', 'Cd') || tval('Purp'));
             setVal('ctgyPurpCd', tryTag('CtgyPurp', 'Cd') || tval('CtgyPurp'));
@@ -1485,7 +1534,6 @@ ${tx}\t\t\t</CdtTrfTxInf>
         });
     }
 
-
     viewXmlModal() {
         this.closeValidationModal();
         this.switchToPreview();
@@ -1500,3 +1548,4 @@ ${tx}\t\t\t</CdtTrfTxInf>
         this.validateMessage();
     }
 }
+

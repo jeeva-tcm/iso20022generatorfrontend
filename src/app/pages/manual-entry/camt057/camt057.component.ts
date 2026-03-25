@@ -7,6 +7,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
+import { FormattingService } from '../../../services/formatting.service';
 import { UetrService } from '../../../services/uetr.service';
 import { ISO_PURPOSE_CODES } from '../../../constants/purpose-codes';
 
@@ -36,6 +37,7 @@ export class Camt057Component implements OnInit {
     private isInternalChange = false;
 
     currencies: string[] = [];
+    currencyPrecision: { [key: string]: number } = {};
     countries: string[] = [];
     categoryPurposes: string[] = [];
     purposes: string[] = [];
@@ -48,22 +50,32 @@ export class Camt057Component implements OnInit {
         private config: ConfigService,
         private snackBar: MatSnackBar,
         private router: Router,
-        private uetrService: UetrService
+        private uetrService: UetrService,
+        private formatting: FormattingService
     ) { }
+
+    public syncScroll(editor: any, gutter: any) {
+        gutter.scrollTop = editor.scrollTop;
+    }
 
     ngOnInit() {
         this.fetchCodelists();
         this.buildForm();
         this.generateXml();
         this.onEditorChange(this.generatedXml, true);
+        this.form.get('currency')?.valueChanges.subscribe(() => {
+            this.updateAmountValidator();
+            this.updateClearingSystemValidation();
+        });
+
         this.form.valueChanges.subscribe(() => {
             this.updateConditionalValidators();
-            this.updateClearingSystemValidation();
             this.generateXml();
         });
 
         // Init history
         this.pushHistory();
+        this.updateAmountValidator();
     }
 
     private updateClearingSystemValidation() {
@@ -175,6 +187,8 @@ export class Camt057Component implements OnInit {
             next: (res) => {
                 if (res && res.codes) {
                     this.currencies = res.codes;
+                    this.currencyPrecision = res.currencies || {};
+                    this.updateAmountValidator();
                 }
             },
             error: (err) => console.error('Failed to load currencies', err)
@@ -212,6 +226,19 @@ export class Camt057Component implements OnInit {
             }
         });
 
+    }
+
+    private updateAmountValidator() {
+        const ccy = this.form.get('currency')?.value;
+        const precision = this.currencyPrecision[ccy] ?? 2;
+        const amountCtrl = this.form.get('amount');
+        
+        const pattern = precision > 0 
+            ? new RegExp(`^\\d{1,13}(\\.\\d{1,${precision}})?$`)
+            : new RegExp(`^\\d{1,13}$`);
+        
+        amountCtrl?.setValidators([Validators.required, Validators.pattern(pattern)]);
+        amountCtrl?.updateValueAndValidity({ emitEvent: false });
     }
 
     private buildForm() {
@@ -257,7 +284,7 @@ export class Camt057Component implements OnInit {
             itmId: ['ITEM-001', [Validators.required, Validators.maxLength(35)]],
             amount: ['5000.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]],
             currency: ['USD', Validators.required],
-            valDt: [new Date().toISOString().split('T')[0], Validators.required],
+            valDt: [new Date().toISOString().split('T')[0], [Validators.required, Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]],
 
             // Optional but commonly used
             endToEndId: ['E2E-057-001', Validators.maxLength(35)],
@@ -306,11 +333,6 @@ export class Camt057Component implements OnInit {
     }
 
     err(f: string): string | null {
-        if (this.showMaxLenWarning[f]) {
-            const c = this.form.get(f);
-            const len = c?.value?.toString().length || 0;
-            return `Maximum limit reached (${len} characters)`;
-        }
         const c = this.form.get(f);
         // Remove .touched requirement to show errors more aggressively
         if (!c || c.valid) return null;
@@ -318,6 +340,19 @@ export class Camt057Component implements OnInit {
         if (c.errors?.['required']) return 'Required field.';
         if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
         if (c.errors?.['pattern']) {
+            if (f === 'amount') {
+                const ccy = this.form.get('currency')?.value;
+                const p = this.currencyPrecision[ccy] ?? 2;
+                return `Value must be a number with max ${p} decimals for ${ccy}.`;
+            }
+            // Precedence: If we're at the limit and pattern is invalid, let the limit hint take precedence
+            if (this.showMaxLenWarning[f]) {
+              const val = c.value?.toString() || '';
+              const limitError = c.errors?.['maxlength']?.requiredLength;
+              if (limitError && val.length >= limitError) return null;
+              if (f.toLowerCase().includes('bic') && val.length >= 11) return null;
+              if (f === 'uetr' && val.length >= 36) return null;
+            }
             if (f.toLowerCase().includes('bic')) return 'Valid 8 or 11-char BIC required.';
             if (f.toLowerCase().includes('iban')) return 'Valid 34-char IBAN required.';
             if (f.toLowerCase().includes('uetr')) return 'Invalid UETR format';
@@ -415,11 +450,25 @@ export class Camt057Component implements OnInit {
         const target = event.target as HTMLInputElement;
         if (!target) return;
         const name = target.getAttribute('formControlName');
-        if (name && (name.toLowerCase().includes('bic') || name.toLowerCase().includes('iban'))) {
+        if (!name) return;
+
+        // Character limit warning logic (Immediate on-hit detection)
+        const maxLen = target.maxLength;
+        const val = target.value || '';
+        if (maxLen > 0 && val.length >= maxLen) {
+            this.showMaxLenWarning[name] = true;
+            if (this.warningTimeouts[name]) clearTimeout(this.warningTimeouts[name]);
+            this.warningTimeouts[name] = setTimeout(() => this.showMaxLenWarning[name] = false, 3000);
+        } else {
+            this.showMaxLenWarning[name] = false;
+        }
+
+        // BIC/IBAN Uppercasing
+        if (name.toLowerCase().includes('bic') || name.toLowerCase().includes('iban')) {
             const start = target.selectionStart;
             const end = target.selectionEnd;
-            const upperValue = target.value.toUpperCase();
-            if (target.value !== upperValue) {
+            const upperValue = val.toUpperCase();
+            if (val !== upperValue) {
                 target.value = upperValue;
                 if (start !== null && end !== null) {
                     target.setSelectionRange(start, end);
@@ -459,17 +508,14 @@ export class Camt057Component implements OnInit {
         if (!target || (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA')) return;
         const maxLen = target.maxLength;
         if (maxLen && maxLen > 0 && target.value && target.value.toString().length >= maxLen) {
+            // Still show warning on keydown if trying to type past limit
             if (target.selectionStart !== null && target.selectionStart !== target.selectionEnd) return;
             if (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey) {
                 const controlName = target.getAttribute('formControlName') || target.getAttribute('name');
                 if (controlName) {
                     this.showMaxLenWarning[controlName] = true;
-                    if (this.warningTimeouts[controlName]) {
-                        clearTimeout(this.warningTimeouts[controlName]);
-                    }
-                    this.warningTimeouts[controlName] = setTimeout(() => {
-                        this.showMaxLenWarning[controlName] = false;
-                    }, 3000);
+                    if (this.warningTimeouts[controlName]) clearTimeout(this.warningTimeouts[controlName]);
+                    this.warningTimeouts[controlName] = setTimeout(() => this.showMaxLenWarning[controlName] = false, 3000);
                 }
             }
         }
@@ -486,6 +532,13 @@ export class Camt057Component implements OnInit {
         return null;
     }
 
+
+    fdt(dt: string): string {
+        if (!dt) return dt;
+        let s = dt.trim().replace(/\.\d+/, '').replace('Z', '+00:00');
+        if (s && !/([+-]\d{2}:\d{2})$/.test(s)) s += '+00:00';
+        return s;
+    }
 
     isoNow(): string {
         const d = new Date(), p = (n: number) => n.toString().padStart(2, '0');
@@ -534,9 +587,7 @@ export class Camt057Component implements OnInit {
         }
 
         const v = this.form.value;
-        let creDtTm = v.creDtTm || this.isoNow();
-        if (creDtTm.endsWith('Z')) creDtTm = creDtTm.replace('Z', '+00:00');
-
+        let creDtTm = this.fdt(v.creDtTm || this.isoNow());
 
         // Parties & Agents correctly formatted with Pty wrapper for main notification level
         const partyXml = (tag: string, prefix: string) => {
@@ -568,7 +619,8 @@ export class Camt057Component implements OnInit {
         if (v.clrSysRef?.trim()) {
             itmXml += `\t\t\t\t\t<PmtId>\n\t\t\t\t\t\t<ClrSysRef>${this.e(v.clrSysRef)}</ClrSysRef>\n\t\t\t\t\t</PmtId>\n`;
         }
-        itmXml += `\t\t\t\t\t<Amt Ccy="${this.e(v.currency)}">${v.amount}</Amt>\n`;
+        const formattedAmt = this.formatting.formatAmount(v.amount, v.currency);
+        itmXml += `\t\t\t\t\t<Amt Ccy="${this.e(v.currency)}">${formattedAmt}</Amt>\n`;
         itmXml += `\t\t\t\t\t<XpctdValDt>${v.valDt}</XpctdValDt>\n`;
 
         if (v.purpCd?.trim()) itmXml += `\t\t\t\t\t<Purp>\n\t\t\t\t\t\t<Cd>${this.e(v.purpCd)}</Cd>\n\t\t\t\t\t</Purp>\n`;
@@ -698,18 +750,35 @@ ${ntfctnPartiesXml}${itmXml}
         this.pushHistory();
 
         try {
-            let xml = this.generatedXml.trim();
+            const tab = '    ';
             let formatted = '';
             let indent = '';
-            const tab = '    ';
 
-            xml.split(/>\s*</).forEach(node => {
-                if (node.match(/^\/\w/)) indent = indent.substring(tab.length);
-                formatted += indent + '<' + node + '>\r\n';
-                if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith('?')) indent += tab;
+            // Normalize XML
+            let xml = this.generatedXml.replace(/>\s+</g, '><').trim();
+            
+            // Intelligent regex to split Tags and Comments
+            const reg = /(<[^>]+>[^<]*<\/([^>]+)>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
+            const nodes = xml.match(reg) || [];
+
+            nodes.forEach(node => {
+                const trimmed = node.trim();
+                if (!trimmed) return;
+
+                if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
+                    formatted += indent + trimmed + '\r\n';
+                } else if (trimmed.startsWith('</')) {
+                    if (indent.length >= tab.length) indent = indent.substring(tab.length);
+                    formatted += indent + trimmed + '\r\n';
+                } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
+                    formatted += indent + trimmed + '\r\n';
+                    if (!trimmed.endsWith('/>')) indent += tab;
+                } else {
+                    formatted += indent + trimmed + '\r\n';
+                }
             });
 
-            this.generatedXml = formatted.substring(1, formatted.length - 3);
+            this.generatedXml = formatted.trim();
             this.refreshLineCount();
             this.snackBar.open('XML Formatted', '', { duration: 1500 });
         } catch (e) {
@@ -978,9 +1047,6 @@ ${ntfctnPartiesXml}${itmXml}
         }
     }
 
-    syncScroll(editor: any, gutter: any) {
-        gutter.scrollTop = editor.scrollTop;
-    }
 
     private e(v: string) { return (v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
     private tabs(n: number) { return '\t'.repeat(n); }
@@ -1055,8 +1121,8 @@ ${ntfctnPartiesXml}${itmXml}
             if (v[p + 'PstCd']) lines.push(`${t}<PstCd>${this.e(v[p + 'PstCd'])}</PstCd>`);
             if (v[p + 'TwnNm']) lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'])}</TwnNm>`);
             if (v[p + 'CtrySubDvsn']) lines.push(`${t}<CtrySubDvsn>${this.e(v[p + 'CtrySubDvsn'])}</CtrySubDvsn>`);
-            if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
         }
+        if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
         if (type === 'unstructured' || type === 'hybrid') {
             if (v[p + 'AdrLine1']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine1'])}</AdrLine>`);
             if (v[p + 'AdrLine2']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine2'])}</AdrLine>`);
@@ -1175,8 +1241,8 @@ ${ntfctnPartiesXml}${itmXml}
 
 
     viewXmlModal() {
+        this.currentTab = 'preview';
         this.closeValidationModal();
-        this.switchToPreview();
     }
 
     editXmlModal() {

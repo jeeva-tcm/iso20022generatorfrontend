@@ -11,22 +11,6 @@
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Force light theme variables correctly if they are shadowed */
-:host-context(body.light-theme) {
-    --editor-bg: #ffffff;
-    --editor-gutter: #f8fafc;
-    --editor-gutter-text: #94a3b8;
-    --editor-text: #1e293b;
-    --editor-thumb: #e2e8f0;
-    --editor-thumb-hover: #cbd5e1;
-    --border-light: #e2e8f0;
-    --bg-card: #ffffff;
-    --bg-card-hover: #f9fafb;
-    --text-main: #020617;
-    --text-muted: #64748b;
-    --accent-color: #6366f1;
-}
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 * {
@@ -38,8 +22,7 @@
 .container {
     max-width: 1400px;
     width: 100%;
-    margin: 0 auto;
-    margin-top: -0.2rem;
+    margin: 0 auto;margin-top: -0.2rem;
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -60,7 +43,17 @@
     overflow-y: auto;
     padding-right: 0.5rem;
 }
-
+.up,.down{
+    display: flex;
+    flex-direction: row;
+    gap: .6rem;
+    justify-content: center;
+}
+.up{
+    justify-content: flex-end;
+    margin-bottom: .5rem;
+    margin-top: -1rem;
+}
 .right-panel {
     flex: 1;
     min-width: 0;
@@ -71,7 +64,7 @@
 
 header {
     text-align: center;
-    margin-bottom: .5rem;
+    margin-bottom: 1rem;
     margin-top: -.6rem;
 }
 
@@ -98,7 +91,6 @@ header p {
     margin-top: .15rem;
 }
 
-/* Tabs */
 .tabs {
     display: none;
 }
@@ -127,7 +119,6 @@ header p {
     border-color: var(--accent-color);
 }
 
-/* Content box */
 .content-box {
     background: var(--bg-card);
     border: 1px solid var(--border-light);
@@ -146,7 +137,6 @@ textarea {
     padding-left: 10px;
 }
 
-/* Address */
 .addr-type-row {
     grid-column: 1/-1;
     margin-top: .25rem;
@@ -195,23 +185,54 @@ textarea {
     color: #f59e0b;
 }
 
-.full-width {
-    grid-column: 1 / -1;
+/* COV toggle */
+.cov-title {
+    justify-content: space-between;
 }
 
-
-.agent-id-subsection {
-    background: transparent !important;
-    border: none !important;
-    padding: 0 !important;
-    gap: 0.4rem 0.9rem !important;
+.cov-switch {
+    position: relative;
+    display: inline-block;
+    width: 38px;
+    height: 20px;
+    cursor: pointer;
+    margin-left: auto;
 }
 
-.intermediary-field {
-    grid-column: 1 / -1 !important;
+.cov-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
 }
 
-/* Preview */
+.slider {
+    position: absolute;
+    inset: 0;
+    background: var(--border-light);
+    border-radius: 20px;
+    transition: .3s;
+}
+
+.slider::before {
+    content: '';
+    position: absolute;
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: .3s;
+}
+
+.cov-switch input:checked+.slider {
+    background: var(--accent-color);
+}
+
+.cov-switch input:checked+.slider::before {
+    transform: translateX(18px);
+}
+
 .preview-actions {
     display: flex;
     justify-content: flex-end;
@@ -232,7 +253,7 @@ textarea {
     font-size: .78rem;
     cursor: pointer;
     font-family: inherit;
-    transition: all 0.15s;
+    transition: all .15s;
     box-shadow: var(--shadow-sm);
 }
 
@@ -270,37 +291,36 @@ textarea {
 }
 
 .action-btn-small {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    color: var(--text-muted);
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bg-card-hover);
-    border: 1px solid var(--border-light);
-    color: var(--text-muted);
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all 0.2s;
 }
 
 .action-btn-small mat-icon {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
 }
 
 .action-btn-small:hover:not(:disabled) {
-    background: var(--accent-light);
-    color: var(--accent-text);
+    background: var(--bg-app);
+    color: var(--accent-color);
     border-color: var(--accent-color);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-sm);
 }
 
 .action-btn-small:disabled {
-    opacity: 0.3;
-    filter: grayscale(1);
+    opacity: 0.5;
     cursor: not-allowed;
+    background: var(--bg-app);
 }
 
 /* Editor Layout with Line Numbers */
@@ -346,8 +366,9 @@ textarea.code-editor {
     padding: 1rem;
     resize: none;
     outline: none;
-    overflow-x: auto;
+    overflow: auto;
     white-space: pre;
+    tab-size: 4;
 }
 
 textarea.code-editor::-webkit-scrollbar {
@@ -368,11 +389,9 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     background: var(--editor-thumb-hover);
 }
 
-/* Bottom bar */
 .bottom-actions {
     display: flex;
     justify-content: center;
-    flex-direction: column;
     gap: .6rem;
     margin-top: 1rem;
     padding: 1rem;
@@ -381,18 +400,7 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     border-radius: 10px;
     box-shadow: var(--shadow-lg);
 }
-.up,.down{
-    display: flex;
-    flex-direction: row;
-    gap: .6rem;
-    justify-content: center;
-}
-.up{
-    justify-content: flex-end;
-    margin-bottom: .5rem;
-    margin-top: -1rem;
-}
-/* Spinner */
+
 .spinner-row {
     display: flex;
     align-items: center;
@@ -418,7 +426,7 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     }
 }
 
-/* ═══ Validation ═══ */
+/* Validation */
 .validation-result-panel {
     margin-top: 1rem;
     padding: 1.25rem;
@@ -723,13 +731,20 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     }
 }
 
-.field-hint.at-limit {
-    color: #f44336;
-    font-size: 0.75rem;
-    margin-top: 0.25rem;
-    display: block;
-    animation: fadeIn 0.3s ease-in-out;
+
+.agent-id-subsection {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    gap: 0.4rem 0.9rem !important;
 }
+
+.intermediary-field {
+    grid-column: 1 / -1 !important;
+}
+
+
+
 
 
 
@@ -1329,19 +1344,4 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     font-weight: 600;
     margin-top: 3px;
     animation: fadeIn 0.2s ease;
-}
-
-.info-icon-small {
-    font-size: 14px;
-    width: 14px;
-    height: 14px;
-    vertical-align: middle;
-    color: var(--text-muted);
-    margin-left: 4px;
-    cursor: help;
-}
-
-input[list]::-webkit-calendar-picker-indicator {
-    display: flex !important;
-}
-
+}

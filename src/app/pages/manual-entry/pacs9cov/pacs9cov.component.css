@@ -11,6 +11,22 @@
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Force light theme variables correctly if they are shadowed */
+:host-context(body.light-theme) {
+    --editor-bg: #ffffff;
+    --editor-gutter: #f8fafc;
+    --editor-gutter-text: #94a3b8;
+    --editor-text: #1e293b;
+    --editor-thumb: #e2e8f0;
+    --editor-thumb-hover: #cbd5e1;
+    --border-light: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f9fafb;
+    --text-main: #020617;
+    --text-muted: #64748b;
+    --accent-color: #6366f1;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 * {
@@ -291,6 +307,7 @@ textarea {
 
 .line-numbers {
     width: 45px;
+    height: 100%;
     background: var(--editor-gutter);
     color: var(--editor-gutter-text);
     padding: 1rem 0;
@@ -320,8 +337,9 @@ textarea.code-editor {
     padding: 1rem;
     resize: none;
     outline: none;
-    overflow-x: auto;
+    overflow: auto;
     white-space: pre;
+    tab-size: 4;
 }
 
 textarea.code-editor::-webkit-scrollbar {

@@ -8,25 +8,27 @@
     <div class="converter-toolbar">
         <div class="toolbar-left">
             <span class="toolbar-label">Samples:</span>
-            <select class="sample-select" (change)="loadSample($event)">
-                <option value="#">Select MT Message</option>
-                <option value="MT103">MT103</option>
-                <option value="MT103+">MT103+ (STP)</option>
-                <option value="MT103 REMIT">MT103 REMIT</option>
-                <option value="MT202">MT202</option>
-                <option value="MT202COV">MT202 COV</option>
-                <option value="MT200">MT200</option>
-                <option value="MT210">MT210</option>
-                <option value="MT900">MT900</option>
-                <option value="MT910">MT910</option>
-                <option value="MT940">MT940</option>
-                <option value="MT950">MT950</option>
-                <option value="MT942">MT942</option>
-                <option value="MT199">MT199</option>
-                <option value="MT299">MT299</option>
-                <option value="MT192">MT192</option>
-                <option value="MT196">MT196</option>
-            </select>
+            <mat-form-field appearance="outline" class="toolbar-select-field">
+                <mat-select placeholder="Select MT Message" (selectionChange)="loadSample($event.value)" class="sample-select">
+                    <mat-option value="#">Clear Message</mat-option>
+                    <mat-option value="MT103">MT103 (pacs.008)</mat-option>
+                    <mat-option value="MT103+">MT103+ (pacs.008-STP)</mat-option>
+                    <mat-option value="MT103 REMIT">MT103 REMIT (pacs.008-Remit)</mat-option>
+                    <mat-option value="MT202">MT202 (pacs.009)</mat-option>
+                    <mat-option value="MT202COV">MT202 COV (pacs.009-COV)</mat-option>
+                    <mat-option value="MT200">MT200 (pacs.009-Cash)</mat-option>
+                    <mat-option value="MT210">MT210 (camt.057)</mat-option>
+                    <mat-option value="MT900">MT900 (camt.054-Debit)</mat-option>
+                    <mat-option value="MT910">MT910 (camt.054-Credit)</mat-option>
+                    <mat-option value="MT940">MT940 (camt.053)</mat-option>
+                    <mat-option value="MT950">MT950 (camt.053-Stat)</mat-option>
+                    <mat-option value="MT942">MT942 (camt.052)</mat-option>
+                    <mat-option value="MT199">MT199 (pacs.002)</mat-option>
+                    <mat-option value="MT299">MT299 (pacs.002-ACK)</mat-option>
+                    <mat-option value="MT192">MT192 (camt.056)</mat-option>
+                    <mat-option value="MT196">MT196 (camt.029)</mat-option>
+                </mat-select>
+            </mat-form-field>
         </div>
         <div class="toolbar-right">
             <button class="action-btn clear-btn" (click)="clearAll()">
@@ -90,10 +92,10 @@
                     <mat-icon>input</mat-icon> MT Input (SWIFT FIN)
                 </div>
                 <div class="panel-actions">
-                    <button class="icon-btn" (click)="undo('mt')" [disabled]="!canUndo('mt')" matTooltip="Undo (Ctrl+Z)">
+                    <button class="icon-btn" data-tooltip="Undo (Ctrl+Z)" (click)="undo('mt')" [disabled]="!canUndo('mt')">
                         <mat-icon>undo</mat-icon>
                     </button>
-                    <button class="icon-btn" (click)="redo('mt')" [disabled]="!canRedo('mt')" matTooltip="Redo (Ctrl+Y)">
+                    <button class="icon-btn" data-tooltip="Redo (Ctrl+Y)" (click)="redo('mt')" [disabled]="!canRedo('mt')">
                         <mat-icon>redo</mat-icon>
                     </button>
                 </div>
@@ -138,22 +140,22 @@
                     <mat-icon>output</mat-icon> MX Output (ISO 20022 XML)
                 </div>
                 <div class="panel-actions" *ngIf="mxOutput.trim()">
-                    <button class="icon-btn" (click)="undo('mx')" [disabled]="!canUndo('mx')" matTooltip="Undo">
+                    <button class="icon-btn" data-tooltip="Undo" (click)="undo('mx')" [disabled]="!canUndo('mx')">
                         <mat-icon>undo</mat-icon>
                     </button>
-                    <button class="icon-btn" (click)="redo('mx')" [disabled]="!canRedo('mx')" matTooltip="Redo">
+                    <button class="icon-btn" data-tooltip="Redo" (click)="redo('mx')" [disabled]="!canRedo('mx')">
                         <mat-icon>redo</mat-icon>
                     </button>
-                    <button class="icon-btn" (click)="formatXml()" matTooltip="Prettify XML">
+                    <button class="icon-btn" data-tooltip="Prettify XML" (click)="formatXml()">
                         <mat-icon>format_align_left</mat-icon>
                     </button>
-                    <button class="icon-btn" (click)="copyMxToClipboard()" matTooltip="Copy XML">
+                    <button class="icon-btn" data-tooltip="Copy XML" (click)="copyMxToClipboard()">
                         <mat-icon>content_copy</mat-icon>
                     </button>
-                    <button class="icon-btn" (click)="downloadMx()" matTooltip="Download XML">
+                    <button class="icon-btn" data-tooltip="Download XML" (click)="downloadMx()">
                         <mat-icon>download</mat-icon>
                     </button>
-                    <button class="icon-btn validate-icon-btn" (click)="validateMx()" matTooltip="Validate MX">
+                    <button class="icon-btn validate-icon-btn" data-tooltip="Validate MX" (click)="validateMx()">
                         <mat-icon>verified</mat-icon>
                     </button>
                 </div>

@@ -1,7 +1,7 @@
 <div class="container">
         <header>
-                <h1>Customer Credit Transfer (pacs.008)</h1>
-                <p style="margin-top: -1rem;">Visual PACS.008 Message Builder</p>
+                <h1>Direct Debit Transfer (pacs.003) <mat-icon class="title-icon">payments</mat-icon></h1>
+                <p style="margin-top: -1rem;">Visual PACS.003 Message Builder</p>
         </header>
 
         <div class="split-view">
@@ -10,6 +10,9 @@
                                 <div class="grid">
 
                                         <div class="section-title">Message Header</div>
+                                         <div class="form-group"><label>Sender Member ID</label><input formControlName="fromMmbId" maxlength="35"></div>
+                                         <div class="form-group"><label>Sender Clr Sys Code</label><input formControlName="fromClrSysId" maxlength="4"></div>
+                                         <div class="form-group"><label>Sender LEI</label><input formControlName="fromLei" maxlength="20"></div>
                                         <div class="form-group"><label>Sender BIC <span
                                                                 class="req">*</span></label><input
                                                         formControlName="fromBic" maxlength="11"
@@ -19,7 +22,8 @@
                                                 <div class="field-hint at-limit" *ngIf="hint('fromBic', 11) as h">{{h}}
                                                 </div>
                                         </div>
-                                        <div class="form-group"><label>Receiver BIC <span
+                                        <div class="form-group"><label>AppHdr Related Msg ID</label><input formControlName="rltd"></div><div class="form-group"><label>Related Msg CharSet</label><input formControlName="rltdCharSet"></div>
+<div class="form-group"><label>Receiver BIC <span
                                                                 class="req">*</span></label><input
                                                         formControlName="toBic" maxlength="11"
                                                         pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$"
@@ -31,6 +35,9 @@
                                         <div class="form-group"><label>Business Msg ID <span
                                                                 class="req">*</span></label><input
                                                         formControlName="bizMsgId" maxlength="35" required>
+                                         <div class="form-group"><label>Receiver Member ID</label><input formControlName="toMmbId" maxlength="35"></div>
+                                         <div class="form-group"><label>Receiver Clr Sys Code</label><input formControlName="toClrSysId" maxlength="4"></div>
+                                         <div class="form-group"><label>Receiver LEI</label><input formControlName="toLei" maxlength="20"></div>
                                                 <div class="validation-msg" *ngIf="err('bizMsgId') as e">{{e}}</div>
                                                 <div class="field-hint at-limit" *ngIf="hint('bizMsgId', 35) as h">{{h}}
                                                 </div>
@@ -63,6 +70,20 @@
                                                 </select>
                                                 <div class="validation-msg" *ngIf="err('sttlmMtd') as e">{{e}}</div>
                                         </div>
+                                        <div class="form-group"><label>Market Practice</label><input formControlName="mktPrctc"></div>
+                                        <div class="form-group"><label>AppHdr Registry</label><input formControlName="regyId" placeholder="e.g. SWIFT"></div>
+                                        <div class="form-group"><label>Copy/Duplicate</label><select formControlName="cpyDplct"><option value="">None</option><option value="COPY">COPY</option><option value="DUPL">DUPL</option></select></div>
+                                         <div class="form-group"><label>AppHdr Priority</label><input formControlName="appHdrPrty" placeholder="e.g. HIGH"></div>
+                                                                                 <div class="form-group"><label>Sttlm Account IBAN</label><input formControlName="sttlmAcctId" placeholder="IBAN"></div>
+                                         <div class="form-group"><label>Sttlm Account Other ID</label><input formControlName="sttlmAcctOthrId"></div>
+                                         <div class="form-group"><label>Sttlm Account Type Code</label><input formControlName="sttlmAcctTpCd"></div>
+                                         <div class="form-group"><label>Sttlm Account Currency</label>
+                                                <select formControlName="sttlmAcctCcy">
+                                                        <option value="">None</option>
+                                                        <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
+                                                </select>
+                                         </div>
+                                         <div class="form-group"><label>Sttlm Account Name</label><input formControlName="sttlmAcctNm"></div>
 
                                         <div class="section-title">Transaction Details</div>
                                         <div class="form-group intermediary-field"><label>Instruction ID <span
@@ -103,7 +124,7 @@
                                                 </div>
                                                 <div class="validation-msg" *ngIf="uetrError">{{uetrError}}</div>
                                                 <div class="validation-msg" *ngIf="err('uetr') as e">{{e}}</div>
-                                                <div class="uetr-success" *ngIf="uetrSuccess">✔ {{uetrSuccess}}</div>
+                                                <div class="uetr-success" *ngIf="uetrSuccess"><mat-icon style="font-size: 14px; height: 14px; width: 14px; vertical-align: middle; margin-right: 4px;">check_circle</mat-icon> {{uetrSuccess}}</div>
                                                 <div class="field-hint at-limit" *ngIf="hint('uetr', 36) as h">{{h}}
                                                 </div>
                                         </div>
@@ -134,12 +155,46 @@
                                                         min="0001-01-01" max="9999-12-31">
                                                 <div class="validation-msg" *ngIf="err('sttlmDt') as e">{{e}}</div>
                                         </div>
+                                        <div class="form-group intermediary-field"><label>Instructed Amount</label>
+                                                <input formControlName="instdAmt" pattern="^\d{1,18}(\.\d{1,5})?$">
+                                        </div>
+                                        <div class="form-group intermediary-field"><label>Instructed Currency</label>
+                                                <select formControlName="instdAmtCcy">
+                                                        <option value="">None</option>
+                                                        <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
+                                                </select>
+                                        </div>
+                                        <div class="form-group intermediary-field"><label>Exchange Rate</label>
+                                                <input formControlName="xchgRate" pattern="^\d{1,11}(\.\d{1,10})?$">
+                                        </div>
+                                        <div class="form-group intermediary-field"><label>Debit DateTime</label>
+                                                <input type="datetime-local" formControlName="dbtDtTm">
+                                        </div>
+                                        <div class="form-group intermediary-field"><label>Credit DateTime</label>
+                                                <input type="datetime-local" formControlName="cdtDtTm">
+                                        </div>                                    
+                                        <div class="form-group intermediary-field"><label>Charges Amount</label>
+                                                <input formControlName="chrgsInfAmt" pattern="^\d{1,18}(\.\d{1,5})?$">
+                                        </div>
+                                        <div class="form-group intermediary-field"><label>Charges Currency</label>
+                                                <select formControlName="chrgsInfCcy">
+                                                        <option value="">None</option>
+                                                        <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
+                                                </select>
+                                        </div>
+                                         <div class="form-group intermediary-field"><label>Charges Agt 2 BIC</label><input formControlName="chrgsInfAgtBic2"></div>
+                                         <div class="form-group intermediary-field"><label>Charges Amt 2</label><input formControlName="chrgsInfAmt2"></div>
+                                         <div class="form-group intermediary-field"><label>Charges Ccy 2</label><select formControlName="chrgsInfCcy2"><option value="">None</option><option *ngFor="let c of currencies" [value]="c">{{c}}</option></select></div>
+                                         <div class="form-group intermediary-field"><label>Charges Agt 3 BIC</label><input formControlName="chrgsInfAgtBic3"></div>
+                                         <div class="form-group intermediary-field"><label>Charges Amt 3</label><input formControlName="chrgsInfAmt3"></div>
+                                         <div class="form-group intermediary-field"><label>Charges Ccy 3</label><select formControlName="chrgsInfCcy3"><option value="">None</option><option *ngFor="let c of currencies" [value]="c">{{c}}</option></select></div>                                    
                                         <div class="form-group intermediary-field"><label>Settlement Priority <span
                                                                 class="opt">Optional</span></label>
                                                 <select formControlName="sttlmPrty">
                                                         <option value="">None</option>
                                                         <option value="HIGH">HIGH</option>
                                                         <option value="NORM">NORM</option>
+                                                        <option value="URGT">URGT</option>
                                                 </select>
                                                 <div class="validation-msg" *ngIf="err('sttlmPrty') as e">{{e}}</div>
                                         </div>
@@ -184,6 +239,8 @@
                                                         <span class="opt">Optional</span></label><input
                                                         formControlName="svcLvlPrtry" placeholder="Max 35 chars">
                                                 <div class="validation-msg" *ngIf="err('svcLvlPrtry') as e">{{e}}</div>
+                                         <div class="form-group intermediary-field"><label>Service Level 2 Code</label><input formControlName="svcLvlCd2" placeholder="e.g. PRPT"></div>
+                                         <div class="form-group intermediary-field"><label>Service Level 3 Code</label><input formControlName="svcLvlCd3" placeholder="e.g. NURG"></div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>Local Instrument Code <span
                                                                 class="opt">Optional</span></label><input
@@ -197,6 +254,18 @@
                                                 </div>
                                         </div>
                                         <div class="form-group intermediary-field">
+                                                <label>Sequence Type</label>
+                                                <select formControlName="seqTp">
+                                                        <option value="">None</option>
+                                                        <option value="FNAL">Final [FNAL]</option>
+                                                        <option value="FRST">First [FRST]</option>
+                                                        <option value="OOFF">One Off [OOFF]</option>
+                                                        <option value="RCUR">Recurring [RCUR]</option>
+                                                        <option value="RPRE">Represented [RPRE]</option>
+                                                </select>
+                                                <div class="validation-msg" *ngIf="err('seqTp') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group intermediary-field">
                                                 <label
                                                         [matTooltip]="'Category Purpose indicates the high-level business purpose of the payment.'">
                                                         Category Purpose Code <span class="opt">Optional</span>
@@ -205,11 +274,11 @@
                                                 </label>
                                                 <select formControlName="ctgyPurpCd">
                                                         <option value="">None</option>
-                                                        <option *ngFor="let p of purposes" [value]="p">{{p}}</option>
+                                                        <option *ngFor="let c of categoryPurposes" [value]="c">{{c}}
+                                                        </option>
                                                 </select>
                                                 <div class="validation-msg" *ngIf="err('ctgyPurpCd') as e">{{e}}</div>
                                         </div>
-
                                         <div class="form-group intermediary-field"><label>Category Purpose Proprietary
                                                         <span class="opt">Optional</span></label><input
                                                         formControlName="ctgyPurpPrtry" placeholder="Max 35 chars">
@@ -218,6 +287,32 @@
                                         </div>
 
 
+
+                                        <div class="section-title">Direct Debit Mandate <span class="req">*</span></div>
+                                        <div class="form-group intermediary-field"><label>Required Collection Date <span class="req">*</span></label>
+                                                <input formControlName="reqdColltnDt" required type="date" min="0001-01-01" max="9999-12-31">
+                                                <div class="validation-msg" *ngIf="err('reqdColltnDt') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group intermediary-field"><label>Mandate ID</label>
+                                                <input formControlName="mndtId" maxlength="35">
+                                        </div>
+                                        <div class="form-group intermediary-field"><label>Date Of Signature</label>
+                                                <input formControlName="dtOfSgntr" type="date" min="0001-01-01" max="9999-12-31">
+                                        </div>
+                                        <div class="form-group intermediary-field"><label>Amendment Indicator</label>
+                                                <select formControlName="amdmntInd">
+                                                    <option value="false">False</option>
+                                                    <option value="true">True</option>
+                                                </select>
+                                        </div>
+                                        <div class="form-group intermediary-field"><label>Original Mandate ID</label>
+                                                <input formControlName="orgnlMndtId" maxlength="35">
+                                        </div>
+                                        <div class="form-group intermediary-field"><label>Original Creditor Scheme ID Name</label>
+                                                <input formControlName="orgnlCdtrSchmeIdNm" maxlength="140">
+                                        </div>
+                                         <div class="party-group"><div class="party-group-title">Original Creditor Scheme ID</div><ng-container *ngTemplateOutlet="partyForm; context:{prefix:'orgnlCdtrSchme',isAgent:false, title:'Original Creditor Scheme ID'}"></ng-container></div>
+                                         <div class="form-group intermediary-field"><label>Original Creditor Agent Account</label><input formControlName="orgnlCdtrAgtAcct" maxlength="34"></div>
 
                                         <div class="section-title">Transaction Agents</div>
 
@@ -233,7 +328,9 @@
                                                         *ngTemplateOutlet="partyForm; context:{prefix:'instdAgt',isAgent:true, title:'Instructed Agent'}"></ng-container>
                                         </div>
 
-                                        <div class="party-group">
+                                                                                 <div class="party-group"><div class="party-group-title">Instructing Party</div><ng-container *ngTemplateOutlet="partyForm; context:{prefix:'instgPty',isAgent:false, title:'Instructing Party'}"></ng-container></div>
+
+<div class="party-group">
                                                 <div class="party-group-title">Initiating Party</div>
                                                 <ng-container
                                                         *ngTemplateOutlet="partyForm; context:{prefix:'initgPty',isAgent:false, title:'Initiating Party'}"></ng-container>
@@ -329,6 +426,17 @@
                                                 </div>
                                         </div>
 
+                                        <div class="party-group">
+                                                <div class="party-group-title">Original Creditor Agent</div>
+                                                <ng-container
+                                                        *ngTemplateOutlet="partyForm; context:{prefix:'orgnlCdtrAgt',isAgent:true, title:'Original Creditor Agent'}"></ng-container>
+                                        </div>
+                                        <div class="party-group">
+                                                <div class="party-group-title">Original Debtor</div>
+                                                <ng-container
+                                                        *ngTemplateOutlet="partyForm; context:{prefix:'orgnlDbtr',isAgent:false, title:'Original Debtor'}"></ng-container>
+                                        </div>
+
                                         <!-- Ultimate Creditor -->
                                         <div class="party-group">
                                                 <div class="party-group-title">Ultimate Creditor</div>
@@ -357,7 +465,7 @@
 
                                         <!-- Instructions for Creditor Agent (0..2) -->
                                         <div class="section-title">Instructions for Creditor Agent <span
-                                                        class="opt">Optional · max 2</span></div>
+                                                        class="opt">Optional Ã‚Â· max 2</span></div>
                                         <div class="party-group">
                                                 <div class="party-group-title">Instr for Creditor Agent 1</div>
                                                 <div [formGroup]="form" class="party-grid">
@@ -365,13 +473,13 @@
                                                                 <label>Instruction Code</label>
                                                                 <select formControlName="instrForCdtrAgt1Cd">
                                                                         <option value="">None</option>
-                                                                        <option value="CHQB">CHQB – Please pay by cheque
+                                                                        <option value="CHQB">CHQB Ã¢â‚¬â€œ Please pay by cheque
                                                                         </option>
-                                                                        <option value="HOLD">HOLD – Hold until advised
+                                                                        <option value="HOLD">HOLD Ã¢â‚¬â€œ Hold until advised
                                                                         </option>
-                                                                        <option value="PHOB">PHOB – Phone beneficiary
+                                                                        <option value="PHOB">PHOB Ã¢â‚¬â€œ Phone beneficiary
                                                                                 before payment</option>
-                                                                        <option value="TELB">TELB – Telecom / Other
+                                                                        <option value="TELB">TELB Ã¢â‚¬â€œ Telecom / Other
                                                                                 beneficiary contact</option>
                                                                 </select>
                                                         </div>
@@ -392,13 +500,13 @@
                                                                 <label>Instruction Code</label>
                                                                 <select formControlName="instrForCdtrAgt2Cd">
                                                                         <option value="">None</option>
-                                                                        <option value="CHQB">CHQB – Please pay by cheque
+                                                                        <option value="CHQB">CHQB Ã¢â‚¬â€œ Please pay by cheque
                                                                         </option>
-                                                                        <option value="HOLD">HOLD – Hold until advised
+                                                                        <option value="HOLD">HOLD Ã¢â‚¬â€œ Hold until advised
                                                                         </option>
-                                                                        <option value="PHOB">PHOB – Phone beneficiary
+                                                                        <option value="PHOB">PHOB Ã¢â‚¬â€œ Phone beneficiary
                                                                                 before payment</option>
-                                                                        <option value="TELB">TELB – Telecom / Other
+                                                                        <option value="TELB">TELB Ã¢â‚¬â€œ Telecom / Other
                                                                                 beneficiary contact</option>
                                                                 </select>
                                                         </div>
@@ -415,7 +523,7 @@
 
                                         <!-- Instructions for Next Agent (0..6) -->
                                         <div class="section-title">Instructions for Next Agent <span
-                                                        class="opt">Optional · max 6</span></div>
+                                                        class="opt">Optional Ã‚Â· max 6</span></div>
                                         <div class="party-group">
                                                 <div class="party-group-title">Instr for Next Agent 1</div>
                                                 <div [formGroup]="form" class="party-grid">
@@ -423,9 +531,9 @@
                                                                 <label>Instruction Code</label>
                                                                 <select formControlName="instrForNxtAgt1Cd">
                                                                         <option value="">None</option>
-                                                                        <option value="PHOA">PHOA – Phone account owner
+                                                                        <option value="PHOA">PHOA Ã¢â‚¬â€œ Phone account owner
                                                                         </option>
-                                                                        <option value="TELA">TELA – Telecom account
+                                                                        <option value="TELA">TELA Ã¢â‚¬â€œ Telecom account
                                                                                 owner</option>
                                                                 </select>
                                                         </div>
@@ -444,9 +552,9 @@
                                                                 <label>Instruction Code</label>
                                                                 <select formControlName="instrForNxtAgt2Cd">
                                                                         <option value="">None</option>
-                                                                        <option value="PHOA">PHOA – Phone account owner
+                                                                        <option value="PHOA">PHOA Ã¢â‚¬â€œ Phone account owner
                                                                         </option>
-                                                                        <option value="TELA">TELA – Telecom account
+                                                                        <option value="TELA">TELA Ã¢â‚¬â€œ Telecom account
                                                                                 owner</option>
                                                                 </select>
                                                         </div>
@@ -465,9 +573,9 @@
                                                                 <label>Instruction Code</label>
                                                                 <select formControlName="instrForNxtAgt3Cd">
                                                                         <option value="">None</option>
-                                                                        <option value="PHOA">PHOA – Phone account owner
+                                                                        <option value="PHOA">PHOA Ã¢â‚¬â€œ Phone account owner
                                                                         </option>
-                                                                        <option value="TELA">TELA – Telecom account
+                                                                        <option value="TELA">TELA Ã¢â‚¬â€œ Telecom account
                                                                                 owner</option>
                                                                 </select>
                                                         </div>
@@ -486,9 +594,9 @@
                                                                 <label>Instruction Code</label>
                                                                 <select formControlName="instrForNxtAgt4Cd">
                                                                         <option value="">None</option>
-                                                                        <option value="PHOA">PHOA – Phone account owner
+                                                                        <option value="PHOA">PHOA Ã¢â‚¬â€œ Phone account owner
                                                                         </option>
-                                                                        <option value="TELA">TELA – Telecom account
+                                                                        <option value="TELA">TELA Ã¢â‚¬â€œ Telecom account
                                                                                 owner</option>
                                                                 </select>
                                                         </div>
@@ -507,9 +615,9 @@
                                                                 <label>Instruction Code</label>
                                                                 <select formControlName="instrForNxtAgt5Cd">
                                                                         <option value="">None</option>
-                                                                        <option value="PHOA">PHOA – Phone account owner
+                                                                        <option value="PHOA">PHOA Ã¢â‚¬â€œ Phone account owner
                                                                         </option>
-                                                                        <option value="TELA">TELA – Telecom account
+                                                                        <option value="TELA">TELA Ã¢â‚¬â€œ Telecom account
                                                                                 owner</option>
                                                                 </select>
                                                         </div>
@@ -528,9 +636,9 @@
                                                                 <label>Instruction Code</label>
                                                                 <select formControlName="instrForNxtAgt6Cd">
                                                                         <option value="">None</option>
-                                                                        <option value="PHOA">PHOA – Phone account owner
+                                                                        <option value="PHOA">PHOA Ã¢â‚¬â€œ Phone account owner
                                                                         </option>
-                                                                        <option value="TELA">TELA – Telecom account
+                                                                        <option value="TELA">TELA Ã¢â‚¬â€œ Telecom account
                                                                                 owner</option>
                                                                 </select>
                                                         </div>
@@ -545,6 +653,22 @@
 
                                         <div class="section-title">Remittance <span class="opt">Optional</span></div>
 
+                                        <div class="form-group">
+                                                <label>Purpose</label>
+                                                <select formControlName="purpCd">
+                                                        <option value="">None</option>
+                                                        <option *ngFor="let p of purposes" [value]="p">{{p}}</option>
+                                                </select>
+                                        </div>
+                                         <div class="form-group intermediary-field"><label>Regulatory Reporting Code 1</label><input formControlName="rgltryRptg1Code" maxlength="10"></div>
+                                         <div class="form-group intermediary-field"><label>Regulatory Reporting Inf 1</label><input formControlName="rgltryRptg1Inf" maxlength="35"></div>
+                                         <div class="form-group intermediary-field"><label>Related Remittance Ref 1</label><input formControlName="rltdRmtInf1Ref" maxlength="35"></div>
+                                         <div class="form-group intermediary-field"><label>Regulatory Reporting Code 2</label><input formControlName="rgltryRptg2Code" maxlength="10"></div>
+                                         <div class="form-group intermediary-field"><label>Regulatory Reporting Inf 2</label><input formControlName="rgltryRptg2Inf" maxlength="35"></div>
+                                         <div class="form-group intermediary-field"><label>Regulatory Reporting Code 3</label><input formControlName="rgltryRptg3Code" maxlength="10"></div>
+                                         <div class="form-group intermediary-field"><label>Regulatory Reporting Inf 3</label><input formControlName="rgltryRptg3Inf" maxlength="35"></div>
+                                         <div class="form-group intermediary-field"><label>Related Remittance Ref 2</label><input formControlName="rltdRmtInf2Ref" maxlength="35"></div>
+                                         <div class="form-group intermediary-field"><label>Related Remittance Ref 3</label><input formControlName="rltdRmtInf3Ref" maxlength="35"></div>
 
                                 </div>
 
@@ -552,6 +676,7 @@
                                 <!-- Remittance Information -->
                                 <div class="form-section">
                                         <div class="section-header">
+                                                <mat-icon>receipt_long</mat-icon>
                                                 <h3>Remittance Information</h3>
                                         </div>
                                         <div class="form-row">
@@ -775,34 +900,6 @@
                         <div class="address-subgrid">
                                 <div class="form-group"
                                         *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
-                                        <label>{{title}} Building Number</label>
-                                        <input [formControlName]="prefix+'BldgNb'" maxlength="16">
-                                        <div class="validation-msg" *ngIf="err(prefix+'BldgNb') as e">{{e}}</div>
-                                        <div class="field-hint at-limit" *ngIf="hint(prefix+'BldgNb', 16) as h">{{h}}</div>
-                                </div>
-                                <div class="form-group"
-                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
-                                        <label>{{title}} Building Name</label>
-                                        <input [formControlName]="prefix+'BldgNm'" maxlength="35">
-                                        <div class="validation-msg" *ngIf="err(prefix+'BldgNm') as e">{{e}}</div>
-                                        <div class="field-hint at-limit" *ngIf="hint(prefix+'BldgNm', 35) as h">{{h}}</div>
-                                </div>
-                                <div class="form-group"
-                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
-                                        <label>{{title}} Street Name</label>
-                                        <input [formControlName]="prefix+'StrtNm'" maxlength="70">
-                                        <div class="validation-msg" *ngIf="err(prefix+'StrtNm') as e">{{e}}</div>
-                                        <div class="field-hint at-limit" *ngIf="hint(prefix+'StrtNm', 70) as h">{{h}}</div>
-                                </div>
-                                <div class="form-group"
-                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
-                                        <label>{{title}} Post Code</label>
-                                        <input [formControlName]="prefix+'PstCd'" maxlength="16">
-                                        <div class="validation-msg" *ngIf="err(prefix+'PstCd') as e">{{e}}</div>
-                                        <div class="field-hint at-limit" *ngIf="hint(prefix+'PstCd', 16) as h">{{h}}</div>
-                                </div>
-                                <div class="form-group"
-                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                                         <label>{{title}} City (Town Name) <span class="req">*</span></label>
                                         <input [formControlName]="prefix+'TwnNm'" maxlength="35">
                                         <div class="validation-msg" *ngIf="err(prefix+'TwnNm') as e">{{e}}</div>
@@ -833,9 +930,46 @@
                                                 <div class="field-hint at-limit" *ngIf="hint(prefix+'AdrLine2', 70) as h">{{h}}</div>
                                         </div>
                                 </ng-container>
+                                <div class="form-group"
+                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        <label>{{title}} Building Number</label>
+                                        <input [formControlName]="prefix+'BldgNb'" maxlength="16">
+                                        <div class="validation-msg" *ngIf="err(prefix+'BldgNb') as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint(prefix+'BldgNb', 16) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"
+                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        <label>{{title}} Building Name</label>
+                                        <input [formControlName]="prefix+'BldgNm'" maxlength="35">
+                                        <div class="validation-msg" *ngIf="err(prefix+'BldgNm') as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint(prefix+'BldgNm', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"
+                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        <label>{{title}} Street Name</label>
+                                        <input [formControlName]="prefix+'StrtNm'" maxlength="70">
+                                        <div class="validation-msg" *ngIf="err(prefix+'StrtNm') as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint(prefix+'StrtNm', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"
+                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        <label>{{title}} Post Code</label>
+                                        <input [formControlName]="prefix+'PstCd'" maxlength="16">
+                                        <div class="validation-msg" *ngIf="err(prefix+'PstCd') as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint(prefix+'PstCd', 16) as h">{{h}}</div>
+                                </div>
                         </div>
                 </ng-container>
 
+                                <!-- Country of Residence -->
+                <div class="form-group" *ngIf="!isAgent">
+                        <label>{{title}} Country of Residence</label>
+                        <select [formControlName]="prefix + 'CtryOfRes'">
+                                <option value="">Select Country</option>
+                                <option *ngFor="let c of countries" [value]="c">{{c}}</option>
+                        </select>
+                        <div class="validation-msg" *ngIf="err(prefix+'CtryOfRes') as e">{{e}}</div>
+                </div>
                 <!-- Name -->
                 <div class="form-group" *ngIf="prefix !== 'instgAgt' && prefix !== 'instdAgt'">
                         <label>{{title}} Name <span class="req" *ngIf="required">*</span></label>
@@ -1000,3 +1134,9 @@
                 </div>
         </div>
 </div>
+
+
+
+
+
+
