@@ -8,6 +8,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
 import { UetrService } from '../../../services/uetr.service';
+import { ISO_PURPOSE_CODES } from '../../../constants/purpose-codes';
 
 @Component({
     selector: 'app-camt057',
@@ -201,8 +202,14 @@ export class Camt057Component implements OnInit {
             }
         });
         this.http.get<any>(this.config.getApiUrl('/codelists/purp')).subscribe({
-            next: (res) => { if (res && res.codes) this.purposes = res.codes; },
-            error: (err) => console.error('Failed to load purposes', err)
+            next: (res) => {
+                const apiCodes = (res && res.codes) ? res.codes : [];
+                this.purposes = [...new Set([...ISO_PURPOSE_CODES, ...apiCodes])].sort();
+            },
+            error: (err) => {
+                console.error('Failed to load purposes', err);
+                this.purposes = [...ISO_PURPOSE_CODES].sort();
+            }
         });
 
     }
@@ -212,7 +219,10 @@ export class Camt057Component implements OnInit {
         const BIC_REQ = [Validators.required, ...BIC];
 
         this.form = this.fb.group({
-            purpCd: [''],
+            purpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/), (control: any) => {
+                if (!control.value) return null;
+                return this.purposes.includes(control.value.toUpperCase()) ? null : { invalidPurpose: true };
+            }]],
             ctgyPurpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/)]],
             ctgyPurpPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
             instrPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
@@ -286,8 +296,13 @@ export class Camt057Component implements OnInit {
             this.form.addControl(p + 'AdrLine2', this.fb.control('', [Validators.maxLength(70), ADDR_PATTERN]));
         });
 
-        // Set Default Dbtr
-        this.form.patchValue({ dbtrName: 'Sender Bank Ltd', dbtrBic: 'SENDBK55XXX' });
+        // Set Default Dbtr/Cdtr
+        this.form.patchValue({
+            dbtrName: 'Debtor Bank FI',
+            dbtrBic: 'BBBBUS33XXX',
+            cdtrName: 'Creditor Bank FI',
+            cdtrBic: 'CCCCGB2LXXX'
+        });
     }
 
     err(f: string): string | null {
@@ -323,7 +338,9 @@ export class Camt057Component implements OnInit {
             if (f.toLowerCase().includes('bldgnb') || f.toLowerCase().includes('pstcd') || f.toLowerCase().includes('pstbx') || f.toLowerCase().includes('bldgnm') || f.toLowerCase().includes('twnnm') || f.toLowerCase().includes('twnlctn') || f.toLowerCase().includes('dstrctnm') || f.toLowerCase().includes('ctrysubdvsn') || f.toLowerCase().includes('strtnm') || f.toLowerCase().includes('dept') || f.toLowerCase().includes('subdept') || f.toLowerCase().includes('flr') || f.toLowerCase().includes('room') || f.toLowerCase().includes('adrline')) {
                 return 'Invalid character. Only ISO 20022 MX allowed characters permitted.';
             }
+            if (f === 'purpCd') return 'Invalid Purpose Code. Please select from the list or enter a valid ISO 20022 Purpose Code.';
         }
+        if (c.errors?.['invalidPurpose']) return 'Invalid Purpose Code. Please select from the list or enter a valid ISO 20022 Purpose Code.';
         if (c.errors?.['target2']) return 'T2 allows only EUR currency.';
         if (c.errors?.['chips']) return 'CHIPS allows only USD currency.';
         if (c.errors?.['fed']) return 'FED allows only USD currency.';

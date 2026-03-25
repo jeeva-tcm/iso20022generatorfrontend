@@ -1314,6 +1314,21 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     flex-shrink: 0;
 }
 
+.info-icon-small {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    vertical-align: middle;
+    color: var(--text-muted);
+    margin-left: 4px;
+    cursor: help;
+}
+
+input[list]::-webkit-calendar-picker-indicator {
+    display: flex !important;
+}
+
+
 .uetr-refresh-btn mat-icon {
     font-size: 15px;
     width: 15px;
