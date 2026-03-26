@@ -181,6 +181,36 @@ body {
     /* IE and Edge */
 }
 
+/* ── Mat-Select Dropdown Panel — Dark Theme Fix ── */
+.mat-mdc-select-panel {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-light) !important;
+    border-radius: 8px !important;
+}
+
+.mat-mdc-option {
+    color: var(--text-main) !important;
+    font-size: 0.82rem !important;
+}
+
+.mat-mdc-option:hover:not(.mdc-list-item--disabled),
+.mat-mdc-option:focus:not(.mdc-list-item--disabled),
+.mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+    background: var(--bg-card-hover) !important;
+}
+
+.mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) .mdc-list-item__primary-text {
+    color: var(--accent-text) !important;
+}
+
+.mat-mdc-select-value-text {
+    color: var(--text-main) !important;
+}
+
+.mat-mdc-select-arrow {
+    color: var(--text-muted) !important;
+}
+
 /* Global Form Elements */
 label {
     display: block;
@@ -228,6 +258,22 @@ input,
 select {
     height: 32px;
     padding: 0 12px;
+}
+
+/* Reset checkbox styling */
+input[type="checkbox"] {
+    width: auto !important;
+    height: auto !important;
+    margin: 0;
+    padding: 0;
+    appearance: auto;
+    -webkit-appearance: checkbox;
+    box-shadow: none !important;
+    transform: scale(1.2);
+    cursor: pointer;
+    background: transparent !important;
+    border: none !important;
+    accent-color: var(--accent-color);
 }
 
 /* Enforce BIC uppercase visually */
@@ -352,7 +398,7 @@ body.light-theme .party-grid {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap; /* To allow validation msg to wrap below */
-    align-items: center;
+    align-items: flex-start; /* Changed from center to prevent vertical overlap when wrapping */
     padding: 5px 20px;
     border-bottom: 1px solid var(--border-light);
     width: 100%;
@@ -408,14 +454,35 @@ body.light-theme .party-grid select {
 /* Validation msg below the input */
 .party-grid .validation-msg {
     flex: 0 0 100%;
-    margin-left: 145px; /* Shifted slightly left to align better under input */
-    margin-top: 4px;
-    margin-bottom: 6px;
+    margin-left: 160px; /* Aligned exactly with input start (after 160px label) */
+    padding-top: 4px; /* Added padding to prevent overlapping input border */
+    padding-bottom: 4px;
     font-size: 10px;
-    line-height: 1.3;
+    line-height: 1.2;
+    color: #dc2626; /* Vibrant standard red (Red 600) */
+    font-weight: 600;
     white-space: normal;
-    word-break: break-word; /* Ensure long words wrap */
+    word-break: break-word; 
     overflow: visible;
+    width: 100%;
+    clear: both;
+}
+
+/* Field limit hints */
+.party-grid .field-hint, 
+.party-grid .field-hint.at-limit {
+    flex: 0 0 100%;
+    margin-left: 160px;
+    margin-top: 1px;
+    margin-bottom: 3px;
+    font-size: 9px;
+    font-weight: 500;
+    color: #f59e0b; /* Amber for hint */
+    display: block;
+}
+
+.party-grid .field-hint.at-limit {
+    color: #ff3b30; /* Red when at limit */
 }
 
 /* Address sub-section */
@@ -480,11 +547,15 @@ body.light-theme textarea:focus {
 
 /* Global Validation Messages */
 .validation-msg {
+    color: #dc2626; /* Vibrant red */
     color: #f87171; /* brighter red for dark theme (default error) */
     font-size: 11px;
-    margin-top: 4px;
-    font-weight: 500;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    font-weight: 600;
     display: block;
+    width: 100%;
+    clear: both;
     animation: fadeIn 0.2s ease;
 }
 
@@ -510,7 +581,7 @@ body.light-theme .hint-msg {
 }
 
 body.light-theme .validation-msg {
-    color: #dc2626;
+    color: red;
 }
 
 body.light-theme .validation-msg.success {
