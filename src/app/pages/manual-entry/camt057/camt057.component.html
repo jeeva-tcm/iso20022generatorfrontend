@@ -81,11 +81,16 @@
                         <input formControlName="clrSysRef" maxlength="35" placeholder="Alphanumeric (1-35)">
                         <div class="validation-msg" *ngIf="err('clrSysRef') as e">{{e}}</div>
                     </div>
-                    <div class="form-group"><label>Purpose Code</label>
-                        <select formControlName="purpCd">
-                            <option value="">None</option>
+                    <div class="form-group intermediary-field">
+                        <label [matTooltip]="'Purpose indicates the underlying reason for the payment.'">
+                            Purpose Code <span class="opt">Optional</span>
+                            <mat-icon class="info-icon-small">info</mat-icon>
+                        </label>
+                        <input formControlName="purpCd" [matTooltip]="'Select or enter a 4-character ISO purpose code'" list="purpList" placeholder="Select or enter code">
+                        <datalist id="purpList">
                             <option *ngFor="let p of purposes" [value]="p">{{p}}</option>
-                        </select>
+                        </datalist>
+                        <div class="validation-msg" *ngIf="err('purpCd') as e">{{e}}</div>
                     </div>
 
                     <div class="form-group">

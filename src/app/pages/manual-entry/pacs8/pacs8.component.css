@@ -1329,4 +1329,19 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     font-weight: 600;
     margin-top: 3px;
     animation: fadeIn 0.2s ease;
-}
+}
+
+.info-icon-small {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    vertical-align: middle;
+    color: var(--text-muted);
+    margin-left: 4px;
+    cursor: help;
+}
+
+input[list]::-webkit-calendar-picker-indicator {
+    display: flex !important;
+}
+

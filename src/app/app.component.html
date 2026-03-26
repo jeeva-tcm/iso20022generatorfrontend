@@ -79,6 +79,12 @@
                                 <span class="msg-desc">Payment Status Report</span>
                             </div>
                         </a>
+                         <a routerLink="/generate/pacs10" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                            <div class="msg-info">
+                                <span class="msg-id">pacs.010.001.10</span>
+                                <span class="msg-desc">Interbank Direct Debit</span>
+                            </div>
+                        </a>
                     </div>
                 </div>
 
@@ -146,6 +152,25 @@
                         </a>
                     </div>
                 </div>
+                <!-- <a routerLink="/generate" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}"
+                    (click)="isMenuForcedClosed = true">
+                    <span class="msg-tag dynamic">FULL</span> MX EXPLORER (700+ TYPES)
+                </a> -->
+                <!-- <a routerLink="/generate/pacs8" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                    <span class="msg-tag pacs">PACS</span> pacs.008.001.08
+                </a>
+                <a routerLink="/generate/pacs9" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                    <span class="msg-tag pacs">PACS</span> pacs.009.001.08
+                </a>
+                <a routerLink="/generate/pacs9cov" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                    <span class="msg-tag pacs">PACS</span> pacs.009.001.08 COV
+                </a>
+                <a routerLink="/generate/pacs10" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                    <span class="msg-tag pacs">PACS</span> pacs.010.001.03
+                </a>
+                <a routerLink="/generate/camt57" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                    <span class="msg-tag camt">CAMT</span> camt.057.001.08
+                </a> -->
             </div>
         </div>
 

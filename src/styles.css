@@ -575,6 +575,14 @@ body.light-theme textarea:focus {
     animation: fadeIn 0.2s ease;
 }
 
+.validation-msg.error {
+    color: #f87171;
+}
+
+.validation-msg.success {
+    color: #34d399; /* Emerald 400 */
+}
+
 .hint-msg {
     color: #f59e0b;
     font-size: 11px;
@@ -590,6 +598,10 @@ body.light-theme .hint-msg {
 
 body.light-theme .validation-msg {
     color: red;
+}
+
+body.light-theme .validation-msg.success {
+    color: #059669; /* Emerald 600 */
 }
 
 .ng-invalid.ng-touched {
