@@ -480,13 +480,20 @@ body.light-theme textarea:focus {
 
 /* Global Validation Messages */
 .validation-msg {
-    color: #f87171;
-    /* brighter red for dark theme */
+    color: #f87171; /* brighter red for dark theme (default error) */
     font-size: 11px;
     margin-top: 4px;
     font-weight: 500;
     display: block;
     animation: fadeIn 0.2s ease;
+}
+
+.validation-msg.error {
+    color: #f87171;
+}
+
+.validation-msg.success {
+    color: #34d399; /* Emerald 400 */
 }
 
 .hint-msg {
@@ -504,6 +511,10 @@ body.light-theme .hint-msg {
 
 body.light-theme .validation-msg {
     color: #dc2626;
+}
+
+body.light-theme .validation-msg.success {
+    color: #059669; /* Emerald 600 */
 }
 
 .ng-invalid.ng-touched {

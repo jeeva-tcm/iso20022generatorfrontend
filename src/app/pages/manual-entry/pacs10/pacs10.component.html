@@ -9,8 +9,19 @@
         <div class="left-panel">
             <form [formGroup]="form" class="content-box">
                 <div class="grid">
+                    <!-- ERROR SUMMARY BOX -->
+                    <div class="error-summary-box" *ngIf="form.invalid && (form.touched || form.dirty)">
+                        <div class="error-summary-header">
+                            <mat-icon>error_outline</mat-icon>
+                            <span>{{getFormErrors().length}} Error(s) found in this form</span>
+                        </div>
+                        <ul class="error-summary-list">
+                            <li *ngFor="let err of getFormErrors()">{{err}}</li>
+                        </ul>
+                    </div>
+
                     <!-- SECTION 1: MESSAGE HEADER -->
-                    <div class="section-title">Message Header</div>
+                    <div class="section-title" [class.has-error]="hasSectionError(['fromBic', 'toBic', 'bizMsgId', 'msgId', 'creDtTm', 'nbOfTxs'])">Message Header</div>
                     <div class="form-group">
                         <label>Sender BIC <span class="req">*</span></label>
                         <input formControlName="fromBic" maxlength="11" placeholder="Sender BIC">
@@ -68,7 +79,7 @@
                     </div>
 
                     <!-- SECTION 2: TRANSACTION DETAILS -->
-                    <div class="section-title">Transaction Details</div>
+                    <div class="section-title" [class.has-error]="hasSectionError(['instrId', 'endToEndId', 'txId', 'uetr', 'cdtId', 'clrSysRef', 'amount', 'currency', 'intrBkSttlmDt', 'purpose', 'remittance'])">Transaction Details</div>
                     <div class="form-group intermediary-field">
                         <label>Instruction Identification <span class="req">*</span></label>
                         <input formControlName="instrId" maxlength="35">
@@ -107,7 +118,7 @@
                     </div>
 
                     <!-- SECTION 3: PAYMENT AMOUNTS -->
-                    <div class="section-title">Payment Amounts</div>
+                    <div class="section-title" [class.has-error]="hasSectionError(['amount', 'currency', 'intrBkSttlmDt', 'clstTm', 'tillTm', 'frTm', 'rjctTm'])">Payment Amounts</div>
                     <div class="form-group">
                         <label>Amount <span class="req">*</span></label>
                         <input formControlName="amount" type="number" step="0.01">
@@ -125,18 +136,26 @@
                         <input formControlName="intrBkSttlmDt" type="date">
                         <div class="validation-msg" *ngIf="err('intrBkSttlmDt') as e">{{e}}</div>
                     </div>
-
-                    <!-- Settlement Time Request -->
-                    <div class="subsection-header">Settlement Time Request <span class="opt">(Optional)</span></div>
-                    <div class="subsection agent-id-subsection">
-                        <div class="form-group"><label>CLS Time</label><input formControlName="sttlmTmReqCLSTm" placeholder="HH:MM:SS"></div>
-                        <div class="form-group"><label>Till Time</label><input formControlName="sttlmTmReqTillTm" placeholder="HH:MM:SS"></div>
-                        <div class="form-group"><label>From Time</label><input formControlName="sttlmTmReqFrTm" placeholder="HH:MM:SS"></div>
-                        <div class="form-group"><label>Reject Time</label><input formControlName="sttlmTmReqRjctTm" placeholder="HH:MM:SS"></div>
+                    <div class="form-group">
+                        <label>CLSTm</label>
+                        <input formControlName="clstTm" placeholder="HH:MM:SS">
+                    </div>
+                    <div class="form-group">
+                        <label>TillTm</label>
+                        <input formControlName="tillTm" placeholder="HH:MM:SS">
+                    </div>
+                    <div class="form-group">
+                        <label>FrTm</label>
+                        <input formControlName="frTm" placeholder="HH:MM:SS">
+                    </div>
+                    <div class="form-group">
+                        <label>RjctTm</label>
+                        <input formControlName="rjctTm" placeholder="HH:MM:SS">
                     </div>
 
+
                     <!-- SECTION 4: PAYMENT TYPE INFORMATION -->
-                    <div class="section-title">Payment Type Information</div>
+                    <div class="section-title" [class.has-error]="hasSectionError(['instrPrty', 'svcLvl', 'lclInstrm', 'ctgyPurp'])">Payment Type Information</div>
                     <div class="form-group">
                         <label>Instruction Priority</label>
                         <select formControlName="instrPrty">
@@ -162,7 +181,7 @@
                     </div>
 
                     <!-- SECTION 5: AGENTS -->
-                    <div class="section-title">Agents</div>
+                    <div class="section-title" [class.has-error]="hasSectionError(['instgAgt', 'instdAgt', 'cdtrAgt', 'dbtrAgt'])">Agents</div>
                     <div class="party-group">
                         <div class="party-group-title mandatory">Instructing Agent</div>
                         <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'instgAgt', isAgent:true, title:'Instructing Agent', required: true, excludeNmAddr: true, excludeAcct: true}"></ng-container>
@@ -181,7 +200,7 @@
                     </div>
 
                     <!-- SECTION 6: PARTIES -->
-                    <div class="section-title">Parties</div>
+                    <div class="section-title" [class.has-error]="hasSectionError(['dbtr', 'cdtr', 'ultmtDbtr', 'ultmtCdtr'])">Parties</div>
                     <div class="party-group">
                         <div class="party-group-title mandatory">Creditor</div>
                         <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'cdtr', isAgent:true, title:'Creditor', required: true}"></ng-container>
@@ -190,17 +209,9 @@
                         <div class="party-group-title mandatory">Debtor</div>
                         <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtr', isAgent:true, title:'Debtor', required: true}"></ng-container>
                     </div>
-                    <div class="party-group">
-                        <div class="party-group-title">Ultimate Creditor</div>
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'ultmtCdtr', isAgent:false, title:'Ultimate Creditor', required: false}"></ng-container>
-                    </div>
-                    <div class="party-group">
-                        <div class="party-group-title">Ultimate Debtor</div>
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'ultmtDbtr', isAgent:false, title:'Ultimate Debtor', required: false}"></ng-container>
-                    </div>
 
                     <!-- SECTION 7: ACCOUNTS -->
-                    <div class="section-title">Accounts</div>
+                    <div class="section-title" [class.has-error]="hasSectionError(['instgAgtAcct', 'instdAgtAcct', 'cdtrAgtAcct', 'dbtrAgtAcct', 'dbtrAcct', 'cdtrAcct'])">Accounts</div>
                     <div class="party-group">
                         <div class="party-group-title">Creditor Agent Account</div>
                         <ng-container *ngTemplateOutlet="acctForm; context:{prefix:'cdtrAgt', title:'Creditor Agent Account'}"></ng-container>
@@ -219,10 +230,13 @@
                     </div>
 
                     <!-- SECTION 8: PAYMENT DETAILS -->
-                    <div class="section-title">Payment Details</div>
+                    <div class="section-title" [class.has-error]="hasSectionError(['purposeCd', 'remittanceInfo', 'instrForDbtrAgt'])">Payment Details</div>
                     <div class="form-group intermediary-field">
                         <label>Purpose Code</label>
-                        <input formControlName="purposeCd" placeholder="e.g. BKXF" maxlength="4">
+                        <input formControlName="purposeCd" placeholder="e.g. BKXF" maxlength="4" list="purposes-list">
+                        <datalist id="purposes-list">
+                            <option *ngFor="let p of purposes" [value]="p">{{p}}</option>
+                        </datalist>
                         <div class="validation-msg" *ngIf="err('purposeCd') as e">{{e}}</div>
                     </div>
                     <div class="form-group intermediary-field">
@@ -266,129 +280,224 @@
                     </button>
                 </div>
                 <div class="editor-wrapper">
-                    <div class="line-numbers">
+                    <div class="line-numbers" #lineNumbers>
                         <div *ngFor="let idx of editorLineCount; let i = index">{{i + 1}}</div>
                     </div>
-                    <textarea class="code-editor" [(ngModel)]="generatedXml" (ngModelChange)="onEditorChange($event)" spellcheck="false" wrap="off"></textarea>
+                    <textarea class="code-editor" [(ngModel)]="generatedXml" (ngModelChange)="onEditorChange($event, false)" (scroll)="syncScroll(xmlEditor, lineNumbers)" #xmlEditor spellcheck="false" wrap="off"></textarea>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- REUSABLE PARTY FORM TEMPLATE (pacs.008 style) -->
+<!-- REUSABLE PARTY FORM TEMPLATE (pacs.008 boxed style) -->
 <ng-template #partyForm let-prefix="prefix" let-isAgent="isAgent" let-title="title" let-required="required" let-excludeNmAddr="excludeNmAddr">
-    <div [formGroup]="form" class="party-grid">
+    <div [formGroup]="form" class="party-grid-boxed">
         <!-- BIC -->
-        <div class="form-group">
-            <label>{{title}} BIC <span class="req" *ngIf="required">*</span></label>
-            <input [formControlName]="prefix + 'Bic'" maxlength="11" placeholder="e.g. BBBBGB2LXXX">
-            <div class="validation-msg" *ngIf="err(prefix + 'Bic') as e">{{e}}</div>
-            <div class="field-hint at-limit" *ngIf="hint(prefix + 'Bic', 11) as h">{{h}}</div>
+        <div class="boxed-row">
+            <div class="boxed-label">{{title}} BIC <span class="req" *ngIf="required">*</span></div>
+            <div class="boxed-input">
+                <input [formControlName]="prefix + 'Bic'" maxlength="11" placeholder="e.g. BBBBGB2LXXX">
+                <div class="validation-msg" *ngIf="err(prefix + 'Bic') as e">{{e}}</div>
+                <div class="field-hint at-limit" *ngIf="hint(prefix + 'Bic', 11) as h">{{h}}</div>
+            </div>
         </div>
 
-        <!-- Address Type & Name Row -->
-        <div class="form-group" *ngIf="!excludeNmAddr">
-            <label>{{title}} Name <span class="req" *ngIf="required">*</span></label>
-            <input [formControlName]="prefix + 'Name'" maxlength="140">
-            <div class="validation-msg" *ngIf="err(prefix + 'Name') as e">{{e}}</div>
-            <div class="field-hint at-limit" *ngIf="hint(prefix + 'Name', 140) as h">{{h}}</div>
+        <!-- Name -->
+        <div class="boxed-row" *ngIf="!excludeNmAddr">
+            <div class="boxed-label">{{title}} Name <span class="req" *ngIf="required">*</span></div>
+            <div class="boxed-input">
+                <input [formControlName]="prefix + 'Name'" maxlength="140">
+                <div class="validation-msg" *ngIf="err(prefix + 'Name') as e">{{e}}</div>
+                <div class="field-hint at-limit" *ngIf="hint(prefix + 'Name', 140) as h">{{h}}</div>
+            </div>
         </div>
 
-        <div class="form-group" *ngIf="!excludeNmAddr">
-            <label>{{title}} Address Type</label>
-            <select [formControlName]="prefix + 'AddrType'">
-                <option value="none">None (BIC/ID Only)</option>
-                <option value="unstructured">Unstructured</option>
-                <option value="structured">Structured</option>
-                <option value="hybrid">Hybrid</option>
-            </select>
-            <div class="validation-msg" *ngIf="err(prefix + 'AddrType') as e">{{e}}</div>
+        <!-- Address Type -->
+        <div class="boxed-row" *ngIf="!excludeNmAddr">
+            <div class="boxed-label">{{title}} Address Type</div>
+            <div class="boxed-input">
+                <select [formControlName]="prefix + 'AddrType'">
+                    <option value="none">None (BIC/ID Only)</option>
+                    <option value="unstructured">Unstructured</option>
+                    <option value="structured">Structured</option>
+                    <option value="hybrid">Hybrid</option>
+                </select>
+                <div class="validation-msg" *ngIf="err(prefix + 'AddrType') as e">{{e}}</div>
+            </div>
         </div>
 
-        <!-- Dynamic Address Fields -->
+        <!-- Dynamic Address Fields (Boxed) -->
         <ng-container *ngIf="!excludeNmAddr && form.get(prefix + 'AddrType')?.value !== 'none'">
-            <div class="subsection party-grid agent-id-subsection" style="grid-column: 1 / -1;">
-                <div class="form-group" *ngIf="['structured', 'hybrid'].includes(form.get(prefix + 'AddrType')?.value)">
-                    <label>Street Name</label>
-                    <input [formControlName]="prefix + 'StrtNm'">
-                </div>
-                <div class="form-group" *ngIf="['structured', 'hybrid'].includes(form.get(prefix + 'AddrType')?.value)">
-                    <label>Building No.</label>
-                    <input [formControlName]="prefix + 'BldgNb'">
-                </div>
-                <div class="form-group" *ngIf="['structured', 'hybrid'].includes(form.get(prefix + 'AddrType')?.value)">
-                    <label>Town Name <span class="req" *ngIf="form.get(prefix + 'AddrType')?.value !== 'unstructured' || (form.get(prefix + 'StrtNm')?.value || form.get(prefix + 'BldgNb')?.value)">*</span></label>
+            <div class="boxed-row" *ngIf="['structured', 'hybrid'].includes(form.get(prefix + 'AddrType')?.value)">
+                <div class="boxed-label">{{title}} Street Name</div>
+                <div class="boxed-input"><input [formControlName]="prefix + 'StrtNm'"></div>
+            </div>
+            <div class="boxed-row" *ngIf="['structured', 'hybrid'].includes(form.get(prefix + 'AddrType')?.value)">
+                <div class="boxed-label">{{title}} Building No.</div>
+                <div class="boxed-input"><input [formControlName]="prefix + 'BldgNb'"></div>
+            </div>
+            <div class="boxed-row" *ngIf="['structured', 'hybrid'].includes(form.get(prefix + 'AddrType')?.value)">
+                <div class="boxed-label">{{title}} Town Name <span class="req" *ngIf="form.get(prefix + 'AddrType')?.value !== 'unstructured' || (form.get(prefix + 'StrtNm')?.value || form.get(prefix + 'BldgNb')?.value)">*</span></div>
+                <div class="boxed-input">
                     <input [formControlName]="prefix + 'TwnNm'">
                     <div class="validation-msg" *ngIf="err(prefix + 'TwnNm') as e">{{e}}</div>
                 </div>
-                <div class="form-group">
-                    <label>Country <span class="req">*</span></label>
+            </div>
+            <div class="boxed-row">
+                <div class="boxed-label">{{title}} Country <span class="req">*</span></div>
+                <div class="boxed-input">
                     <select [formControlName]="prefix + 'Ctry'">
                         <option value="">Select Country</option>
                         <option *ngFor="let c of countries" [value]="c">{{c}}</option>
                     </select>
                     <div class="validation-msg" *ngIf="err(prefix + 'Ctry') as e">{{e}}</div>
                 </div>
-                <ng-container *ngIf="['unstructured', 'hybrid'].includes(form.get(prefix + 'AddrType')?.value)">
-                    <div class="form-group"><label>Address Line 1</label><input [formControlName]="prefix + 'AdrLine1'"></div>
-                    <div class="form-group"><label>Address Line 2</label><input [formControlName]="prefix + 'AdrLine2'"></div>
-                    <div class="form-group"><label>Address Line 3</label><input [formControlName]="prefix + 'AdrLine3'"></div>
-                </ng-container>
             </div>
+            <ng-container *ngIf="['unstructured', 'hybrid'].includes(form.get(prefix + 'AddrType')?.value)">
+                <div class="boxed-row">
+                    <div class="boxed-label">{{title}} Address Line 1</div>
+                    <div class="boxed-input"><input [formControlName]="prefix + 'AdrLine1'"></div>
+                </div>
+                <div class="boxed-row">
+                    <div class="boxed-label">{{title}} Address Line 2</div>
+                    <div class="boxed-input"><input [formControlName]="prefix + 'AdrLine2'"></div>
+                </div>
+            </ng-container>
         </ng-container>
 
         <!-- ID Fields -->
-        <div class="form-group">
-            <label>{{title}} Member ID</label>
-            <input [formControlName]="prefix + 'ClrSysMmbId'" maxlength="35">
-            <div class="validation-msg" *ngIf="err(prefix + 'ClrSysMmbId') as e">{{e}}</div>
+        <div class="boxed-row">
+            <div class="boxed-label">{{title}} Clearing System Code <span class="req" *ngIf="err(prefix + 'ClrSysCd')">*</span></div>
+            <div class="boxed-input">
+                <input [formControlName]="prefix + 'ClrSysCd'" maxlength="4" placeholder="e.g. USABA">
+                <div class="validation-msg" *ngIf="err(prefix + 'ClrSysCd') as e">{{e}}</div>
+            </div>
         </div>
-        <div class="form-group">
-            <label>{{title}} LEI</label>
-            <input [formControlName]="prefix + 'Lei'" maxlength="20">
-            <div class="validation-msg" *ngIf="err(prefix + 'Lei') as e">{{e}}</div>
+        <div class="boxed-row">
+            <div class="boxed-label">{{title}} Member ID <span class="req" *ngIf="err(prefix + 'ClrSysMmbId')">*</span></div>
+            <div class="boxed-input">
+                <input [formControlName]="prefix + 'ClrSysMmbId'" maxlength="35">
+                <div class="validation-msg" *ngIf="err(prefix + 'ClrSysMmbId') as e">{{e}}</div>
+            </div>
+        </div>
+        <div class="boxed-row">
+            <div class="boxed-label">{{title}} LEI</div>
+            <div class="boxed-input">
+                <input [formControlName]="prefix + 'Lei'" maxlength="20">
+                <div class="validation-msg" *ngIf="err(prefix + 'Lei') as e">{{e}}</div>
+            </div>
         </div>
     </div>
 </ng-template>
 
-<!-- REUSABLE ACCOUNT FORM TEMPLATE -->
+<!-- REUSABLE ACCOUNT FORM TEMPLATE (Boxed Style) -->
 <ng-template #acctForm let-prefix="prefix" let-title="title" let-required="required">
-    <div [formGroup]="form" class="party-grid">
-        <div class="form-group intermediary-field">
-            <label>{{title}} ID (IBAN or Other) <span class="req" *ngIf="required">*</span></label>
-            <input [formControlName]="prefix + 'Acct'" maxlength="34">
-            <div class="validation-msg" *ngIf="err(prefix + 'Acct') as e">{{e}}</div>
-            <div class="field-hint at-limit" *ngIf="hint(prefix + 'Acct', 34) as h">{{h}}</div>
+    <div [formGroup]="form" class="party-grid-boxed">
+        <div class="boxed-row">
+            <div class="boxed-label">{{title}} ID (IBAN or Othr) <span class="req" *ngIf="required">*</span></div>
+            <div class="boxed-input">
+                <input [formControlName]="prefix + 'Acct'" maxlength="34">
+                <div class="validation-msg" *ngIf="err(prefix + 'Acct') as e">{{e}}</div>
+                <div class="field-hint at-limit" *ngIf="hint(prefix + 'Acct', 34) as h">{{h}}</div>
+            </div>
         </div>
-        <div class="subsection agent-id-subsection" style="grid-column: 1 / -1;">
-            <div class="form-group">
-                <label>Scheme Name <span class="req" *ngIf="err(prefix + 'AcctSchemeNm')">*</span></label>
-                <input [formControlName]="prefix + 'AcctSchemeNm'" maxlength="4" placeholder="e.g. BBAN">
-                <div class="validation-msg" *ngIf="err(prefix + 'AcctSchemeNm') as e">{{e}}</div>
-            </div>
-            <div class="form-group">
-                <label>Proprietary</label>
-                <input [formControlName]="prefix + 'AcctPrtry'" maxlength="35">
-                <div class="validation-msg" *ngIf="err(prefix + 'AcctPrtry') as e">{{e}}</div>
-            </div>
-            <div class="form-group">
-                <label>Type (Prtry)</label>
-                <input [formControlName]="prefix + 'AcctTypePrtry'" maxlength="35">
-            </div>
-            <div class="form-group">
-                <label>Currency</label>
-                <input [formControlName]="prefix + 'AcctCcy'" maxlength="3" placeholder="e.g. EUR">
+        <div class="boxed-row">
+            <div class="boxed-label">Account Type (Prtry)</div>
+            <div class="boxed-input"><input [formControlName]="prefix + 'AcctTypePrtry'" maxlength="35"></div>
+        </div>
+        <div class="boxed-row">
+            <div class="boxed-label">Account Currency</div>
+            <div class="boxed-input">
+                <input [formControlName]="prefix + 'AcctCcy'" maxlength="3" placeholder="e.g. EUR" list="currencies-list">
                 <div class="validation-msg" *ngIf="err(prefix + 'AcctCcy') as e">{{e}}</div>
             </div>
-            <div class="form-group">
-                <label>Issuer</label>
-                <input [formControlName]="prefix + 'AcctIssr'" maxlength="35">
-            </div>
-            <div class="form-group">
-                <label>Proxy ID</label>
-                <input [formControlName]="prefix + 'AcctProxyId'" maxlength="35">
-            </div>
+        </div>
+        <div class="boxed-row">
+            <div class="boxed-label">Account Issuer</div>
+            <div class="boxed-input"><input [formControlName]="prefix + 'AcctIssr'" maxlength="35"></div>
+        </div>
+        <div class="boxed-row">
+            <div class="boxed-label">Account Proxy ID</div>
+            <div class="boxed-input"><input [formControlName]="prefix + 'AcctProxyId'" maxlength="35"></div>
         </div>
     </div>
 </ng-template>
+
+<!-- Validation Results Modal -->
+<div class="validation-overlay" *ngIf="showValidationModal" (click)="closeValidationModal()">
+    <div class="validation-modal" (click)="$event.stopPropagation()">
+        <!-- Modal Header -->
+        <div class="vm-header">
+            <div class="vm-title">
+                <mat-icon>verified</mat-icon>
+                <span>Validation Results</span>
+                <span class="vm-msg-type" *ngIf="validationReport?.message">{{validationReport.message}}</span>
+            </div>
+            <div class="vm-header-actions" *ngIf="validationStatus === 'done'">
+                <button class="vm-action-btn" (click)="viewXmlModal()"><mat-icon>visibility</mat-icon> VIEW XML</button>
+                <button class="vm-action-btn" (click)="editXmlModal()"><mat-icon>edit</mat-icon> EDIT</button>
+                <button class="vm-action-btn run" (click)="runValidationModal()"><mat-icon>play_circle</mat-icon> RUN</button>
+            </div>
+            <button class="vm-close" (click)="closeValidationModal()"><mat-icon>close</mat-icon></button>
+        </div>
+        <!-- Loading State -->
+        <div class="vm-loading" *ngIf="validationStatus === 'validating'">
+            <div class="vm-spinner"></div>
+            <p>Validating your XML message...</p>
+            <span class="vm-loading-sub">Running Layer 1-3 checks</span>
+        </div>
+        <!-- Results -->
+        <div class="vm-body" *ngIf="validationStatus === 'done' && validationReport">
+            <div class="vm-status-banner" [class.pass]="validationReport.status === 'PASS'" [class.fail]="validationReport.status !== 'PASS'">
+                <mat-icon>{{validationReport.status === 'PASS' ? 'check_circle' : 'cancel'}}</mat-icon>
+                <div class="vm-status-text">
+                    <strong>{{validationReport.status === 'PASS' ? 'VALIDATION PASSED' : 'VALIDATION FAILED'}}</strong>
+                    <span>{{validationReport.errors || 0}} error(s), {{validationReport.warnings || 0}} warning(s) &bull; {{validationReport.total_time_ms || 0}}ms</span>
+                </div>
+            </div>
+            <div class="vm-layers" *ngIf="getValidationLayers().length > 0">
+                <div class="vm-layer" *ngFor="let k of getValidationLayers()" [class.layer-pass]="isLayerPass(k)" [class.layer-fail]="isLayerFail(k)" [class.layer-warn]="isLayerWarn(k)">
+                    <div class="vm-layer-icon">
+                        <span *ngIf="isLayerPass(k)"><mat-icon style="color: #10b981; font-size: 20px;">check_circle</mat-icon></span>
+                        <span *ngIf="isLayerFail(k)"><mat-icon style="color: #ef4444; font-size: 20px;">cancel</mat-icon></span>
+                        <span *ngIf="isLayerWarn(k)"><mat-icon style="color: #f59e0b; font-size: 20px;">warning</mat-icon></span>
+                    </div>
+                    <div class="vm-layer-info">
+                        <strong>Layer {{k}}: {{getLayerName(k)}}</strong>
+                        <span class="vm-layer-time">{{getLayerTime(k)}}ms</span>
+                    </div>
+                </div>
+            </div>
+            <div class="vm-issues" *ngIf="getValidationIssues().length > 0">
+                <div class="vm-issues-header"><mat-icon>report</mat-icon><span>Issues ({{getValidationIssues().length}})</span></div>
+                <div class="vm-issue-list">
+                    <div class="vm-issue" *ngFor="let issue of getValidationIssues()" (click)="toggleValidationIssue(issue)" [class.expanded]="validationExpandedIssue === issue">
+                        <div class="vm-issue-row">
+                            <span class="vm-issue-severity" [class.error]="issue.severity === 'ERROR'" [class.warning]="issue.severity === 'WARNING'">{{issue.severity}}</span>
+                            <span class="vm-issue-layer">L{{issue.layer}}</span>
+                            <span class="vm-issue-msg">{{issue.message}}</span>
+                            <mat-icon class="vm-issue-chevron">{{validationExpandedIssue === issue ? 'expand_less' : 'expand_more'}}</mat-icon>
+                        </div>
+                        <div class="vm-issue-detail" *ngIf="validationExpandedIssue === issue">
+                            <div class="vm-detail-row" *ngIf="issue.severity === 'ERROR'"><strong>Error Details:</strong> <span>{{issue.message}}</span></div>
+                            <div class="vm-detail-row" *ngIf="issue.path"><strong>Path:</strong> <code>{{issue.path}}</code></div>
+                            <div class="vm-detail-row" *ngIf="issue.code"><strong>Code:</strong> <code>{{issue.code}}</code></div>
+                            <div class="vm-detail-row fix" *ngIf="issue.fix_suggestion">
+                                <strong><mat-icon style="font-size: 16px; width: 16px; height: 16px; vertical-align: middle;">lightbulb</mat-icon> Fix:</strong>
+                                <span>{{issue.fix_suggestion}}</span>
+                                <button class="vm-copy-btn" (click)="copyFix(issue.fix_suggestion, $event)" matTooltip="Copy fix suggestion">
+                                    <mat-icon>content_copy</mat-icon>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="vm-no-issues" *ngIf="getValidationIssues().length === 0">
+                <mat-icon>celebration</mat-icon>
+                <p>No issues found! Your message is valid.</p>
+            </div>
+        </div>
+    </div>
+</div>

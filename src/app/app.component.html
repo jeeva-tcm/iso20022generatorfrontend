@@ -71,6 +71,12 @@
                                 <span class="msg-desc">Payment Status Report</span>
                             </div>
                         </a>
+                         <a routerLink="/generate/pacs10" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                            <div class="msg-info">
+                                <span class="msg-id">pacs.010.001.10</span>
+                                <span class="msg-desc">Interbank Direct Debit</span>
+                            </div>
+                        </a>
                     </div>
                 </div>
 
@@ -123,7 +129,7 @@
                     (click)="isMenuForcedClosed = true">
                     <span class="msg-tag dynamic">FULL</span> MX EXPLORER (700+ TYPES)
                 </a> -->
-                <a routerLink="/generate/pacs8" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                <!-- <a routerLink="/generate/pacs8" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
                     <span class="msg-tag pacs">PACS</span> pacs.008.001.08
                 </a>
                 <a routerLink="/generate/pacs9" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
@@ -137,7 +143,7 @@
                 </a>
                 <a routerLink="/generate/camt57" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
                     <span class="msg-tag camt">CAMT</span> camt.057.001.08
-                </a>
+                </a> -->
             </div>
         </div>
 

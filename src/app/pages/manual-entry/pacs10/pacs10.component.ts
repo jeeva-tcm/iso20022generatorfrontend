@@ -34,6 +34,12 @@ export class Pacs10Component implements OnInit {
     public xmlHistoryIdx = -1;
     public maxHistory = 50;
     private isInternalChange = false;
+    
+    // Validation Modal State
+    showValidationModal = false;
+    validationStatus: 'idle' | 'validating' | 'done' = 'idle';
+    validationReport: any = null;
+    validationExpandedIssue: any = null;
 
     get canUndoXml() { return this.xmlHistoryIdx > 0; }
     get canRedoXml() { return this.xmlHistoryIdx < this.xmlHistory.length - 1; }
@@ -50,7 +56,7 @@ export class Pacs10Component implements OnInit {
     priorityEnums = ['HIGH', 'NORM', 'LOW'];
 
     agentPrefixes = ['instgAgt', 'instdAgt', 'dbtrAgt', 'cdtrAgt'];
-    partyPrefixes = ['dbtr', 'cdtr', 'ultmtDbtr', 'ultmtCdtr'];
+    partyPrefixes = ['dbtr', 'cdtr'];
 
     constructor(
         private fb: FormBuilder,
@@ -84,6 +90,46 @@ export class Pacs10Component implements OnInit {
     }
 
     private updateClearingSystemValidation() {
+        [...this.agentPrefixes, ...this.partyPrefixes].forEach(p => {
+            const cd = this.form.get(p + 'ClrSysCd');
+            const mmb = this.form.get(p + 'ClrSysMmbId');
+            
+            if (cd?.value?.trim() && !mmb?.value?.trim()) {
+                mmb?.setErrors({ ...mmb.errors, required: true });
+            } else if (mmb?.value?.trim() && !cd?.value?.trim()) {
+                cd?.setErrors({ ...cd.errors, required: true });
+            } else {
+                [cd, mmb].forEach(ctrl => {
+                    if (ctrl?.hasError('required')) {
+                        const errors = { ...ctrl.errors };
+                        delete errors['required'];
+                        ctrl.setErrors(Object.keys(errors).length ? errors : null);
+                    }
+                });
+            }
+        });
+
+        // Also for Org party parts 
+        this.partyPrefixes.forEach(p => {
+            const cd = this.form.get(p + 'OrgClrSysCd');
+            const mmb = this.form.get(p + 'OrgClrSysMmbId');
+            if (cd && mmb) {
+                if (cd.value?.trim() && !mmb.value?.trim()) {
+                    mmb.setErrors({ ...mmb.errors, required: true });
+                } else if (mmb.value?.trim() && !cd.value?.trim()) {
+                    cd.setErrors({ ...cd.errors, required: true });
+                } else {
+                    [cd, mmb].forEach(ctrl => {
+                        if (ctrl?.hasError('required')) {
+                            const errors = { ...ctrl.errors };
+                            delete errors['required'];
+                            ctrl.setErrors(Object.keys(errors).length ? errors : null);
+                        }
+                    });
+                }
+            }
+        });
+
         const systems = [...this.agentPrefixes, ...this.partyPrefixes].map(p => {
             return this.form.get(p + 'ClrSysCd')?.value?.trim()?.toUpperCase();
         });
@@ -408,74 +454,105 @@ export class Pacs10Component implements OnInit {
         const c: any = {
             fromBic: ['BBBBUS33XXX', BIC], 
             toBic: ['CCCCGB2LXXX', BIC], 
-            bizMsgId: ['MSG-2026-FI-001', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]],
-            msgId: ['M-2026-FI-001', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]], 
+            bizMsgId: ['MSG-2026-FI-PAC10-FULL-001', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]],
+            msgId: ['M-2026-FI-PAC10-FULL-001', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]], 
             creDtTm: [this.isoNow(), Validators.required],
             nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]],
             cdtId: ['CDT-FI-999-01', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]],
             cdtrAgtBic: ['BBBBUS33XXX', BIC_OPT],
             cdtrBic: ['CCCCGB2LXXX', BIC],
-            instrId: ['I-2026-FI-010', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]],
-            endToEndId: ['E2E-2026-FI-010', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]],
-            txId: ['', [Validators.maxLength(35), ADDR_PATTERN]],
+            instrId: ['I-2026-FULL-010', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]],
+            endToEndId: ['E2E-2026-FULL-010', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]],
+            txId: ['TX-2026-FULL-010', [Validators.maxLength(35), ADDR_PATTERN]],
             uetr: ['550e8400-e29b-41d4-a716-446655440020', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
-            clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
+            clrSysRef: ['CLR-SR-FULL-01', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
             
             // AppHdr extensions
-            copyDplct: [''], pssblDplct: [''], prty: [''],
+            copyDplct: ['COPY'], pssblDplct: ['true'], prty: ['HIGH'],
             
             // Payment Type Info
-            instrPrty: [''],
-            svcLvlCd: ['', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{4}$/)]], 
-            svcLvlPrtry: ['', [Validators.maxLength(35), ADDR_PATTERN]],
-            lclInstrmCd: ['', [Validators.maxLength(4)]], 
-            lclInstrmPrtry: ['', [Validators.maxLength(35), ADDR_PATTERN]],
-            ctgyPurpCd: ['', [Validators.pattern(/^[A-Z]{4}$/)]], 
-            ctgyPurpPrtry: ['', [Validators.maxLength(35), ADDR_PATTERN]],
+            instrPrty: ['HIGH'],
+            svcLvlCd: ['SEPA', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{4}$/)]], 
+            svcLvlPrtry: ['PRIORITY-SVC', [Validators.maxLength(35), ADDR_PATTERN]],
+            lclInstrmCd: ['ONCL', [Validators.maxLength(4)]], 
+            lclInstrmPrtry: ['INSTANT-SETTLM', [Validators.maxLength(35), ADDR_PATTERN]],
+            ctgyPurpCd: ['CASH', [Validators.pattern(/^[A-Z]{4}$/)]], 
+            ctgyPurpPrtry: ['CORP-CASH-POOL', [Validators.maxLength(35), ADDR_PATTERN]],
             
-            amount: ['25000.00', [Validators.required, Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]], 
-            currency: ['EUR', [Validators.required, Validators.pattern(/^[A-Z]{3}$/)]],
+            amount: ['100000.00', [Validators.required, Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]], 
+            currency: ['USD', [Validators.required, Validators.pattern(/^[A-Z]{3}$/)]],
             intrBkSttlmDt: [new Date().toISOString().split('T')[0], Validators.required],
-            purposeCd: ['', [Validators.pattern(/^[A-Z]{4}$/)]], 
-            purposePrtry: ['', [Validators.maxLength(35), ADDR_PATTERN]],
-            remittanceInfo: ['', [Validators.maxLength(140), ADDR_PATTERN]],
-            instrForDbtrAgt: ['', [Validators.maxLength(140), ADDR_PATTERN]],
-            
-            sttlmTmReqCLSTm: ['', [Validators.pattern(/^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/)]],
-            sttlmTmReqTillTm: ['', [Validators.pattern(/^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/)]],
-            sttlmTmReqFrTm: ['', [Validators.pattern(/^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/)]],
-            sttlmTmReqRjctTm: ['', [Validators.pattern(/^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/)]],
+            clstTm: ['', [Validators.pattern(/^([01]\d|2[0-3]):?([0-5]\d):?([0-5]\d)$/)]],
+            tillTm: ['', [Validators.pattern(/^([01]\d|2[0-3]):?([0-5]\d):?([0-5]\d)$/)]],
+            frTm: ['', [Validators.pattern(/^([01]\d|2[0-3]):?([0-5]\d):?([0-5]\d)$/)]],
+            rjctTm: ['', [Validators.pattern(/^([01]\d|2[0-3]):?([0-5]\d):?([0-5]\d)$/)]],
+            purposeCd: ['BKXF', [Validators.pattern(/^[A-Z]{4}$/)]], 
+            purposePrtry: ['INTERBANK-XFER', [Validators.maxLength(35), ADDR_PATTERN]],
+            remittanceInfo: ['Full Interbank Settlement for Transaction ID 2026-001', [Validators.maxLength(140), ADDR_PATTERN]],
+            instrForDbtrAgt: ['Settle via TARGET2 RTGS immediately', [Validators.maxLength(140), ADDR_PATTERN]],
             
             dbtrBic: ['BBBBUS33XXX', BIC],
-            dbtrAgtBic: ['', BIC_OPT],
+            dbtrAgtBic: ['BBBBUS33XXX', BIC_OPT],
             instgAgtBic: ['BBBBUS33XXX', BIC],
             instdAgtBic: ['CCCCGB2LXXX', BIC],
             dbtrAcct: ['471932901234', [Validators.required, Validators.pattern(/^[A-Z0-9]{5,34}$/)]],
             cdtrAcct: ['471932905678', [Validators.required, Validators.pattern(/^[A-Z0-9]{5,34}$/)]]
         };
 
-        [...this.agentPrefixes, ...this.partyPrefixes].forEach(p => {
-            if (!c[p + 'AddrType']) c[p + 'AddrType'] = ['none'];
+        const prefixes = [...this.agentPrefixes, ...this.partyPrefixes, 'ultmtDbtr', 'ultmtCdtr'];
+
+        prefixes.forEach(p => {
+            const isAgent = this.agentPrefixes.includes(p);
+            
+            if (!c[p + 'AddrType']) c[p + 'AddrType'] = ['hybrid'];
+            
             ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry', 'AdrLine1', 'AdrLine2', 'AdrLine3', 'AdrTpCd', 'AdrTpPrtry'].forEach(f => {
-                if (!c[p + f]) c[p + f] = ['', [Validators.maxLength(f === 'Ctry' ? 2 : 70), ADDR_PATTERN]];
+                let val = '';
+                if (f === 'StrtNm') val = 'Broad Street';
+                else if (f === 'BldgNb') val = '45';
+                else if (f === 'TwnNm') val = p.includes('US') || p.includes('Dbtr') ? 'Dallas' : 'Paris';
+                else if (f === 'Ctry') val = p.includes('US') || p.includes('Dbtr') ? 'US' : 'FR';
+                else if (f === 'PstCd') val = '75001';
+                else if (f === 'Dept') val = 'Treasury';
+                else if (f === 'SubDept') val = 'Interbank Payments';
+                else if (f === 'AdrLine1') val = 'Suite 500, North Tower';
+                else if (f === 'AdrLine2') val = 'Financial District';
+                
+                if (!c[p + f]) c[p + f] = [val, [Validators.maxLength(f === 'Ctry' ? 2 : 70), ADDR_PATTERN]];
             });
-            if (!c[p + 'Name']) c[p + 'Name'] = ['', [Validators.maxLength(140), SAFE_NAME]];
-            if (!c[p + 'Lei']) c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
-            if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['', Validators.maxLength(4)];
-            if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
-            if (!c[p + 'Acct']) c[p + 'Acct'] = ['', [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
+            
+            const pName = p.replace(/([A-Z])/g, ' $1').toUpperCase();
+            if (!c[p + 'Name']) c[p + 'Name'] = [pName + ' INSTITUTION', [Validators.maxLength(140), SAFE_NAME]];
+            if (!c[p + 'Lei']) c[p + 'Lei'] = ['54930084UKLVMY22DS16', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
+            if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['USAB', Validators.maxLength(4)];
+            if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['MEM-' + p.toUpperCase().substring(0, 5) + '-01', Validators.maxLength(35)];
+            
+            if (!c[p + 'Acct']) {
+                let acctVal = '4719' + Math.floor(Math.random() * 9000000000 + 1000000000);
+                c[p + 'Acct'] = [acctVal, [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
+            }
+
             // Detailed Account fields
-            ['AcctSchemeNm', 'AcctPrtry', 'AcctIssr', 'AcctTypeCd', 'AcctTypePrtry', 'AcctCcy', 'AcctNm', 'AcctProxyId', 'AcctProxyTypeCd', 'AcctProxyTypePrtry'].forEach(f => {
-                c[p + f] = [''];
+            ['AcctSchemeNm', 'AcctPrtry', 'AcctIssr', 'AcctTypeCd', 'AcctTypePrtry', 'AcctCcy', 'AcctNm', 'AcctProxyId'].forEach(f => {
+                let val: any = '';
+                if (f === 'AcctCcy') val = 'USD';
+                else if (f === 'AcctNm') val = pName + ' OPERATIONAL ACCOUNT';
+                else if (f === 'AcctProxyId') val = p + '@proxy.test';
+                else if (f === 'AcctSchemeNm') val = 'BANK';
+                
+                let v: any[] = [val];
+                if (f === 'AcctCcy') v = [val, [Validators.pattern(/^[A-Z]{3}$/)]];
+                c[p + f] = v;
             });
-            if (!this.agentPrefixes.includes(p)) {
-                if (!c[p + 'IdType']) c[p + 'IdType'] = ['none'];
-                if (!c[p + 'OrgAnyBIC']) c[p + 'OrgAnyBIC'] = ['', BIC_OPT];
-                if (!c[p + 'OrgLEI']) c[p + 'OrgLEI'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
-                if (!c[p + 'OrgClrSysCd']) c[p + 'OrgClrSysCd'] = ['', Validators.maxLength(4)];
-                if (!c[p + 'OrgClrSysMmbId']) c[p + 'OrgClrSysMmbId'] = ['', Validators.maxLength(35)];
-                if (!c[p + 'OrgOthrId']) c[p + 'OrgOthrId'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
-                if (!c[p + 'OrgOthrSchmeNmCd']) c[p + 'OrgOthrSchmeNmCd'] = ['', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{1,4}$/)]];
+
+            if (!isAgent) {
+                if (!c[p + 'IdType']) c[p + 'IdType'] = ['org'];
+                if (!c[p + 'OrgAnyBIC']) c[p + 'OrgAnyBIC'] = ['BBBBUS33XXX', BIC_OPT];
+                if (!c[p + 'OrgLEI']) c[p + 'OrgLEI'] = ['54930084UKLVMY22DS16', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
+                if (!c[p + 'OrgClrSysCd']) c[p + 'OrgClrSysCd'] = ['USAB', Validators.maxLength(4)];
+                if (!c[p + 'OrgClrSysMmbId']) c[p + 'OrgClrSysMmbId'] = ['ORG-' + p.toUpperCase().substring(0, 5), Validators.maxLength(35)];
+                if (!c[p + 'OrgOthrId']) c[p + 'OrgOthrId'] = ['OTH-' + p.toUpperCase().substring(0, 5), [Validators.maxLength(35), ADDR_PATTERN]];
+                if (!c[p + 'OrgOthrSchmeNmCd']) c[p + 'OrgOthrSchmeNmCd'] = ['BANK', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{1,4}$/)]];
             }
         });
 
@@ -516,29 +593,35 @@ ${this.agt('CdtrAgt', 'cdtrAgt', v, 4)}
 ${this.fullAcct('CdtrAgtAcct', 'cdtrAgt', v, 4)}
 ${this.agt('Cdtr', 'cdtr', v, 4)}
 ${this.fullAcct('CdtrAcct', 'cdtr', v, 4)}
-				<DrctDbtTxInf>
-					<PmtId>
+\t\t\t\t<DrctDbtTxInf>
+\t\t\t\t\t<PmtId>
 ${this.el('InstrId', v.instrId, 6)}${this.el('EndToEndId', v.endToEndId, 6)}${this.el('TxId', v.txId, 6)}${this.el('UETR', v.uetr, 6)}${this.el('ClrSysRef', v.clrSysRef, 6)}
-					</PmtId>
+\t\t\t\t\t</PmtId>
 ${this.pmtTpInf(v)}
-					<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${this.e(v.amount)}</IntrBkSttlmAmt>
-					<IntrBkSttlmDt>${this.e(v.intrBkSttlmDt)}</IntrBkSttlmDt>
-${this.sttlmTmReq(v)}
-${this.party('UltmtDbtr', 'ultmtDbtr', v, 5)}
-${this.agt('Dbtr', 'dbtr', v, 5)}
+\t\t\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${this.e(v.amount)}</IntrBkSttlmAmt>
+\t\t\t\t\t<IntrBkSttlmDt>${this.e(v.intrBkSttlmDt)}</IntrBkSttlmDt>
+${this.sttlmTmReq(v)}${this.agt('Dbtr', 'dbtr', v, 5)}
 ${this.fullAcct('DbtrAcct', 'dbtr', v, 5)}
 ${this.agt('DbtrAgt', 'dbtrAgt', v, 5)}
 ${this.fullAcct('DbtrAgtAcct', 'dbtrAgt', v, 5)}
-${this.party('UltmtCdtr', 'ultmtCdtr', v, 5)}
 ${this.el('InstrForDbtrAgt', v.instrForDbtrAgt, 5)}
 ${this.purp(v)}
 ${this.rmtInf(v)}
-				</DrctDbtTxInf>
+\t\t\t\t</DrctDbtTxInf>
 \t\t\t</CdtInstr>
 \t\t</FIDrctDbt>
 \t</Document>
 </BusMsgEnvlp>`;
         this.onEditorChange(xml, true);
+    }
+
+    private sttlmTmReq(v: any) {
+        let res = '';
+        if (v.clstTm) res += this.el('CLSTm', v.clstTm, 6);
+        if (v.tillTm) res += this.el('TillTm', v.tillTm, 6);
+        if (v.frTm) res += this.el('FrTm', v.frTm, 6);
+        if (v.rjctTm) res += this.el('RjctTm', v.rjctTm, 6);
+        return res ? this.tag('SttlmTmReq', res, 5) : '';
     }
 
     private pmtTpInf(v: any) {
@@ -559,14 +642,6 @@ ${this.rmtInf(v)}
         return res ? this.tag('PmtTpInf', res, 5) : '';
     }
 
-    private sttlmTmReq(v: any) {
-        let res = '';
-        if (v.sttlmTmReqCLSTm) res += this.el('CLSTm', v.sttlmTmReqCLSTm, 6);
-        if (v.sttlmTmReqTillTm) res += this.el('TillTm', v.sttlmTmReqTillTm, 6);
-        if (v.sttlmTmReqFrTm) res += this.el('FrTm', v.sttlmTmReqFrTm, 6);
-        if (v.sttlmTmReqRjctTm) res += this.el('RjctTm', v.sttlmTmReqRjctTm, 6);
-        return res ? this.tag('SttlmTmReq', res, 5) : '';
-    }
 
     private purp(v: any) {
         if (v.purposeCd) return this.tag('Purp', this.el('Cd', v.purposeCd, 6), 5);
@@ -587,14 +662,12 @@ ${this.rmtInf(v)}
             let tpVal = v[p + 'AcctTypePrtry'] || v[p + 'AcctTypeCd'];
             res += this.tag('Tp', this.el('Prtry', tpVal, indent + 3), indent + 1);
         }
-        if (v[p + 'AcctCcy']) res += this.el('Ccy', v[p + 'AcctCcy'], indent + 1);
+        if (v[p + 'AcctCcy'] && /^[A-Z]{3}$/.test(v[p + 'AcctCcy'])) {
+            res += this.el('Ccy', v[p + 'AcctCcy'], indent + 1);
+        }
         if (v[p + 'AcctNm']) res += this.el('Nm', v[p + 'AcctNm'], indent + 1);
         if (v[p + 'AcctProxyId']) {
             let pr = this.el('Id', v[p + 'AcctProxyId'], indent + 3);
-            if (v[p + 'AcctProxyTypeCd'] || v[p + 'AcctProxyTypePrtry']) {
-                let pxtp = v[p + 'AcctProxyTypeCd'] ? this.el('Cd', v[p + 'AcctProxyTypeCd'], indent + 5) : this.el('Prtry', v[p + 'AcctProxyTypePrtry'], indent + 5);
-                pr += this.tag('Tp', pxtp, indent + 4);
-            }
             res += this.tag('Prxy', pr, indent + 1);
         }
         return this.tag(tag, res, indent);
@@ -607,10 +680,6 @@ ${this.rmtInf(v)}
             return this.el('IBAN', val, tabs);
         }
         let othr = this.el('Id', val, tabs + 2);
-        if (v[p + 'AcctSchemeNm'] || v[p + 'AcctPrtry']) {
-            let sch = v[p + 'AcctSchemeNm'] ? this.el('Cd', v[p + 'AcctSchemeNm'], tabs + 4) : this.el('Prtry', v[p + 'AcctPrtry'], tabs + 4);
-            othr += this.tag('SchmeNm', sch, tabs + 3);
-        }
         if (v[p + 'AcctIssr']) othr += this.el('Issr', v[p + 'AcctIssr'], tabs + 2);
         return this.tag('Othr', othr, tabs + 1);
     }
@@ -632,8 +701,12 @@ ${this.rmtInf(v)}
         let content = '';
         if (bic) content += this.el('BICFI', bic, indent + 2);
         if (clrMmb) {
-            let clr = this.el('MmbId', clrMmb, indent + 3);
-            if (clrCd) clr = this.tag('ClrSysId', this.el('Cd', clrCd, indent + 4), indent + 3) + clr;
+            let clr = '';
+            // Sequence: ClrSysId (mandatory) -> MmbId (mandatory)
+            // Even if clrCd is missing, we must generate the tag to satisfy sequence
+            const sysId = clrCd ? this.el('Cd', clrCd, indent + 4) : `${this.tabs(indent + 4)}<Cd></Cd>\n`;
+            clr += `${this.tabs(indent + 3)}<ClrSysId>\n${sysId}${this.tabs(indent + 3)}</ClrSysId>\n`;
+            clr += this.el('MmbId', clrMmb, indent + 3);
             content += this.tag('ClrSysMmbId', clr, indent + 2);
         }
         if (lei) content += this.el('LEI', lei, indent + 2);
@@ -743,7 +816,7 @@ ${this.rmtInf(v)}
         }, 0);
     }
 
-    syncScroll(editor: any, gutter: any) {
+    syncScroll(editor: HTMLTextAreaElement, gutter: HTMLDivElement) {
         if (gutter) gutter.scrollTop = editor.scrollTop;
     }
 
@@ -812,16 +885,94 @@ ${this.rmtInf(v)}
     validateXml() {
         if (this.form.invalid) {
             this.form.markAllAsTouched();
-            this.snackBar.open('Please fix form errors.', 'Close', { duration: 3000 });
+            this.scrollToFirstError();
+            this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
             return;
         }
+        if (!this.generatedXml?.trim()) return;
+
+        this.showValidationModal = true;
+        this.validationStatus = 'validating';
+        this.validationReport = null;
+        this.validationExpandedIssue = null;
+
         this.http.post(this.config.getApiUrl('/validate'), {
             xml_content: this.generatedXml,
-            message_type: 'pacs.010.001.03'
-        }).subscribe((res: any) => {
-            sessionStorage.setItem('validationResult', JSON.stringify(res));
-            this.router.navigate(['/validate']);
+            mode: 'Full 1-3',
+            message_type: 'pacs.010.001.03',
+            store_in_history: true
+        }).subscribe({
+            next: (data: any) => {
+                this.validationReport = data;
+                this.validationStatus = 'done';
+            },
+            error: (err) => {
+                this.validationReport = {
+                    status: 'FAIL', errors: 1, warnings: 0,
+                    message: 'pacs.010.001.03', total_time_ms: 0,
+                    layer_status: {},
+                    details: [{
+                        severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
+                        path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'),
+                        fix_suggestion: 'Ensure the validation server is running.'
+                    }]
+                };
+                this.validationStatus = 'done';
+            }
         });
+    }
+
+    closeValidationModal() {
+        this.showValidationModal = false;
+        this.validationReport = null;
+        this.validationStatus = 'idle';
+        this.validationExpandedIssue = null;
+    }
+
+    getValidationLayers(): string[] {
+        if (!this.validationReport?.layer_status) return [];
+        return Object.keys(this.validationReport.layer_status).sort();
+    }
+
+    getLayerName(k: string): string {
+        const names: Record<string, string> = { '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' };
+        return names[k] ?? `Layer ${k}`;
+    }
+
+    getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
+    getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
+    isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
+    isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
+    isLayerWarn(k: string) {
+        const s = this.getLayerStatus(k);
+        return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+    }
+
+    getValidationIssues(): any[] { return this.validationReport?.details ?? []; }
+
+    viewXmlModal() {
+        this.closeValidationModal();
+        this.currentTab = 'preview';
+    }
+
+    editXmlModal() {
+        this.closeValidationModal();
+        this.currentTab = 'form';
+    }
+
+    toggleValidationIssue(issue: any) {
+        this.validationExpandedIssue = this.validationExpandedIssue === issue ? null : issue;
+    }
+
+    copyFix(text: string, e: MouseEvent) {
+        e.stopPropagation();
+        navigator.clipboard.writeText(text).then(() => {
+            this.snackBar.open('Copied!', '', { duration: 1500 });
+        });
+    }
+
+    runValidationModal() {
+        this.validateXml();
     }
 
     downloadXml() {
@@ -838,13 +989,48 @@ ${this.rmtInf(v)}
 
     err(c: string): string | null {
         const ctrl = this.form.get(c);
-        if (ctrl && ctrl.invalid && (ctrl.dirty || ctrl.touched)) {
-            if (ctrl.errors?.['required']) return 'Required field.';
-            if (ctrl.errors?.['pattern']) return 'Invalid format.';
-            if (ctrl.errors?.['maxlength']) return `Max ${ctrl.errors['maxlength'].requiredLength} chars.`;
-            if (ctrl.errors?.['target2']) return 'T2 requires EUR.';
-            if (ctrl.errors?.['linked']) return 'Name and Address must be present together.';
-        }
-        return null;
+        if (!ctrl || ctrl.valid || (!ctrl.touched && !ctrl.dirty)) return null;
+        if (ctrl.errors?.['required']) return 'Required field.';
+        if (ctrl.errors?.['pattern']) return 'Invalid format.';
+        if (ctrl.errors?.['maxlength']) return `Max ${ctrl.errors['maxlength'].requiredLength} chars.`;
+        if (ctrl.errors?.['target2']) return 'T2 requires EUR.';
+        if (ctrl.errors?.['chaps']) return 'CHAPS requires GBP.';
+        if (ctrl.errors?.['chips']) return 'CHIPS requires USD.';
+        if (ctrl.errors?.['fed']) return 'FED requires USD.';
+        if (ctrl.errors?.['forbidden']) return 'Forbidden field.';
+        if (ctrl.errors?.['linked']) return 'Name and Address must be present together.';
+        return 'Invalid value.';
+    }
+
+    private scrollToFirstError() {
+        setTimeout(() => {
+            const firstInvalid = document.querySelector('.ng-invalid.ng-touched');
+            if (firstInvalid) {
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                (firstInvalid as HTMLElement).focus();
+            }
+        }, 100);
+    }
+
+    hasSectionError(prefixes: string[]): boolean {
+        return prefixes.some(p => {
+            return Object.keys(this.form.controls).some(key => 
+                key.startsWith(p) && 
+                this.form.get(key)?.invalid && 
+                (this.form.get(key)?.touched || this.form.get(key)?.dirty)
+            );
+        });
+    }
+
+    getFormErrors(): string[] {
+        const errors: string[] = [];
+        Object.keys(this.form.controls).forEach(key => {
+            const msg = this.err(key);
+            if (msg) {
+                const label = key.replace(/([A-Z])/g, ' $1').trim();
+                errors.push(`${label.charAt(0).toUpperCase() + label.slice(1)}: ${msg}`);
+            }
+        });
+        return errors;
     }
 }
