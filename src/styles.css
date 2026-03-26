@@ -18,7 +18,8 @@
     --bg-card: #0a0a0b;
     --bg-card-hover: #121214;
     --text-main: #ffffff;
-    --text-muted: #a1a1aa; /* Zinc 400 - clean and crisp */
+    --text-muted: #a1a1aa;
+    /* Zinc 400 - clean and crisp */
     --border-light: rgba(255, 255, 255, 0.14);
     --header-bg: rgba(0, 0, 0, 0.85);
     --banner-gradient: linear-gradient(135deg, #0f1012 0%, #1e1e21 50%, #2d2d30 100%);
@@ -30,7 +31,8 @@
     --shadow-xl: 0 20px 30px -10px rgba(0, 0, 0, 0.9);
 
     /* Vibrant Accents */
-    --accent-color: #818cf8; /* indigo-400 */
+    --accent-color: #818cf8;
+    /* indigo-400 */
     --accent-light: rgba(129, 140, 248, 0.2);
     --accent-text: #c7d2fe;
 
@@ -344,15 +346,17 @@ body.light-theme .section-title {
     border: 1px solid var(--border-light);
     border-radius: 8px;
     padding: 0;
-    margin: 0.2rem 0.5rem 1.2rem 5px; /* Added 5px left margin here */
+    margin: 0.2rem 0.5rem 1.2rem 5px;
+    /* Added 5px left margin here */
     box-shadow: var(--shadow-sm);
-    overflow: visible; /* Changed from hidden to visible so errors aren't clipped */
+    overflow: visible;
+    /* Changed from hidden to visible so errors aren't clipped */
 }
 
 body.light-theme .party-group {
     background: #ffffff;
     border: 1px solid #cbd5e1;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .party-group:hover {
@@ -372,7 +376,7 @@ body.light-theme .party-group {
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-bottom: 0;
-    margin-left: 0; 
+    margin-left: 0;
 }
 
 body.light-theme .party-group-title {
@@ -386,7 +390,8 @@ body.light-theme .party-group-title {
     display: grid;
     grid-template-columns: 1fr;
     background: transparent;
-    overflow: visible; /* Ensure nothing clips children */
+    overflow: visible;
+    /* Ensure nothing clips children */
 }
 
 body.light-theme .party-grid {
@@ -397,8 +402,10 @@ body.light-theme .party-grid {
 .party-grid .form-group {
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap; /* To allow validation msg to wrap below */
-    align-items: flex-start; /* Changed from center to prevent vertical overlap when wrapping */
+    flex-wrap: wrap;
+    /* To allow validation msg to wrap below */
+    align-items: flex-start;
+    /* Changed from center to prevent vertical overlap when wrapping */
     padding: 5px 20px;
     border-bottom: 1px solid var(--border-light);
     width: 100%;
@@ -454,22 +461,25 @@ body.light-theme .party-grid select {
 /* Validation msg below the input */
 .party-grid .validation-msg {
     flex: 0 0 100%;
-    margin-left: 160px; /* Aligned exactly with input start (after 160px label) */
-    padding-top: 4px; /* Added padding to prevent overlapping input border */
+    margin-left: 160px;
+    /* Aligned exactly with input start (after 160px label) */
+    padding-top: 4px;
+    /* Added padding to prevent overlapping input border */
     padding-bottom: 4px;
     font-size: 10px;
     line-height: 1.2;
-    color: #dc2626; /* Vibrant standard red (Red 600) */
+    color: #dc2626;
+    /* Vibrant standard red (Red 600) */
     font-weight: 600;
     white-space: normal;
-    word-break: break-word; 
+    word-break: break-word;
     overflow: visible;
     width: 100%;
     clear: both;
 }
 
 /* Field limit hints */
-.party-grid .field-hint, 
+.party-grid .field-hint,
 .party-grid .field-hint.at-limit {
     flex: 0 0 100%;
     margin-left: 160px;
@@ -477,12 +487,14 @@ body.light-theme .party-grid select {
     margin-bottom: 3px;
     font-size: 9px;
     font-weight: 500;
-    color: #f59e0b; /* Amber for hint */
+    color: #f59e0b;
+    /* Amber for hint */
     display: block;
 }
 
 .party-grid .field-hint.at-limit {
-    color: #ff3b30; /* Red when at limit */
+    color: #ff3b30;
+    /* Red when at limit */
 }
 
 /* Address sub-section */
@@ -502,11 +514,13 @@ body.light-theme .address-subgrid {
 }
 
 .address-subgrid .form-group {
-    padding-left: 40px; /* Indent address fields */
+    padding-left: 40px;
+    /* Indent address fields */
 }
 
 .address-subgrid .form-group label {
-    flex: 0 0 140px; /* Slightly narrower label for subgrid to account for padding */
+    flex: 0 0 140px;
+    /* Slightly narrower label for subgrid to account for padding */
 }
 
 /* Hide material icons in simple headers */
@@ -538,7 +552,9 @@ body.light-theme textarea:focus {
 }
 
 /* Disable hover features (tooltips) globally */
-.mat-mdc-tooltip, .mdc-tooltip, .mat-tooltip {
+.mat-mdc-tooltip,
+.mdc-tooltip,
+.mat-tooltip {
     display: none !important;
     opacity: 0 !important;
     visibility: hidden !important;
@@ -547,7 +563,8 @@ body.light-theme textarea:focus {
 
 /* Global Validation Messages */
 .validation-msg {
-    color: #dc2626; /* Vibrant red */
+    color: #dc2626;
+    /* Vibrant red */
     font-size: 11px;
     padding-top: 2px;
     padding-bottom: 2px;
@@ -594,6 +611,7 @@ body.light-theme .validation-msg {
         transform: translateY(0);
     }
 }
+
 /* ===== Validation Modal ===== */
 .validation-overlay {
     position: fixed;
@@ -611,6 +629,7 @@ body.light-theme .validation-msg {
     cursor: pointer;
     animation: fadeIn 0.2s ease;
 }
+
 @keyframes fadeIn {
     from {
         opacity: 0;
