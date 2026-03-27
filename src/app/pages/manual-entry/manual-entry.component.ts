@@ -56,6 +56,8 @@ export class ManualEntryComponent implements OnInit {
         { id: 'pacs.004.001.09', name: 'Payment Return', type: 'pacs', route: 'pacs4' },
         { id: 'pacs.002.001.10', name: 'Payment Status Report', type: 'pacs', route: 'pacs2' },
         { id: 'camt.057.001.08', name: 'Notification to Receive', type: 'camt', route: 'camt57' },
+        { id: 'camt.052.001.08', name: 'Bank To Customer Report', type: 'camt', route: 'camt052' },
+        { id: 'camt.053.001.08', name: 'Bank To Customer Statement', type: 'camt', route: 'camt053' },
         { id: 'pain.001.001.09', name: 'Credit Transfer Init', type: 'pain', route: 'pain001' },
         { id: 'pain.002.001.10', name: 'Pmt Status Report', type: 'pain', route: 'pain002' }
     ];

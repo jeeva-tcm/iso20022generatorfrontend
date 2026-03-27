@@ -1,7 +1,7 @@
 <div class="container" (click)="$event.stopPropagation()">
     <header>
-        <h1>Account Report (camt.052) <mat-icon class="title-icon">receipt_long</mat-icon></h1>
-        <!-- <p style="margin-top: -1rem;">Visual camt.052 Message Builder</p> -->
+        <h1>Bank To Customer Statement (camt.053) <mat-icon class="title-icon">description</mat-icon></h1>
+        <p style="margin-top: -1rem;">Visual camt.053 Message Builder</p>
     </header>
 
     <div class="split-view">
@@ -331,12 +331,12 @@
                         <input formControlName="grpHdrAddtlInf" maxlength="500">
                     </div>
 
-                    <div class="section-title">Report Identification</div>
+                    <div class="section-title">Statement IDentification</div>
                     <div class="form-group">
-                        <label>Report ID <span class="req">*</span></label>
-                        <input formControlName="rptId" maxlength="35">
-                        <div class="validation-msg" *ngIf="err('rptId') as e">{{e}}</div>
-                        <div class="field-hint at-limit" *ngIf="hint('rptId', 35) as h">{{h}}</div>
+                        <label>Statement ID <span class="req">*</span></label>
+                        <input formControlName="stmtId" maxlength="35">
+                        <div class="validation-msg" *ngIf="err('stmtId') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('stmtId', 35) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
                         <label>Electronic Seq Number</label>
@@ -358,17 +358,17 @@
                     </div>
                     <div class="form-group">
                         <label>Page Number <span class="req">*</span></label>
-                        <input formControlName="rptPgNb" maxlength="5" placeholder="e.g. 1">
-                        <div class="validation-msg" *ngIf="err('rptPgNb') as e">{{e}}</div>
-                        <div class="field-hint at-limit" *ngIf="hint('rptPgNb', 5) as h">{{h}}</div>
+                        <input formControlName="stmtPgNb" maxlength="5" placeholder="e.g. 1">
+                        <div class="validation-msg" *ngIf="err('stmtPgNb') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('stmtPgNb', 5) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
                         <label>Last Page Indicator <span class="req">*</span></label>
-                        <select formControlName="rptPgLastPgInd">
+                        <select formControlName="stmtPgLastPgInd">
                             <option value="true">true</option>
                             <option value="false">false</option>
                         </select>
-                        <div class="validation-msg" *ngIf="err('rptPgLastPgInd') as e">{{e}}</div>
+                        <div class="validation-msg" *ngIf="err('stmtPgLastPgInd') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
                         <label>From Date</label>
@@ -737,15 +737,19 @@
                         <div class="section-title">Transaction References</div>
                         <div class="form-group" style="grid-column: 1 / -1;">
                             <label>UETR (End-to-End Tracking Ref)</label>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <input formControlName="txUetr" maxlength="36" style="flex: 1;"
-                                    placeholder="xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx">
-                                <button type="button" class="gen-uetr-btn" (click)="generateUetr()"
-                                    matTooltip="Generate random UETR">
-                                    <mat-icon style="font-size: 18px; width: 18px; height: 18px;">autorenew</mat-icon>
+                            <div class="uetr-control-row">
+                                <input formControlName="txUetr" maxlength="36" 
+                                       placeholder="xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+                                       (blur)="validateManualUetr()"
+                                       (paste)="onUetrPaste($event)"
+                                       (keydown.enter)="validateManualUetr()">
+                                <button type="button" class="uetr-refresh-btn" (click)="refreshUetr()" title="Refresh UETR">
+                                    <mat-icon>refresh</mat-icon>
                                 </button>
                             </div>
+                            <div class="validation-msg" *ngIf="uetrError">{{uetrError}}</div>
                             <div class="validation-msg" *ngIf="err('txUetr') as e">{{e}}</div>
+                            <div class="uetr-success" *ngIf="uetrSuccess">✔ {{uetrSuccess}}</div>
                             <div class="field-hint at-limit" *ngIf="hint('txUetr', 36) as h">{{h}}</div>
                         </div>
                         <div class="form-group">
@@ -895,10 +899,10 @@
                     <!-- Additional Report Info -->
                     <div class="section-title">Additional Info</div>
                     <div class="form-group" style="grid-column: 1 / -1;">
-                        <label>Additional Report Information</label>
-                        <input formControlName="addtlRptInf" maxlength="500">
-                        <div class="validation-msg" *ngIf="err('addtlRptInf') as e">{{e}}</div>
-                        <div class="field-hint at-limit" *ngIf="hint('addtlRptInf', 500) as h">{{h}}</div>
+                        <label>Additional Statement Information</label>
+                        <input formControlName="addtlStmtInf" maxlength="500">
+                        <div class="validation-msg" *ngIf="err('addtlStmtInf') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('addtlStmtInf', 500) as h">{{h}}</div>
                     </div>
                 </div>
             </form>
