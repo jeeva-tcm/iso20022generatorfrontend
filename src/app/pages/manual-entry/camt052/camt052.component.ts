@@ -125,13 +125,15 @@ export class Camt052Component implements OnInit {
                 xml += t(5) + '</ClrSysMmbId>\n';
             }
             if (v[prefix + 'Lei']?.trim()) xml += t(5) + '<LEI>' + this.e(v[prefix + 'Lei']) + '</LEI>\n';
-            // Omit Nm and PstlAddr from Header FI identification if present to satisfy V1/V8 validation
+            // Omit Nm and PstlAddr from Header FI identification to satisfy head.001 validation
             if (prefix !== 'from' && prefix !== 'to') {
                 if (v[prefix + 'Nm']?.trim()) xml += t(5) + '<Nm>' + this.e(v[prefix + 'Nm']) + '</Nm>\n';
                 xml += this.buildPostalAddr(prefix, v, t, 5);
             }
             xml += t(4) + '</FinInstnId>\n';
-            if (v[prefix + 'BrnchId']?.trim()) xml += t(4) + '<BrnchId><Id>' + this.e(v[prefix + 'BrnchId']) + '</Id></BrnchId>\n';
+            if (prefix !== 'from' && prefix !== 'to') {
+                if (v[prefix + 'BrnchId']?.trim()) xml += t(4) + '<BrnchId>\n' + t(5) + '<Id>' + this.e(v[prefix + 'BrnchId']) + '</Id>\n' + t(4) + '</BrnchId>\n';
+            }
             xml += t(3) + '</FIId>\n';
         }
         return xml;
@@ -408,7 +410,7 @@ export class Camt052Component implements OnInit {
             if (val !== upperValue) {
                 target.value = upperValue;
                 if (start !== null && end !== null) target.setSelectionRange(start, end);
-                this.form.get(name)?.patchValue(upperValue, { emitEvent: false });
+                this.form.get(name)?.patchValue(upperValue);
             }
         }
     }
@@ -636,21 +638,26 @@ export class Camt052Component implements OnInit {
             const hasRltdPties = v.txInitgPtyNm?.trim() || v.txUltmtDbtrNm?.trim() || v.txDbtrNm?.trim() || v.txDbtrAcct?.trim() || v.txCdtrNm?.trim() || v.txCdtrAcct?.trim() || v.txUltmtCdtrNm?.trim();
             if (hasRltdPties) {
                 ntryXml += t(7) + '<RltdPties>\n';
+                // InitgPty
                 if (v.txInitgPtyNm?.trim()) ntryXml += t(8) + '<InitgPty>\n' + t(9) + '<Nm>' + this.e(v.txInitgPtyNm) + '</Nm>\n' + t(8) + '</InitgPty>\n';
+                // Dbtr
                 if (v.txDbtrNm?.trim() || v.txDbtrAcct?.trim()) {
-                    ntryXml += t(8) + '<Dbtr>\n' + t(9) + '<Pty>\n';
-                    if (v.txDbtrNm?.trim()) ntryXml += t(10) + '<Nm>' + this.e(v.txDbtrNm) + '</Nm>\n';
-                    ntryXml += t(9) + '</Pty>\n' + t(8) + '</Dbtr>\n';
+                    if (v.txDbtrNm?.trim()) {
+                        ntryXml += t(8) + '<Dbtr>\n' + t(9) + '<Nm>' + this.e(v.txDbtrNm) + '</Nm>\n' + t(8) + '</Dbtr>\n';
+                    }
                     if (v.txDbtrAcct?.trim()) ntryXml += t(8) + '<DbtrAcct>\n' + t(9) + '<Id>\n' + t(10) + '<Othr>\n' + t(11) + '<Id>' + this.e(v.txDbtrAcct) + '</Id>\n' + t(10) + '</Othr>\n' + t(9) + '</Id>\n' + t(8) + '</DbtrAcct>\n';
                 }
-                if (v.txUltmtDbtrNm?.trim()) ntryXml += t(8) + '<UltmtDbtr>\n' + t(9) + '<Pty>\n' + t(10) + '<Nm>' + this.e(v.txUltmtDbtrNm) + '</Nm>\n' + t(9) + '</Pty>\n' + t(8) + '</UltmtDbtr>\n';
+                // UltmtDbtr
+                if (v.txUltmtDbtrNm?.trim()) ntryXml += t(8) + '<UltmtDbtr>\n' + t(9) + '<Nm>' + this.e(v.txUltmtDbtrNm) + '</Nm>\n' + t(8) + '</UltmtDbtr>\n';
+                // Cdtr
                 if (v.txCdtrNm?.trim() || v.txCdtrAcct?.trim()) {
-                    ntryXml += t(8) + '<Cdtr>\n' + t(9) + '<Pty>\n';
-                    if (v.txCdtrNm?.trim()) ntryXml += t(10) + '<Nm>' + this.e(v.txCdtrNm) + '</Nm>\n';
-                    ntryXml += t(9) + '</Pty>\n' + t(8) + '</Cdtr>\n';
+                    if (v.txCdtrNm?.trim()) {
+                        ntryXml += t(8) + '<Cdtr>\n' + t(9) + '<Nm>' + this.e(v.txCdtrNm) + '</Nm>\n' + t(8) + '</Cdtr>\n';
+                    }
                     if (v.txCdtrAcct?.trim()) ntryXml += t(8) + '<CdtrAcct>\n' + t(9) + '<Id>\n' + t(10) + '<Othr>\n' + t(11) + '<Id>' + this.e(v.txCdtrAcct) + '</Id>\n' + t(10) + '</Othr>\n' + t(9) + '</Id>\n' + t(8) + '</CdtrAcct>\n';
                 }
-                if (v.txUltmtCdtrNm?.trim()) ntryXml += t(8) + '<UltmtCdtr>\n' + t(9) + '<Pty>\n' + t(10) + '<Nm>' + this.e(v.txUltmtCdtrNm) + '</Nm>\n' + t(9) + '</Pty>\n' + t(8) + '</UltmtCdtr>\n';
+                // UltmtCdtr
+                if (v.txUltmtCdtrNm?.trim()) ntryXml += t(8) + '<UltmtCdtr>\n' + t(9) + '<Nm>' + this.e(v.txUltmtCdtrNm) + '</Nm>\n' + t(8) + '</UltmtCdtr>\n';
                 ntryXml += t(7) + '</RltdPties>\n';
             }
             // Related Agents
@@ -693,19 +700,12 @@ export class Camt052Component implements OnInit {
         if (v.ntryAddtlInf?.trim()) ntryXml += t(5) + '<AddtlNtryInf>' + this.e(v.ntryAddtlInf) + '</AddtlNtryInf>\n';
         ntryXml += t(4) + '</Ntry>\n';
 
-        // Pagination (Mandatory in CBPR+; RptPgntn and MsgPgntn are mutually exclusive)
-        let pgnXml = '';
-        if (!v.grpHdrMsgPgntnPgNb?.trim()) {
-            pgnXml = t(4) + '<RptPgntn>\n'
-                + t(5) + '<PgNb>' + this.e(v.rptPgNb || '1') + '</PgNb>\n'
-                + t(5) + '<LastPgInd>' + (v.rptPgLastPgInd === 'false' ? 'false' : 'true') + '</LastPgInd>\n'
-                + t(4) + '</RptPgntn>\n';
-        }
+        // Pagination (Mandatory in CBPR+ Rpt block)
+        let pgnXml = t(4) + '<RptPgntn>\n'
+            + t(5) + '<PgNb>' + this.e(v.rptPgNb || '1') + '</PgNb>\n'
+            + t(5) + '<LastPgInd>' + (v.rptPgLastPgInd === 'false' ? 'false' : 'true') + '</LastPgInd>\n'
+            + t(4) + '</RptPgntn>\n';
 
-        // optional sequence numbers
-        let seqXml = '';
-        if (v.elctrncSeqNb?.trim()) seqXml += t(4) + '<ElctrncSeqNb>' + this.e(v.elctrncSeqNb) + '</ElctrncSeqNb>\n';
-        if (v.lglSeqNb?.trim()) seqXml += t(4) + '<LglSeqNb>' + this.e(v.lglSeqNb) + '</LglSeqNb>\n';
 
         // From/To Date
         let frToDtXml = '';
@@ -757,16 +757,16 @@ export class Camt052Component implements OnInit {
 
         this.generatedXml += t(1) + '</AppHdr>\n'
             + t(1) + '<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.052.001.08">\n'
-            + t(2) + '<BkToCstmrAcctRpt>\n'
+            + t(2) + '<BankToCustomerAccountReportV08>\n'
             + t(3) + '<GrpHdr>\n'
             + t(4) + '<MsgId>' + this.e(v.msgId) + '</MsgId>\n'
             + t(4) + '<CreDtTm>' + creDtTm + '</CreDtTm>\n';
 
         if (v.grpHdrMsgRcptNm?.trim() || v.grpHdrMsgRcptBic?.trim()) {
-            this.generatedXml += t(4) + '<MsgRcpt>\n' + t(5) + '<Pty>\n';
-            if (v.grpHdrMsgRcptNm?.trim()) this.generatedXml += t(6) + '<Nm>' + this.e(v.grpHdrMsgRcptNm) + '</Nm>\n';
-            if (v.grpHdrMsgRcptBic?.trim()) this.generatedXml += t(6) + '<Id>\n' + t(7) + '<OrgId>\n' + t(8) + '<AnyBIC>' + this.e(v.grpHdrMsgRcptBic) + '</AnyBIC>\n' + t(7) + '</OrgId>\n' + t(6) + '</Id>\n';
-            this.generatedXml += t(5) + '</Pty>\n' + t(4) + '</MsgRcpt>\n';
+            this.generatedXml += t(4) + '<MsgRcpt>\n';
+            if (v.grpHdrMsgRcptNm?.trim()) this.generatedXml += t(5) + '<Nm>' + this.e(v.grpHdrMsgRcptNm) + '</Nm>\n';
+            if (v.grpHdrMsgRcptBic?.trim()) this.generatedXml += t(5) + '<Id>\n' + t(6) + '<OrgId>\n' + t(7) + '<AnyBIC>' + this.e(v.grpHdrMsgRcptBic) + '</AnyBIC>\n' + t(6) + '</OrgId>\n' + t(5) + '</Id>\n';
+            this.generatedXml += t(4) + '</MsgRcpt>\n';
         }
 
         if (v.grpHdrMsgPgntnPgNb?.trim()) {
@@ -784,12 +784,15 @@ export class Camt052Component implements OnInit {
         this.generatedXml += t(3) + '</GrpHdr>\n'
             + t(3) + '<Rpt>\n'
             + t(4) + '<Id>' + this.e(v.rptId) + '</Id>\n'
-            + pgnXml
-            + seqXml;
+            + pgnXml;
+
+        if (v.elctrncSeqNb?.trim()) this.generatedXml += t(4) + '<ElctrncSeqNb>' + this.e(v.elctrncSeqNb) + '</ElctrncSeqNb>\n';
 
         if (v.rptgSeq?.trim()) {
-            this.generatedXml += t(4) + '<RptgSeq>\n' + t(5) + '<FrToRg>\n' + t(6) + '<FrSeq>' + this.e(v.rptgSeq) + '</FrSeq>\n' + t(5) + '</FrToRg>\n' + t(4) + '</RptgSeq>\n';
+            this.generatedXml += t(4) + '<RptgSeq>\n' + t(5) + '<FrSeq>' + this.e(v.rptgSeq) + '</FrSeq>\n' + t(4) + '</RptgSeq>\n';
         }
+
+        if (v.lglSeqNb?.trim()) this.generatedXml += t(4) + '<LglSeqNb>' + this.e(v.lglSeqNb) + '</LglSeqNb>\n';
 
         this.generatedXml += t(4) + '<CreDtTm>' + creDtTm + '</CreDtTm>\n'
             + frToDtXml
@@ -802,7 +805,7 @@ export class Camt052Component implements OnInit {
             + ntryXml
             + addtlRptInfXml
             + t(3) + '</Rpt>\n'
-            + t(2) + '</BkToCstmrAcctRpt>\n'
+            + t(2) + '</BankToCustomerAccountReportV08>\n'
             + t(1) + '</Document>\n'
             + '</BusMsgEnvlp>';
 

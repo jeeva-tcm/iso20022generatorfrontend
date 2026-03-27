@@ -21,8 +21,8 @@
                                     <option value="OrgId">Organization (OrgId)</option>
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label>Name</label>
+                            <div class="form-group" *ngIf="form.get('fromType')?.value === 'OrgId'">
+                                <label>Name <span class="req">*</span></label>
                                 <input formControlName="fromNm" maxlength="140">
                                 <div class="validation-msg" *ngIf="err('fromNm') as e">{{e}}</div>
                                 <div class="field-hint at-limit" *ngIf="hint('fromNm', 140) as h">{{h}}</div>
@@ -41,7 +41,7 @@
                             </div>
 
                             <!-- Detailed Address (From) -->
-                            <div class="address-subgrid">
+                            <div class="address-subgrid" *ngIf="form.get('fromType')?.value === 'OrgId'">
                                 <div class="party-group-title"
                                     style="background: rgba(0,0,0,0.02); font-size: 0.65rem;">Postal Address</div>
                                 <div class="form-group">
@@ -65,8 +65,7 @@
                                     <input formControlName="fromCtrySubDvsn" maxlength="35">
                                 </div>
                                 <div class="form-group">
-                                    <label>Country <span class="req"
-                                            *ngIf="form.get('fromType')?.value === 'OrgId'">*</span></label>
+                                    <label>Country <span class="req">*</span></label>
                                     <input formControlName="fromCtry" maxlength="2" placeholder="e.g. US">
                                     <div class="validation-msg" *ngIf="err('fromCtry') as e">{{e}}</div>
                                 </div>
@@ -117,7 +116,7 @@
                             </div>
 
                             <!-- Contact Details (From) -->
-                            <div class="address-subgrid">
+                            <div class="address-subgrid" *ngIf="form.get('fromType')?.value === 'OrgId'">
                                 <div class="party-group-title"
                                     style="background: rgba(0,0,0,0.02); font-size: 0.65rem;">Contact Details</div>
                                 <div class="form-group">
@@ -148,8 +147,8 @@
                                     <option value="OrgId">Organization (OrgId)</option>
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label>Name</label>
+                            <div class="form-group" *ngIf="form.get('toType')?.value === 'OrgId'">
+                                <label>Name <span class="req">*</span></label>
                                 <input formControlName="toNm" maxlength="140">
                                 <div class="validation-msg" *ngIf="err('toNm') as e">{{e}}</div>
                                 <div class="field-hint at-limit" *ngIf="hint('toNm', 140) as h">{{h}}</div>
@@ -168,7 +167,7 @@
                             </div>
 
                             <!-- Detailed Address (To) -->
-                            <div class="address-subgrid">
+                            <div class="address-subgrid" *ngIf="form.get('toType')?.value === 'OrgId'">
                                 <div class="party-group-title"
                                     style="background: rgba(0,0,0,0.02); font-size: 0.65rem;">Postal Address</div>
                                 <div class="form-group">
@@ -192,8 +191,7 @@
                                     <input formControlName="toCtrySubDvsn" maxlength="35">
                                 </div>
                                 <div class="form-group">
-                                    <label>Country <span class="req"
-                                            *ngIf="form.get('toType')?.value === 'OrgId'">*</span></label>
+                                    <label>Country <span class="req">*</span></label>
                                     <input formControlName="toCtry" maxlength="2" placeholder="e.g. GB">
                                     <div class="validation-msg" *ngIf="err('toCtry') as e">{{e}}</div>
                                 </div>
@@ -244,7 +242,7 @@
                             </div>
 
                             <!-- Contact Details (To) -->
-                            <div class="address-subgrid">
+                            <div class="address-subgrid" *ngIf="form.get('toType')?.value === 'OrgId'">
                                 <div class="party-group-title"
                                     style="background: rgba(0,0,0,0.02); font-size: 0.65rem;">Contact Details</div>
                                 <div class="form-group">
