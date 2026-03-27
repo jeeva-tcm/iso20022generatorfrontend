@@ -50,9 +50,11 @@
 .split-view {
     display: flex;
     gap: 1.5rem;
-    align-items: flex-start;
-    height: calc(100vh - 30px);
+    align-items: stretch;
+    flex: 1;
+    min-height: 0;
     margin-top: -1rem;
+    padding-bottom: 1rem;
 }
 
 .left-panel {
@@ -61,13 +63,16 @@
     height: 100%;
     overflow-y: auto;
     padding-right: 0.5rem;
+    padding-bottom: 2rem;
 }
 
 .right-panel {
     flex: 1;
     min-width: 0;
     height: 100%;
-    overflow-y: auto;
+    overflow-y: hidden;
+    display: flex;
+    flex-direction: column;
     padding-right: 0.5rem;
 }
 
@@ -152,6 +157,12 @@ header p {
     box-shadow: var(--shadow-md);
 }
 
+.preview-box {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
 
 /* Using global .grid, .section-title, .form-group from styles.css */
 
@@ -168,7 +179,8 @@ textarea {
     background: var(--editor-bg);
     border: 1px solid var(--border-light);
     border-radius: 8px;
-    height: 500px;
+    flex: 1;
+    min-height: 0;
     overflow: hidden;
     position: relative;
 }
@@ -212,12 +224,12 @@ textarea.code-editor {
 
 .left-panel, .right-panel {
     scrollbar-width: thin;
-    scrollbar-color: #add8e6 transparent;
+    scrollbar-color: #d1d5db transparent;
 }
 
 textarea.code-editor {
     scrollbar-width: thin;
-    scrollbar-color: #add8e6 var(--editor-bg);
+    scrollbar-color: #d1d5db var(--editor-bg);
 }
 
 .left-panel::-webkit-scrollbar,
@@ -239,14 +251,14 @@ textarea.code-editor::-webkit-scrollbar-track {
 .left-panel::-webkit-scrollbar-thumb,
 .right-panel::-webkit-scrollbar-thumb,
 textarea.code-editor::-webkit-scrollbar-thumb {
-    background-color: #add8e6; /* Light Blue */
+    background-color: #d1d5db; /* Grey */
     border-radius: 4px;
 }
 
 .left-panel::-webkit-scrollbar-thumb:hover,
 .right-panel::-webkit-scrollbar-thumb:hover,
 textarea.code-editor::-webkit-scrollbar-thumb:hover {
-    background-color: #87cefa; /* Light Sky Blue */
+    background-color: #9ca3af; /* Darker Grey */
 }
 
 /* Preview Actions */

@@ -33,8 +33,11 @@
 .split-view {
     display: flex;
     gap: 1.5rem;
-    align-items: flex-start;
-    height: calc(100vh - 120px);
+    align-items: stretch;
+    flex: 1;
+    min-height: 0;
+    margin-top: -1rem;
+    padding-bottom: 1rem;
 }
 
 .left-panel {
@@ -43,13 +46,16 @@
     height: 100%;
     overflow-y: auto;
     padding-right: 0.5rem;
+    padding-bottom: 2rem;
 }
 
 .right-panel {
     flex: 1;
     min-width: 0;
     height: 100%;
-    overflow-y: auto;
+    overflow-y: hidden;
+    display: flex;
+    flex-direction: column;
     padding-right: 0.5rem;
 }
 
@@ -118,6 +124,13 @@ header p {
     border-radius: 12px;
     padding: 1.25rem 1.5rem;
     box-shadow: var(--shadow-md);
+}
+
+.preview-box {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 
@@ -293,7 +306,8 @@ textarea {
     background: var(--editor-bg);
     border: 1px solid var(--border-light);
     border-radius: 8px;
-    height: 500px;
+    flex: 1;
+    min-height: 0;
     overflow: hidden;
     position: relative;
 }
@@ -334,23 +348,6 @@ textarea.code-editor {
     white-space: pre;
 }
 
-textarea.code-editor::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-}
-
-textarea.code-editor::-webkit-scrollbar-track {
-    background: var(--editor-bg);
-}
-
-textarea.code-editor::-webkit-scrollbar-thumb {
-    background: var(--editor-thumb);
-    border-radius: 5px;
-}
-
-textarea.code-editor::-webkit-scrollbar-thumb:hover {
-    background: var(--editor-thumb-hover);
-}
 
 /* Bottom bar */
 .bottom-actions {
@@ -714,12 +711,6 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     display: block;
     animation: fadeIn 0.3s ease-in-out;
 }
-
-
-
-
-
-
 
 
 /* ===== Validation Modal ===== */
@@ -1313,4 +1304,43 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     font-weight: 600;
     margin-top: 3px;
     animation: fadeIn 0.2s ease;
-}
+}
+
+.left-panel, .right-panel {
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db transparent;
+}
+
+textarea.code-editor {
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db var(--editor-bg);
+}
+
+.left-panel::-webkit-scrollbar,
+.right-panel::-webkit-scrollbar,
+textarea.code-editor::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.left-panel::-webkit-scrollbar-track,
+.right-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+textarea.code-editor::-webkit-scrollbar-track {
+    background: var(--editor-bg);
+}
+
+.left-panel::-webkit-scrollbar-thumb,
+.right-panel::-webkit-scrollbar-thumb,
+textarea.code-editor::-webkit-scrollbar-thumb {
+    background-color: #d1d5db; /* Grey */
+    border-radius: 4px;
+}
+
+.left-panel::-webkit-scrollbar-thumb:hover,
+.right-panel::-webkit-scrollbar-thumb:hover,
+textarea.code-editor::-webkit-scrollbar-thumb:hover {
+    background-color: #9ca3af; /* Darker Grey */
+}
