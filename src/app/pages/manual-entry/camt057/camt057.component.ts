@@ -357,7 +357,6 @@ export class Camt057Component implements OnInit {
             if (f.toLowerCase().includes('iban')) return 'Valid 34-char IBAN required.';
             if (f.toLowerCase().includes('uetr')) return 'Invalid UETR format';
             if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Max 18 digits, up to 5 decimals.';
-            if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
             if (f === 'bizMsgId' || f === 'msgId' || f === 'ntfctnId' || f === 'itmId' || f === 'instrId' || f === 'endToEndId') return 'Invalid Pattern.';
             if (f === 'clrSysRef') return 'Invalid Pattern (Alphanumeric only, max 35 chars).';
             if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Must be a valid ISO 20022 code (4 uppercase letters).';
