@@ -25,15 +25,9 @@ export class FormattingService {
    * @param currency The ISO currency code (e.g., 'USD', 'EUR')
    * @returns Formatted string (e.g., "1500.00")
    */
-  formatAmount(amount: any, currency: string): string {
+  formatAmount(amount: any, currency?: string): string {
     if (amount === null || amount === undefined || amount === '') return '';
-    
-    // Convert to number safely
-    const num = typeof amount === 'number' ? amount : parseFloat(amount.toString().replace(/,/g, ''));
-    if (isNaN(num)) return amount.toString();
-
-    const decimals = this.getDecimalCount(currency);
-    return num.toFixed(decimals);
+    return amount.toString().trim();
   }
 
   /**

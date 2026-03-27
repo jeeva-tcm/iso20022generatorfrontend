@@ -588,21 +588,22 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
       // Normalize XML
       let xml = this.generatedXml.replace(/>\s+</g, '><').trim();
       
-      const reg = /(<[^>]+>[^<]*<\/([^>]+)>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
+      // Intelligent regex to split Tags and Comments
+      const reg = /(<[^/!?][^>]*>[^<]*<\/[^>]+>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
       const nodes = xml.match(reg) || [];
 
       nodes.forEach(node => {
         const trimmed = node.trim();
         if (!trimmed) return;
 
-        if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
-          formatted += indent + trimmed + '\r\n';
-        } else if (trimmed.startsWith('</')) {
+        if (trimmed.startsWith('</')) {
           if (indent.length >= tab.length) indent = indent.substring(tab.length);
+          formatted += indent + trimmed + '\r\n';
+        } else if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
           formatted += indent + trimmed + '\r\n';
         } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
           formatted += indent + trimmed + '\r\n';
-          if (!trimmed.endsWith('/>')) indent += tab;
+          indent += tab;
         } else {
           formatted += indent + trimmed + '\r\n';
         }

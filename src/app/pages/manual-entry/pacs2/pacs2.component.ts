@@ -237,8 +237,20 @@ export class Pacs2Component implements OnInit {
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
 \t<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
-\t\t<Fr><FIId><FinInstnId><BICFI>${this.esc(v.fromBic)}</BICFI></FinInstnId></FIId></Fr>
-\t\t<To><FIId><FinInstnId><BICFI>${this.esc(v.toBic)}</BICFI></FinInstnId></FIId></To>
+\t\t<Fr>
+\t\t\t<FIId>
+\t\t\t\t<FinInstnId>
+\t\t\t\t\t<BICFI>${this.esc(v.fromBic)}</BICFI>
+\t\t\t\t</FinInstnId>
+\t\t\t</FIId>
+\t\t</Fr>
+\t\t<To>
+\t\t\t<FIId>
+\t\t\t\t<FinInstnId>
+\t\t\t\t\t<BICFI>${this.esc(v.toBic)}</BICFI>
+\t\t\t\t</FinInstnId>
+\t\t\t</FIId>
+\t\t</To>
 \t\t<BizMsgIdr>${this.esc(v.bizMsgId)}</BizMsgIdr>
 \t\t<MsgDefIdr>${this.esc(v.msgDefIdr)}</MsgDefIdr>
 \t\t<BizSvc>${this.esc(v.bizSvc)}</BizSvc>
@@ -386,23 +398,43 @@ ${txInf.trimEnd()}
   syncScroll(editor: HTMLTextAreaElement, gutter: HTMLDivElement) {
     gutter.scrollTop = editor.scrollTop;
   }
-
   formatXml() {
     if (!this.generatedXml?.trim()) return;
+    this.pushHistory();
+
     try {
+      const tab = '    ';
       let formatted = '';
       let indent = '';
-      const tab = '    ';
-      this.generatedXml.split(/>\s*</).forEach(node => {
-        if (node.match(/^\/\w/)) indent = indent.substring(tab.length);
-        formatted += indent + '<' + node + '>\r\n';
-        if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith('?')) indent += tab;
+      // Normalize XML
+      let xml = this.generatedXml.replace(/>\s+</g, '><').trim();
+      
+      // Intelligent regex to split Tags and Comments
+      const reg = /(<[^/!?][^>]*>[^<]*<\/[^>]+>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
+      const nodes = xml.match(reg) || [];
+
+      nodes.forEach(node => {
+        const trimmed = node.trim();
+        if (!trimmed) return;
+
+        if (trimmed.startsWith('</')) {
+          if (indent.length >= tab.length) indent = indent.substring(tab.length);
+          formatted += indent + trimmed + '\r\n';
+        } else if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
+          formatted += indent + trimmed + '\r\n';
+        } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
+          formatted += indent + trimmed + '\r\n';
+          indent += tab;
+        } else {
+          formatted += indent + trimmed + '\r\n';
+        }
       });
+      
       this.generatedXml = formatted.trim();
       this.refreshLineCount();
-      this.pushHistory();
+      this.snackBar.open('XML Formatted', '', { duration: 1500 });
     } catch (e) {
-      this.snackBar.open('Error formatting XML', 'Close', { duration: 2000 });
+      this.snackBar.open('Unable to format XML', '', { duration: 3000 });
     }
   }
 

@@ -863,20 +863,20 @@ export class Camt052Component implements OnInit {
             let formatted = '';
             let indent = '';
             let xml = this.generatedXml.replace(/>\s+</g, '><').trim();
-            const regStr = '(<[^>]+>[^<]*<\\/([^>]+)>)|(<[^>]+\\/>)|(<[^>]+>)|(<!--[\\s\\S]*?-->)|([^<]+)';
-            const reg = new RegExp(regStr, 'g');
+            // Intelligent regex to split Tags and Comments
+            const reg = /(<[^/!?][^>]*>[^<]*<\/[^>]+>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
             const nodes = xml.match(reg) || [];
             nodes.forEach(node => {
                 const trimmed = node.trim();
                 if (!trimmed) return;
-                if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
-                    formatted += indent + trimmed + '\r\n';
-                } else if (trimmed.startsWith('</')) {
+                if (trimmed.startsWith('</')) {
                     if (indent.length >= tab.length) indent = indent.substring(tab.length);
+                    formatted += indent + trimmed + '\r\n';
+                } else if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
                     formatted += indent + trimmed + '\r\n';
                 } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
                     formatted += indent + trimmed + '\r\n';
-                    if (!trimmed.endsWith('/>')) indent += tab;
+                    indent += tab;
                 } else {
                     formatted += indent + trimmed + '\r\n';
                 }
