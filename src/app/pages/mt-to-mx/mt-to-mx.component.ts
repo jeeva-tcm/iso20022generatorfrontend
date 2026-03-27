@@ -829,9 +829,7 @@ export class MtToMxComponent implements OnInit {
     private esc(v: string) { return (v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
     private isoNow(): string {
-        const d = new Date(), p = (n: number) => n.toString().padStart(2, '0');
-        const off = -d.getTimezoneOffset(), s = off >= 0 ? '+' : '-';
-        return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}${s}${p(Math.floor(Math.abs(off) / 60))}:${p(Math.abs(off) % 60)}`;
+        return new Date().toISOString().split('.')[0] + '+00:00';
     }
 
     private generateUUID(): string {

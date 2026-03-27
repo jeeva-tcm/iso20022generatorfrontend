@@ -9,6 +9,7 @@ import { Router } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
 import { FormattingService } from '../../../services/formatting.service';
 import { UetrService } from '../../../services/uetr.service';
+import { ISO_PURPOSE_CODES } from '../../../constants/purpose-codes';
 
 @Component({
     selector: 'app-pacs9',
@@ -189,8 +190,14 @@ export class Pacs9Component implements OnInit {
             }
         });
         this.http.get<any>(this.config.getApiUrl('/codelists/purp')).subscribe({
-            next: (res) => { if (res && res.codes) this.purposes = res.codes; },
-            error: (err) => console.error('Failed to load purposes', err)
+            next: (res) => {
+                const existingCodes = res && res.codes ? res.codes : [];
+                this.purposes = [...new Set([...existingCodes, ...ISO_PURPOSE_CODES])].sort();
+            },
+            error: (err) => {
+                console.error('Failed to load purposes', err);
+                this.purposes = [...ISO_PURPOSE_CODES].sort();
+            }
         });
 
     }
@@ -252,7 +259,10 @@ export class Pacs9Component implements OnInit {
         const ADDR_PATTERN = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
         const c: any = {
             purpCd: [''],
-            ctgyPurpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/)]],
+            ctgyPurpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/), (control: any) => {
+                if (!control.value) return null;
+                return (this.purposes || []).includes(control.value.toUpperCase()) ? null : { invalidPurpose: true };
+            }]],
             ctgyPurpPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
             instrPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
             clrChanl: ['', [Validators.pattern(/^(BOOK|MPNS|RTGS|RTNS)$/)]],
@@ -293,8 +303,8 @@ export class Pacs9Component implements OnInit {
             prvsInstgAgt1Bic: ['', BIC_OPT], prvsInstgAgt2Bic: ['', BIC_OPT], prvsInstgAgt3Bic: ['', BIC_OPT],
             intrmyAgt1Bic: ['', BIC_OPT], intrmyAgt2Bic: ['', BIC_OPT], intrmyAgt3Bic: ['', BIC_OPT],
             // Debtor/Creditor FI Accounts
-            dbtrFiAcct: [''],
-            cdtrFiAcct: [''],
+            dbtrFiAcct: ['471932901234'],
+            cdtrFiAcct: ['471932905678'],
             dbtrAgtAcct: [''],
             cdtrAgtAcct: [''],
             // Instructions for Creditor Agent (0..2)
@@ -343,8 +353,8 @@ export class Pacs9Component implements OnInit {
             if (!c[p + 'Acct']) c[p + 'Acct'] = ['', [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
         });
         // Set default names for mandatory parties
-        c['dbtrFiName'] = ['Debtor', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
-        c['cdtrFiName'] = ['Creditor', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
+        c['dbtrFiName'] = ['Debtor FI', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
+        c['cdtrFiName'] = ['Creditor FI', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
         c['dbtrAgtName'] = ['Debtor Agent', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
         c['cdtrAgtName'] = ['Creditor Agent', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
 
@@ -388,11 +398,16 @@ export class Pacs9Component implements OnInit {
             if (f === 'lclInstrmCd') return 'Invalid Local Instrument Code. Must be 1-4 alphanumeric characters.';
             if (f === 'lclInstrmPrtry') return 'Invalid Proprietary Local Instrument. Up to 35 characters allowed.';
             if (f === 'ctgyPurpPrtry') return 'Invalid Proprietary Category Purpose. Up to 35 characters allowed.';
-            if (f.toLowerCase().includes('bldgnb') || f.toLowerCase().includes('pstcd') || f.toLowerCase().includes('pstbx') || f.toLowerCase().includes('bldgnm') || f.toLowerCase().includes('twnnm') || f.toLowerCase().includes('twnlctn') || f.toLowerCase().includes('dstrctnm') || f.toLowerCase().includes('ctrysubdvsn') || f.toLowerCase().includes('strtnm') || f.toLowerCase().includes('dept') || f.toLowerCase().includes('subdept') || f.toLowerCase().includes('flr') || f.toLowerCase().includes('room') || f.toLowerCase().includes('adrline')) {
-                return 'Invalid character. Only ISO 20022 MX allowed characters permitted.';
-            }
-            if (f.toLowerCase().includes('name') || f.toLowerCase().includes('nm')) return "Invalid characters. Only letters, numbers, spaces and . , ( ) ' - are allowed (no &, @, !, etc.)";
+            if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Please select from the list or enter a valid ISO 20022 Purpose Code.';
         }
+
+        if (f.toLowerCase().includes('bldgnb') || f.toLowerCase().includes('pstcd') || f.toLowerCase().includes('pstbx') || f.toLowerCase().includes('bldgnm') || f.toLowerCase().includes('twnnm') || f.toLowerCase().includes('twnlctn') || f.toLowerCase().includes('dstrctnm') || f.toLowerCase().includes('ctrysubdvsn') || f.toLowerCase().includes('strtnm') || f.toLowerCase().includes('dept') || f.toLowerCase().includes('subdept') || f.toLowerCase().includes('flr') || f.toLowerCase().includes('room') || f.toLowerCase().includes('adrline')) {
+            if (c.errors?.['pattern']) return 'Invalid character. Only ISO 20022 MX allowed characters permitted.';
+        }
+        if (f.toLowerCase().includes('name') || f.toLowerCase().includes('nm')) {
+            if (c.errors?.['pattern']) return "Invalid characters. Only letters, numbers, spaces and . , ( ) ' - are allowed (no &, @, !, etc.)";
+        }
+        if (c.errors?.['invalidPurpose']) return 'Invalid Purpose Code. Please select from the list or enter a valid ISO 20022 Purpose Code.';
         if (c.errors?.['target2']) return 'TARGET2 payments must use EUR as the settlement currency.';
         if (c.errors?.['chaps']) return 'Invalid Currency for CHAPS clearing system. When ClrSysId/Cd = CHAPS, the transaction currency must be GBP.';
         return 'Invalid value.';
@@ -512,6 +527,20 @@ export class Pacs9Component implements OnInit {
         const d = new Date(), p = (n: number) => n.toString().padStart(2, '0');
         const off = -d.getTimezoneOffset(), s = off >= 0 ? '+' : '-';
         return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}${s}${p(Math.floor(Math.abs(off) / 60))}:${p(Math.abs(off) % 60)}`;
+    }
+
+    formatCbprDateTime(dt: string): string {
+        if (!dt) return this.isoNow();
+        let res = dt.trim();
+        // 1. Replace Z with +00:00
+        if (res.endsWith('Z')) res = res.replace('Z', '+00:00');
+        // 2. Remove milliseconds if present (e.g. .415)
+        res = res.replace(/\.\d{1,}/, '');
+        // 3. Ensure mandatory timezone offset. If missing, assume +00:00
+        if (!/[+-]\d{2}:\d{2}$/.test(res)) {
+            res += '+00:00';
+        }
+        return res;
     }
 
 

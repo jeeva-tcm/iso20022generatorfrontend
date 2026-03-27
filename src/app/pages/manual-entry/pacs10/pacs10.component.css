@@ -141,6 +141,33 @@ select,
 textarea {
     box-sizing: border-box;
     padding-left: 10px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* Error Styling: High Visibility Red border for invalid fields */
+input.ng-invalid.ng-touched,
+select.ng-invalid.ng-touched,
+textarea.ng-invalid.ng-touched,
+input.ng-invalid.ng-dirty,
+select.ng-invalid.ng-dirty,
+textarea.ng-invalid.ng-dirty {
+    border: 2px solid #ef4444 !important;
+    background-color: #fff5f5 !important;
+}
+
+input.ng-invalid.ng-touched:focus,
+select.ng-invalid.ng-touched:focus,
+textarea.ng-invalid.ng-touched:focus {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1) !important;
+}
+
+.validation-msg {
+    color: #ef4444;
+    font-size: 0.72rem;
+    font-weight: 600;
+    margin-top: 0.35rem;
+    display: block;
+    animation: fadeIn 0.2s ease-in-out;
 }
 
 /* Address */
@@ -148,6 +175,8 @@ textarea {
     grid-column: 1/-1;
     margin-top: .25rem;
 }
+
+/* Global party classes from styles.css will be used */
 
 .subsection {
     grid-column: 1/-1;
@@ -194,6 +223,20 @@ textarea {
 
 .full-width {
     grid-column: 1 / -1;
+}
+
+.dual-input {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    flex: 1;
+}
+
+.triple-input {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr 1fr;
+    gap: 8px;
+    flex: 1;
 }
 
 
@@ -314,7 +357,6 @@ textarea {
 
 .line-numbers {
     width: 45px;
-    height: 100%;
     background: var(--editor-gutter);
     color: var(--editor-gutter-text);
     padding: 1rem 0;
@@ -790,8 +832,8 @@ textarea.code-editor {
 
 .vm-action-btn.run {
     background: rgba(99, 102, 241, 0.1);
-    border-color: rgba(99, 102, 241, 0.3);
-    color: #818cf8;
+    color: var(--accent-color);
+    border-color: var(--accent-color);
 }
 
 .vm-action-btn.run:hover {
@@ -1304,6 +1346,172 @@ textarea.code-editor {
     font-weight: 600;
     margin-top: 3px;
     animation: fadeIn 0.2s ease;
+}
+
+.info-icon-small {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    vertical-align: middle;
+    color: var(--text-muted);
+    margin-left: 4px;
+    cursor: help;
+}
+
+input[list]::-webkit-calendar-picker-indicator {
+    display: flex !important;
+}
+
+/* Boxed Layout for Party Groups */
+.party-grid-boxed {
+    display: flex;
+    flex-direction: column;
+}
+
+.boxed-row {
+    display: flex;
+    border-bottom: 1px solid #e5e7eb; /* gray-200 */
+    min-height: 44px;
+    align-items: stretch;
+}
+
+.boxed-row:last-child {
+    border-bottom: none;
+}
+
+.boxed-label {
+    flex: 0 0 35%;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    text-align: right;
+    font-weight: 700;
+    font-size: 11px;
+    color: #4b5563; /* gray-600 */
+    text-transform: uppercase;
+    background: #f9fafb; /* gray-50 */
+    border-right: 1px solid #e5e7eb;
+}
+
+.boxed-input {
+    flex: 1;
+    padding: 8px 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.boxed-input input, .boxed-input select {
+    width: 100% !important;
+    height: 36px !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 4px !important;
+    padding: 0 12px !important;
+    font-size: 13px !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    box-shadow: none !important;
+}
+
+.boxed-label .req {
+    color: #dc2626 !important;
+    margin-left: 4px;
+    font-size: 14px;
+}
+
+.boxed-input .validation-msg {
+    margin: 4px 0 0;
+    font-size: 11px;
+    color: #ef4444;
+}
+/* Top Action Bar for XML - Pacs.008 Style Sizes */
+.top-action-bar {
+    display: flex;
+    gap: 10px;
+    background: var(--bg-card);
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 0.75rem;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 6px;
+    border: none;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    color: white;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.action-btn mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.action-btn.copy, 
+.action-btn.download {
+    background: #6366f1; /* Consistent Indigo/Purple */
+}
+
+.action-btn.copy:hover, 
+.action-btn.download:hover {
+    background: #4f46e5;
+    transform: translateY(-0.5px);
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.12);
+}
+
+.action-btn.validate {
+    background: #10b981; /* Precise Green */
+}
+
+.action-btn.validate:hover {
+    background: #059669;
+    transform: translateY(-0.5px);
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.12);
+}
+
+.action-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+    grid-column: 1 / -1;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-main);
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--accent-light);
+    margin: 1.5rem 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.3s, border-bottom-color 0.3s;
+}
+
+.section-title.has-error {
+    color: #ef4444 !important;
+    border-bottom-color: #ef4444 !important;
+}
+
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .left-panel, .right-panel {

@@ -10,6 +10,7 @@ import { ConfigService } from '../../../services/config.service';
 import { FormattingService } from '../../../services/formatting.service';
 import { AddressValidatorService, AddressValidationResult } from '../../../services/address-validator.service';
 import { UetrService } from '../../../services/uetr.service';
+import { ISO_PURPOSE_CODES } from '../../../constants/purpose-codes';
 
 @Component({
   selector: 'app-pacs8',
@@ -49,9 +50,9 @@ export class Pacs8Component implements OnInit {
 
   agentPrefixes = ['instgAgt', 'instdAgt', 'dbtrAgt', 'cdtrAgt',
     'prvsInstgAgt1', 'prvsInstgAgt2', 'prvsInstgAgt3',
-    'intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3', 'dbtr', 'cdtr'];
+    'intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'];
 
-  partyPrefixes = ['ultmtDbtr', 'ultmtCdtr', 'initgPty'];
+  partyPrefixes = ['dbtr', 'cdtr', 'ultmtDbtr', 'ultmtCdtr', 'initgPty'];
 
   constructor(
     private fb: FormBuilder,
@@ -206,8 +207,14 @@ export class Pacs8Component implements OnInit {
       }
     });
     this.http.get<any>(this.config.getApiUrl('/codelists/purp')).subscribe({
-      next: (res) => { if (res && res.codes) this.purposes = res.codes; },
-      error: (err) => console.error('Failed to load purposes', err)
+      next: (res) => {
+        const existingCodes = res && res.codes ? res.codes : [];
+        this.purposes = [...new Set([...existingCodes, ...ISO_PURPOSE_CODES])].sort();
+      },
+      error: (err) => {
+        console.error('Failed to load purposes', err);
+        this.purposes = [...ISO_PURPOSE_CODES].sort();
+      }
     });
 
   }
@@ -415,15 +422,13 @@ export class Pacs8Component implements OnInit {
     // Safe character set: letters, digits, space, . , ( ) ' - only. No & @ ! # $ etc.
     const SAFE_NAME = Validators.pattern(/^[a-zA-Z0-9 .,()'\-]+$/);
     // ISO 20022 MX allowed character pattern for address fields
-    const ADDR_PATTERN = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
-    const c: any = {
-      fromBic: ['BBBBUS33XXX', BIC], toBic: ['CCCCGB2LXXX', BIC], bizMsgId: ['MSG-2026-B-001', [Validators.required, Validators.maxLength(35)]],
-      msgId: ['MSG-2026-B-001', Validators.required], creDtTm: [this.isoNow(), Validators.required],
-      sttlmPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
+    const ADDR_PATTERN = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);    const c: any = {
+      fromBic: ['BBBBUS33XXX', BIC], toBic: ['CCCCGB2LXXX', BIC], bizMsgId: ['B-2026-FI-001', [Validators.required, Validators.maxLength(35)]],
+      msgId: ['M-2026-FI-001', [Validators.required, Validators.maxLength(35)]], creDtTm: [this.isoNow(), Validators.required],
       nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['INDA', Validators.required],
       instgAgtBic: ['BBBBUS33XXX', BIC], instdAgtBic: ['CCCCGB2LXXX', BIC],
-      instrId: ['INSTR-001', [Validators.required, Validators.maxLength(35)]], endToEndId: ['E2E-001', [Validators.required, Validators.maxLength(35)]],
-      txId: ['TX-001', [Validators.required, Validators.maxLength(35)]],
+      instrId: ['I-2026-FI-001', [Validators.required, Validators.maxLength(35)]], endToEndId: ['E2E-2026-FI-001', [Validators.required, Validators.maxLength(35)]],
+      txId: ['T-2026-FI-001', [Validators.required, Validators.maxLength(35)]],
       uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
       clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
       amount: ['1500.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
@@ -460,11 +465,17 @@ export class Pacs8Component implements OnInit {
       prvsInstgAgt1Bic: ['', BIC_OPT], prvsInstgAgt2Bic: ['', BIC_OPT], prvsInstgAgt3Bic: ['', BIC_OPT],
       intrmyAgt1Bic: ['', BIC_OPT], intrmyAgt2Bic: ['', BIC_OPT], intrmyAgt3Bic: ['', BIC_OPT],
       purpCd: [''],
-      ctgyPurpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/)]],
+      ctgyPurpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/), (control: any) => {
+        if (!control.value) return null;
+        return (this.categoryPurposes || []).includes(control.value.toUpperCase()) ? null : { invalidPurpose: true };
+      }]],
       ctgyPurpPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
       lclInstrmCd: ['', [Validators.pattern(/^[A-Z0-9]{1,4}$/)]],
       lclInstrmPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
-
+      dbtrAcct: ['471932901234'],
+      cdtrAcct: ['471932905678'],
+      dbtrAgtAcct: [''],
+      cdtrAgtAcct: [''],
       rmtInfType: ['none'],
       rmtInfUstrd: ['', [Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/)]],
       rmtInfStrdCdtrRefType: [''],
@@ -477,12 +488,6 @@ export class Pacs8Component implements OnInit {
       rmtInfStrdInvceeNm: ['', Validators.maxLength(140)],
       rmtInfStrdTaxRmtId: ['', Validators.maxLength(35)],
       rmtInfStrdGrnshmtId: ['', Validators.maxLength(35)],
-
-      // Account fields
-      dbtrAcct: ['471932901234'],
-      cdtrAcct: ['GB29NWBK60161331926819'],
-      dbtrAgtAcct: [''],
-      cdtrAgtAcct: [''],
       // Instructions for Creditor Agent (0..2)
       instrForCdtrAgt1Cd: [''], instrForCdtrAgt1InfTxt: ['', [Validators.minLength(1), Validators.maxLength(140), ADDR_PATTERN]],
       instrForCdtrAgt2Cd: [''], instrForCdtrAgt2InfTxt: ['', [Validators.minLength(1), Validators.maxLength(140), ADDR_PATTERN]],
@@ -493,6 +498,7 @@ export class Pacs8Component implements OnInit {
       instrForNxtAgt4Cd: [''], instrForNxtAgt4InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
       instrForNxtAgt5Cd: [''], instrForNxtAgt5InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
       instrForNxtAgt6Cd: [''], instrForNxtAgt6InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+
 
     };[...this.agentPrefixes, ...this.partyPrefixes].forEach(p => {
       if (!c[p + 'AddrType']) c[p + 'AddrType'] = 'none';
@@ -667,7 +673,7 @@ export class Pacs8Component implements OnInit {
       if (fl.includes('name') || fl.includes('nm')) return "Invalid characters. Only letters, numbers, spaces and . , ( ) ' - are allowed (no &, @, !, etc.)";
       if (fl.includes('ustrd') || fl.includes('adtlrmtinf')) return "Invalid character in remittance field. Only ISO 20022 MX allowed chars permitted.";
 
-      if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Must be a valid ISO 20022 code (4 uppercase letters).';
+      if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Please select from the list or enter a valid ISO 20022 Purpose Code.';
       if (f === 'instrPrty') return 'Invalid Priority. Must be HIGH or NORM.';
       if (f === 'sttlmPrty') return 'Invalid Settlement Priority. Must be HIGH or NORM.';
       if (f === 'clrChanl') return 'Invalid Clearing Channel. Must be BOOK, MPNS, RTGS, or RTNS.';
@@ -676,6 +682,7 @@ export class Pacs8Component implements OnInit {
       if (f === 'lclInstrmCd') return 'Invalid Local Instrument Code. Must be 1-4 alphanumeric characters.';
       if (f === 'lclInstrmPrtry') return 'Invalid Proprietary Local Instrument. Up to 35 characters allowed.';
       if (f === 'ctgyPurpPrtry') return 'Invalid Proprietary Category Purpose. Up to 35 characters allowed.';
+      if (f === 'purpCd') return 'Invalid Purpose Code. Please select from the list or enter a valid ISO 20022 Purpose Code.';
     }
     if (c.errors?.['noIdentifier']) return 'Name, LEI, or Member ID required.';
     if (c.errors?.['target2']) return 'T2 allows only EUR currency.';
@@ -792,6 +799,20 @@ export class Pacs8Component implements OnInit {
     const d = new Date(), p = (n: number) => n.toString().padStart(2, '0');
     const off = -d.getTimezoneOffset(), s = off >= 0 ? '+' : '-';
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}${s}${p(Math.floor(Math.abs(off) / 60))}:${p(Math.abs(off) % 60)}`;
+  }
+
+  formatCbprDateTime(dt: string): string {
+    if (!dt) return this.isoNow();
+    let res = dt.trim();
+    // 1. Replace Z with +00:00
+    if (res.endsWith('Z')) res = res.replace('Z', '+00:00');
+    // 2. Remove milliseconds if present (e.g. .415)
+    res = res.replace(/\.\d{1,}/, '');
+    // 3. Ensure mandatory timezone offset. If missing, assume +00:00
+    if (!/[+-]\d{2}:\d{2}$/.test(res)) {
+      res += '+00:00';
+    }
+    return res;
   }
 
   generateXml() {
@@ -939,7 +960,6 @@ export class Pacs8Component implements OnInit {
       }
     }
 
-    if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 4), 3);
 
     // Regulatory Reporting (0..3)
     for (let i = 1; i <= 3; i++) {

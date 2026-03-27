@@ -9,6 +9,7 @@ import { Router } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
 import { FormattingService } from '../../../services/formatting.service';
 import { UetrService } from '../../../services/uetr.service';
+import { ISO_PURPOSE_CODES } from '../../../constants/purpose-codes';
 
 @Component({
     selector: 'app-pacs9cov',
@@ -235,8 +236,14 @@ export class Pacs9CovComponent implements OnInit {
             }
         });
         this.http.get<any>(this.config.getApiUrl('/codelists/purp')).subscribe({
-            next: (res) => { if (res && res.codes) this.purposes = res.codes; },
-            error: (err) => console.error('Failed to load purposes', err)
+            next: (res) => {
+                const apiCodes = (res && res.codes) ? res.codes : [];
+                this.purposes = [...new Set([...ISO_PURPOSE_CODES, ...apiCodes])].sort();
+            },
+            error: (err) => {
+                console.error('Failed to load purposes', err);
+                this.purposes = [...ISO_PURPOSE_CODES].sort();
+            }
         });
 
     }
@@ -298,7 +305,10 @@ export class Pacs9CovComponent implements OnInit {
         const ADDR_PATTERN = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
         const c: any = {
             purpCd: [''],
-            ctgyPurpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/)]],
+            ctgyPurpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/), (control: any) => {
+                if (!control.value) return null;
+                return (this.purposes || []).includes(control.value.toUpperCase()) ? null : { invalidPurpose: true };
+            }]],
             ctgyPurpPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
             instrPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
             clrChanl: ['', [Validators.pattern(/^(BOOK|MPNS|RTGS|RTNS)$/)]],
@@ -333,17 +343,17 @@ export class Pacs9CovComponent implements OnInit {
             amount: ['1500000', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['EUR', Validators.required],
             sttlmDt: [new Date().toISOString().split('T')[0], [Validators.required, Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]],
             // Debtor FI (required)
-            dbtrFiBic: ['RBOSGB2L', BIC],
-            dbtrFiAcct: [''],
+            dbtrFiBic: ['BBBBUS33XXX', BIC],
+            dbtrFiAcct: ['471932901234'],
             // Debtor Agent (mandatory)
-            dbtrAgtBic: ['NDEAFIHH', BIC],
+            dbtrAgtBic: ['BBBBUS33XXX', BIC],
             dbtrAgtAcct: [''],
             // Creditor Agent (mandatory)
-            cdtrAgtBic: ['HELSFIHH', BIC],
+            cdtrAgtBic: ['CCCCGB2LXXX', BIC],
             cdtrAgtAcct: [''],
             // Creditor FI (required)
-            cdtrFiBic: ['OKOYFIHH', BIC],
-            cdtrFiAcct: [''],
+            cdtrFiBic: ['CCCCGB2LXXX', BIC],
+            cdtrFiAcct: ['471932905678'],
             // Optional agents
             prvsInstgAgt1Bic: ['', BIC_OPT], prvsInstgAgt2Bic: ['', BIC_OPT], prvsInstgAgt3Bic: ['', BIC_OPT],
             intrmyAgt1Bic: ['', BIC_OPT], intrmyAgt2Bic: ['', BIC_OPT], intrmyAgt3Bic: ['', BIC_OPT],
@@ -351,17 +361,20 @@ export class Pacs9CovComponent implements OnInit {
             intrmyAgt1Acct: [''], intrmyAgt2Acct: [''], intrmyAgt3Acct: [''],
 
             // COV — UndrlygCstmrCdtTrf fields
-            covDbtrName: ['A Debiter', [Validators.required, Validators.maxLength(140), SAFE_NAME]],
-            covDbtrAcct: ['R85236974'],
-            covDbtrOrgAnyBIC: ['RBOSGB2L', BIC],
-            covDbtrAgtBic: ['RBOSGB2L', BIC],
+            covDbtrName: ['Debtor Name', [Validators.required, Validators.maxLength(140), SAFE_NAME]],
+            covDbtrAcct: ['471932901234'],
+            covDbtrOrgAnyBIC: ['BBBBUS33XXX', BIC],
+            covDbtrAgtBic: ['BBBBUS33XXX', BIC],
             covDbtrAgtAcct: [''],
-            covCdtrAgtBic: ['OKOYFIHH', BIC],
+            covCdtrAgtBic: ['CCCCGB2LXXX', BIC],
             covCdtrAgtAcct: [''],
-            covCdtrName: ['Z Krediter', [Validators.required, Validators.maxLength(140), SAFE_NAME]],
-            covCdtrOrgAnyBIC: ['OKOYFIHH', BIC],
-            covCdtrAcct: ['O96325478'],
-            covPurpCd: [''],
+            covCdtrName: ['Creditor Name', [Validators.required, Validators.maxLength(140), SAFE_NAME]],
+            covCdtrOrgAnyBIC: ['CCCCGB2LXXX', BIC],
+            covCdtrAcct: ['471932905678'],
+            covPurpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/), (control: any) => {
+                if (!control.value) return null;
+                return this.purposes.includes(control.value.toUpperCase()) ? null : { invalidPurpose: true };
+            }]],
 
             // InstrForCdtrAgt (COV) (0..2)
             covInstrForCdtrAgt1Cd: [''], covInstrForCdtrAgt1InfTxt: ['', [Validators.minLength(1), Validators.maxLength(140), ADDR_PATTERN]],
@@ -495,7 +508,7 @@ export class Pacs9CovComponent implements OnInit {
             if (f.toLowerCase().includes('iban')) return 'Valid 34-char IBAN required.';
             if (f.toLowerCase().includes('uetr')) return 'Invalid UETR format';
             if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Amount must be > 0 (max 18 digits).';
-            if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Must be a valid ISO 20022 code (4 uppercase letters).';
+            if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Please select from the list or enter a valid ISO 20022 Purpose Code.';
             if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
             if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId' || f === 'clrSysRef') return 'Invalid Pattern (Alphanumeric only, max 35 chars).';
             if (f.toLowerCase().includes('name') || f.toLowerCase().includes('nm')) return "Invalid characters. Only letters, numbers, spaces and . , ( ) ' - are allowed (no &, @, !, etc.)";
@@ -511,7 +524,9 @@ export class Pacs9CovComponent implements OnInit {
             if (f.toLowerCase().includes('bldgnb') || f.toLowerCase().includes('pstcd') || f.toLowerCase().includes('pstbx') || f.toLowerCase().includes('bldgnm') || f.toLowerCase().includes('twnnm') || f.toLowerCase().includes('twnlctn') || f.toLowerCase().includes('dstrctnm') || f.toLowerCase().includes('ctrysubdvsn') || f.toLowerCase().includes('strtnm') || f.toLowerCase().includes('dept') || f.toLowerCase().includes('subdept') || f.toLowerCase().includes('flr') || f.toLowerCase().includes('room') || f.toLowerCase().includes('adrline')) {
                 return 'Invalid character. Only ISO 20022 MX allowed characters permitted.';
             }
+            if (f === 'covPurpCd') return 'Invalid Purpose Code. Please select from the list or enter a valid ISO 20022 Purpose Code.';
         }
+        if (c.errors?.['invalidPurpose']) return 'Invalid Purpose Code. Please select from the list or enter a valid ISO 20022 Purpose Code.';
         if (c.errors?.['target2']) return 'T2 allows only EUR currency.';
         if (c.errors?.['chips']) return 'CHIPS allows only USD currency.';
         if (c.errors?.['fed']) return 'FED allows only USD currency.';
@@ -635,6 +650,20 @@ export class Pacs9CovComponent implements OnInit {
         const d = new Date(), p = (n: number) => n.toString().padStart(2, '0');
         const off = -d.getTimezoneOffset(), s = off >= 0 ? '+' : '-';
         return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}${s}${p(Math.floor(Math.abs(off) / 60))}:${p(Math.abs(off) % 60)}`;
+    }
+
+    formatCbprDateTime(dt: string): string {
+        if (!dt) return this.isoNow();
+        let res = dt.trim();
+        // 1. Replace Z with +00:00
+        if (res.endsWith('Z')) res = res.replace('Z', '+00:00');
+        // 2. Remove milliseconds if present (e.g. .415)
+        res = res.replace(/\.\d{1,}/, '');
+        // 3. Ensure mandatory timezone offset. If missing, assume +00:00
+        if (!/[+-]\d{2}:\d{2}$/.test(res)) {
+            res += '+00:00';
+        }
+        return res;
     }
 
     generateXml() {
