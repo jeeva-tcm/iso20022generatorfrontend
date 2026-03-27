@@ -628,8 +628,20 @@ export class Pacs9AdvComponent implements OnInit {
             `<?xml version="1.0" encoding="UTF-8"?>
 <BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
 \t<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
-\t\t<Fr><FIId><FinInstnId><BICFI>${this.e(frBic)}</BICFI></FinInstnId></FIId></Fr>
-\t\t<To><FIId><FinInstnId><BICFI>${this.e(toBic)}</BICFI></FinInstnId></FIId></To>
+\t\t<Fr>
+\t\t\t<FIId>
+\t\t\t\t<FinInstnId>
+\t\t\t\t\t<BICFI>${this.e(frBic)}</BICFI>
+\t\t\t\t</FinInstnId>
+\t\t\t</FIId>
+\t\t</Fr>
+\t\t<To>
+\t\t\t<FIId>
+\t\t\t\t<FinInstnId>
+\t\t\t\t\t<BICFI>${this.e(toBic)}</BICFI>
+\t\t\t\t</FinInstnId>
+\t\t\t</FIId>
+\t\t</To>
 \t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>
 \t\t<MsgDefIdr>pacs.009.001.08_ADV</MsgDefIdr>
 \t\t<BizSvc>swift.cbprplus.02</BizSvc>
@@ -857,21 +869,21 @@ ${tx}\t\t\t</CdtTrfTxInf>
             let xml = this.generatedXml.replace(/>\s+</g, '><').trim();
             
             // Intelligent regex to split Tags and Comments
-            const reg = /(<[^>]+>[^<]*<\/([^>]+)>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
+            const reg = /(<[^/!?][^>]*>[^<]*<\/[^>]+>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
             const nodes = xml.match(reg) || [];
 
             nodes.forEach(node => {
                 const trimmed = node.trim();
                 if (!trimmed) return;
 
-                if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
-                    formatted += indent + trimmed + '\r\n';
-                } else if (trimmed.startsWith('</')) {
+                if (trimmed.startsWith('</')) {
                     if (indent.length >= tab.length) indent = indent.substring(tab.length);
+                    formatted += indent + trimmed + '\r\n';
+                } else if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
                     formatted += indent + trimmed + '\r\n';
                 } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
                     formatted += indent + trimmed + '\r\n';
-                    if (!trimmed.endsWith('/>')) indent += tab;
+                    indent += tab;
                 } else {
                     formatted += indent + trimmed + '\r\n';
                 }

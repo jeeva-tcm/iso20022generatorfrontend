@@ -136,8 +136,16 @@
                                 <span class="mandatory-star" *ngIf="child.mandatory">*</span>
                             </label>
                             <div class="input-container">
-                                <input type="text" class="form-input" [placeholder]="child.type || 'Enter value'"
-                                    [(ngModel)]="formData[path + '.' + child.name]" (ngModelChange)="updatePreview()">
+                                <ng-container *ngIf="child.options && child.options.length > 0; else textInput">
+                                    <select class="form-input select-input" [(ngModel)]="formData[path + '.' + child.name]" (ngModelChange)="updatePreview()">
+                                        <option value="">-- Select Code --</option>
+                                        <option *ngFor="let opt of child.options" [value]="opt">{{opt}}</option>
+                                    </select>
+                                </ng-container>
+                                <ng-template #textInput>
+                                    <input type="text" class="form-input" [placeholder]="child.type || 'Enter value'"
+                                        [(ngModel)]="formData[path + '.' + child.name]" (ngModelChange)="updatePreview()">
+                                </ng-template>
                                 <span class="input-tag">&lt;{{child.name}}&gt;</span>
                             </div>
                         </div>

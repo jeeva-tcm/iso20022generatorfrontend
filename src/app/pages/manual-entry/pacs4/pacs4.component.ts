@@ -304,8 +304,20 @@ export class Pacs4Component implements OnInit {
         this.generatedXml = `<?xml version="1.0" encoding="UTF-8"?>
 <BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
 \t<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
-\t\t<Fr><FIId><FinInstnId><BICFI>${this.e(v.fromBic)}</BICFI></FinInstnId></FIId></Fr>
-\t\t<To><FIId><FinInstnId><BICFI>${this.e(v.toBic)}</BICFI></FinInstnId></FIId></To>
+\t\t<Fr>
+\t\t\t<FIId>
+\t\t\t\t<FinInstnId>
+\t\t\t\t\t<BICFI>${this.e(v.fromBic)}</BICFI>
+\t\t\t\t</FinInstnId>
+\t\t\t</FIId>
+\t\t</Fr>
+\t\t<To>
+\t\t\t<FIId>
+\t\t\t\t<FinInstnId>
+\t\t\t\t\t<BICFI>${this.e(v.toBic)}</BICFI>
+\t\t\t\t</FinInstnId>
+\t\t\t</FIId>
+\t\t</To>
 \t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>
 \t\t<MsgDefIdr>pacs.004.001.09</MsgDefIdr>
 \t\t<BizSvc>swift.cbprplus.02</BizSvc>
@@ -342,8 +354,6 @@ ${tx}\t\t\t</TxInf>
         const mmbId = v[prefix + 'MmbId'];
         const clrCd = v[prefix + 'ClrSysCd'];
 
-        if (!bic && !lei && !mmbId) return '';
-
         let fi = '';
         if (bic) fi += `${this.tabs(indent + 2)}<BICFI>${this.e(bic)}</BICFI>\n`;
         if (mmbId) {
@@ -354,6 +364,7 @@ ${tx}\t\t\t</TxInf>
         }
         if (lei) fi += this.el('LEI', lei, indent + 2);
 
+        if (!fi.trim()) return '';
         return this.tag(tag, this.tag('FinInstnId', fi, indent + 1), indent);
     }
 
@@ -364,21 +375,19 @@ ${tx}\t\t\t</TxInf>
         const mmbId = v[prefix + 'MmbId'];
         const clrCd = v[prefix + 'ClrSysCd'];
 
-        if (!bic && !name && !lei && !mmbId && (v[prefix + 'AddrType'] === 'none' || !v[prefix + 'AddrType'])) return '';
-
         let content = '';
         if (name) content += this.el('Nm', name, indent + 1);
         content += this.addrXml(v, prefix, indent + 1);
 
         let id = '';
-        if (bic || lei || mmbId) {
+        if (bic || lei || mmbId || clrCd) {
             let org = '';
             if (bic) org += this.el('AnyBIC', bic, indent + 4);
             if (lei) org += this.el('LEI', lei, indent + 4);
-            if (mmbId) {
+            if (mmbId || clrCd) {
                 let clrId = '';
                 if (clrCd) clrId += this.tag('SchmeNm', this.el('Cd', clrCd, indent + 7), indent + 6);
-                clrId += this.el('Id', mmbId, indent + 6);
+                if (mmbId) clrId += this.el('Id', mmbId, indent + 6);
                 org += this.tag('Othr', clrId, indent + 5);
             }
             id = this.tag('Id', this.tag('OrgId', org, indent + 3), indent + 2);
@@ -386,6 +395,7 @@ ${tx}\t\t\t</TxInf>
         content += id;
 
         // If it's a party, it might have a tag child wrapper depending on the parent
+        if (!content.trim()) return '';
         return this.tag(tag, this.tag('Pty', content, indent + 1), indent);
     }
 
@@ -603,30 +613,24 @@ ${tx}\t\t\t</TxInf>
             // 2. Opening tags like <tag>
             // 3. Closing tags like </tag>
             // 4. XML declarations
-            const reg = /(<[^>]+>[^<]*<\/([^>]+)>)|(<[^>]+\/>)|(<[^>]+>)|([^<]+)/g;
+            // Intelligent regex to split Tags and Comments
+            const reg = /(<[^/!?][^>]*>[^<]*<\/[^>]+>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
             const nodes = xml.match(reg) || [];
 
             nodes.forEach(node => {
                 const trimmed = node.trim();
                 if (!trimmed) return;
 
-                // Case 1: Leaf node (e.g., <MsgId>123</MsgId> or <PmtId/>)
-                if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
-                    formatted += indent + trimmed + '\n';
-                }
-                // Case 2: Closing tag (e.g., </GrpHdr>)
-                else if (trimmed.startsWith('</')) {
+                if (trimmed.startsWith('</')) {
                     if (indent.length >= tab.length) indent = indent.substring(tab.length);
-                    formatted += indent + trimmed + '\n';
-                }
-                // Case 3: Opening tag (e.g., <GrpHdr>)
-                else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
-                    formatted += indent + trimmed + '\n';
+                    formatted += indent + trimmed + '\r\n';
+                } else if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
+                    formatted += indent + trimmed + '\r\n';
+                } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
+                    formatted += indent + trimmed + '\r\n';
                     indent += tab;
-                }
-                // Case 4: XML Declaration or plain text (fallback)
-                else {
-                    formatted += indent + trimmed + '\n';
+                } else {
+                    formatted += indent + trimmed + '\r\n';
                 }
             });
 

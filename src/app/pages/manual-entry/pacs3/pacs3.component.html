@@ -885,7 +885,7 @@
                 </div>
 
                 <!-- Address Type -->
-                <div class="form-group" *ngIf="prefix !== 'instgAgt' && prefix !== 'instdAgt'">
+                <div class="form-group">
                         <label>{{title}} Address Type</label>
                         <select [formControlName]="prefix+'AddrType'">
                                 <option value="none">None (BIC/ID Only)</option>
@@ -971,7 +971,7 @@
                         <div class="validation-msg" *ngIf="err(prefix+'CtryOfRes') as e">{{e}}</div>
                 </div>
                 <!-- Name -->
-                <div class="form-group" *ngIf="prefix !== 'instgAgt' && prefix !== 'instdAgt'">
+                <div class="form-group">
                         <label>{{title}} Name <span class="req" *ngIf="required">*</span></label>
                         <input [formControlName]="prefix+'Name'" maxlength="140">
                         <div class="validation-msg" *ngIf="err(prefix+'Name') as e">{{e}}</div>
@@ -1013,7 +1013,7 @@
                 </div>
 
                 <!-- Account Number -->
-                <div class="form-group" *ngIf="prefix !== 'instgAgt' && prefix !== 'instdAgt'">
+                <div class="form-group">
                         <label>{{title}} Account Number</label>
                         <input [formControlName]="prefix+'Acct'" maxlength="34">
                         <div class="field-hint at-limit" *ngIf="hint(prefix+'Acct', 34) as h">{{h}}</div>

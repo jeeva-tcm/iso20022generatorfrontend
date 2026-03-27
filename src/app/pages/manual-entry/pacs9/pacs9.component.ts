@@ -268,8 +268,17 @@ export class Pacs9Component implements OnInit {
             txId: ['TX-FI-001', Validators.required],
             uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
             appHdrPriority: [''],
+            fromMmbId: [''], fromClrSysId: [''], fromLei: [''],
+            toMmbId: [''], toClrSysId: [''], toLei: [''],
+            rltd: [''], rltdCharSet: [''],
             clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
             sttlmPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
+            instdAmt: [''], instdAmtCcy: [''],
+            xchgRate: [''],
+            rgltryRptg1Code: [''], rgltryRptg1Inf: [''],
+            rgltryRptg2Code: [''], rgltryRptg2Inf: [''],
+            rgltryRptg3Code: [''], rgltryRptg3Inf: [''],
+            rltdRmtInf1Ref: [''], rltdRmtInf2Ref: [''], rltdRmtInf3Ref: [''],
             amount: ['50000.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
             sttlmDt: [new Date().toISOString().split('T')[0], [Validators.required, Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]],
             // Debtor FI (required)
@@ -556,17 +565,40 @@ export class Pacs9Component implements OnInit {
         let pmtTpXml = '';
         if (v.instrPrty?.trim()) pmtTpXml += this.el('InstrPrty', v.instrPrty, 4);
         if (v.clrChanl?.trim()) pmtTpXml += this.el('ClrChanl', v.clrChanl, 4);
-        if (v.svcLvlCd?.trim()) pmtTpXml += this.tag('SvcLvl', this.el('Cd', v.svcLvlCd, 5), 4);
-        else if (v.svcLvlPrtry?.trim()) pmtTpXml += this.tag('SvcLvl', this.el('Prtry', v.svcLvlPrtry, 5), 4);
-        if (v.lclInstrmCd?.trim()) pmtTpXml += this.tag('LclInstrm', this.el('Cd', v.lclInstrmCd, 5), 4);
-        else if (v.lclInstrmPrtry?.trim()) pmtTpXml += this.tag('LclInstrm', this.el('Prtry', v.lclInstrmPrtry, 5), 4);
-        if (v.ctgyPurpCd?.trim()) pmtTpXml += this.tag('CtgyPurp', this.el('Cd', v.ctgyPurpCd, 5), 4);
-        else if (v.ctgyPurpPrtry?.trim()) pmtTpXml += this.tag('CtgyPurp', this.el('Prtry', v.ctgyPurpPrtry, 5), 4);
+        if (v.svcLvlCd?.trim() || v.svcLvlPrtry?.trim()) {
+            let content = v.svcLvlCd?.trim() ? this.el('Cd', v.svcLvlCd, 5) : this.el('Prtry', v.svcLvlPrtry, 5);
+            pmtTpXml += this.tag('SvcLvl', content, 4);
+        }
+        if (v.lclInstrmCd?.trim() || v.lclInstrmPrtry?.trim()) {
+            let content = v.lclInstrmCd?.trim() ? this.el('Cd', v.lclInstrmCd, 5) : this.el('Prtry', v.lclInstrmPrtry, 5);
+            pmtTpXml += this.tag('LclInstrm', content, 4);
+        }
+        if (v.ctgyPurpCd?.trim() || v.ctgyPurpPrtry?.trim()) {
+            let content = v.ctgyPurpCd?.trim() ? this.el('Cd', v.ctgyPurpCd, 5) : this.el('Prtry', v.ctgyPurpPrtry, 5);
+            pmtTpXml += this.tag('CtgyPurp', content, 4);
+        }
+
         if (pmtTpXml) tx += this.tag('PmtTpInf', pmtTpXml, 3);
         const formattedAmt = this.formatting.formatAmount(v.amount, v.currency);
         tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${formattedAmt}</IntrBkSttlmAmt>\n`;
         tx += this.el('IntrBkSttlmDt', v.sttlmDt, 3);
         if (v.sttlmPrty?.trim()) tx += this.el('SttlmPrty', v.sttlmPrty, 3);
+
+        const formatAcct = (val: string, tabs: number) => {
+            if (!val) return '';
+            const ibanCountries = ['AD', 'AE', 'AL', 'AT', 'AZ', 'BA', 'BE', 'BG', 'BH', 'BR', 'BY', 'CH', 'CR', 'CY', 'CZ', 'DE', 'DK', 'DO', 'EE', 'EG', 'ES', 'FI', 'FO', 'FR', 'GB', 'GE', 'GI', 'GL', 'GR', 'GT', 'HR', 'HU', 'IE', 'IL', 'IQ', 'IS', 'IT', 'JO', 'KW', 'KZ', 'LB', 'LI', 'LT', 'LU', 'LV', 'MC', 'MD', 'ME', 'MK', 'MR', 'MT', 'MU', 'NL', 'NO', 'PK', 'PL', 'PS', 'PT', 'QA', 'RO', 'RS', 'RU', 'SA', 'SC', 'SE', 'SI', 'SK', 'SM', 'ST', 'SV', 'TL', 'TN', 'TR', 'UA', 'VA', 'VG', 'XK'];
+            if (val.length >= 14 && ibanCountries.includes(val.substring(0, 2).toUpperCase()) && /^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/i.test(val)) {
+                return this.el('IBAN', val, tabs + 1);
+            } else {
+                return `\n${'\t'.repeat(tabs + 1)}<Othr>\n${'\t'.repeat(tabs + 2)}<Id>${this.e(val)}</Id>\n${'\t'.repeat(tabs + 1)}</Othr>\n${'\t'.repeat(tabs)}`;
+            }
+        };
+
+        if (v.instdAmt && v.instdAmtCcy) {
+            const formattedInstdAmt = this.formatting.formatAmount(v.instdAmt, v.instdAmtCcy);
+            tx += `\t\t\t<InstdAmt Ccy="${this.e(v.instdAmtCcy)}">${formattedInstdAmt}</InstdAmt>\n`;
+        }
+        if (v.xchgRate) tx += this.el('XchgRate', v.xchgRate, 3);
         // PrvsInstgAgts
         tx += this.agtWithAcct('PrvsInstgAgt1', 'prvsInstgAgt1', v);
         tx += this.agtWithAcct('PrvsInstgAgt2', 'prvsInstgAgt2', v);
@@ -609,6 +641,26 @@ export class Pacs9Component implements OnInit {
 
         if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 5), 4);
 
+        // Regulatory Reporting (0..3)
+        for (let i = 1; i <= 3; i++) {
+            const cd = v[`rgltryRptg${i}Code`]?.trim();
+            const inf = v[`rgltryRptg${i}Inf`]?.trim();
+            if (cd || inf) {
+                let dtls = '';
+                if (cd) dtls += this.el('Cd', cd, 6);
+                if (inf) dtls += this.el('Inf', inf, 6);
+                tx += this.tag('RgltryRptg', this.tag('Dtls', dtls, 5), 4);
+            }
+        }
+
+        // Related Remittance Information (0..10)
+        for (let i = 1; i <= 3; i++) {
+            const ref = v[`rltdRmtInf${i}Ref`]?.trim();
+            if (ref) {
+                tx += this.tag('RltdRmtInf', this.el('Ref', ref, 5), 4);
+            }
+        }
+
         // Remittance Information
         if (v.rmtInfType === 'ustrd' && v.rmtInfUstrd?.trim()) {
             tx += this.tag('RmtInf', this.el('Ustrd', v.rmtInfUstrd, 5), 4);
@@ -636,19 +688,31 @@ export class Pacs9Component implements OnInit {
         }
 
 
-        const frBic = v.fromBic;
-        const toBic = v.toBic;
+        const appHdrFi = (bic: string, mmbId: string, clrSysId: string, lei: string) => {
+            let res = '';
+            if (bic) res += `\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n`;
+            if (mmbId || clrSysId) {
+                let clr = '';
+                if (clrSysId) clr += `\t\t\t\t\t\t<ClrSysId>\n\t\t\t\t\t\t\t<Cd>${this.e(clrSysId)}</Cd>\n\t\t\t\t\t\t</ClrSysId>\n`;
+                if (mmbId) clr += `\t\t\t\t\t\t<MmbId>${this.e(mmbId)}</MmbId>\n`;
+                res += `\t\t\t\t\t<ClrSysMmbId>\n${clr}\t\t\t\t\t</ClrSysMmbId>\n`;
+            }
+            if (lei) res += `\t\t\t\t\t<LEI>${this.e(lei)}</LEI>\n`;
+            return `\t\t\t<FIId>\n\t\t\t\t<FinInstnId>\n${res}\t\t\t\t</FinInstnId>\n\t\t\t</FIId>\n`;
+        };
 
         this.generatedXml =
             `<?xml version="1.0" encoding="UTF-8"?>
 <BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
 \t<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
-\t\t<Fr><FIId><FinInstnId><BICFI>${this.e(frBic)}</BICFI></FinInstnId></FIId></Fr>
-\t\t<To><FIId><FinInstnId><BICFI>${this.e(toBic)}</BICFI></FinInstnId></FIId></To>
+\t\t<Fr>
+${appHdrFi(v.fromBic, v.fromMmbId, v.fromClrSysId, v.fromLei)}\t\t</Fr>
+\t\t<To>
+${appHdrFi(v.toBic, v.toMmbId, v.toClrSysId, v.toLei)}\t\t</To>
 \t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>
 \t\t<MsgDefIdr>pacs.009.001.08</MsgDefIdr>
 \t\t<BizSvc>swift.cbprplus.02</BizSvc>
-\t\t<CreDt>${creDtTm}</CreDt>${v.appHdrPriority?.trim() ? `\n\t\t<Prty>${v.appHdrPriority}</Prty>` : ''}
+\t\t<CreDt>${creDtTm}</CreDt>${v.appHdrPriority?.trim() ? `\n\t\t<Prty>${v.appHdrPriority}</Prty>` : ''}${v.rltd ? `\n\t\t<Rltd>\n\t\t\t<BizMsgIdr>${this.e(v.rltd)}</BizMsgIdr>\n\t\t</Rltd>` : ''}
 \t</AppHdr>
 \t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.009.001.08">
 \t\t<FICdtTrf>
@@ -681,8 +745,15 @@ ${tx}\t\t\t</CdtTrfTxInf>
     agtWithAcct(tag: string, prefix: string, v: any) {
         let res = this.agt(tag, prefix, v);
         if (v[prefix + 'Acct']?.trim()) {
-            // Indent 4 for transaction children
-            res += this.tag(tag + 'Acct', this.tag('Id', this.tag('Othr', this.el('Id', v[prefix + 'Acct'], 7), 6), 5), 4);
+            const val = v[prefix + 'Acct'];
+            const ibanCountries = ['AD', 'AE', 'AL', 'AT', 'AZ', 'BA', 'BE', 'BG', 'BH', 'BR', 'BY', 'CH', 'CR', 'CY', 'CZ', 'DE', 'DK', 'DO', 'EE', 'EG', 'ES', 'FI', 'FO', 'FR', 'GB', 'GE', 'GI', 'GL', 'GR', 'GT', 'HR', 'HU', 'IE', 'IL', 'IQ', 'IS', 'IT', 'JO', 'KW', 'KZ', 'LB', 'LI', 'LT', 'LU', 'LV', 'MC', 'MD', 'ME', 'MK', 'MR', 'MT', 'MU', 'NL', 'NO', 'PK', 'PL', 'PS', 'PT', 'QA', 'RO', 'RS', 'RU', 'SA', 'SC', 'SE', 'SI', 'SK', 'SM', 'ST', 'SV', 'TL', 'TN', 'TR', 'UA', 'VA', 'VG', 'XK'];
+            let idContent = '';
+            if (val.length >= 14 && ibanCountries.includes(val.substring(0, 2).toUpperCase()) && /^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/i.test(val)) {
+                idContent = this.el('IBAN', val, 6);
+            } else {
+                idContent = `\n\t\t\t\t\t\t<Othr>\n\t\t\t\t\t\t\t<Id>${this.e(val)}</Id>\n\t\t\t\t\t\t</Othr>\n\t\t\t\t\t`;
+            }
+            res += this.tag(tag + 'Acct', this.tag('Id', idContent, 5), 4);
         }
         return res;
     }
@@ -694,26 +765,22 @@ ${tx}\t\t\t</CdtTrfTxInf>
         const clrCd = v[prefix + 'ClrSysCd'];
         const clrMmb = v[prefix + 'ClrSysMmbId'];
 
-        if (!bic && !name && !lei && !clrMmb) return '';
-
         let content = '';
         // Indent 6 for children of FinInstnId
         if (bic) content += `\t\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n`;
-        if (clrMmb) {
+    if (clrMmb || clrCd) {
             content += `\t\t\t\t\t\t<ClrSysMmbId>\n`;
             if (clrCd) content += `\t\t\t\t\t\t\t<ClrSysId>\n\t\t\t\t\t\t\t\t<Cd>${this.e(clrCd)}</Cd>\n\t\t\t\t\t\t\t</ClrSysId>\n`;
-            content += `\t\t\t\t\t\t\t<MmbId>${this.e(clrMmb)}</MmbId>\n`;
+            if (clrMmb) content += `\t\t\t\t\t\t\t<MmbId>${this.e(clrMmb)}</MmbId>\n`;
             content += `\t\t\t\t\t\t</ClrSysMmbId>\n`;
         }
         if (lei) content += `\t\t\t\t\t\t<LEI>${this.e(lei)}</LEI>\n`;
 
-        // Filter: Nm and PstlAdr are NOT allowed for InstgAgt and InstdAgt as per MyStandards requirements
-        if (tag !== 'InstgAgt' && tag !== 'InstdAgt') {
-            if (name) content += `\t\t\t\t\t\t<Nm>${this.e(name)}</Nm>\n`;
-            content += this.addrXml(v, prefix, 6, tag.startsWith('PrvsInstgAgt'));
-        }
+        if (name) content += `\t\t\t\t\t\t<Nm>${this.e(name)}</Nm>\n`;
+        content += this.addrXml(v, prefix, 6, tag.startsWith('PrvsInstgAgt'));
 
         // Indent 4 for transaction level agents (Dbtr, Cdtr, etc.)
+        if (!content.trim()) return '';
         return `\t\t\t\t<${tag}>\n\t\t\t\t\t<FinInstnId>\n${content}\t\t\t\t\t</FinInstnId>\n\t\t\t\t</${tag}>\n`;
     }
     addrXml(v: any, p: string, indent = 4, isPrvs = false): string {
@@ -875,21 +942,21 @@ ${tx}\t\t\t</CdtTrfTxInf>
             let xml = this.generatedXml.replace(/>\s+</g, '><').trim();
             
             // Intelligent regex to split Tags and Comments
-            const reg = /(<[^>]+>[^<]*<\/([^>]+)>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
+            const reg = /(<[^/!?][^>]*>[^<]*<\/[^>]+>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
             const nodes = xml.match(reg) || [];
 
             nodes.forEach(node => {
                 const trimmed = node.trim();
                 if (!trimmed) return;
 
-                if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
-                    formatted += indent + trimmed + '\r\n';
-                } else if (trimmed.startsWith('</')) {
+                if (trimmed.startsWith('</')) {
                     if (indent.length >= tab.length) indent = indent.substring(tab.length);
+                    formatted += indent + trimmed + '\r\n';
+                } else if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
                     formatted += indent + trimmed + '\r\n';
                 } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
                     formatted += indent + trimmed + '\r\n';
-                    if (!trimmed.endsWith('/>')) indent += tab;
+                    indent += tab;
                 } else {
                     formatted += indent + trimmed + '\r\n';
                 }

@@ -783,14 +783,12 @@ ${tx}\t\t\t</CdtTrfTxInf>
         const clrCd = v[prefix + 'ClrSysCd'];
         const clrMmb = v[prefix + 'ClrSysMmbId'];
 
-        if (!bic && !name && !lei && !clrMmb) return '';
-
         let content = '';
         if (bic) content += `\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n`;
-        if (clrMmb) {
+    if (clrMmb || clrCd) {
             content += `\t\t\t\t\t<ClrSysMmbId>\n`;
             if (clrCd) content += `\t\t\t\t\t\t<ClrSysId>\n\t\t\t\t\t\t\t<Cd>${this.e(clrCd)}</Cd>\n\t\t\t\t\t\t</ClrSysId>\n`;
-            content += `\t\t\t\t\t\t<MmbId>${this.e(clrMmb)}</MmbId>\n`;
+            if (clrMmb) content += `\t\t\t\t\t\t<MmbId>${this.e(clrMmb)}</MmbId>\n`;
             content += `\t\t\t\t\t</ClrSysMmbId>\n`;
         }
         if (lei) content += `\t\t\t\t\t<LEI>${this.e(lei)}</LEI>\n`;
@@ -801,6 +799,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
             content += this.addrXml(v, prefix, 5, tag.startsWith('PrvsInstgAgt'));
         }
 
+        if (!content.trim()) return '';
         return `\t\t\t<${tag}>\n\t\t\t\t<FinInstnId>\n${content}\t\t\t\t</FinInstnId>\n\t\t\t</${tag}>\n`;
     }
 
@@ -811,27 +810,13 @@ ${tx}\t\t\t</CdtTrfTxInf>
         const clrCd = v[prefix + 'ClrSysCd'] || v[prefix + 'OrgClrSysCd'];
         const clrMmb = v[prefix + 'ClrSysMmbId'] || v[prefix + 'OrgClrSysMmbId'];
 
-        if (!bic && !name && !lei && !clrMmb && v[prefix + 'AddrType'] === 'none') return '';
-
         let content = '';
         if (name) content += `${this.tabs(indent + 1)}<Nm>${this.e(name)}</Nm>\n`;
         content += this.addrXml(v, prefix, indent + 1);
 
-        let org = '';
-        if (bic) org += `${this.tabs(indent + 3)}<AnyBIC>${this.e(bic)}</AnyBIC>\n`;
-        if (lei) org += `${this.tabs(indent + 3)}<LEI>${this.e(lei)}</LEI>\n`;
-        if (clrMmb) {
-            org += `${this.tabs(indent + 3)}<Othr>\n${this.tabs(indent + 4)}<Id>${this.e(clrMmb)}</Id>\n`;
-            if (clrCd) {
-                org += `${this.tabs(indent + 4)}<SchmeNm>\n${this.tabs(indent + 5)}<Cd>${this.e(clrCd)}</Cd>\n${this.tabs(indent + 4)}</SchmeNm>\n`;
-            }
-            org += `${this.tabs(indent + 3)}</Othr>\n`;
-        }
+        content += this.partyIdXml(v, prefix, indent + 1);
 
-        if (org) {
-            content += `${this.tabs(indent + 1)}<Id>\n${this.tabs(indent + 2)}<OrgId>\n${org}${this.tabs(indent + 2)}</OrgId>\n${this.tabs(indent + 1)}</Id>\n`;
-        }
-
+        if (!content.trim()) return '';
         return `${this.tabs(indent)}<${tag}>\n${content}${this.tabs(indent)}</${tag}>\n`;
     }
     addrXml(v: any, p: string, indent = 4, isPrvs = false): string {
@@ -1145,21 +1130,21 @@ ${tx}\t\t\t</CdtTrfTxInf>
             let xml = this.generatedXml.replace(/>\s+</g, '><').trim();
 
             // Intelligent regex to split Tags and Comments
-            const reg = /(<[^>]+>[^<]*<\/([^>]+)>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
+            const reg = /(<[^/!?][^>]*>[^<]*<\/[^>]+>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
             const nodes = xml.match(reg) || [];
 
             nodes.forEach(node => {
                 const trimmed = node.trim();
                 if (!trimmed) return;
 
-                if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
-                    formatted += indent + trimmed + '\r\n';
-                } else if (trimmed.startsWith('</')) {
+                if (trimmed.startsWith('</')) {
                     if (indent.length >= tab.length) indent = indent.substring(tab.length);
+                    formatted += indent + trimmed + '\r\n';
+                } else if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
                     formatted += indent + trimmed + '\r\n';
                 } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
                     formatted += indent + trimmed + '\r\n';
-                    if (!trimmed.endsWith('/>')) indent += tab;
+                    indent += tab;
                 } else {
                     formatted += indent + trimmed + '\r\n';
                 }

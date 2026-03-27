@@ -140,6 +140,7 @@ export class ManualEntryComponent implements OnInit {
             next: (schema) => {
                 if (schema) {
                     this.applyMandatoryOverrides(schema, type);
+                    this.enforceISOOrder(schema);
                 }
                 this.schema = schema;
                 this.loading = false;
@@ -166,13 +167,71 @@ export class ManualEntryComponent implements OnInit {
         });
     }
 
+    enforceISOOrder(node: SchemaNode) {
+        if (!node.children || node.children.length === 0) return;
+
+        // Sequence rule: Conf must be before Cd in Sts container (e.g. camt.029 InvestigationStatus6Choice)
+        if (node.name === 'Sts') {
+            node.children.sort((a, b) => {
+                const priorityOrder = ['Conf', 'Cd'];
+                const aIdx = priorityOrder.indexOf(a.name);
+                const bIdx = priorityOrder.indexOf(b.name);
+                if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+                if (aIdx !== -1) return -1;
+                if (bIdx !== -1) return 1;
+                return 0;
+            });
+        }
+        
+        // Sequence rule: Cancellation Reason Info (camt.029, camt.056)
+        if (node.name === 'CxlStsRsnInf' || node.name === 'CxlRsnInf') {
+            const rOrder = ['Orgtr', 'Rsn', 'AddtlInf'];
+            node.children.sort((a, b) => {
+                const aI = rOrder.indexOf(a.name);
+                const bI = rOrder.indexOf(b.name);
+                if (aI !== -1 && bI !== -1) return aI - bI;
+                if (aI !== -1) return -1;
+                if (bI !== -1) return 1;
+                return 0;
+            });
+        }
+        
+        // Sequence rule: AppHdr order (head.001.001.01/02)
+        if (node.name === 'AppHdr') {
+            const hOrder = ['Fr', 'To', 'BizMsgIdr', 'MsgDefIdr', 'BizSvc', 'CreDt', 'Prty', 'Rltd'];
+            node.children.sort((a, b) => {
+                const aI = hOrder.indexOf(a.name);
+                const bI = hOrder.indexOf(b.name);
+                if (aI !== -1 && bI !== -1) return aI - bI;
+                if (aI !== -1) return -1;
+                if (bI !== -1) return 1;
+                return 0;
+            });
+        }
+
+        // Recursively apply to children
+        for (const child of node.children) {
+            this.enforceISOOrder(child);
+        }
+    }
+
     applyMandatoryOverrides(node: SchemaNode, type: string) {
         const t = type.toLowerCase();
-        // Skip CAMT as requested by user
-        if (t.startsWith('camt.')) return;
+        // Skip CAMT by default as requested by user earlier, but we need it for camt.029 logic now
+        // if (t.startsWith('camt.')) return; 
+
+        // Explicitly skip MT 192 (camt.056) as it should not have forced party blocks
+        if (t.includes('camt.056')) return;
 
         if (t.startsWith('pacs.') || t.startsWith('pain.')) {
-            const mandatoryNames = ['Dbtr', 'Cdtr', 'DbtrAgt', 'CdtrAgt', 'DbtrFi', 'CdtrFi'];
+            // Base mandatory parties for all payment messages
+            let mandatoryNames = ['Dbtr', 'Cdtr'];
+            
+            // Specific requirements for customer/direct debit transfers
+            if (t.includes('pacs.008') || t.includes('pacs.003') || t.includes('pain.001') || t.includes('pain.008')) {
+                mandatoryNames.push('DbtrAgt', 'CdtrAgt');
+            }
+            
             if (mandatoryNames.includes(node.name)) {
                 node.mandatory = true;
             }
@@ -237,11 +296,24 @@ export class ManualEntryComponent implements OnInit {
             else if (n === 'BirthDt') {
                 this.formData[path] = '1980-01-01';
             }
-            else if (n === 'SvcLvl' || n === 'Cd' || n === 'Prtry') {
+            else if (n === 'SvcLvl' || n === 'Cd' || n === 'Prtry' || n === 'Conf') {
                 if (path.includes('SvcLvl')) this.formData[path] = 'URGP';
                 else if (isLeaf) {
-                    if (n === 'Cd') this.formData[path] = 'OTHR';
+                    if (n === 'Cd') {
+                        // For resolution messages (camt.029), Sts is a choice. 
+                        // If we have Conf, we MUST NOT have Cd.
+                        if (path.includes('.Sts.Cd') && !path.includes('RjctdMod')) return; 
+                        
+                        // For cancellation results (camt.029), Cd is often in RjctdMod which we want to avoid by default
+                        // if Conf is available.
+                        if (path.includes('RjctdMod')) return; 
+                        this.formData[path] = 'OTHR';
+                    }
                     else if (n === 'Prtry') this.formData[path] = 'CUSTOM';
+                    else if (n === 'Conf') {
+                        // Resolution of Investigation (camt.029) defaults
+                        this.formData[path] = 'ACCR'; // Accepted Cancellation
+                    }
                     else this.formData[path] = 'ADDR';
                 }
             }
