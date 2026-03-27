@@ -140,64 +140,85 @@ export class Pacs10Component implements OnInit {
         const anyFED = systems.includes('FED');
 
         const currencyCtrl = this.form.get('currency');
-        const ccy = currencyCtrl?.value;
-
-        // T2 Validation
-        if (anyT2 && ccy !== 'EUR' && ccy !== '') {
-            if (!currencyCtrl?.hasError('target2')) {
-                currencyCtrl?.setErrors({ ...currencyCtrl.errors, target2: true });
-            }
-        } else if (currencyCtrl?.hasError('target2')) {
+        // Target2/CHAPS/CHIPS/FED Validation (Moving to on-demand to prevent flow interruption)
+        if (currencyCtrl?.hasError('target2') || currencyCtrl?.hasError('chaps') || 
+            currencyCtrl?.hasError('chips') || currencyCtrl?.hasError('fed')) {
             const errors = { ...currencyCtrl.errors };
             delete errors['target2'];
-            currencyCtrl.setErrors(Object.keys(errors).length ? errors : null);
-        }
-
-        // CHAPS Validation
-        if (anyCHAPS && ccy !== 'GBP' && ccy !== '') {
-            if (!currencyCtrl?.hasError('chaps')) {
-                currencyCtrl?.setErrors({ ...currencyCtrl.errors, chaps: true });
-            }
-        } else if (currencyCtrl?.hasError('chaps')) {
-            const errors = { ...currencyCtrl.errors };
             delete errors['chaps'];
-            currencyCtrl.setErrors(Object.keys(errors).length ? errors : null);
-        }
-
-        // CHIPS Validation
-        if (anyCHIPS && ccy !== 'USD' && ccy !== '') {
-            if (!currencyCtrl?.hasError('chips')) {
-                currencyCtrl?.setErrors({ ...currencyCtrl.errors, chips: true });
-            }
-        } else if (currencyCtrl?.hasError('chips')) {
-            const errors = { ...currencyCtrl.errors };
             delete errors['chips'];
-            currencyCtrl.setErrors(Object.keys(errors).length ? errors : null);
-        }
-
-        // FED Validation
-        if (anyFED && ccy !== 'USD' && ccy !== '') {
-            if (!currencyCtrl?.hasError('fed')) {
-                currencyCtrl?.setErrors({ ...currencyCtrl.errors, fed: true });
-            }
-        } else if (currencyCtrl?.hasError('fed')) {
-            const errors = { ...currencyCtrl.errors };
             delete errors['fed'];
             currencyCtrl.setErrors(Object.keys(errors).length ? errors : null);
         }
 
-        // ClrSysRef Validation (Forbidden if no standard clearing system)
-        const standardSystems = ['T2', 'CHAPS', 'CHIPS', 'FED', 'RTGS'];
-        const hasStandardClearing = systems.some(s => standardSystems.includes(s));
+        // ClrSysRef Validation (Moving to on-demand to prevent flow interruption)
         const clrRefCtrl = this.form.get('clrSysRef');
-        if (clrRefCtrl?.value?.trim() && !hasStandardClearing) {
-            if (!clrRefCtrl.hasError('forbidden')) {
-                clrRefCtrl.setErrors({ ...clrRefCtrl.errors, forbidden: true });
-            }
-        } else if (clrRefCtrl?.hasError('forbidden')) {
+        if (clrRefCtrl?.hasError('forbidden')) {
             const errors = { ...clrRefCtrl.errors };
             delete errors['forbidden'];
             clrRefCtrl.setErrors(Object.keys(errors).length ? errors : null);
+        }
+    }
+
+    private validateFullMessageErrors() {
+        const systems = [...this.agentPrefixes, ...this.partyPrefixes].map(p => {
+            return this.form.get(p + 'ClrSysCd')?.value?.trim()?.toUpperCase();
+        });
+        const standardSystems = ['T2', 'CHAPS', 'CHIPS', 'FED', 'RTGS'];
+        const hasStandardClearing = systems.some(s => standardSystems.includes(s));
+        
+        const anyT2 = systems.includes('T2');
+        const anyCHAPS = systems.includes('CHAPS');
+        const anyCHIPS = systems.includes('CHIPS');
+        const anyFED = systems.includes('FED');
+
+        const currencyCtrl = this.form.get('currency');
+        const ccy = currencyCtrl?.value;
+
+        // T2 Validation
+        if (anyT2 && ccy !== 'EUR' && ccy !== '') {
+            currencyCtrl?.setErrors({ ...currencyCtrl.errors, target2: true });
+        }
+        // CHAPS Validation
+        if (anyCHAPS && ccy !== 'GBP' && ccy !== '') {
+            currencyCtrl?.setErrors({ ...currencyCtrl.errors, chaps: true });
+        }
+        // CHIPS Validation
+        if (anyCHIPS && ccy !== 'USD' && ccy !== '') {
+            currencyCtrl?.setErrors({ ...currencyCtrl.errors, chips: true });
+        }
+        // FED Validation
+        if (anyFED && ccy !== 'USD' && ccy !== '') {
+            currencyCtrl?.setErrors({ ...currencyCtrl.errors, fed: true });
+        }
+
+        const clrRefCtrl = this.form.get('clrSysRef');
+        if (clrRefCtrl?.value?.trim() && !hasStandardClearing) {
+            clrRefCtrl.setErrors({ ...clrRefCtrl.errors, forbidden: true });
+        }
+
+        // Co-presence rule for FIs: Name and Address must always be together or both absent.
+        // Applies to Cdtr, Dbtr, CdtrAgt, DbtrAgt as per ISO 20022/CBPR+ standards.
+        ['cdtr', 'dbtr', 'cdtrAgt', 'dbtrAgt'].forEach(p => {
+            const name = this.form.get(p + 'Name')?.value?.trim();
+            const addrType = this.form.get(p + 'AddrType')?.value;
+            const addrTypeCtrl = this.form.get(p + 'AddrType');
+            const nameCtrl = this.form.get(p + 'Name');
+
+            if (name && addrType === 'none') {
+                addrTypeCtrl?.setErrors({ ...addrTypeCtrl?.errors, linked: true });
+            } else if (!name && addrType && addrType !== 'none') {
+                nameCtrl?.setErrors({ ...nameCtrl?.errors, linked: true });
+            }
+        });
+
+        // Cdtr-specific rule: Nm must NEVER be generated without PstlAdr.
+        // If cdtrName is filled but addrType is 'none', block with a dedicated error.
+        const cdtrName = this.form.get('cdtrName')?.value?.trim();
+        const cdtrAddrType = this.form.get('cdtrAddrType')?.value;
+        const cdtrAddrCtrl = this.form.get('cdtrAddrType');
+        if (cdtrName && cdtrAddrType === 'none') {
+            cdtrAddrCtrl?.setErrors({ ...cdtrAddrCtrl?.errors, nmWithoutAddr: true });
         }
     }
 
@@ -212,24 +233,12 @@ export class Pacs10Component implements OnInit {
             const addrTypeCtrl = this.form.get(p + 'AddrType');
             const name = nameCtrl?.value?.trim();
 
-            if (name) {
-                if (addrType === 'none') {
-                    addrTypeCtrl?.setErrors({ ...addrTypeCtrl.errors, linked: true });
-                } else {
-                    const errors = { ...addrTypeCtrl?.errors };
-                    delete errors['linked'];
-                    addrTypeCtrl?.setErrors(Object.keys(errors).length ? errors : null);
-                }
-            } else if (addrType !== 'none') {
-                nameCtrl?.setErrors({ ...nameCtrl?.errors, linked: true });
-            } else {
-                // Clear linked errors
-                [nameCtrl, addrTypeCtrl].forEach(ctrl => {
-                    const errors = { ...ctrl?.errors };
-                    delete errors['linked'];
-                    ctrl?.setErrors(Object.keys(errors).length ? errors : null);
-                });
-            }
+            // Real-time: Only clear cross-field errors to allow "accept any data" until validation
+            [nameCtrl, addrTypeCtrl].forEach(ctrl => {
+                const errors = { ...ctrl?.errors };
+                delete errors['linked'];
+                ctrl?.setErrors(Object.keys(errors).length ? errors : null);
+            });
 
             if (addrType && addrType !== 'none') {
                 if (!ctryCtrl?.hasValidator(Validators.required)) {
@@ -257,11 +266,31 @@ export class Pacs10Component implements OnInit {
                 }
             }
 
-            // Mixed Address Rule: If any structured field exists + any AdrLine exists => Town and Country are mandatory.
-            const hasStructured = ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry'].some(f => !!this.form.get(p + f)?.value);
-            const hasAdrLine = !!(this.form.get(p + 'AdrLine1')?.value || this.form.get(p + 'AdrLine2')?.value || this.form.get(p + 'AdrLine3')?.value);
+            // Hybrid/Mixed Address Logic
+            const addrLinesModel = [1, 2, 3, 4, 5, 6, 7].map(i => this.form.get(p + 'AdrLine' + i)?.value);
+            const hasAnyAdrLine = addrLinesModel.some(v => !!v);
+
+            if (addrType === 'hybrid') {
+                // RULE: In Hybrid/Mixed mode, Town and Country are mandatory
+                if (!ctryCtrl?.hasValidator(Validators.required)) {
+                    ctryCtrl?.addValidators(Validators.required);
+                    ctryCtrl?.updateValueAndValidity({ emitEvent: false });
+                }
+                if (!twnNmCtrl?.hasValidator(Validators.required)) {
+                    twnNmCtrl?.addValidators(Validators.required);
+                    twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
+                }
+                
+                // RULE: In Hybrid/Mixed mode, only max 2 AdrLines allowed (3rd line cleared)
+                [3].forEach(i => {
+                    const ctrl = this.form.get(p + 'AdrLine' + i);
+                    if (ctrl?.value) ctrl.setValue('', { emitEvent: false });
+                });
+            }
             
-            if (hasStructured && hasAdrLine) {
+            // Re-eval mandated fields based on any manual data entry patterns (detecting mixed records)
+            const hasStructuredFields = ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnLctnNm'].some(f => !!this.form.get(p + f)?.value);
+            if (hasStructuredFields && hasAnyAdrLine) {
                 if (!ctryCtrl?.hasValidator(Validators.required)) {
                     ctryCtrl?.addValidators(Validators.required);
                     ctryCtrl?.updateValueAndValidity({ emitEvent: false });
@@ -331,24 +360,6 @@ export class Pacs10Component implements OnInit {
         });
     }
 
-    @HostListener('input', ['$event'])
-    onInput(event: any) {
-        const target = event.target as HTMLInputElement;
-        if (!target) return;
-        const name = target.getAttribute('formControlName');
-        if (name && (name.toLowerCase().includes('bic') || name.toLowerCase().includes('iban'))) {
-            const start = target.selectionStart;
-            const end = target.selectionEnd;
-            const upperValue = target.value.toUpperCase();
-            if (target.value !== upperValue) {
-                target.value = upperValue;
-                if (start !== null && end !== null) {
-                    target.setSelectionRange(start, end);
-                }
-                this.form.get(name)?.patchValue(upperValue, { emitEvent: false });
-            }
-        }
-    }
 
     @HostListener('keydown', ['$event'])
     onKeydown(event: KeyboardEvent) {
@@ -397,16 +408,6 @@ export class Pacs10Component implements OnInit {
         }
     }
 
-    hint(f: string, maxLen: number): string | null {
-        if (!this.showMaxLenWarning[f]) return null;
-        const c = this.form.get(f);
-        if (!c || !c.value) return null;
-        const len = c.value.toString().length;
-        if (len >= maxLen) {
-            return `Maximum ${maxLen} characters reached (${len}/${maxLen})`;
-        }
-        return null;
-    }
 
     private fetchCodelists() {
         this.http.get<any>(this.config.getApiUrl('/codelists/currency')).subscribe({
@@ -419,14 +420,22 @@ export class Pacs10Component implements OnInit {
         });
         this.http.get<any>(this.config.getApiUrl('/codelists/ctgyPurp')).subscribe({
             next: (res) => {
-                if (res && res.codes && res.codes.length > 0) this.categoryPurposes = res.codes;
-                else this.categoryPurposes = ['ADVA', 'AGRT', 'CASH', 'COLL', 'DIVD', 'GOVT', 'HEDG', 'INTC', 'LOAN', 'OTHR', 'PENS', 'SALA', 'SUPP', 'TAXS', 'TREA', 'VATX'];
+                const existing = res && res.codes ? res.codes : [];
+                this.categoryPurposes = [...new Set([...existing, 'ADVA', 'AGRT', 'CASH', 'COLL', 'DIVD', 'GOVT', 'HEDG', 'INTC', 'LOAN', 'OTHR', 'PENS', 'SALA', 'SUPP', 'TAXS', 'TREA', 'VATX'])].sort();
             },
-            error: (err) => console.error('Failed to load category purposes', err)
+            error: () => {
+                this.categoryPurposes = ['ADVA', 'AGRT', 'CASH', 'COLL', 'DIVD', 'GOVT', 'HEDG', 'INTC', 'LOAN', 'OTHR', 'PENS', 'SALA', 'SUPP', 'TAXS', 'TREA', 'VATX'].sort();
+            }
         });
         this.http.get<any>(this.config.getApiUrl('/codelists/purp')).subscribe({
-            next: (res) => { if (res && res.codes) this.purposes = [...new Set([...res.codes, ...ISO_PURPOSE_CODES])].sort(); },
-            error: (err) => { this.purposes = [...ISO_PURPOSE_CODES].sort(); }
+            next: (res) => {
+                const existingCodes = res && res.codes ? res.codes : [];
+                this.purposes = [...new Set([...existingCodes, ...ISO_PURPOSE_CODES])].sort();
+            },
+            error: (err) => {
+                console.error('Failed to load purposes', err);
+                this.purposes = [...ISO_PURPOSE_CODES].sort();
+            }
         });
     }
 
@@ -452,73 +461,115 @@ export class Pacs10Component implements OnInit {
         const ADDR_PATTERN = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
 
         const c: any = {
-            fromBic: ['BBBBUS33XXX', BIC], 
-            toBic: ['CCCCGB2LXXX', BIC], 
-            bizMsgId: ['MSG-2026-FI-PAC10-FULL-001', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]],
-            msgId: ['M-2026-FI-PAC10-FULL-001', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]], 
+            fromBic: ['BOFAUS3NXXX', BIC], 
+            toBic: ['CITIUS33XXX', BIC], 
+            bizMsgId: ['BMID-2026-PAC010-001', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]],
+            msgId: ['MSGID-2026-PAC010-001', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]], 
             creDtTm: [this.isoNow(), Validators.required],
             nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]],
-            cdtId: ['CDT-FI-999-01', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]],
-            cdtrAgtBic: ['BBBBUS33XXX', BIC_OPT],
-            cdtrBic: ['CCCCGB2LXXX', BIC],
-            instrId: ['I-2026-FULL-010', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]],
-            endToEndId: ['E2E-2026-FULL-010', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]],
-            txId: ['TX-2026-FULL-010', [Validators.maxLength(35), ADDR_PATTERN]],
-            uetr: ['550e8400-e29b-41d4-a716-446655440020', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
-            clrSysRef: ['CLR-SR-FULL-01', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
+            cdtId: ['CDT-FI-2026-001', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]],
+            
+            // Creditor Agent
+            cdtrAgtBic: ['CHASUS33XXX', BIC_OPT],
+            cdtrAgtName: ['JP MORGAN CHASE BANK', [Validators.maxLength(140), SAFE_NAME]],
+            cdtrAgtLei: ['7H6GLXDRUGQFU57RNE97', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
+            cdtrAgtClrSysCd: ['USFW', Validators.maxLength(4)],
+            cdtrAgtClrSysMmbId: ['MEM-CAGT-01', Validators.maxLength(35)],
+            cdtrAgtAddrType: ['structured'],
+            
+            // Creditor
+            cdtrBic: ['CITIUS33XXX', BIC],
+            cdtrName: ['CITIBANK NA', [Validators.maxLength(140), SAFE_NAME]],
+            cdtrLei: ['E57ODZWZ7FF32TWEFS77', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
+            cdtrClrSysCd: ['USFW', Validators.maxLength(4)],
+            cdtrClrSysMmbId: ['MEM-CDTR-01', Validators.maxLength(35)],
+            cdtrAddrType: ['structured'],
+            
+            // Payment IDs
+            instrId: ['INSTR-2026-PAC010-001', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]],
+            endToEndId: ['E2E-2026-PAC010-001', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]],
+            txId: ['TXID-2026-PAC010-001', [Validators.maxLength(35), ADDR_PATTERN]],
+            uetr: [this.uetrService.generate(), [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
+            clrSysRef: ['CLRREF-2026-001', [Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/), Validators.maxLength(35)]],
             
             // AppHdr extensions
             copyDplct: ['COPY'], pssblDplct: ['true'], prty: ['HIGH'],
             
             // Payment Type Info
             instrPrty: ['HIGH'],
-            svcLvlCd: ['SEPA', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{4}$/)]], 
-            svcLvlPrtry: ['PRIORITY-SVC', [Validators.maxLength(35), ADDR_PATTERN]],
+            svcLvlCd: ['G001', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{4}$/)]], 
+            svcLvlPrtry: ['', [Validators.maxLength(35), ADDR_PATTERN]],
             lclInstrmCd: ['ONCL', [Validators.maxLength(4)]], 
-            lclInstrmPrtry: ['INSTANT-SETTLM', [Validators.maxLength(35), ADDR_PATTERN]],
-            ctgyPurpCd: ['CASH', [Validators.pattern(/^[A-Z]{4}$/)]], 
-            ctgyPurpPrtry: ['CORP-CASH-POOL', [Validators.maxLength(35), ADDR_PATTERN]],
+            lclInstrmPrtry: ['', [Validators.maxLength(35), ADDR_PATTERN]],
+            ctgyPurpCd: ['INTC', [Validators.pattern(/^[A-Z]{4}$/)]], 
+            ctgyPurpPrtry: ['', [Validators.maxLength(35), ADDR_PATTERN]],
             
-            amount: ['100000.00', [Validators.required, Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]], 
+            amount: ['250000.00', [Validators.required, Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],
             currency: ['USD', [Validators.required, Validators.pattern(/^[A-Z]{3}$/)]],
             intrBkSttlmDt: [new Date().toISOString().split('T')[0], Validators.required],
-            clstTm: ['', [Validators.pattern(/^([01]\d|2[0-3]):?([0-5]\d):?([0-5]\d)$/)]],
-            tillTm: ['', [Validators.pattern(/^([01]\d|2[0-3]):?([0-5]\d):?([0-5]\d)$/)]],
-            frTm: ['', [Validators.pattern(/^([01]\d|2[0-3]):?([0-5]\d):?([0-5]\d)$/)]],
-            rjctTm: ['', [Validators.pattern(/^([01]\d|2[0-3]):?([0-5]\d):?([0-5]\d)$/)]],
-            purposeCd: ['BKXF', [Validators.pattern(/^[A-Z]{4}$/)]], 
-            purposePrtry: ['INTERBANK-XFER', [Validators.maxLength(35), ADDR_PATTERN]],
-            remittanceInfo: ['Full Interbank Settlement for Transaction ID 2026-001', [Validators.maxLength(140), ADDR_PATTERN]],
-            instrForDbtrAgt: ['Settle via TARGET2 RTGS immediately', [Validators.maxLength(140), ADDR_PATTERN]],
+            clstTm: ['09:00:00+00:00', [Validators.pattern(/^([01]\d|2[0-3]):[0-5]\d:[0-5]\d([+-][01]\d:[0-5]\d|Z)$/)]],
+            tillTm: ['17:00:00+00:00', [Validators.pattern(/^([01]\d|2[0-3]):[0-5]\d:[0-5]\d([+-][01]\d:[0-5]\d|Z)$/)]],
+            frTm: ['08:00:00+00:00', [Validators.pattern(/^([01]\d|2[0-3]):[0-5]\d:[0-5]\d([+-][01]\d:[0-5]\d|Z)$/)]],
+            rjctTm: ['16:00:00+00:00', [Validators.pattern(/^([01]\d|2[0-3]):[0-5]\d:[0-5]\d([+-][01]\d:[0-5]\d|Z)$/)]],
+            purposeCd: ['INTC', [Validators.pattern(/^[A-Z]{4}$/)]], 
+            purposePrtry: ['', [Validators.maxLength(35), ADDR_PATTERN]],
+            remittanceInfo: ['Interbank Direct Debit Settlement March 2026', [Validators.maxLength(140), ADDR_PATTERN]],
+            instrForDbtrAgt: ['Settle via RTGS system immediately', [Validators.maxLength(140), ADDR_PATTERN]],
             
-            dbtrBic: ['BBBBUS33XXX', BIC],
-            dbtrAgtBic: ['BBBBUS33XXX', BIC_OPT],
-            instgAgtBic: ['BBBBUS33XXX', BIC],
-            instdAgtBic: ['CCCCGB2LXXX', BIC],
-            dbtrAcct: ['471932901234', [Validators.required, Validators.pattern(/^[A-Z0-9]{5,34}$/)]],
-            cdtrAcct: ['471932905678', [Validators.required, Validators.pattern(/^[A-Z0-9]{5,34}$/)]]
+            // Debtor
+            dbtrBic: ['BOFAUS3NXXX', BIC],
+            dbtrName: ['BANK OF AMERICA NA', [Validators.maxLength(140), SAFE_NAME]],
+            dbtrLei: ['9DI4HL4JZ54KOAHE3750', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
+            dbtrClrSysCd: ['USFW', Validators.maxLength(4)],
+            dbtrClrSysMmbId: ['MEM-DBTR-01', Validators.maxLength(35)],
+            dbtrAddrType: ['structured'],
+            
+            // Debtor Agent
+            dbtrAgtBic: ['WFBIUS6SXXX', BIC_OPT],
+            dbtrAgtName: ['WELLS FARGO BANK NA', [Validators.maxLength(140), SAFE_NAME]],
+            dbtrAgtLei: ['KB1H1DSPRFMYMCUFXT09', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
+            dbtrAgtClrSysCd: ['USFW', Validators.maxLength(4)],
+            dbtrAgtClrSysMmbId: ['MEM-DAGT-01', Validators.maxLength(35)],
+            dbtrAgtAddrType: ['structured'],
+            
+            // Instructing / Instructed Agents
+            instgAgtBic: ['BOFAUS3NXXX', BIC],
+            instdAgtBic: ['CITIUS33XXX', BIC],
+            
+            // Accounts
+            dbtrAcct: ['DE89370400440532013000', [Validators.required, Validators.pattern(/^[A-Z0-9]{5,34}$/)]],
+            cdtrAcct: ['GB29NWBK60161331926819', [Validators.required, Validators.pattern(/^[A-Z0-9]{5,34}$/)]]
         };
 
-        const prefixes = [...this.agentPrefixes, ...this.partyPrefixes, 'ultmtDbtr', 'ultmtCdtr'];
+        const prefixes = [...this.agentPrefixes, ...this.partyPrefixes];
 
         prefixes.forEach(p => {
             const isAgent = this.agentPrefixes.includes(p);
             
-            if (!c[p + 'AddrType']) c[p + 'AddrType'] = ['hybrid'];
+            if (!c[p + 'AddrType']) c[p + 'AddrType'] = ['none'];
             
-            ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry', 'AdrLine1', 'AdrLine2', 'AdrLine3', 'AdrTpCd', 'AdrTpPrtry'].forEach(f => {
-                let val = '';
-                if (f === 'StrtNm') val = 'Broad Street';
-                else if (f === 'BldgNb') val = '45';
-                else if (f === 'TwnNm') val = p.includes('US') || p.includes('Dbtr') ? 'Dallas' : 'Paris';
-                else if (f === 'Ctry') val = p.includes('US') || p.includes('Dbtr') ? 'US' : 'FR';
-                else if (f === 'PstCd') val = '75001';
-                else if (f === 'Dept') val = 'Treasury';
-                else if (f === 'SubDept') val = 'Interbank Payments';
-                else if (f === 'AdrLine1') val = 'Suite 500, North Tower';
-                else if (f === 'AdrLine2') val = 'Financial District';
+            // Address field mapping per party
+            const addrMap: any = {
+                dbtr:    { StrtNm: '100 North Tryon Street', BldgNb: '100', BldgNm: 'Bank of America Tower', Flr: '30th Floor', PstBx: 'PO Box 15220', Room: 'Suite 3000', PstCd: '28255', TwnNm: 'Charlotte', TwnLctnNm: 'Uptown', Dept: 'Treasury Operations', SubDept: 'Direct Debit Unit', Ctry: 'US' },
+                cdtr:    { StrtNm: '388 Greenwich Street', BldgNb: '388', BldgNm: 'Citigroup Center', Flr: '25th Floor', PstBx: 'PO Box 3290', Room: 'Room 2500', PstCd: '10013', TwnNm: 'New York', TwnLctnNm: 'Tribeca', Dept: 'Global Payments', SubDept: 'Interbank Settlement', Ctry: 'US' },
+                dbtrAgt: { StrtNm: '420 Montgomery Street', BldgNb: '420', BldgNm: 'Wells Fargo Building', Flr: '15th Floor', PstBx: 'PO Box 44000', Room: 'Room 1501', PstCd: '94104', TwnNm: 'San Francisco', TwnLctnNm: 'Financial District', Dept: 'Correspondent Banking', SubDept: 'FI Payments', Ctry: 'US' },
+                cdtrAgt: { StrtNm: '383 Madison Avenue', BldgNb: '383', BldgNm: 'JPMorgan Chase Tower', Flr: '20th Floor', PstBx: 'PO Box 2222', Room: 'Room 2001', PstCd: '10179', TwnNm: 'New York', TwnLctnNm: 'Midtown East', Dept: 'Payment Services', SubDept: 'Cash Management', Ctry: 'US' }
+            };
+            const defaults = addrMap[p] || {};
+
+            ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'Ctry', 'AdrLine1', 'AdrLine2', 'AdrLine3'].forEach(f => {
+                let val = defaults[f] || '';
                 
-                if (!c[p + f]) c[p + f] = [val, [Validators.maxLength(f === 'Ctry' ? 2 : 70), ADDR_PATTERN]];
+                // Per-field ISO 20022 validators
+                let validators: any[];
+                if (f === 'Ctry') {
+                    validators = [Validators.pattern(/^[A-Z]{2,2}$/)];
+                } else if (f.startsWith('AdrLine')) {
+                    validators = [Validators.maxLength(70), ADDR_PATTERN];
+                } else {
+                    validators = [Validators.maxLength(70), ADDR_PATTERN];
+                }
+                if (!c[p + f]) c[p + f] = [val, validators];
             });
             
             const pName = p.replace(/([A-Z])/g, ' $1').toUpperCase();
@@ -527,29 +578,45 @@ export class Pacs10Component implements OnInit {
             if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['USAB', Validators.maxLength(4)];
             if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['MEM-' + p.toUpperCase().substring(0, 5) + '-01', Validators.maxLength(35)];
             
-            if (!c[p + 'Acct']) {
+            if (!c[p + 'AcctIBAN']) {
+                c[p + 'AcctIBAN'] = ['', [Validators.pattern(/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/), Validators.minLength(10), Validators.maxLength(34)]];
+            }
+            if (!c[p + 'AcctOthrId']) {
                 let acctVal = '4719' + Math.floor(Math.random() * 9000000000 + 1000000000);
-                c[p + 'Acct'] = [acctVal, [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
+                c[p + 'AcctOthrId'] = [acctVal, [Validators.pattern(/^[A-Z0-9]{1,34}$/)]];
             }
 
-            // Detailed Account fields
-            ['AcctSchemeNm', 'AcctPrtry', 'AcctIssr', 'AcctTypeCd', 'AcctTypePrtry', 'AcctCcy', 'AcctNm', 'AcctProxyId'].forEach(f => {
-                let val: any = '';
-                if (f === 'AcctCcy') val = 'USD';
-                else if (f === 'AcctNm') val = pName + ' OPERATIONAL ACCOUNT';
-                else if (f === 'AcctProxyId') val = p + '@proxy.test';
-                else if (f === 'AcctSchemeNm') val = 'BANK';
-                
+            // Detailed Account fields per party
+            const acctMap: any = {
+                dbtr:    { AcctIBAN: '', AcctOthrId: '4719329012340001', AcctSchemeNm: 'BANK', AcctPrtry: '', AcctIssr: 'BOFAUS3NXXX', AcctTypeCd: 'CACC', AcctTypePrtry: '', AcctCcy: 'USD', AcctNm: 'BOFA DIRECT DEBIT OPERATING', AcctProxyId: 'dbtr@proxy.bofa.com', AcctProxyCd: 'EMAL', AcctProxyPrtry: '' },
+                cdtr:    { AcctIBAN: '', AcctOthrId: 'GB29NWBK60161331926819', AcctSchemeNm: 'BANK', AcctPrtry: '', AcctIssr: 'CITIUS33XXX', AcctTypeCd: 'CACC', AcctTypePrtry: '', AcctCcy: 'USD', AcctNm: 'CITI CREDITOR SETTLEMENT', AcctProxyId: 'cdtr@proxy.citi.com', AcctProxyCd: 'EMAL', AcctProxyPrtry: '' },
+                dbtrAgt: { AcctIBAN: '', AcctOthrId: '9283746501928374', AcctSchemeNm: 'BANK', AcctPrtry: '', AcctIssr: 'WFBIUS6SXXX', AcctTypeCd: 'CACC', AcctTypePrtry: '', AcctCcy: 'USD', AcctNm: 'WELLS FARGO AGENT ACCOUNT', AcctProxyId: '', AcctProxyCd: '', AcctProxyPrtry: '' },
+                cdtrAgt: { AcctIBAN: '', AcctOthrId: '1827364509182736', AcctSchemeNm: 'BANK', AcctPrtry: '', AcctIssr: 'CHASUS33XXX', AcctTypeCd: 'CACC', AcctTypePrtry: '', AcctCcy: 'USD', AcctNm: 'JPM AGENT SETTLEMENT ACCT', AcctProxyId: '', AcctProxyCd: '', AcctProxyPrtry: '' }
+            };
+            const acctDefaults = acctMap[p] || {};
+
+            ['AcctSchemeNm', 'AcctPrtry', 'AcctIssr', 'AcctTypeCd', 'AcctTypePrtry', 'AcctCcy', 'AcctNm', 'AcctProxyId', 'AcctProxyCd', 'AcctProxyPrtry'].forEach(f => {
+                let val: any = acctDefaults[f] || '';
                 let v: any[] = [val];
                 if (f === 'AcctCcy') v = [val, [Validators.pattern(/^[A-Z]{3}$/)]];
                 c[p + f] = v;
             });
 
+            // Set IBAN or OthrId per party
+            if (acctDefaults.AcctIBAN) {
+                if (!c[p + 'AcctIBAN']) c[p + 'AcctIBAN'] = [acctDefaults.AcctIBAN, [Validators.pattern(/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/), Validators.minLength(10), Validators.maxLength(34)]];
+            } else {
+                if (!c[p + 'AcctIBAN']) c[p + 'AcctIBAN'] = ['', [Validators.pattern(/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/), Validators.minLength(10), Validators.maxLength(34)]];
+            }
+            if (!c[p + 'AcctOthrId']) {
+                c[p + 'AcctOthrId'] = [acctDefaults.AcctOthrId || '', [Validators.pattern(/^[A-Z0-9]{1,34}$/)]];
+            }
+
             if (!isAgent) {
                 if (!c[p + 'IdType']) c[p + 'IdType'] = ['org'];
-                if (!c[p + 'OrgAnyBIC']) c[p + 'OrgAnyBIC'] = ['BBBBUS33XXX', BIC_OPT];
-                if (!c[p + 'OrgLEI']) c[p + 'OrgLEI'] = ['54930084UKLVMY22DS16', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
-                if (!c[p + 'OrgClrSysCd']) c[p + 'OrgClrSysCd'] = ['USAB', Validators.maxLength(4)];
+                if (!c[p + 'OrgAnyBIC']) c[p + 'OrgAnyBIC'] = [c[p + 'Bic'] ? c[p + 'Bic'][0] : 'BOFAUS3NXXX', BIC_OPT];
+                if (!c[p + 'OrgLEI']) c[p + 'OrgLEI'] = [c[p + 'Lei'] ? c[p + 'Lei'][0] : '54930084UKLVMY22DS16', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
+                if (!c[p + 'OrgClrSysCd']) c[p + 'OrgClrSysCd'] = ['USFW', Validators.maxLength(4)];
                 if (!c[p + 'OrgClrSysMmbId']) c[p + 'OrgClrSysMmbId'] = ['ORG-' + p.toUpperCase().substring(0, 5), Validators.maxLength(35)];
                 if (!c[p + 'OrgOthrId']) c[p + 'OrgOthrId'] = ['OTH-' + p.toUpperCase().substring(0, 5), [Validators.maxLength(35), ADDR_PATTERN]];
                 if (!c[p + 'OrgOthrSchmeNmCd']) c[p + 'OrgOthrSchmeNmCd'] = ['BANK', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{1,4}$/)]];
@@ -628,6 +695,7 @@ ${this.rmtInf(v)}
         let res = '';
         if (v.instrPrty) res += this.el('InstrPrty', v.instrPrty, 6);
         if (v.svcLvlCd || v.svcLvlPrtry) {
+            // Prioritize Cd; only fall back to Prtry if Cd is absent
             let sv = v.svcLvlCd ? this.el('Cd', v.svcLvlCd, 7) : this.el('Prtry', v.svcLvlPrtry, 7);
             res += this.tag('SvcLvl', sv, 6);
         }
@@ -639,14 +707,16 @@ ${this.rmtInf(v)}
             let cp = v.ctgyPurpCd ? this.el('Cd', v.ctgyPurpCd, 7) : this.el('Prtry', v.ctgyPurpPrtry, 7);
             res += this.tag('CtgyPurp', cp, 6);
         }
+
         return res ? this.tag('PmtTpInf', res, 5) : '';
     }
 
 
     private purp(v: any) {
-        if (v.purposeCd) return this.tag('Purp', this.el('Cd', v.purposeCd, 6), 5);
-        if (v.purposePrtry) return this.tag('Purp', this.el('Prtry', v.purposePrtry, 6), 5);
-        return '';
+        if (!v.purposeCd && !v.purposePrtry) return '';
+        // Prioritize Cd; only fall back to Prtry if Cd is absent
+        const p = v.purposeCd ? this.el('Cd', v.purposeCd, 6) : this.el('Prtry', v.purposePrtry, 6);
+        return this.tag('Purp', p, 5);
     }
 
     private rmtInf(v: any) {
@@ -659,29 +729,39 @@ ${this.rmtInf(v)}
         if (!id) return '';
         let res = this.tag('Id', id, indent + 1);
         if (v[p + 'AcctTypeCd'] || v[p + 'AcctTypePrtry']) {
-            let tpVal = v[p + 'AcctTypePrtry'] || v[p + 'AcctTypeCd'];
-            res += this.tag('Tp', this.el('Prtry', tpVal, indent + 3), indent + 1);
+            let tpVal = v[p + 'AcctTypePrtry'] ? this.el('Prtry', v[p + 'AcctTypePrtry'], indent + 3) : this.el('Cd', v[p + 'AcctTypeCd'], indent + 3);
+            res += this.tag('Tp', tpVal, indent + 1);
         }
         if (v[p + 'AcctCcy'] && /^[A-Z]{3}$/.test(v[p + 'AcctCcy'])) {
             res += this.el('Ccy', v[p + 'AcctCcy'], indent + 1);
         }
         if (v[p + 'AcctNm']) res += this.el('Nm', v[p + 'AcctNm'], indent + 1);
         if (v[p + 'AcctProxyId']) {
-            let pr = this.el('Id', v[p + 'AcctProxyId'], indent + 3);
+            let pr = '';
+            if (v[p + 'AcctProxyCd'] || v[p + 'AcctProxyPrtry']) {
+                let tp = v[p + 'AcctProxyPrtry'] ? this.el('Prtry', v[p + 'AcctProxyPrtry'], indent + 4) : this.el('Cd', v[p + 'AcctProxyCd'], indent + 4);
+                pr += this.tag('Tp', tp, indent + 3);
+            }
+            pr += this.el('Id', v[p + 'AcctProxyId'], indent + 3);
             res += this.tag('Prxy', pr, indent + 1);
         }
         return this.tag(tag, res, indent);
     }
 
     private formatAcctDetails(v: any, p: string, tabs: number) {
-        let val = v[p + 'Acct'];
-        if (!val) return '';
-        if (/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/i.test(val) && val.length >= 10) {
-            return this.el('IBAN', val, tabs);
+        if (v[p + 'AcctIBAN']) {
+            return this.el('IBAN', v[p + 'AcctIBAN'], tabs);
         }
-        let othr = this.el('Id', val, tabs + 2);
-        if (v[p + 'AcctIssr']) othr += this.el('Issr', v[p + 'AcctIssr'], tabs + 2);
-        return this.tag('Othr', othr, tabs + 1);
+        if (v[p + 'AcctOthrId']) {
+            let othr = this.el('Id', v[p + 'AcctOthrId'], tabs + 2);
+            if (v[p + 'AcctSchemeNm'] || v[p + 'AcctPrtry']) {
+                let sn = v[p + 'AcctPrtry'] ? this.el('Prtry', v[p + 'AcctPrtry'], tabs + 4) : this.el('Cd', v[p + 'AcctSchemeNm'], tabs + 4);
+                othr += this.tag('SchmeNm', sn, tabs + 2);
+            }
+            if (v[p + 'AcctIssr']) othr += this.el('Issr', v[p + 'AcctIssr'], tabs + 2);
+            return this.tag('Othr', othr, tabs + 1);
+        }
+        return '';
     }
 
     private e(v: string) { return (v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
@@ -691,45 +771,53 @@ ${this.rmtInf(v)}
 
     agt(tag: string, prefix: string, v: any, indent = 3, onlyBic = false) {
         const bic = v[prefix + 'Bic'];
-        const name = v[prefix + 'Name'];
+        const name = (v[prefix + 'Name'] || '').trim();
         const lei = v[prefix + 'Lei'];
         const clrCd = v[prefix + 'ClrSysCd'];
         const clrMmb = v[prefix + 'ClrSysMmbId'];
         
         if (!bic && !name && !lei && !clrMmb && v[prefix + 'AddrType'] === 'none') return '';
 
-        let content = '';
-        if (bic) content += this.el('BICFI', bic, indent + 2);
+        let finInstnId = '';
+        if (bic) finInstnId += this.el('BICFI', bic, indent + 2);
+        
         if (clrMmb) {
             let clr = '';
-            // Sequence: ClrSysId (mandatory) -> MmbId (mandatory)
-            // Even if clrCd is missing, we must generate the tag to satisfy sequence
+            // Sequence: ClrSysId -> MmbId
             const sysId = clrCd ? this.el('Cd', clrCd, indent + 4) : `${this.tabs(indent + 4)}<Cd></Cd>\n`;
             clr += `${this.tabs(indent + 3)}<ClrSysId>\n${sysId}${this.tabs(indent + 3)}</ClrSysId>\n`;
             clr += this.el('MmbId', clrMmb, indent + 3);
-            content += this.tag('ClrSysMmbId', clr, indent + 2);
+            finInstnId += this.tag('ClrSysMmbId', clr, indent + 2);
         }
-        if (lei) content += this.el('LEI', lei, indent + 2);
+
+        if (lei) finInstnId += this.el('LEI', lei, indent + 2);
         
         if (!onlyBic) {
             const addr = this.addrXml(v, prefix, indent + 2);
-            if (name) content += this.el('Nm', name, indent + 2);
-            if (addr) content += addr;
+            // ISO 20022 rule: Name and Address must always be together or both absent for Financial Institutions
+            if (name && addr) {
+                finInstnId += this.el('Nm', name, indent + 2);
+                finInstnId += addr;
+            }
         }
 
-        return this.tag(tag, this.tag('FinInstnId', content, indent + 1), indent);
+        return this.tag(tag, this.tag('FinInstnId', finInstnId, indent + 1), indent);
     }
 
     party(tag: string, prefix: string, v: any, indent = 4) {
-        const bic = v[prefix + 'Bic'];
-        const name = v[prefix + 'Name'];
-        const lei = v[prefix + 'Lei'];
-        const clrMmb = v[prefix + 'ClrSysMmbId'];
+        const bic = v[prefix + 'OrgAnyBIC'] || v[prefix + 'Bic'];
+        const name = (v[prefix + 'Name'] || '').trim();
+        const lei = v[prefix + 'OrgLEI'] || v[prefix + 'Lei'];
+        const clrMmb = v[prefix + 'OrgClrSysMmbId'] || v[prefix + 'ClrSysMmbId'];
         if (!bic && !name && !lei && !clrMmb && v[prefix + 'AddrType'] === 'none') return '';
 
-        let res = '';
-        if (name) res += this.el('Nm', name, indent + 1);
-        res += this.addrXml(v, prefix, indent + 1);
+        let partyContent = '';
+        const addr = this.addrXml(v, prefix, indent + 1);
+        // Rule: Nm and PstlAdr together or none
+        if (name && addr) {
+            partyContent += this.el('Nm', name, indent + 1);
+            partyContent += addr;
+        }
 
         let id = '';
         if (bic || lei || clrMmb) {
@@ -742,37 +830,40 @@ ${this.rmtInf(v)}
             }
             id = this.tag('OrgId', org, indent + 2);
         }
-        if (id) res += this.tag('Id', id, indent + 1);
+        if (id) partyContent += this.el('Id', id, indent + 1);
 
-        return this.tag(tag, res, indent);
+        return this.tag(tag, partyContent, indent);
     }
 
     addrXml(v: any, p: string, indent = 4): string {
-        const type = v[p + 'AddrType']; if (!type || type === 'none') return '';
-        let lines = '';
+        const type = v[p + 'AddrType']; 
+        if (!type || type === 'none') return '';
+        
+        let lines: string[] = []; 
         const t = this.tabs(indent + 1);
         
-        // Address Type Code
-        if (v[p + 'AdrTpCd']) {
-            lines += this.tag('AdrTp', this.el('Cd', v[p + 'AdrTpCd'], indent + 2), indent + 1);
-        } else if (v[p + 'AdrTpPrtry']) {
-            lines += this.tag('AdrTp', this.el('Prtry', v[p + 'AdrTpPrtry'], indent + 2), indent + 1);
-        }
-
-        const hasStructured = ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry'].some(f => v[p + f]);
-
         if (type === 'structured' || type === 'hybrid') {
-            ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry'].forEach(f => {
-                if (v[p + f]) lines += `${t}<${f}>${this.e(v[p + f])}</${f}>\n`;
+            const structuredFields = ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm'];
+            structuredFields.forEach(f => {
+                if (v[p + f]) lines.push(`${t}<${f}>${this.e(v[p + f])}</${f}>`);
             });
+            // Ctry is only emitted for structured/hybrid, not for unstructured
+            if (v[p + 'Ctry']) {
+                lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
+            }
         }
+
         if (type === 'unstructured' || type === 'hybrid') {
-            const maxLines = hasStructured ? 2 : 7;
-            [1, 2, 3].forEach(i => {
-                if (i <= maxLines && v[p + 'AdrLine' + i]) lines += `${t}<AdrLine>${this.e(v[p + 'AdrLine' + i])}</AdrLine>\n`;
+            // Hybrid allows only 2 lines, Unstructured allows max 3 (restricted per user request)
+            const limit = type === 'hybrid' ? 2 : 3;
+            [1, 2, 3].slice(0, limit).forEach(i => {
+                const val = v[p + 'AdrLine' + i];
+                if (val) lines.push(`${t}<AdrLine>${this.e(val)}</AdrLine>`);
             });
         }
-        return lines ? this.tag('PstlAdr', lines, indent) : '';
+        
+        if (!lines.length) return '';
+        return `${this.tabs(indent)}<PstlAdr>\n${lines.join('\n')}\n${this.tabs(indent)}</PstlAdr>\n`;
     }
 
     partyIdXml(v: any, p: string, indent = 4): string {
@@ -882,12 +973,16 @@ ${this.rmtInf(v)}
 
     parseXmlToForm(xml: string) { }
 
-    validateXml() {
+    switchToPreview() {
+        this.generateXml();
+        this.currentTab = 'preview';
+    }
+
+    validateMessage() {
+        this.validateFullMessageErrors();
+        this.generateXml();
         if (this.form.invalid) {
             this.form.markAllAsTouched();
-            this.scrollToFirstError();
-            this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
-            return;
         }
         if (!this.generatedXml?.trim()) return;
 
@@ -952,7 +1047,7 @@ ${this.rmtInf(v)}
 
     viewXmlModal() {
         this.closeValidationModal();
-        this.currentTab = 'preview';
+        this.switchToPreview();
     }
 
     editXmlModal() {
@@ -972,7 +1067,7 @@ ${this.rmtInf(v)}
     }
 
     runValidationModal() {
-        this.validateXml();
+        this.validateMessage();
     }
 
     downloadXml() {
@@ -981,7 +1076,7 @@ ${this.rmtInf(v)}
         a.download = `pacs010-${Date.now()}.xml`; a.click();
     }
 
-    copyXml() {
+    copyToClipboard() {
         navigator.clipboard.writeText(this.generatedXml).then(() => {
             this.snackBar.open('Copied to clipboard!', 'Close', { duration: 2000 });
         });
@@ -990,21 +1085,163 @@ ${this.rmtInf(v)}
     err(c: string): string | null {
         const ctrl = this.form.get(c);
         if (!ctrl || ctrl.valid || (!ctrl.touched && !ctrl.dirty)) return null;
+        
+        // Hide pattern/format errors if we are showing a maxlen "at limit" hint
+        if (this.showMaxLenWarning[c]) {
+            const val = ctrl.value?.toString() || '';
+            const limit = ctrl.errors?.['maxlength']?.requiredLength;
+            if (limit && val.length >= limit) return null;
+            if (c.toLowerCase().includes('bic') && val.length >= 11) return null;
+        }
+
+        const tFields = ['clstTm', 'tillTm', 'frTm', 'rjctTm'];
+        if (tFields.includes(c) && ctrl.errors?.['pattern']) return 'Invalid time format. Must include timezone offset (e.g., 09:00:00+05:30).';
+        
         if (ctrl.errors?.['required']) return 'Required field.';
+        if (c === 'purposeCd' && ctrl.errors?.['pattern']) return 'Invalid Purpose Code. Please select from the list or enter a valid ISO 20022 Purpose Code.';
+        if (c === 'clrSysRef' && ctrl.errors?.['pattern']) return 'Invalid Pattern (Alphanumeric and standard special characters only, max 35 chars).';
         if (ctrl.errors?.['pattern']) return 'Invalid format.';
         if (ctrl.errors?.['maxlength']) return `Max ${ctrl.errors['maxlength'].requiredLength} chars.`;
         if (ctrl.errors?.['target2']) return 'T2 requires EUR.';
         if (ctrl.errors?.['chaps']) return 'CHAPS requires GBP.';
         if (ctrl.errors?.['chips']) return 'CHIPS requires USD.';
         if (ctrl.errors?.['fed']) return 'FED requires USD.';
-        if (ctrl.errors?.['forbidden']) return 'Forbidden field.';
-        if (ctrl.errors?.['linked']) return 'Name and Address must be present together.';
+        if (ctrl.errors?.['forbidden']) return 'Clearing System Reference must NOT be sent if no active clearing system is used.';
+        if (ctrl.errors?.['linked']) return 'Name and Address must always be present together.';
         return 'Invalid value.';
+    }
+
+    hint(f: string, maxLen: number): string | null {
+        if (!this.showMaxLenWarning[f]) return null;
+        const c = this.form.get(f);
+        if (!c || !c.value) return null;
+        const len = c.value.toString().length;
+        if (len >= maxLen) return `Maximum ${maxLen} characters reached (${len}/${maxLen})`;
+        return null;
+    }
+
+    @HostListener('keydown', ['$event'])
+    onKeyDown(event: KeyboardEvent) {
+        const target = event.target as HTMLInputElement;
+        if (!target || (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA')) return;
+        
+        const name = target.getAttribute('formControlName') || target.getAttribute('name');
+        if (!name) return;
+
+        // Allow system/control keys (Backspace, Delete, Arrow keys, Tab, etc.)
+        const controlKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab', 'Enter', 'Home', 'End', 'Escape'];
+        if (controlKeys.includes(event.key) || event.ctrlKey || event.metaKey || event.altKey) return;
+
+        const val = target.value || '';
+        const key = event.key;
+
+        // 1. Max length restriction (Hard block at key level)
+        const maxLen = target.maxLength;
+        if (maxLen > 0 && val.length >= maxLen && target.selectionStart === target.selectionEnd) {
+            event.preventDefault();
+            return;
+        }
+
+        const n = name.toLowerCase();
+
+        // 2. Character-level restrictions
+        // Numeric only (Amount, nbOfTxs)
+        if (n.includes('amount') || n === 'nboftxs') {
+            if (!/^[0-9.]$/.test(key)) {
+                event.preventDefault();
+                return;
+            }
+            if (key === '.' && val.includes('.')) {
+                event.preventDefault(); // Only one dot allowed
+                return;
+            }
+        }
+        
+        // BIC/IBAN (Alphanumeric only)
+        if (n.includes('bic') || n.includes('iban')) {
+            if (!/^[A-Za-z0-9]$/.test(key)) {
+                event.preventDefault();
+                return;
+            }
+        }
+
+        // LEI (Alphanumeric only)
+        if (n.includes('lei')) {
+            if (!/^[A-Za-z0-9]$/.test(key)) {
+                event.preventDefault();
+                return;
+            }
+        }
+
+        // UETR (Hex + dashes)
+        if (n === 'uetr') {
+            if (!/^[a-fA-F0-9\-]$/.test(key)) {
+                event.preventDefault();
+                return;
+            }
+        }
+
+        // ISO 20022 MX character set restriction for all other text fields
+        const mxSetRegex = /^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/;
+        if (target.type === 'text' || target.type === 'textarea') {
+            if (!mxSetRegex.test(key)) {
+                event.preventDefault();
+            }
+        }
+    }
+
+    @HostListener('input', ['$event'])
+    onInput(event: any) {
+        const target = event.target as HTMLInputElement;
+        if (!target) return;
+        const name = target.getAttribute('formControlName') || target.getAttribute('name');
+        if (!name) return;
+
+        const maxLen = target.maxLength;
+        let val = target.value || '';
+
+        // Sanitize input (especially after paste)
+        const n = name.toLowerCase();
+        if (n.includes('amount') || n === 'nboftxs') {
+            val = val.replace(/[^0-9.]/g, '');
+            const parts = val.split('.');
+            if (parts.length > 2) val = parts[0] + '.' + parts.slice(1).join('');
+        }
+        if (n.includes('bic') || n.includes('iban') || n.includes('lei')) {
+            val = val.replace(/[^A-Za-z0-9]/g, '');
+        }
+
+        // Enforce casing
+        if (n.includes('bic') || n.includes('iban') || n.includes('ctry') || n === 'purposecd' || n === 'ctgypurpcd') {
+            val = val.toUpperCase();
+        }
+
+        // Hard trim for maxlength (Paste protection)
+        if (maxLen > 0 && val.length > maxLen) {
+            val = val.substring(0, maxLen);
+        }
+
+        if (target.value !== val) {
+            const start = target.selectionStart;
+            const end = target.selectionEnd;
+            target.value = val;
+            if (start !== null && end !== null) target.setSelectionRange(start, end);
+            this.form.get(name)?.setValue(val, { emitEvent: false });
+        }
+
+        // Max length warning hints
+        if (maxLen > 0 && val.length >= maxLen) {
+            this.showMaxLenWarning[name] = true;
+            if (this.warningTimeouts[name]) clearTimeout(this.warningTimeouts[name]);
+            this.warningTimeouts[name] = setTimeout(() => this.showMaxLenWarning[name] = false, 3000);
+        } else {
+            this.showMaxLenWarning[name] = false;
+        }
     }
 
     private scrollToFirstError() {
         setTimeout(() => {
-            const firstInvalid = document.querySelector('.ng-invalid.ng-touched');
+            const firstInvalid = document.querySelector('.ng-invalid.ng-touched, .ng-invalid.ng-dirty');
             if (firstInvalid) {
                 firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 (firstInvalid as HTMLElement).focus();
@@ -1022,15 +1259,4 @@ ${this.rmtInf(v)}
         });
     }
 
-    getFormErrors(): string[] {
-        const errors: string[] = [];
-        Object.keys(this.form.controls).forEach(key => {
-            const msg = this.err(key);
-            if (msg) {
-                const label = key.replace(/([A-Z])/g, ' $1').trim();
-                errors.push(`${label.charAt(0).toUpperCase() + label.slice(1)}: ${msg}`);
-            }
-        });
-        return errors;
-    }
 }

@@ -163,46 +163,7 @@ textarea.ng-invalid.ng-touched:focus {
     margin-top: .25rem;
 }
 
-.party-group {
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: 10px;
-    margin-bottom: 2rem;
-    overflow: hidden;
-    box-shadow: var(--shadow-md);
-}
-
-.party-group-title {
-    background: var(--bg-card-hover);
-    padding: 12px 18px;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--text-main);
-    border-bottom: 2px solid var(--accent-color);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.party-group-title.mandatory::after {
-    content: "MANDATORY";
-    font-size: 0.62rem;
-    background: rgba(239, 68, 68, 0.12);
-    color: #ef4444;
-    padding: 3px 8px;
-    border-radius: 5px;
-    margin-left: auto;
-    font-weight: 800;
-}
-
-.party-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: .75rem 1rem;
-    padding: 1.25rem;
-}
+/* Global party classes from styles.css will be used */
 
 .subsection {
     grid-column: 1/-1;
@@ -249,6 +210,20 @@ textarea.ng-invalid.ng-touched:focus {
 
 .full-width {
     grid-column: 1 / -1;
+}
+
+.dual-input {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    flex: 1;
+}
+
+.triple-input {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr 1fr;
+    gap: 8px;
+    flex: 1;
 }
 
 
@@ -1543,48 +1518,6 @@ input[list]::-webkit-calendar-picker-indicator {
     border-bottom-color: #ef4444 !important;
 }
 
-/* Error Summary Box */
-.error-summary-box {
-    grid-column: 1 / -1;
-    background: #fff5f5;
-    border: 2px solid #feb2b2;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    animation: slideDown 0.3s ease-out;
-}
-
-.error-summary-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: #c53030;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.error-summary-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-}
-
-.error-summary-list li {
-    font-size: 0.78rem;
-    color: #742a2a;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.error-summary-list li::before {
-    content: "•";
-    color: #c53030;
-    font-weight: 900;
-}
 
 @keyframes slideDown {
     from { opacity: 0; transform: translateY(-10px); }
