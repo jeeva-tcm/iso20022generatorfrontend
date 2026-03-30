@@ -434,6 +434,20 @@ export class Pacs8Component implements OnInit {
       amount: ['1500.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
       sttlmDt: [new Date().toISOString().split('T')[0], [Validators.required, Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]], 
 
+      appHdrPriority: [''],
+      fromMmbId: [''], fromClrSysId: [''], fromLei: [''],
+      toMmbId: [''], toClrSysId: [''], toLei: [''],
+      rltd: [''], rltdCharSet: [''],
+
+      instdAmt: [''], instdAmtCcy: [''],
+      xchgRate: [''],
+      dbtDtTm: [''], cdtDtTm: [''],
+      chrgsInfAmt: [''], chrgsInfCcy: [''], chrgsInfAgtBic: [''],
+      rgltryRptg1Code: [''], rgltryRptg1Inf: [''],
+      rgltryRptg2Code: [''], rgltryRptg2Inf: [''],
+      rgltryRptg3Code: [''], rgltryRptg3Inf: [''],
+      rltdRmtInf1Ref: [''], rltdRmtInf2Ref: [''], rltdRmtInf3Ref: [''],
+
       instrPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
       clrChanl: ['', [Validators.pattern(/^(BOOK|MPNS|RTGS|RTNS)$/)]],
       svcLvlCd: ['', [Validators.pattern(/^[A-Z0-9]{1,4}$/)]],
@@ -830,34 +844,45 @@ export class Pacs8Component implements OnInit {
     let pmtTpXml = '';
     if (v.instrPrty?.trim()) pmtTpXml += this.el('InstrPrty', v.instrPrty, 4);
     if (v.clrChanl?.trim()) pmtTpXml += this.el('ClrChanl', v.clrChanl, 4);
-    if (v.svcLvlCd?.trim()) pmtTpXml += this.tag('SvcLvl', this.el('Cd', v.svcLvlCd, 5), 4);
-    else if (v.svcLvlPrtry?.trim()) pmtTpXml += this.tag('SvcLvl', this.el('Prtry', v.svcLvlPrtry, 5), 4);
-    if (v.lclInstrmCd?.trim()) pmtTpXml += this.tag('LclInstrm', this.el('Cd', v.lclInstrmCd, 5), 4);
-    else if (v.lclInstrmPrtry?.trim()) pmtTpXml += this.tag('LclInstrm', this.el('Prtry', v.lclInstrmPrtry, 5), 4);
-    if (v.ctgyPurpCd?.trim()) pmtTpXml += this.tag('CtgyPurp', this.el('Cd', v.ctgyPurpCd, 5), 4);
-    else if (v.ctgyPurpPrtry?.trim()) pmtTpXml += this.tag('CtgyPurp', this.el('Prtry', v.ctgyPurpPrtry, 5), 4);
+    
+    if (v.svcLvlCd?.trim() || v.svcLvlPrtry?.trim()) {
+        let content = v.svcLvlCd?.trim() ? this.el('Cd', v.svcLvlCd, 5) : this.el('Prtry', v.svcLvlPrtry, 5);
+        pmtTpXml += this.tag('SvcLvl', content, 4);
+    }
+    
+    if (v.lclInstrmCd?.trim() || v.lclInstrmPrtry?.trim()) {
+        let content = v.lclInstrmCd?.trim() ? this.el('Cd', v.lclInstrmCd, 5) : this.el('Prtry', v.lclInstrmPrtry, 5);
+        pmtTpXml += this.tag('LclInstrm', content, 4);
+    }
+    
+    if (v.ctgyPurpCd?.trim() || v.ctgyPurpPrtry?.trim()) {
+        let content = v.ctgyPurpCd?.trim() ? this.el('Cd', v.ctgyPurpCd, 5) : this.el('Prtry', v.ctgyPurpPrtry, 5);
+        pmtTpXml += this.tag('CtgyPurp', content, 4);
+    }
+    
     if (pmtTpXml) tx += this.tag('PmtTpInf', pmtTpXml, 3);
 
     const formattedAmt = this.formatting.formatAmount(v.amount, v.currency);
     tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${formattedAmt}</IntrBkSttlmAmt>\n`;
     tx += this.el('IntrBkSttlmDt', v.sttlmDt, 3);
     if (v.sttlmPrty?.trim()) tx += this.el('SttlmPrty', v.sttlmPrty, 3);
-    tx += this.el('ChrgBr', v.chrgBr, 3);
-    // PrvsInstgAgts
-    tx += this.agt('PrvsInstgAgt1', 'prvsInstgAgt1', v);
-    tx += this.agt('PrvsInstgAgt2', 'prvsInstgAgt2', v);
-    tx += this.agt('PrvsInstgAgt3', 'prvsInstgAgt3', v);
-    // InstgAgt/InstdAgt in CdtTrfTxInf (CBPR+ requires these at txn level, NOT GrpHdr)
-    tx += this.agt('InstgAgt', 'instgAgt', v);
-    tx += this.agt('InstdAgt', 'instdAgt', v);
-    // IntrmyAgts
-    ['intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'].forEach(p => {
-      tx += this.agt(p.charAt(0).toUpperCase() + p.slice(1), p, v);
-      if (v[p + 'Acct']?.trim()) {
-        tx += this.tag(p.charAt(0).toUpperCase() + p.slice(1) + 'Acct', this.tag('Id', this.tag('Othr', this.el('Id', v[p + 'Acct'], 6), 5), 4), 3);
-      }
-    });
+    if (v.chrgBr?.trim()) tx += this.el('ChrgBr', v.chrgBr, 3);
 
+    // Charges Information (0..n)
+    if (v.chrgsInfAmt && v.chrgsInfCcy) {
+        let chrgs = `\t\t\t\t\t<Amt Ccy="${this.e(v.chrgsInfCcy)}">${v.chrgsInfAmt}</Amt>\n`;
+        if (v.chrgsInfAgtBic) {
+            chrgs += this.tag('Agt', this.tag('FinInstnId', this.el('BICFI', v.chrgsInfAgtBic, 7), 6), 5);
+        }
+        tx += this.tag('ChrgsInf', chrgs, 4);
+    }
+    
+    if (v.instdAmt && v.instdAmtCcy) {
+        const formattedInstdAmt = this.formatting.formatAmount(v.instdAmt, v.instdAmtCcy);
+        tx += `\t\t\t<InstdAmt Ccy="${this.e(v.instdAmtCcy)}">${formattedInstdAmt}</InstdAmt>\n`;
+    }
+    if (v.xchgRate) tx += this.el('XchgRate', v.xchgRate, 3);
+    
     const formatAcct = (val: string, tabs: number) => {
       if (!val) return '';
       const ibanCountries = ['AD', 'AE', 'AL', 'AT', 'AZ', 'BA', 'BE', 'BG', 'BH', 'BR', 'BY', 'CH', 'CR', 'CY', 'CZ', 'DE', 'DK', 'DO', 'EE', 'EG', 'ES', 'FI', 'FO', 'FR', 'GB', 'GE', 'GI', 'GL', 'GR', 'GT', 'HR', 'HU', 'IE', 'IL', 'IQ', 'IS', 'IT', 'JO', 'KW', 'KZ', 'LB', 'LI', 'LT', 'LU', 'LV', 'MC', 'MD', 'ME', 'MK', 'MR', 'MT', 'MU', 'NL', 'NO', 'PK', 'PL', 'PS', 'PT', 'QA', 'RO', 'RS', 'RU', 'SA', 'SC', 'SE', 'SI', 'SK', 'SM', 'ST', 'SV', 'TL', 'TN', 'TR', 'UA', 'VA', 'VG', 'XK'];
@@ -867,6 +892,31 @@ export class Pacs8Component implements OnInit {
         return `\n${'\t'.repeat(tabs + 1)}<Othr>\n${'\t'.repeat(tabs + 2)}<Id>${this.e(val)}</Id>\n${'\t'.repeat(tabs + 1)}</Othr>\n${'\t'.repeat(tabs)}`;
       }
     };
+
+    // PrvsInstgAgts
+    tx += this.agt('PrvsInstgAgt1', 'prvsInstgAgt1', v);
+    tx += this.agt('PrvsInstgAgt2', 'prvsInstgAgt2', v);
+    tx += this.agt('PrvsInstgAgt3', 'prvsInstgAgt3', v);
+    // InstgAgt/InstdAgt in CdtTrfTxInf (CBPR+ requires these at txn level, NOT GrpHdr)
+    tx += this.agt('InstgAgt', 'instgAgt', v);
+    if (v.instgAgtAcct?.trim()) tx += this.tag('InstgAgtAcct', this.tag('Id', formatAcct(v.instgAgtAcct, 4), 4), 3);
+    tx += this.agt('InstdAgt', 'instdAgt', v);
+    if (v.instdAgtAcct?.trim()) tx += this.tag('InstdAgtAcct', this.tag('Id', formatAcct(v.instdAgtAcct, 4), 4), 3);
+    // IntrmyAgts
+    ['intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'].forEach(p => {
+      tx += this.agt(p.charAt(0).toUpperCase() + p.slice(1), p, v);
+      if (v[p + 'Acct']?.trim()) {
+        tx += this.tag(p.charAt(0).toUpperCase() + p.slice(1) + 'Acct', this.tag('Id', this.tag('Othr', this.el('Id', v[p + 'Acct'], 6), 5), 4), 3);
+      }
+    });
+
+    // SttlmTmIndctn
+    if (v.dbtDtTm || v.cdtDtTm) {
+        let stind = '';
+        if (v.dbtDtTm) stind += this.el('DbtDtTm', this.fdt(v.dbtDtTm), 4);
+        if (v.cdtDtTm) stind += this.el('CdtDtTm', this.fdt(v.cdtDtTm), 4);
+        tx += this.tag('SttlmTmIndctn', stind, 3);
+    }
 
     // UltmtDbtr, Dbtr, DbtrAcct, DbtrAgt, DbtrAgtAcct
     if (v.ultmtDbtrName?.trim() || (v.ultmtDbtrAddrType && v.ultmtDbtrAddrType !== 'none') || (v.ultmtDbtrIdType && v.ultmtDbtrIdType !== 'none')) {
@@ -911,6 +961,26 @@ export class Pacs8Component implements OnInit {
     }
 
 
+    // Regulatory Reporting (0..3)
+    for (let i = 1; i <= 3; i++) {
+        const cd = v[`rgltryRptg${i}Code`]?.trim();
+        const inf = v[`rgltryRptg${i}Inf`]?.trim();
+        if (cd || inf) {
+            let dtls = '';
+            if (cd) dtls += this.el('Cd', cd, 6);
+            if (inf) dtls += this.el('Inf', inf, 6);
+            tx += this.tag('RgltryRptg', this.tag('Dtls', dtls, 5), 3);
+        }
+    }
+
+    // Related Remittance Information (0..10)
+    for (let i = 1; i <= 3; i++) {
+        const ref = v[`rltdRmtInf${i}Ref`]?.trim();
+        if (ref) {
+            tx += this.tag('RltdRmtInf', this.el('Ref', ref, 4), 3);
+        }
+    }
+
 
     let rmtInf = '';
     if (v.rmtInfType === 'ustrd' && v.rmtInfUstrd) {
@@ -953,19 +1023,31 @@ export class Pacs8Component implements OnInit {
     tx += rmtInf;
 
 
-    const frBic = v.fromBic;
-    const toBic = v.toBic;
+    const appHdrFi = (bic: string, mmbId: string, clrSysId: string, lei: string) => {
+        let res = '';
+        if (bic) res += `\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n`;
+        if (mmbId || clrSysId) {
+            let clr = '';
+            if (clrSysId) clr += `\t\t\t\t\t\t<ClrSysId>\n\t\t\t\t\t\t\t<Cd>${this.e(clrSysId)}</Cd>\n\t\t\t\t\t\t</ClrSysId>\n`;
+            if (mmbId) clr += `\t\t\t\t\t\t<MmbId>${this.e(mmbId)}</MmbId>\n`;
+            res += `\t\t\t\t\t<ClrSysMmbId>\n${clr}\t\t\t\t\t</ClrSysMmbId>\n`;
+        }
+        if (lei) res += `\t\t\t\t\t<LEI>${this.e(lei)}</LEI>\n`;
+        return `\t\t\t<FIId>\n\t\t\t\t<FinInstnId>\n${res}\t\t\t\t</FinInstnId>\n\t\t\t</FIId>\n`;
+    };
 
     this.generatedXml =
       `<?xml version="1.0" encoding="UTF-8"?>
 <BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
 \t<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
-\t\t<Fr><FIId><FinInstnId><BICFI>${this.e(frBic)}</BICFI></FinInstnId></FIId></Fr>
-\t\t<To><FIId><FinInstnId><BICFI>${this.e(toBic)}</BICFI></FinInstnId></FIId></To>
+\t\t<Fr>
+${appHdrFi(v.fromBic, v.fromMmbId, v.fromClrSysId, v.fromLei)}\t\t</Fr>
+\t\t<To>
+${appHdrFi(v.toBic, v.toMmbId, v.toClrSysId, v.toLei)}\t\t</To>
 \t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>
 \t\t<MsgDefIdr>pacs.008.001.08</MsgDefIdr>
 \t\t<BizSvc>swift.cbprplus.02</BizSvc>
-\t\t<CreDt>${creDtTm}</CreDt>
+\t\t<CreDt>${creDtTm}</CreDt>${v.appHdrPriority?.trim() ? `\n\t\t<Prty>${v.appHdrPriority}</Prty>` : ''}${v.rltd ? `\n\t\t<Rltd>\n\t\t\t<BizMsgIdr>${this.e(v.rltd)}</BizMsgIdr>\n\t\t</Rltd>` : ''}
 \t</AppHdr>
 \t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08">
 \t\t<FIToFICstmrCdtTrf>
@@ -987,33 +1069,14 @@ ${tx}\t\t\t</CdtTrfTxInf>
 
   // XML helpers
   partyAgentXml(tag: string, prefix: string, v: any, indent = 4) {
-    const bic = v[prefix + 'Bic'] || v[prefix + 'OrgAnyBIC'];
-    const name = v[prefix + 'Name'];
-    const lei = v[prefix + 'Lei'] || v[prefix + 'OrgLEI'];
-    const clrCd = v[prefix + 'ClrSysCd'] || v[prefix + 'OrgClrSysCd'];
-    const clrMmb = v[prefix + 'ClrSysMmbId'] || v[prefix + 'OrgClrSysMmbId'];
-
-    if (!bic && !name && !lei && !clrMmb && v[prefix + 'AddrType'] === 'none') return '';
-
     let content = '';
+    const name = v[prefix + 'Name'];
     if (name) content += `${this.tabs(indent + 1)}<Nm>${this.e(name)}</Nm>\n`;
+    
     content += this.addrXml(v, prefix, indent + 1);
+    content += this.partyIdXml(v, prefix, indent + 1);
 
-    let org = '';
-    if (bic) org += `${this.tabs(indent + 3)}<AnyBIC>${this.e(bic)}</AnyBIC>\n`;
-    if (lei) org += `${this.tabs(indent + 3)}<LEI>${this.e(lei)}</LEI>\n`;
-    if (clrMmb) {
-      org += `${this.tabs(indent + 3)}<Othr>\n${this.tabs(indent + 4)}<Id>${this.e(clrMmb)}</Id>\n`;
-      if (clrCd) {
-        org += `${this.tabs(indent + 4)}<SchmeNm>\n${this.tabs(indent + 5)}<Cd>${this.e(clrCd)}</Cd>\n${this.tabs(indent + 4)}</SchmeNm>\n`;
-      }
-      org += `${this.tabs(indent + 3)}</Othr>\n`;
-    }
-
-    if (org) {
-      content += `${this.tabs(indent + 1)}<Id>\n${this.tabs(indent + 2)}<OrgId>\n${org}${this.tabs(indent + 2)}</OrgId>\n${this.tabs(indent + 1)}</Id>\n`;
-    }
-
+    if (!content.trim()) return '';
     return `${this.tabs(indent)}<${tag}>\n${content}${this.tabs(indent)}</${tag}>\n`;
   }
 
@@ -1033,20 +1096,19 @@ ${tx}\t\t\t</CdtTrfTxInf>
     const clrCd = v[prefix + 'ClrSysCd'];
     const clrMmb = v[prefix + 'ClrSysMmbId'];
 
-    if (!bic && !name && !lei && !clrMmb) return '';
-
     let content = '';
     if (bic) content += `\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n`;
-    if (clrMmb) {
+    if (clrMmb || clrCd) {
       content += `\t\t\t\t\t<ClrSysMmbId>\n`;
       if (clrCd) content += `\t\t\t\t\t\t<ClrSysId>\n\t\t\t\t\t\t\t<Cd>${this.e(clrCd)}</Cd>\n\t\t\t\t\t\t</ClrSysId>\n`;
-      content += `\t\t\t\t\t\t<MmbId>${this.e(clrMmb)}</MmbId>\n`;
+      if (clrMmb) content += `\t\t\t\t\t\t<MmbId>${this.e(clrMmb)}</MmbId>\n`;
       content += `\t\t\t\t\t</ClrSysMmbId>\n`;
     }
     if (lei) content += `\t\t\t\t\t<LEI>${this.e(lei)}</LEI>\n`;
     if (name) content += `\t\t\t\t\t<Nm>${this.e(name)}</Nm>\n`;
     content += this.addrXml(v, prefix, 5, tag.startsWith('PrvsInstgAgt'));
 
+    if (!content.trim()) return '';
     return `\t\t\t<${tag}>\n\t\t\t\t<FinInstnId>\n${content}\t\t\t\t</FinInstnId>\n\t\t\t</${tag}>\n`;
   }
   addrXml(v: any, p: string, indent = 4, isPrvs = false): string {
@@ -1255,21 +1317,21 @@ ${tx}\t\t\t</CdtTrfTxInf>
       let xml = this.generatedXml.replace(/>\s+</g, '><').trim();
       
       // Intelligent regex to split Tags and Comments
-      const reg = /(<[^>]+>[^<]*<\/([^>]+)>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
+      const reg = /(<[^/!?][^>]*>[^<]*<\/[^>]+>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
       const nodes = xml.match(reg) || [];
 
       nodes.forEach(node => {
         const trimmed = node.trim();
         if (!trimmed) return;
 
-        if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
-          formatted += indent + trimmed + '\r\n';
-        } else if (trimmed.startsWith('</')) {
+        if (trimmed.startsWith('</')) {
           if (indent.length >= tab.length) indent = indent.substring(tab.length);
+          formatted += indent + trimmed + '\r\n';
+        } else if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
           formatted += indent + trimmed + '\r\n';
         } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
           formatted += indent + trimmed + '\r\n';
-          if (!trimmed.endsWith('/>')) indent += tab;
+          indent += tab;
         } else {
           formatted += indent + trimmed + '\r\n';
         }
@@ -1551,10 +1613,19 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 patch[p + 'ClrSysCd'] = clr.getElementsByTagName('ClrSysId')[0]?.getElementsByTagName('Cd')[0]?.textContent || '';
               }
             }
-            // Account for Intermediary Agents
+            // Account for Agents/Parties
             const acctEl = doc.getElementsByTagName(tag + 'Acct')[0];
             if (acctEl) {
-              patch[p + 'Acct'] = acctEl.getElementsByTagName('Id')[0]?.getElementsByTagName('Othr')[0]?.getElementsByTagName('Id')[0]?.textContent || '';
+                const idNode = acctEl.getElementsByTagName('Id')[0];
+                if (idNode) {
+                    const ibanNode = idNode.getElementsByTagName('IBAN')[0];
+                    if (ibanNode) {
+                        patch[p + 'Acct'] = ibanNode.textContent || '';
+                    } else {
+                        const othrId = idNode.getElementsByTagName('Othr')[0]?.getElementsByTagName('Id')[0];
+                        if (othrId) patch[p + 'Acct'] = othrId.textContent || '';
+                    }
+                }
             }
           }
         }

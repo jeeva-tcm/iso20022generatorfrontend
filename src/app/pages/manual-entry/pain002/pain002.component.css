@@ -408,10 +408,15 @@ textarea.code-editor {
     gap: .6rem;
     justify-content: center;
 }
-
-.down {
-    justify-content: flex-end;
+.up {
+    justify-content: center;
+    margin-bottom: .5rem;
+    margin-top: -1rem;
 }
+.down {
+    justify-content: center;
+}
+
 /* Spinner */
 .spinner-row {
     display: flex;

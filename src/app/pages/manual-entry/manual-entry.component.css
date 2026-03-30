@@ -244,12 +244,23 @@
     font-weight: 900;
     text-transform: uppercase;
     flex-shrink: 0;
-    background: rgba(0,0,0,0.05);
+    background: rgba(0, 0, 0, 0.05);
 }
 
-.pop-tag.pacs { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
-.pop-tag.pain { background: rgba(236, 72, 153, 0.1); color: #ec4899; }
-.pop-tag.camt { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.pop-tag.pacs {
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+}
+
+.pop-tag.pain {
+    background: rgba(236, 72, 153, 0.1);
+    color: #ec4899;
+}
+
+.pop-tag.camt {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
 
 .pop-info {
     flex: 1;
@@ -741,7 +752,9 @@
         padding-bottom: 64px;
     }
 }
-.left-panel, .right-panel {
+
+.left-panel,
+.right-panel {
     scrollbar-width: thin;
     scrollbar-color: #d1d5db transparent;
 }
@@ -770,12 +783,32 @@ textarea.code-editor::-webkit-scrollbar-track {
 .left-panel::-webkit-scrollbar-thumb,
 .right-panel::-webkit-scrollbar-thumb,
 textarea.code-editor::-webkit-scrollbar-thumb {
-    background-color: #d1d5db; /* Grey */
+    background-color: #d1d5db;
+    /* Grey */
     border-radius: 4px;
 }
 
 .left-panel::-webkit-scrollbar-thumb:hover,
 .right-panel::-webkit-scrollbar-thumb:hover,
 textarea.code-editor::-webkit-scrollbar-thumb:hover {
-    background-color: #9ca3af; /* Darker Grey */
+    background-color: #9ca3af;
+    /* Darker Grey */
+}
+
+
+/* ──────────────── SELECT INPUT ──────────────── */
+.select-input {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px !important;
+    cursor: pointer;
+}
+
+.select-input option {
+    background: #1e1e2e;
+    color: white;
 }

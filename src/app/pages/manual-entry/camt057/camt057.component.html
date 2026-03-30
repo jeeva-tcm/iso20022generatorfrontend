@@ -1,7 +1,7 @@
-<div class="container" (click)="$event.stopPropagation()">
+﻿<div class="container" (click)="$event.stopPropagation()">
     <header>
         <h1>Notification To Receive (camt.057) <mat-icon class="title-icon">account_balance</mat-icon></h1>
-        <p style="margin-top: -1rem;">Visual camt.057 Message Builder</p>
+        <!-- <p style="margin-top: -1rem;">Visual camt.057 Message Builder</p> -->
     </header>
 
     <div class="split-view">
@@ -38,12 +38,7 @@
                         <input formControlName="creDtTm">
                         <div class="validation-msg" *ngIf="err('creDtTm') as e">{{e}}</div>
                     </div>
-                    <div class="form-group">
-                        <label>Number of Transactions <span class="req">*</span></label>
-                        <input formControlName="nbOfTxs" maxlength="15" pattern="^[1-9]\d{0,14}$" required>
-                        <div class="validation-msg" *ngIf="err('nbOfTxs') as e">{{e}}</div>
-                        <div class="field-hint at-limit" *ngIf="hint('nbOfTxs', 15) as h">{{h}}</div>
-                    </div>
+
 
                     <div class="section-title">Item Detail</div>
                     <div class="form-group">
@@ -153,6 +148,67 @@
                                 <label>Intermediary Agent Account ID</label>
                                 <input formControlName="intrmyAgtAcct" maxlength="34" placeholder="Account">
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section" style="margin-top: 2rem;">
+                    <div class="section-header">
+                        <h3>Payment Type Information <span class="opt">Optional</span></h3>
+                    </div>
+                    <div class="grid">
+                        <div class="form-group">
+                            <label>Instruction Priority <span class="opt">Optional</span></label>
+                            <select formControlName="instrPrty">
+                                <option value="">None</option>
+                                <option value="HIGH">High [HIGH]</option>
+                                <option value="NORM">Normal [NORM]</option>
+                            </select>
+                            <div class="validation-msg" *ngIf="err('instrPrty') as e">{{e}}</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Clearing Channel <span class="opt">Optional</span></label>
+                            <select formControlName="clrChanl">
+                                <option value="">None</option>
+                                <option value="BOOK">Book Transfer [BOOK]</option>
+                                <option value="MPNS">Mass Payment Net System [MPNS]</option>
+                                <option value="RTGS">Real Time Gross Settlement [RTGS]</option>
+                                <option value="RTNS">Real Time Net Settlement [RTNS]</option>
+                            </select>
+                            <div class="validation-msg" *ngIf="err('clrChanl') as e">{{e}}</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Service Level Code <span class="opt">Optional</span></label>
+                            <input formControlName="svcLvlCd" placeholder="e.g. SEPA" maxlength="4">
+                            <div class="validation-msg" *ngIf="err('svcLvlCd') as e">{{e}}</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Service Level Proprietary <span class="opt">Optional</span></label>
+                            <input formControlName="svcLvlPrtry" placeholder="Max 35 chars" maxlength="35">
+                            <div class="validation-msg" *ngIf="err('svcLvlPrtry') as e">{{e}}</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Local Instrument Code <span class="opt">Optional</span></label>
+                            <input formControlName="lclInstrmCd" placeholder="e.g. ONCL" maxlength="4">
+                            <div class="validation-msg" *ngIf="err('lclInstrmCd') as e">{{e}}</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Local Instrument Proprietary <span class="opt">Optional</span></label>
+                            <input formControlName="lclInstrmPrtry" placeholder="Max 35 chars" maxlength="35">
+                            <div class="validation-msg" *ngIf="err('lclInstrmPrtry') as e">{{e}}</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Category Purpose Code <span class="opt">Optional</span></label>
+                            <select formControlName="ctgyPurpCd">
+                                <option value="">None</option>
+                                <option *ngFor="let c of categoryPurposes" [value]="c">{{c}}</option>
+                            </select>
+                            <div class="validation-msg" *ngIf="err('ctgyPurpCd') as e">{{e}}</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Category Purpose Proprietary <span class="opt">Optional</span></label>
+                            <input formControlName="ctgyPurpPrtry" placeholder="Max 35 chars" maxlength="35">
+                            <div class="validation-msg" *ngIf="err('ctgyPurpPrtry') as e">{{e}}</div>
                         </div>
                     </div>
                 </div>

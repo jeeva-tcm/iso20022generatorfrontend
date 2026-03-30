@@ -109,9 +109,9 @@ export class Pacs2Component implements OnInit {
       orgnlCreDtTm: [this.isoNow(), Validators.required],
 
       // TxRef
-      orgnlInstrId: ['', Validators.maxLength(35)],
+      orgnlInstrId: ['', [Validators.required, Validators.maxLength(35)]],
       orgnlEndToEndId: ['', Validators.maxLength(35)],
-      orgnlTxId: ['', Validators.maxLength(35)],
+      orgnlTxId: ['', [Validators.required, Validators.maxLength(35)]],
       orgnlUETR: [this.uetrService.generate(), UETR_PATTERN],
 
       // TxSts
@@ -133,6 +133,29 @@ export class Pacs2Component implements OnInit {
       stsRsnOrgtrCtry: ['', Validators.pattern(/^[A-Z]{2,2}$/)],
       stsRsnOrgtrAdrLine1: ['', Validators.maxLength(70)],
       stsRsnOrgtrAdrLine2: ['', Validators.maxLength(70)],
+
+      // StsRsnInf -> Orgtr -> Identifiers
+      stsRsnOrgtrAnyBIC: ['', BIC_OPT],
+      stsRsnOrgtrLei: ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
+      stsRsnOrgtrCtryOfRes: ['', [Validators.pattern(/^[A-Z]{2,2}$/)]],
+      
+      // OrgId -> Othr
+      stsRsnOrgtrOrgIdOthrId: ['', Validators.maxLength(35)],
+      stsRsnOrgtrOrgIdOthrSchmeNmCd: ['', Validators.maxLength(4)],
+      stsRsnOrgtrOrgIdOthrSchmeNmPrtry: ['', Validators.maxLength(35)],
+      stsRsnOrgtrOrgIdOthrIssr: ['', Validators.maxLength(35)],
+
+      // PrvtId -> Birth
+      stsRsnOrgtrBirthDt: [''],
+      stsRsnOrgtrPrvcOfBirth: ['', Validators.maxLength(35)],
+      stsRsnOrgtrCityOfBirth: ['', Validators.maxLength(35)],
+      stsRsnOrgtrCtryOfBirth: ['', Validators.pattern(/^[A-Z]{2,2}$/)],
+      
+      // PrvtId -> Othr
+      stsRsnOrgtrPrvtIdOthrId: ['', Validators.maxLength(35)],
+      stsRsnOrgtrPrvtIdOthrSchmeNmCd: ['', Validators.maxLength(4)],
+      stsRsnOrgtrPrvtIdOthrSchmeNmPrtry: ['', Validators.maxLength(35)],
+      stsRsnOrgtrPrvtIdOthrIssr: ['', Validators.maxLength(35)],
 
       // Reason
       stsRsnCd: [''],
@@ -237,8 +260,20 @@ export class Pacs2Component implements OnInit {
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
 \t<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
-\t\t<Fr><FIId><FinInstnId><BICFI>${this.esc(v.fromBic)}</BICFI></FinInstnId></FIId></Fr>
-\t\t<To><FIId><FinInstnId><BICFI>${this.esc(v.toBic)}</BICFI></FinInstnId></FIId></To>
+\t\t<Fr>
+\t\t\t<FIId>
+\t\t\t\t<FinInstnId>
+\t\t\t\t\t<BICFI>${this.esc(v.fromBic)}</BICFI>
+\t\t\t\t</FinInstnId>
+\t\t\t</FIId>
+\t\t</Fr>
+\t\t<To>
+\t\t\t<FIId>
+\t\t\t\t<FinInstnId>
+\t\t\t\t\t<BICFI>${this.esc(v.toBic)}</BICFI>
+\t\t\t\t</FinInstnId>
+\t\t\t</FIId>
+\t\t</To>
 \t\t<BizMsgIdr>${this.esc(v.bizMsgId)}</BizMsgIdr>
 \t\t<MsgDefIdr>${this.esc(v.msgDefIdr)}</MsgDefIdr>
 \t\t<BizSvc>${this.esc(v.bizSvc)}</BizSvc>
@@ -265,9 +300,58 @@ ${txInf.trimEnd()}
     
     // Originator
     let orgtr = '';
-    if (v.stsRsnOrgtrName?.trim() || v.stsRsnOrgtrTwnNm?.trim() || v.stsRsnOrgtrCtry?.trim()) {
+    if (v.stsRsnOrgtrName?.trim() || v.stsRsnOrgtrTwnNm?.trim() || v.stsRsnOrgtrCtry?.trim() || 
+        v.stsRsnOrgtrAnyBIC?.trim() || v.stsRsnOrgtrLei?.trim() || v.stsRsnOrgtrCtryOfRes?.trim() ||
+        v.stsRsnOrgtrOrgIdOthrId?.trim() || v.stsRsnOrgtrPrvtIdOthrId?.trim() || v.stsRsnOrgtrBirthDt) {
+      
       orgtr += this.leaf('Nm', v.stsRsnOrgtrName, 6);
       orgtr += this.addrXml(v, 'stsRsnOrgtr', 6);
+      
+      // Identifiers
+      let id = '';
+      
+      // OrgId
+      let orgId = '';
+      orgId += this.leaf('AnyBIC', v.stsRsnOrgtrAnyBIC, 9);
+      orgId += this.leaf('LEI', v.stsRsnOrgtrLei, 9);
+      
+      if (v.stsRsnOrgtrOrgIdOthrId?.trim()) {
+        let othr = this.leaf('Id', v.stsRsnOrgtrOrgIdOthrId, 10);
+        let scheme = this.leaf('Cd', v.stsRsnOrgtrOrgIdOthrSchmeNmCd, 12) + 
+                    this.leaf('Prtry', v.stsRsnOrgtrOrgIdOthrSchmeNmPrtry, 12);
+        if (scheme) othr += this.branch('SchmeNm', scheme, 11);
+        othr += this.leaf('Issr', v.stsRsnOrgtrOrgIdOthrIssr, 10);
+        orgId += this.branch('Othr', othr, 9);
+      }
+      
+      if (orgId) id += this.branch('OrgId', orgId, 8);
+      
+      // PrvtId
+      let prvtId = '';
+      
+      // Birth Details
+      if (v.stsRsnOrgtrBirthDt) {
+        let birth = this.leaf('BirthDt', v.stsRsnOrgtrBirthDt, 11);
+        birth += this.leaf('PrvcOfBirth', v.stsRsnOrgtrPrvcOfBirth, 11);
+        birth += this.leaf('CityOfBirth', v.stsRsnOrgtrCityOfBirth, 11);
+        birth += this.leaf('CtryOfBirth', v.stsRsnOrgtrCtryOfBirth, 11);
+        prvtId += this.branch('DtAndPlcOfBirth', birth, 10);
+      }
+      
+      if (v.stsRsnOrgtrPrvtIdOthrId?.trim()) {
+        let othr = this.leaf('Id', v.stsRsnOrgtrPrvtIdOthrId, 11);
+        let scheme = this.leaf('Cd', v.stsRsnOrgtrPrvtIdOthrSchmeNmCd, 13) + 
+                    this.leaf('Prtry', v.stsRsnOrgtrPrvtIdOthrSchmeNmPrtry, 13);
+        if (scheme) othr += this.branch('SchmeNm', scheme, 12);
+        othr += this.leaf('Issr', v.stsRsnOrgtrPrvtIdOthrIssr, 11);
+        prvtId += this.branch('Othr', othr, 10);
+      }
+      
+      if (prvtId) id += this.branch('PrvtId', prvtId, 8);
+      
+      if (id) orgtr += this.branch('Id', id, 7);
+      
+      orgtr += this.leaf('CtryOfRes', v.stsRsnOrgtrCtryOfRes, 6);
     }
     if (orgtr) inner += this.branch('Orgtr', orgtr, 5);
 
@@ -386,23 +470,43 @@ ${txInf.trimEnd()}
   syncScroll(editor: HTMLTextAreaElement, gutter: HTMLDivElement) {
     gutter.scrollTop = editor.scrollTop;
   }
-
   formatXml() {
     if (!this.generatedXml?.trim()) return;
+    this.pushHistory();
+
     try {
+      const tab = '    ';
       let formatted = '';
       let indent = '';
-      const tab = '    ';
-      this.generatedXml.split(/>\s*</).forEach(node => {
-        if (node.match(/^\/\w/)) indent = indent.substring(tab.length);
-        formatted += indent + '<' + node + '>\r\n';
-        if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith('?')) indent += tab;
+      // Normalize XML
+      let xml = this.generatedXml.replace(/>\s+</g, '><').trim();
+      
+      // Intelligent regex to split Tags and Comments
+      const reg = /(<[^/!?][^>]*>[^<]*<\/[^>]+>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
+      const nodes = xml.match(reg) || [];
+
+      nodes.forEach(node => {
+        const trimmed = node.trim();
+        if (!trimmed) return;
+
+        if (trimmed.startsWith('</')) {
+          if (indent.length >= tab.length) indent = indent.substring(tab.length);
+          formatted += indent + trimmed + '\r\n';
+        } else if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
+          formatted += indent + trimmed + '\r\n';
+        } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
+          formatted += indent + trimmed + '\r\n';
+          indent += tab;
+        } else {
+          formatted += indent + trimmed + '\r\n';
+        }
       });
+      
       this.generatedXml = formatted.trim();
       this.refreshLineCount();
-      this.pushHistory();
+      this.snackBar.open('XML Formatted', '', { duration: 1500 });
     } catch (e) {
-      this.snackBar.open('Error formatting XML', 'Close', { duration: 2000 });
+      this.snackBar.open('Unable to format XML', '', { duration: 3000 });
     }
   }
 
@@ -412,7 +516,7 @@ ${txInf.trimEnd()}
       const doc = new DOMParser().parseFromString(xml, 'text/xml');
       if (doc.getElementsByTagName('parsererror').length) return;
       
-      const t = (tag: string) => doc.getElementsByTagName(tag)[0]?.textContent || '';
+      const t = (tag: string, parent?: Element | Document) => (parent || doc).getElementsByTagName(tag)[0]?.textContent || '';
       const patch: any = {};
       
       // Top level / Header
@@ -423,9 +527,43 @@ ${txInf.trimEnd()}
       patch.bizSvc = t('BizSvc');
 
       // OrgnlGrpInf
-      patch.orgnlMsgId = t('OrgnlMsgId');
-      patch.orgnlMsgNmId = t('OrgnlMsgNmId');
       patch.orgnlCreDtTm = t('OrgnlCreDtTm');
+
+      // StsRsnOrgtr complex fields
+      const orgtr = doc.getElementsByTagName('Orgtr')[0];
+      if (orgtr) {
+        patch.stsRsnOrgtrName = t('Nm', orgtr);
+        patch.stsRsnOrgtrAnyBIC = t('AnyBIC', orgtr);
+        patch.stsRsnOrgtrLei = t('LEI', orgtr);
+        patch.stsRsnOrgtrCtryOfRes = t('CtryOfRes', orgtr);
+
+        const orgId = orgtr.getElementsByTagName('OrgId')[0];
+        if (orgId) {
+            const orgOthr = orgId.getElementsByTagName('Othr')[0];
+            if (orgOthr) {
+                patch.stsRsnOrgtrOrgIdOthrId = t('Id', orgOthr);
+                patch.stsRsnOrgtrOrgIdOthrSchmeNmCd = t('Cd', orgOthr);
+                patch.stsRsnOrgtrOrgIdOthrSchmeNmPrtry = t('Prtry', orgOthr);
+                patch.stsRsnOrgtrOrgIdOthrIssr = t('Issr', orgOthr);
+            }
+        }
+
+        const prvtId = orgtr.getElementsByTagName('PrvtId')[0];
+        if (prvtId) {
+            patch.stsRsnOrgtrBirthDt = t('BirthDt', prvtId);
+            patch.stsRsnOrgtrPrvcOfBirth = t('PrvcOfBirth', prvtId);
+            patch.stsRsnOrgtrCityOfBirth = t('CityOfBirth', prvtId);
+            patch.stsRsnOrgtrCtryOfBirth = t('CtryOfBirth', prvtId);
+
+            const prvtOthr = prvtId.getElementsByTagName('Othr')[0];
+            if (prvtOthr) {
+                patch.stsRsnOrgtrPrvtIdOthrId = t('Id', prvtOthr);
+                patch.stsRsnOrgtrPrvtIdOthrSchmeNmCd = t('Cd', prvtOthr);
+                patch.stsRsnOrgtrPrvtIdOthrSchmeNmPrtry = t('Prtry', prvtOthr);
+                patch.stsRsnOrgtrPrvtIdOthrIssr = t('Issr', prvtOthr);
+            }
+        }
+      }
 
       // Refs
       patch.orgnlInstrId = t('OrgnlInstrId');

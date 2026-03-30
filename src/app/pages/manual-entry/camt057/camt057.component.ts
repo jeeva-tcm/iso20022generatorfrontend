@@ -357,7 +357,6 @@ export class Camt057Component implements OnInit {
             if (f.toLowerCase().includes('iban')) return 'Valid 34-char IBAN required.';
             if (f.toLowerCase().includes('uetr')) return 'Invalid UETR format';
             if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Max 18 digits, up to 5 decimals.';
-            if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
             if (f === 'bizMsgId' || f === 'msgId' || f === 'ntfctnId' || f === 'itmId' || f === 'instrId' || f === 'endToEndId') return 'Invalid Pattern.';
             if (f === 'clrSysRef') return 'Invalid Pattern (Alphanumeric only, max 35 chars).';
             if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Must be a valid ISO 20022 code (4 uppercase letters).';
@@ -613,75 +612,104 @@ export class Camt057Component implements OnInit {
         ntfctnPartiesXml += agtXmlWithAcct('IntrmyAgt', 'intrmyAgt');
 
         // Optional Item components
-        let itmXml = `\t\t\t\t<Itm>\n\t\t\t\t\t<Id>${this.e(v.itmId)}</Id>\n`;
-        if (v.endToEndId?.trim()) itmXml += `\t\t\t\t\t<EndToEndId>${this.e(v.endToEndId)}</EndToEndId>\n`;
-        if (v.uetr?.trim()) itmXml += `\t\t\t\t\t<UETR>${this.e(v.uetr)}</UETR>\n`;
+        let itmXml = `        <Itm>\n          <Id>${this.e(v.itmId)}</Id>\n`;
+        if (v.endToEndId?.trim()) itmXml += `          <EndToEndId>${this.e(v.endToEndId)}</EndToEndId>\n`;
+        if (v.uetr?.trim()) itmXml += `          <UETR>${this.e(v.uetr)}</UETR>\n`;
         if (v.clrSysRef?.trim()) {
-            itmXml += `\t\t\t\t\t<PmtId>\n\t\t\t\t\t\t<ClrSysRef>${this.e(v.clrSysRef)}</ClrSysRef>\n\t\t\t\t\t</PmtId>\n`;
+            itmXml += `          <PmtId>\n            <ClrSysRef>${this.e(v.clrSysRef)}</ClrSysRef>\n          </PmtId>\n`;
         }
         const formattedAmt = this.formatting.formatAmount(v.amount, v.currency);
-        itmXml += `\t\t\t\t\t<Amt Ccy="${this.e(v.currency)}">${formattedAmt}</Amt>\n`;
-        itmXml += `\t\t\t\t\t<XpctdValDt>${v.valDt}</XpctdValDt>\n`;
+        itmXml += `          <Amt Ccy="${this.e(v.currency)}">${formattedAmt}</Amt>\n`;
+        itmXml += `          <XpctdValDt>${v.valDt}</XpctdValDt>\n`;
 
-        if (v.purpCd?.trim()) itmXml += `\t\t\t\t\t<Purp>\n\t\t\t\t\t\t<Cd>${this.e(v.purpCd)}</Cd>\n\t\t\t\t\t</Purp>\n`;
+        // Payment Type Information (PmtTpInf)
+        let pmtTpInfXml = '';
+        if (v.instrPrty || v.clrChanl || v.svcLvlCd || v.svcLvlPrtry || v.lclInstrmCd || v.lclInstrmPrtry || v.ctgyPurpCd || v.ctgyPurpPrtry) {
+            pmtTpInfXml += `          <PmtTpInf>\n`;
+            if (v.instrPrty) pmtTpInfXml += `            <InstrPrty>${this.e(v.instrPrty)}</InstrPrty>\n`;
+            if (v.clrChanl) pmtTpInfXml += `            <ClrChanl>${this.e(v.clrChanl)}</ClrChanl>\n`;
+            
+            if (v.svcLvlCd || v.svcLvlPrtry) {
+                pmtTpInfXml += `            <SvcLvl>\n`;
+                if (v.svcLvlCd) pmtTpInfXml += `              <Cd>${this.e(v.svcLvlCd)}</Cd>\n`;
+                if (v.svcLvlPrtry) pmtTpInfXml += `              <Prtry>${this.e(v.svcLvlPrtry)}</Prtry>\n`;
+                pmtTpInfXml += `            </SvcLvl>\n`;
+            }
+            if (v.lclInstrmCd || v.lclInstrmPrtry) {
+                pmtTpInfXml += `            <LclInstrm>\n`;
+                if (v.lclInstrmCd) pmtTpInfXml += `              <Cd>${this.e(v.lclInstrmCd)}</Cd>\n`;
+                if (v.lclInstrmPrtry) pmtTpInfXml += `              <Prtry>${this.e(v.lclInstrmPrtry)}</Prtry>\n`;
+                pmtTpInfXml += `            </LclInstrm>\n`;
+            }
+            if (v.ctgyPurpCd || v.ctgyPurpPrtry) {
+                pmtTpInfXml += `            <CtgyPurp>\n`;
+                if (v.ctgyPurpCd) pmtTpInfXml += `              <Cd>${this.e(v.ctgyPurpCd)}</Cd>\n`;
+                if (v.ctgyPurpPrtry) pmtTpInfXml += `              <Prtry>${this.e(v.ctgyPurpPrtry)}</Prtry>\n`;
+                pmtTpInfXml += `            </CtgyPurp>\n`;
+            }
+            pmtTpInfXml += `          </PmtTpInf>\n`;
+        }
+        itmXml += pmtTpInfXml;
+
+        if (v.purpCd?.trim()) itmXml += `          <Purp>\n            <Cd>${this.e(v.purpCd)}</Cd>\n          </Purp>\n`;
 
         // Remittance
         if (v.rmtInfType && v.rmtInfType !== 'none') {
-            let rmtXml = `\t\t\t\t\t<RmtInf>\n`;
+            let rmtXml = `          <RmtInf>\n`;
             if (v.rmtInfType === 'ustrd') {
-                rmtXml += `\t\t\t\t\t\t<Ustrd>${this.e(v.rmtInfUstrd)}</Ustrd>\n`;
+                rmtXml += `            <Ustrd>${this.e(v.rmtInfUstrd)}</Ustrd>\n`;
             } else if (v.rmtInfType === 'strd') {
-                rmtXml += `\t\t\t\t\t\t<Strd>\n`;
+                rmtXml += `            <Strd>\n`;
                 if (v.rmtInfStrdCdtrRef?.trim()) {
-                    rmtXml += `\t\t\t\t\t\t\t<CdtrRefInf>\n`;
+                    rmtXml += `              <CdtrRefInf>\n`;
                     if (v.rmtInfStrdCdtrRefType?.trim()) {
-                        rmtXml += `\t\t\t\t\t\t\t\t<Tp>\n\t\t\t\t\t\t\t\t\t<CdOrPrtry>\n\t\t\t\t\t\t\t\t\t\t<Cd>${this.e(v.rmtInfStrdCdtrRefType)}</Cd>\n\t\t\t\t\t\t\t\t\t</CdOrPrtry>\n\t\t\t\t\t\t\t\t</Tp>\n`;
+                        rmtXml += `                <Tp>\n                  <CdOrPrtry>\n                    <Cd>${this.e(v.rmtInfStrdCdtrRefType)}</Cd>\n                  </CdOrPrtry>\n                </Tp>\n`;
                     }
-                    rmtXml += `\t\t\t\t\t\t\t\t<Ref>${this.e(v.rmtInfStrdCdtrRef)}</Ref>\n\t\t\t\t\t\t\t</CdtrRefInf>\n`;
+                    rmtXml += `                <Ref>${this.e(v.rmtInfStrdCdtrRef)}</Ref>\n              </CdtrRefInf>\n`;
                 }
                 if (v.rmtInfStrdAddtlRmtInf?.trim()) {
-                    rmtXml += `\t\t\t\t\t\t\t<AddtlRmtInf>${this.e(v.rmtInfStrdAddtlRmtInf)}</AddtlRmtInf>\n`;
+                    rmtXml += `              <AddtlRmtInf>${this.e(v.rmtInfStrdAddtlRmtInf)}</AddtlRmtInf>\n`;
                 }
                 if (v.rmtInfStrdRfrdDocNb || v.rmtInfStrdRfrdDocCd) {
-                    rmtXml += `\t\t\t\t\t\t\t<RfrdDocInf>\n`;
-                    if (v.rmtInfStrdRfrdDocNb) rmtXml += `\t\t\t\t\t\t\t\t<Nb>${this.e(v.rmtInfStrdRfrdDocNb)}</Nb>\n`;
-                    if (v.rmtInfStrdRfrdDocCd) rmtXml += `\t\t\t\t\t\t\t\t<Tp>\n\t\t\t\t\t\t\t\t\t<CdOrPrtry>\n\t\t\t\t\t\t\t\t\t\t<Cd>${this.e(v.rmtInfStrdRfrdDocCd)}</Cd>\n\t\t\t\t\t\t\t\t\t</CdOrPrtry>\n\t\t\t\t\t\t\t\t</Tp>\n`;
-                    rmtXml += `\t\t\t\t\t\t\t</RfrdDocInf>\n`;
+                    rmtXml += `              <RfrdDocInf>\n`;
+                    if (v.rmtInfStrdRfrdDocNb) rmtXml += `                <Nb>${this.e(v.rmtInfStrdRfrdDocNb)}</Nb>\n`;
+                    if (v.rmtInfStrdRfrdDocCd) rmtXml += `                <Tp>\n                  <CdOrPrtry>\n                    <Cd>${this.e(v.rmtInfStrdRfrdDocCd)}</Cd>\n                  </CdOrPrtry>\n                </Tp>\n`;
+                    rmtXml += `              </RfrdDocInf>\n`;
                 }
                 if (v.rmtInfStrdRfrdDocAmt) {
-                    rmtXml += `\t\t\t\t\t\t\t<RfrdDocAmt>\n\t\t\t\t\t\t\t\t<RmtAmt>\n\t\t\t\t\t\t\t\t\t<DuePyblAmt Ccy="${this.e(v.currency)}">${v.rmtInfStrdRfrdDocAmt}</DuePyblAmt>\n\t\t\t\t\t\t\t\t</RmtAmt>\n\t\t\t\t\t\t\t</RfrdDocAmt>\n`;
+                    rmtXml += `              <RfrdDocAmt>\n                <RmtAmt>\n                  <DuePyblAmt Ccy="${this.e(v.currency)}">${this.formatting.formatAmount(v.rmtInfStrdRfrdDocAmt, v.currency)}</DuePyblAmt>\n                </RmtAmt>\n              </RfrdDocAmt>\n`;
                 }
-                rmtXml += `\t\t\t\t\t\t</Strd>\n`;
+                rmtXml += `            </Strd>\n`;
             }
-            rmtXml += `\t\t\t\t\t</RmtInf>\n`;
+            rmtXml += `          </RmtInf>\n`;
             itmXml += rmtXml;
         }
 
-        itmXml += `\t\t\t\t</Itm>`;
+        itmXml += `        </Itm>`;
 
 
         this.generatedXml = `<?xml version="1.0" encoding="UTF-8"?>
 <BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
-	<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
-		<Fr><FIId><FinInstnId><BICFI>${this.e(v.fromBic)}</BICFI></FinInstnId></FIId></Fr>
-		<To><FIId><FinInstnId><BICFI>${this.e(v.toBic)}</BICFI></FinInstnId></FIId></To>
-		<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>
-		<MsgDefIdr>camt.057.001.08</MsgDefIdr>
-		<BizSvc>${this.e(v.bizSvc)}</BizSvc>
-		<CreDt>${creDtTm}</CreDt>
-	</AppHdr>
-	<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.057.001.06">
-		<NtfctnToRcv>
-			<GrpHdr>
-				<MsgId>${this.e(v.msgId)}</MsgId>
-				<CreDtTm>${creDtTm}</CreDtTm>
-			</GrpHdr>
-			<Ntfctn>
-				<Id>${this.e(v.ntfctnId)}</Id>
+  <AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
+    <Fr><FIId><FinInstnId><BICFI>${this.e(v.fromBic)}</BICFI></FinInstnId></FIId></Fr>
+    <To><FIId><FinInstnId><BICFI>${this.e(v.toBic)}</BICFI></FinInstnId></FIId></To>
+    <BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>
+    <MsgDefIdr>camt.057.001.08</MsgDefIdr>
+    <BizSvc>${this.e(v.bizSvc)}</BizSvc>
+    <CreDt>${creDtTm}</CreDt>
+  </AppHdr>
+  <Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.057.001.06">
+    <NtfctnToRcv>
+      <GrpHdr>
+        <MsgId>${this.e(v.msgId)}</MsgId>
+        <CreDtTm>${creDtTm}</CreDtTm>
+      </GrpHdr>
+      <Ntfctn>
+        <Id>${this.e(v.ntfctnId)}</Id>
 ${ntfctnPartiesXml}${itmXml}
-			</Ntfctn>
-		</NtfctnToRcv>
-	</Document>
+      </Ntfctn>
+    </NtfctnToRcv>
+  </Document>
 </BusMsgEnvlp>`;
         this.onEditorChange(this.generatedXml, true);
     }
@@ -758,21 +786,21 @@ ${ntfctnPartiesXml}${itmXml}
             let xml = this.generatedXml.replace(/>\s+</g, '><').trim();
             
             // Intelligent regex to split Tags and Comments
-            const reg = /(<[^>]+>[^<]*<\/([^>]+)>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
+            const reg = /(<[^/!?][^>]*>[^<]*<\/[^>]+>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
             const nodes = xml.match(reg) || [];
 
             nodes.forEach(node => {
                 const trimmed = node.trim();
                 if (!trimmed) return;
 
-                if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
-                    formatted += indent + trimmed + '\r\n';
-                } else if (trimmed.startsWith('</')) {
+                if (trimmed.startsWith('</')) {
                     if (indent.length >= tab.length) indent = indent.substring(tab.length);
+                    formatted += indent + trimmed + '\r\n';
+                } else if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
                     formatted += indent + trimmed + '\r\n';
                 } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
                     formatted += indent + trimmed + '\r\n';
-                    if (!trimmed.endsWith('/>')) indent += tab;
+                    indent += tab;
                 } else {
                     formatted += indent + trimmed + '\r\n';
                 }
@@ -1049,7 +1077,7 @@ ${ntfctnPartiesXml}${itmXml}
 
 
     private e(v: string) { return (v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-    private tabs(n: number) { return '\t'.repeat(n); }
+    private tabs(n: number) { return '  '.repeat(n); }
 
     agt(tag: string, prefix: string, v: any, indent = 3) {
         const bic = v[prefix + 'Bic'];
@@ -1058,14 +1086,14 @@ ${ntfctnPartiesXml}${itmXml}
         const clrCd = v[prefix + 'ClrSysCd'];
         const clrMmb = v[prefix + 'ClrSysMmbId'];
 
-        if (!bic && !name && !lei && !clrMmb) return '';
+        if (!bic && !name && !lei && !clrMmb && !clrCd) return '';
 
         let content = '';
         if (bic) content += `${this.tabs(indent + 2)}<BICFI>${this.e(bic)}</BICFI>\n`;
-        if (clrMmb) {
+        if (clrMmb || clrCd) {
             content += `${this.tabs(indent + 2)}<ClrSysMmbId>\n`;
             if (clrCd) content += `${this.tabs(indent + 3)}<ClrSysId>\n${this.tabs(indent + 4)}<Cd>${this.e(clrCd)}</Cd>\n${this.tabs(indent + 3)}</ClrSysId>\n`;
-            content += `${this.tabs(indent + 3)}<MmbId>${this.e(clrMmb)}</MmbId>\n`;
+            if (clrMmb) content += `${this.tabs(indent + 3)}<MmbId>${this.e(clrMmb)}</MmbId>\n`;
             content += `${this.tabs(indent + 2)}</ClrSysMmbId>\n`;
         }
         if (lei) content += `${this.tabs(indent + 2)}<LEI>${this.e(lei)}</LEI>\n`;
@@ -1076,13 +1104,13 @@ ${ntfctnPartiesXml}${itmXml}
     }
 
     partyAgentXml(tag: string, prefix: string, v: any, indent = 4) {
-        const bic = v[prefix + 'Bic'];
+        const bic = v[prefix + 'Bic'] || v[prefix + 'OrgAnyBIC'];
         const name = v[prefix + 'Name'];
-        const lei = v[prefix + 'Lei'];
-        const clrCd = v[prefix + 'ClrSysCd'];
-        const clrMmb = v[prefix + 'ClrSysMmbId'];
+        const lei = v[prefix + 'Lei'] || v[prefix + 'OrgLEI'];
+        const clrCd = v[prefix + 'ClrSysCd'] || v[prefix + 'OrgClrSysCd'];
+        const clrMmb = v[prefix + 'ClrSysMmbId'] || v[prefix + 'OrgClrSysMmbId'];
 
-        if (!bic && !name && !lei && !clrMmb && v[prefix + 'AddrType'] === 'none') return '';
+        if (!bic && !name && !lei && !clrMmb && !clrCd && v[prefix + 'AddrType'] === 'none') return '';
 
         let content = '';
         if (name) content += `${this.tabs(indent)}<Nm>${this.e(name)}</Nm>\n`;
@@ -1091,8 +1119,9 @@ ${ntfctnPartiesXml}${itmXml}
         let org = '';
         if (bic) org += `${this.tabs(indent + 2)}<AnyBIC>${this.e(bic)}</AnyBIC>\n`;
         if (lei) org += `${this.tabs(indent + 2)}<LEI>${this.e(lei)}</LEI>\n`;
-        if (clrMmb) {
-            org += `${this.tabs(indent + 2)}<Othr>\n${this.tabs(indent + 3)}<Id>${this.e(clrMmb)}</Id>\n`;
+        if (clrMmb || clrCd) {
+            org += `${this.tabs(indent + 2)}<Othr>\n`;
+            if (clrMmb) org += `${this.tabs(indent + 3)}<Id>${this.e(clrMmb)}</Id>\n`;
             if (clrCd) {
                 org += `${this.tabs(indent + 3)}<SchmeNm>\n${this.tabs(indent + 4)}<Cd>${this.e(clrCd)}</Cd>\n${this.tabs(indent + 3)}</SchmeNm>\n`;
             }
