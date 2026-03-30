@@ -104,6 +104,38 @@ header p {
     flex-direction: column;
 }
 
+/* ── Subsections within Party Group ── */
+.subsection {
+    grid-column: 1 / -1;
+    background: rgba(255, 255, 255, 0.02);
+    border-top: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+    margin-top: 10px;
+    padding-bottom: 5px;
+}
+
+body.light-theme .subsection {
+    background: #f8fafc;
+    border-top: 1px solid #cbd5e1;
+    border-bottom: 1px solid #cbd5e1;
+}
+
+.subsection-header {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 6px 20px;
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: var(--accent-color);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+body.light-theme .subsection-header {
+    background: #f1f5f9;
+    color: #475569;
+}
+
 input,
 select,
 textarea {

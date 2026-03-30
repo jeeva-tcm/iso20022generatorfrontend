@@ -157,6 +157,62 @@
                                 <div class="form-group"><label>ADDRESS LINE 1</label><input formControlName="stsRsnOrgtrAdrLine1"></div>
                                 <div class="form-group"><label>ADDRESS LINE 2</label><input formControlName="stsRsnOrgtrAdrLine2"></div>
                             </div>
+
+                            <!-- Identifiers -->
+                            <div class="subsection">
+                                <div class="subsection-header">General Identifiers</div>
+                                <div class="form-group">
+                                    <label>AnyBIC</label>
+                                    <input formControlName="stsRsnOrgtrAnyBIC" maxlength="11" placeholder="e.g. BBBUUS33XXX">
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrAnyBIC') as e">{{e}}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>LEI</label>
+                                    <input formControlName="stsRsnOrgtrLei" maxlength="20" placeholder="20-char LEI">
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrLei') as e">{{e}}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Country of Residence</label>
+                                    <select formControlName="stsRsnOrgtrCtryOfRes">
+                                        <option value="">Select Country</option>
+                                        <option *ngFor="let c of countries" [value]="c">{{c}}</option>
+                                    </select>
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrCtryOfRes') as e">{{e}}</div>
+                                </div>
+                            </div>
+
+                            <!-- Org ID Other -->
+                            <div class="subsection">
+                                <div class="subsection-header">Organization ID - Other Identity</div>
+                                <div class="form-group"><label>Other ID</label><input formControlName="stsRsnOrgtrOrgIdOthrId" maxlength="35"></div>
+                                <div class="form-group"><label>Scheme Code</label><input formControlName="stsRsnOrgtrOrgIdOthrSchmeNmCd" maxlength="4" placeholder="e.g. TXID"></div>
+                                <div class="form-group"><label>Scheme Proprietary</label><input formControlName="stsRsnOrgtrOrgIdOthrSchmeNmPrtry" maxlength="35"></div>
+                                <div class="form-group"><label>Issuer</label><input formControlName="stsRsnOrgtrOrgIdOthrIssr" maxlength="35"></div>
+                            </div>
+
+                            <!-- Birth Details -->
+                            <div class="subsection">
+                                <div class="subsection-header">Private ID - Birth Details</div>
+                                <div class="form-group"><label>Birth Date</label><input formControlName="stsRsnOrgtrBirthDt" type="date"></div>
+                                <div class="form-group"><label>Province of Birth</label><input formControlName="stsRsnOrgtrPrvcOfBirth" maxlength="35"></div>
+                                <div class="form-group"><label>City of Birth</label><input formControlName="stsRsnOrgtrCityOfBirth" maxlength="35"></div>
+                                <div class="form-group">
+                                    <label>Country of Birth</label>
+                                    <select formControlName="stsRsnOrgtrCtryOfBirth">
+                                        <option value="">Select Country</option>
+                                        <option *ngFor="let c of countries" [value]="c">{{c}}</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Private ID Other -->
+                            <div class="subsection">
+                                <div class="subsection-header">Private ID - Other Identity</div>
+                                <div class="form-group"><label>Other ID</label><input formControlName="stsRsnOrgtrPrvtIdOthrId" maxlength="35"></div>
+                                <div class="form-group"><label>Scheme Code</label><input formControlName="stsRsnOrgtrPrvtIdOthrSchmeNmCd" maxlength="4"></div>
+                                <div class="form-group"><label>Scheme Proprietary</label><input formControlName="stsRsnOrgtrPrvtIdOthrSchmeNmPrtry" maxlength="35"></div>
+                                <div class="form-group"><label>Issuer</label><input formControlName="stsRsnOrgtrPrvtIdOthrIssr" maxlength="35"></div>
+                            </div>
                         </div>
                     </div>
 
