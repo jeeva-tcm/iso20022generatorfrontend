@@ -109,9 +109,9 @@ export class Pacs2Component implements OnInit {
       orgnlCreDtTm: [this.isoNow(), Validators.required],
 
       // TxRef
-      orgnlInstrId: ['', Validators.maxLength(35)],
+      orgnlInstrId: ['', [Validators.required, Validators.maxLength(35)]],
       orgnlEndToEndId: ['', Validators.maxLength(35)],
-      orgnlTxId: ['', Validators.maxLength(35)],
+      orgnlTxId: ['', [Validators.required, Validators.maxLength(35)]],
       orgnlUETR: [this.uetrService.generate(), UETR_PATTERN],
 
       // TxSts

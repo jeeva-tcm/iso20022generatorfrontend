@@ -160,10 +160,6 @@ textarea {
     background: var(--accent-color);
 }
 
-.download-btn {
-    background: #5b47fb;
-}
-
 .validate-btn {
     background: var(--success-gradient);
     padding: 9px 20px;
@@ -259,7 +255,7 @@ textarea.code-editor {
     padding: 1rem;
     resize: none;
     outline: none;
-    overflow-x: auto;
+    overflow: auto;
     white-space: pre;
 }
 

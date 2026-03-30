@@ -67,8 +67,9 @@
 
                     <div class="section-title">Transaction References</div>
                     <div class="form-group intermediary-field">
-                        <label>Original Instruction ID</label>
-                        <input formControlName="orgnlInstrId">
+                        <label>Original Instruction ID <span class="req">*</span></label>
+                        <input formControlName="orgnlInstrId" required>
+                        <div class="validation-msg" *ngIf="err('orgnlInstrId') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('orgnlInstrId', 35) as h">{{h}}</div>
                     </div>
                     <div class="form-group intermediary-field">
@@ -77,8 +78,9 @@
                         <div class="field-hint at-limit" *ngIf="hint('orgnlEndToEndId', 35) as h">{{h}}</div>
                     </div>
                     <div class="form-group intermediary-field">
-                        <label>Original Transaction ID</label>
-                        <input formControlName="orgnlTxId">
+                        <label>Original Transaction ID <span class="req">*</span></label>
+                        <input formControlName="orgnlTxId" required>
+                        <div class="validation-msg" *ngIf="err('orgnlTxId') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('orgnlTxId', 35) as h">{{h}}</div>
                     </div>
                     <div class="form-group intermediary-field">
@@ -174,19 +176,20 @@
 
         <!-- Right Panel: XML Preview -->
         <div class="right-panel">
-            <div class="preview-actions">
-                <button class="action-btn copy-btn" (click)="copyXml()">
-                    <mat-icon>content_copy</mat-icon> Copy
-                </button>
-                <button class="action-btn copy-btn" (click)="downloadXml()">
-                    <mat-icon>download</mat-icon> Download
-                </button>
-                <button class="action-btn validate-btn" (click)="validateMessage()" [disabled]="validating || form.invalid">
-                    <mat-icon>verified</mat-icon> Validate Message
-                </button>
-            </div>
-
-            <div class="content-box">
+            <div class="bottom-actions" style="margin-top: 0; margin-bottom: 1rem;">
+                                <!-- Simple History Actions -->
+                                <div class="down">
+                                        <button class="action-btn copy-btn"
+                                                (click)="copyToClipboard()"><mat-icon>content_copy</mat-icon> Copy
+                                                XML</button>
+                                        <button class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon>
+                                                Download XML</button>
+                                        <button class="action-btn validate-btn" (click)="validateMessage()" [disabled]="form.invalid">
+                                                <mat-icon>verified</mat-icon> Validate Message
+                                        </button>
+                                </div>
+</div>
+            <div class="content-box preview-box">
                 <div class="up">
                     <button class="action-btn-small" (click)="undoXml()" [disabled]="!canUndoXml()" matTooltip="Undo">
                         <mat-icon>undo</mat-icon>
