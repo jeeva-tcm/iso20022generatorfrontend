@@ -392,16 +392,20 @@ textarea.code-editor {
     gap: .6rem;
     justify-content: center;
 }
-
+.up {
+    justify-content: center;
+    margin-bottom: .5rem;
+    margin-top: -1rem;
+}
 .down {
-    justify-content: flex-end;
+    justify-content: center;
 }
 
-.editor-header .up {
+/* .editor-header .up {
     justify-content: flex-end;
     width: 100%;
     padding: 2px 5px;
-}
+} */
 /* Spinner */
 .spinner-row {
     display: flex;
