@@ -1,7 +1,6 @@
 <div class="container">
     <header>
         <h1>Interbank Direct Debit (pacs.010) <mat-icon class="title-icon">account_balance_wallet</mat-icon></h1>
-        <p style="margin-top: -1rem;">Premium ISO 20022 PACS.010 Message Builder</p>
     </header>
 
     <div class="split-view">
@@ -39,12 +38,6 @@
                         <label>Creation DateTime <span class="req">*</span></label>
                         <input formControlName="creDtTm" maxlength="25">
                         <div class="validation-msg" *ngIf="err('creDtTm') as e">{{e}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Number of Txns <span class="req">*</span></label>
-                        <input formControlName="nbOfTxs" maxlength="15">
-                        <div class="validation-msg" *ngIf="err('nbOfTxs') as e">{{e}}</div>
-                        <div class="field-hint at-limit" *ngIf="hint('nbOfTxs', 15) as h">{{h}}</div>
                     </div>
 
                     <div class="section-title">Header Configuration <span class="opt">Optional</span></div>
@@ -306,13 +299,13 @@
 
             <div class="content-box preview-box">
                 <div class="up">
-                    <button class="action-btn-small" (click)="undoXml()" [disabled]="!canUndoXml" matTooltip="Undo">
+                    <button class="action-btn-small" (click)="undoXml()" [disabled]="!canUndoXml" matTooltip="Undo (Ctrl+Z)">
                         <mat-icon>undo</mat-icon>
                     </button>
-                    <button class="action-btn-small" (click)="redoXml()" [disabled]="!canRedoXml" matTooltip="Redo">
+                    <button class="action-btn-small" (click)="redoXml()" [disabled]="!canRedoXml" matTooltip="Redo (Ctrl+Y)">
                         <mat-icon>redo</mat-icon>
                     </button>
-                    <button class="action-btn-small" (click)="formatXml()" [disabled]="!generatedXml" matTooltip="Format XML">
+                    <button class="action-btn-small" (click)="formatXml()" [disabled]="!generatedXml" matTooltip="Format XML (Ctrl+S)">
                         <mat-icon>format_align_left</mat-icon>
                     </button>
                 </div>
@@ -337,33 +330,18 @@
             <div class="field-hint at-limit" *ngIf="hint(isAgent ? prefix+'Bic' : prefix+'OrgAnyBIC', 11) as h">{{h}}</div>
         </div>
 
-        <!-- Name & Address Type (Hidden for agents as per standards) -->
-        <ng-container *ngIf="prefix !== 'instgAgt' && prefix !== 'instdAgt'">
-            <div class="form-group">
-                <label>{{title}} Name <span class="req" *ngIf="required">*</span></label>
-                <input [formControlName]="prefix+'Name'" maxlength="140">
-                <div class="validation-msg" *ngIf="err(prefix+'Name') as e">{{e}}</div>
-                <!-- Co-presence rule warning: Nm must always come with PstlAdr -->
-                <div class="validation-msg" style="color:#f59e0b;"
-                    *ngIf="form.get(prefix+'Name')?.value?.trim() && form.get(prefix+'AddrType')?.value === 'none'">
-                    ⚠ Name requires an Address. Select an Address Type above, otherwise Name will not be included in the XML.
-                </div>
-            </div>
-        </ng-container>
-
         <!-- Address Type -->
         <div class="form-group" *ngIf="prefix !== 'instgAgt' && prefix !== 'instdAgt'">
-            <label>Address Type</label>
+            <label>{{title}} Address Type</label>
             <select [formControlName]="prefix+'AddrType'">
                 <option value="none">None (BIC/ID Only)</option>
                 <option value="structured">Structured</option>
                 <option value="unstructured">Unstructured</option>
                 <option value="hybrid">Hybrid</option>
             </select>
-            <div class="validation-msg" *ngIf="err(prefix+'AddrType') as e">{{e}}</div>
         </div>
 
-        <!-- Address Fields -->
+        <!-- Dynamic Address Fields -->
         <ng-container *ngIf="prefix !== 'instgAgt' && prefix !== 'instdAgt' && form.get(prefix+'AddrType')?.value !== 'none'">
             <div class="address-subgrid">
                 <!-- Structured Fields -->
@@ -408,12 +386,8 @@
                         <label>Town Name <span class="req">*</span></label>
                         <input [formControlName]="prefix+'TwnNm'" maxlength="35">
                     </div>
-                    <div class="form-group">
-                        <label>Town Location</label>
-                        <input [formControlName]="prefix+'TwnLctnNm'" maxlength="35">
-                    </div>
 
-                    <!-- Country (Required for structured/hybrid only) -->
+                    <!-- Country -->
                     <div class="form-group">
                         <label>Country <span class="req">*</span></label>
                         <select [formControlName]="prefix+'Ctry'">
@@ -424,7 +398,7 @@
                     </div>
                 </ng-container>
 
-                <!-- Unstructured Fields (Hybrid max 2, Unstructured max 3) -->
+                <!-- Unstructured Fields -->
                 <ng-container *ngIf="['unstructured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                     <div class="form-group" *ngFor="let i of (form.get(prefix+'AddrType')?.value === 'hybrid' ? [1,2] : [1,2,3])">
                         <label>Address Line {{i}}</label>
@@ -436,80 +410,65 @@
             </div>
         </ng-container>
 
-        <!-- ID Fields -->
+        <!-- Name -->
         <div class="form-group">
-            <label>Member ID</label>
-            <input [formControlName]="isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId'" maxlength="35">
+            <label>{{title}} Name <span class="req" *ngIf="required">*</span></label>
+            <input [formControlName]="prefix+'Name'" maxlength="140">
+            <div class="validation-msg" *ngIf="err(prefix+'Name') as e">{{e}}</div>
+            <div class="field-hint at-limit" *ngIf="hint(prefix+'Name', 140) as h">{{h}}</div>
         </div>
+
+        <!-- Member ID -->
         <div class="form-group">
-            <label>Clearing System Code</label>
-            <input [formControlName]="isAgent ? prefix+'ClrSysCd' : prefix+'OrgClrSysCd'" maxlength="4">
+            <label>{{title}} Member ID</label>
+            <input [formControlName]="isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId'" maxlength="35" placeholder="Clearing Member ID">
+            <div class="validation-msg" *ngIf="err(isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId') as e">{{e}}</div>
+            <div class="field-hint at-limit" *ngIf="hint(isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId', 35) as h">{{h}}</div>
         </div>
+
+        <!-- Clearing System Code -->
         <div class="form-group">
-            <label>LEI</label>
-            <input [formControlName]="isAgent ? prefix+'Lei' : prefix+'OrgLEI'" maxlength="20">
+            <label>{{title}} Clearing System Code</label>
+            <input [formControlName]="isAgent ? prefix+'ClrSysCd' : prefix+'OrgClrSysCd'" maxlength="5"
+                placeholder="e.g. USAB">
+            <div class="validation-msg" *ngIf="err(isAgent ? prefix+'ClrSysCd' : prefix+'OrgClrSysCd') as e">{{e}}</div>
+            <div class="field-hint at-limit" *ngIf="hint(isAgent ? prefix+'ClrSysCd' : prefix+'OrgClrSysCd', 4) as h">{{h}}</div>
+        </div>
+
+        <!-- LEI -->
+        <div class="form-group">
+            <label>{{title}} LEI</label>
+            <input [formControlName]="isAgent ? prefix+'Lei' : prefix+'OrgLEI'" maxlength="20"
+                placeholder="20-char LEI">
+            <div class="validation-msg" *ngIf="err(isAgent ? prefix+'Lei' : prefix+'OrgLEI') as e">{{e}}</div>
+            <div class="field-hint at-limit" *ngIf="hint(isAgent ? prefix+'Lei' : prefix+'OrgLEI', 20) as h">{{h}}</div>
         </div>
     </div>
 </ng-template>
 
 <ng-template #accountForm let-prefix="prefix" let-title="title" let-required="required">
     <div [formGroup]="form" class="party-grid">
-        <!-- Account Identification Choice: IBAN -->
+        <!-- Account Identification: IBAN -->
         <div class="form-group">
             <label>IBAN <span class="req" *ngIf="required">*</span></label>
-            <input [formControlName]="prefix+'AcctIBAN'" maxlength="34" placeholder="IBAN (e.g. DE12...)">
+            <input [formControlName]="prefix+'AcctIBAN'" maxlength="34" placeholder="IBAN (e.g. DE89370400440532013000)">
             <div class="validation-msg" *ngIf="err(prefix+'AcctIBAN') as e">{{e}}</div>
-        </div>
-
-        <!-- Account Identification Choice: Other -->
-        <div class="address-subgrid">
-            <div class="form-group">
-                <label>Other Account ID</label>
-                <input [formControlName]="prefix+'AcctOthrId'" maxlength="34" placeholder="Account Number">
-                <div class="validation-msg" *ngIf="err(prefix+'AcctOthrId') as e">{{e}}</div>
-            </div>
-
-            <div class="form-group">
-                <label>Issuer / Scheme Nm</label>
-                <input [formControlName]="prefix+'AcctIssr'" maxlength="35" placeholder="Issuing Bank/Scheme">
-            </div>
-
-            <div class="form-group">
-                <label>Scheme Code / Prtry</label>
-                <div class="dual-input">
-                    <input [formControlName]="prefix+'AcctSchemeNm'" maxlength="4" placeholder="Code">
-                    <input [formControlName]="prefix+'AcctPrtry'" maxlength="35" placeholder="Proprietary">
-                </div>
-            </div>
+            <div class="field-hint at-limit" *ngIf="hint(prefix+'AcctIBAN', 34) as h">{{h}}</div>
         </div>
 
         <!-- Account Metadata -->
-        <div class="address-subgrid" style="border-top: none;">
-            <div class="form-group">
-                <label>Account Type (Cd/Prtry)</label>
-                <div class="dual-input">
-                    <input [formControlName]="prefix+'AcctTypeCd'" maxlength="4" placeholder="Code">
-                    <input [formControlName]="prefix+'AcctTypePrtry'" maxlength="35" placeholder="Proprietary">
-                </div>
-            </div>
-
+        <div class="address-subgrid">
             <div class="form-group">
                 <label>Currency</label>
-                <input [formControlName]="prefix+'AcctCcy'" maxlength="3" placeholder="ISO Currency (e.g. USD)">
+                <select [formControlName]="prefix+'AcctCcy'">
+                    <option value="">Select Currency</option>
+                    <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
+                </select>
             </div>
 
             <div class="form-group">
                 <label>Account Name</label>
                 <input [formControlName]="prefix+'AcctNm'" maxlength="70">
-            </div>
-
-            <div class="form-group">
-                <label>Proxy ID & Type</label>
-                <div class="triple-input">
-                    <input [formControlName]="prefix+'AcctProxyId'" maxlength="35" placeholder="Proxy ID">
-                    <input [formControlName]="prefix+'AcctProxyCd'" maxlength="4" placeholder="Cd">
-                    <input [formControlName]="prefix+'AcctProxyPrtry'" maxlength="35" placeholder="Prtry">
-                </div>
             </div>
         </div>
     </div>
