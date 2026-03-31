@@ -48,6 +48,7 @@ export class Pacs10Component implements OnInit {
     showMaxLenWarning: { [key: string]: boolean } = {};
 
     currencies: string[] = [];
+    currencyPrecision: { [key: string]: number } = {};
     countries: string[] = [];
     categoryPurposes: string[] = [];
     purposes: string[] = [];
@@ -81,12 +82,67 @@ export class Pacs10Component implements OnInit {
 
         this.form.valueChanges.subscribe(() => {
             this.updateConditionalValidators();
-            this.updateClearingSystemValidation();
-            this.generateXml();
+            this.updateClearingSystemValidation(); 
+        });
+
+        this.form.get('currency')?.valueChanges.subscribe(() => {
+            this.updateAmountValidator();
+            this.updateClearingSystemValidation(); 
         });
         
         // Init history
         this.pushHistory();
+        this.setupAddressTypeFiller();
+    }
+
+    private setupAddressTypeFiller() {
+        [...this.agentPrefixes, ...this.partyPrefixes].forEach(p => {
+            this.form.get(p + 'AddrType')?.valueChanges.subscribe(type => {
+                if (type === 'structured') {
+                    this.form.patchValue({
+                        [p + 'Dept']: 'Treasury Operations',
+                        [p + 'SubDept']: 'Corporate Payments',
+                        [p + 'StrtNm']: '10 Bishopsgate',
+                        [p + 'BldgNb']: '10',
+                        [p + 'BldgNm']: 'City Tower',
+                        [p + 'Flr']: '12th Floor',
+                        [p + 'PstBx']: 'PO Box 100',
+                        [p + 'Room']: 'Room 1201',
+                        [p + 'PstCd']: 'EC2N 4BQ',
+                        [p + 'TwnNm']: 'London',
+                        [p + 'TwnLctnNm']: 'Central London',
+                        [p + 'Ctry']: 'GB'
+                    }, { emitEvent: false });
+                } else if (type === 'unstructured') {
+                    this.form.patchValue({
+                        [p + 'AdrLine1']: '10 Bishopsgate',
+                        [p + 'AdrLine2']: 'Central Business District',
+                        [p + 'AdrLine3']: 'London GB'
+                    }, { emitEvent: false });
+                    // Clear structured fields
+                    const structured = ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'Ctry'];
+                    structured.forEach(f => this.form.get(p + f)?.patchValue('', { emitEvent: false }));
+                } else if (type === 'hybrid') {
+                    this.form.patchValue({
+                        [p + 'Dept']: 'Treasury Operations',
+                        [p + 'SubDept']: 'Corporate Payments',
+                        [p + 'StrtNm']: '10 Bishopsgate',
+                        [p + 'BldgNb']: '10',
+                        [p + 'BldgNm']: 'City Tower',
+                        [p + 'Flr']: '12th Floor',
+                        [p + 'PstBx']: 'PO Box 100',
+                        [p + 'Room']: 'Room 1201',
+                        [p + 'PstCd']: 'EC2N 4BQ',
+                        [p + 'TwnNm']: 'London',
+                        [p + 'TwnLctnNm']: 'Central London',
+                        [p + 'Ctry']: 'GB',
+                        [p + 'AdrLine1']: 'Central Business District',
+                        [p + 'AdrLine2']: 'Near Liverpool Street',
+                        [p + 'AdrLine3']: ''
+                    }, { emitEvent: false });
+                }
+            });
+        });
     }
 
     private updateClearingSystemValidation() {
@@ -255,13 +311,13 @@ export class Pacs10Component implements OnInit {
 
             if (addrType === 'structured' || addrType === 'hybrid') {
                 if (!twnNmCtrl?.hasValidator(Validators.required)) {
-                    twnNmCtrl?.setValidators([Validators.required, Validators.maxLength(35), ADDR_PATTERN]);
+                    twnNmCtrl?.setValidators([Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]);
                     twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
                 }
             } else {
                 if (twnNmCtrl?.hasValidator(Validators.required)) {
                     twnNmCtrl?.clearValidators();
-                    twnNmCtrl?.setValidators([Validators.maxLength(35), ADDR_PATTERN]);
+                    twnNmCtrl?.setValidators([Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]);
                     twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
                 }
             }
@@ -336,82 +392,21 @@ export class Pacs10Component implements OnInit {
             lei?.updateValueAndValidity({ emitEvent: false });
         });
 
-        // Account / Scheme Linkage
-        [...this.agentPrefixes, ...this.partyPrefixes].forEach(p => {
-            const acctCtrl = this.form.get(p + 'Acct');
-            const schemeCtrl = this.form.get(p + 'AcctSchemeNm');
-            const prtryCtrl = this.form.get(p + 'AcctPrtry');
-            const val = acctCtrl?.value?.trim() || '';
-
-            if (val && !/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/i.test(val)) {
-                // Not IBAN => Othr => SchmeNm or Prtry required
-                if (!schemeCtrl?.value && !prtryCtrl?.value) {
-                    schemeCtrl?.setErrors({ ...schemeCtrl.errors, required: true });
-                } else {
-                    const errors = { ...schemeCtrl?.errors };
-                    delete errors['required'];
-                    schemeCtrl?.setErrors(Object.keys(errors).length ? errors : null);
-                }
-            } else {
-                const errors = { ...schemeCtrl?.errors };
-                delete errors['required'];
-                schemeCtrl?.setErrors(Object.keys(errors).length ? errors : null);
-            }
-        });
     }
 
 
-    @HostListener('keydown', ['$event'])
-    onKeydown(event: KeyboardEvent) {
-        // 1. History & Formatting Shortcuts (Ctrl+Z, Ctrl+Y, Ctrl+S)
-        if (event.ctrlKey || event.metaKey) {
-            if (document.activeElement?.classList.contains('code-editor')) {
-                switch (event.key.toLowerCase()) {
-                    case 'z':
-                        event.preventDefault();
-                        this.undoXml();
-                        return;
-                    case 'y':
-                        event.preventDefault();
-                        this.redoXml();
-                        return;
-                    case 's':
-                        event.preventDefault();
-                        this.formatXml();
-                        return;
-                    case '/':
-                        event.preventDefault();
-                        this.toggleCommentXml();
-                        return;
-                }
-            }
-        }
 
-        // 2. MaxLength Warning logic
-        const target = event.target as HTMLInputElement;
-        if (!target || (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA')) return;
-        const maxLen = target.maxLength;
-        if (maxLen && maxLen > 0 && target.value && target.value.toString().length >= maxLen) {
-            if (target.selectionStart !== null && target.selectionStart !== target.selectionEnd) return;
-            if (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey) {
-                const controlName = target.getAttribute('formControlName') || target.getAttribute('name');
-                if (controlName) {
-                    this.showMaxLenWarning[controlName] = true;
-                    if (this.warningTimeouts[controlName]) {
-                        clearTimeout(this.warningTimeouts[controlName]);
-                    }
-                    this.warningTimeouts[controlName] = setTimeout(() => {
-                        this.showMaxLenWarning[controlName] = false;
-                    }, 3000);
-                }
-            }
-        }
-    }
 
 
     private fetchCodelists() {
         this.http.get<any>(this.config.getApiUrl('/codelists/currency')).subscribe({
-            next: (res) => { if (res && res.codes) this.currencies = res.codes; },
+            next: (res) => { 
+                if (res && res.codes) {
+                    this.currencies = res.codes;
+                    this.currencyPrecision = res.currencies || {};
+                    this.updateAmountValidator();
+                }
+            },
             error: (err) => console.error('Failed to load currencies', err)
         });
         this.http.get<any>(this.config.getApiUrl('/codelists/country')).subscribe({
@@ -454,6 +449,20 @@ export class Pacs10Component implements OnInit {
         return res;
     }
 
+    private updateAmountValidator() {
+        const ccy = this.form.get('currency')?.value;
+        const precision = this.currencyPrecision[ccy] ?? 2;
+        const amountCtrl = this.form.get('amount');
+        
+        // Dynamic regex matching pacs.008 logic: 1-18 digits total, optional decimal based on precision
+        const pattern = precision > 0 
+          ? new RegExp(`^\\d{1,18}(\\.\\d{1,${precision}})?$`)
+          : new RegExp(`^\\d{1,18}$`);
+        
+        amountCtrl?.setValidators([Validators.required, Validators.pattern(pattern)]);
+        amountCtrl?.updateValueAndValidity({ emitEvent: false });
+    }
+
     private buildForm() {
         const BIC = [Validators.required, Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
         const BIC_OPT = [Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
@@ -463,16 +472,16 @@ export class Pacs10Component implements OnInit {
         const c: any = {
             fromBic: ['BOFAUS3NXXX', BIC], 
             toBic: ['CITIUS33XXX', BIC], 
-            bizMsgId: ['BMID-2026-PAC010-001', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]],
-            msgId: ['MSGID-2026-PAC010-001', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]], 
+            bizMsgId: ['BMD-2026-PAC010-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
+            msgId: ['MSGID-2026-PAC010-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]], 
             creDtTm: [this.isoNow(), Validators.required],
             nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]],
-            cdtId: ['CDT-FI-2026-001', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]],
+            cdtId: ['CDT-FI-2026-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
             
             // Creditor Agent
             cdtrAgtBic: ['CHASUS33XXX', BIC_OPT],
-            cdtrAgtName: ['JP MORGAN CHASE BANK', [Validators.maxLength(140), SAFE_NAME]],
-            cdtrAgtLei: ['7H6GLXDRUGQFU57RNE97', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
+            cdtrAgtName: ['JPMORGAN CHASE BANK', [Validators.maxLength(140), SAFE_NAME]],
+            cdtrAgtLei: ['7H6LDXLRUQGFU57RNE97', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
             cdtrAgtClrSysCd: ['USFW', Validators.maxLength(4)],
             cdtrAgtClrSysMmbId: ['MEM-CAGT-01', Validators.maxLength(35)],
             cdtrAgtAddrType: ['structured'],
@@ -486,11 +495,11 @@ export class Pacs10Component implements OnInit {
             cdtrAddrType: ['structured'],
             
             // Payment IDs
-            instrId: ['INSTR-2026-PAC010-001', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]],
-            endToEndId: ['E2E-2026-PAC010-001', [Validators.required, Validators.maxLength(35), ADDR_PATTERN]],
-            txId: ['TXID-2026-PAC010-001', [Validators.maxLength(35), ADDR_PATTERN]],
-            uetr: [this.uetrService.generate(), [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
-            clrSysRef: ['CLRREF-2026-001', [Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/), Validators.maxLength(35)]],
+            instrId: ['INSTR-2026-PAC010-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
+            endToEndId: ['E2E-2026-PAC010-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
+            txId: ['TXID-2026-PAC010-001', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
+            uetr: ['6bbef0a5-218b-42dc-8bce-9684f59847cd', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
+            clrSysRef: ['', [Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/), Validators.maxLength(35)]],
             
             // AppHdr extensions
             copyDplct: ['COPY'], pssblDplct: ['true'], prty: ['HIGH'],
@@ -498,47 +507,43 @@ export class Pacs10Component implements OnInit {
             // Payment Type Info
             instrPrty: ['HIGH'],
             svcLvlCd: ['G001', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{4}$/)]], 
-            svcLvlPrtry: ['', [Validators.maxLength(35), ADDR_PATTERN]],
+            svcLvlPrtry: ['PRIORITY-SVC', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
             lclInstrmCd: ['ONCL', [Validators.maxLength(4)]], 
-            lclInstrmPrtry: ['', [Validators.maxLength(35), ADDR_PATTERN]],
+            lclInstrmPrtry: ['INSTANT-SETTLM', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
             ctgyPurpCd: ['INTC', [Validators.pattern(/^[A-Z]{4}$/)]], 
-            ctgyPurpPrtry: ['', [Validators.maxLength(35), ADDR_PATTERN]],
+            ctgyPurpPrtry: ['CORP-CASH-POOL', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
             
-            amount: ['250000.00', [Validators.required, Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],
-            currency: ['USD', [Validators.required, Validators.pattern(/^[A-Z]{3}$/)]],
+            amount: ['50000', [Validators.required, Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],
+            currency: ['GBP', [Validators.required, Validators.pattern(/^[A-Z]{3}$/)]],
             intrBkSttlmDt: [new Date().toISOString().split('T')[0], Validators.required],
             clstTm: ['09:00:00+00:00', [Validators.pattern(/^([01]\d|2[0-3]):[0-5]\d:[0-5]\d([+-][01]\d:[0-5]\d|Z)$/)]],
             tillTm: ['17:00:00+00:00', [Validators.pattern(/^([01]\d|2[0-3]):[0-5]\d:[0-5]\d([+-][01]\d:[0-5]\d|Z)$/)]],
             frTm: ['08:00:00+00:00', [Validators.pattern(/^([01]\d|2[0-3]):[0-5]\d:[0-5]\d([+-][01]\d:[0-5]\d|Z)$/)]],
             rjctTm: ['16:00:00+00:00', [Validators.pattern(/^([01]\d|2[0-3]):[0-5]\d:[0-5]\d([+-][01]\d:[0-5]\d|Z)$/)]],
             purposeCd: ['INTC', [Validators.pattern(/^[A-Z]{4}$/)]], 
-            purposePrtry: ['', [Validators.maxLength(35), ADDR_PATTERN]],
-            remittanceInfo: ['Interbank Direct Debit Settlement March 2026', [Validators.maxLength(140), ADDR_PATTERN]],
-            instrForDbtrAgt: ['Settle via RTGS system immediately', [Validators.maxLength(140), ADDR_PATTERN]],
+            purposePrtry: ['INTERBANK-XFER', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
+            remittanceInfo: ['Interbank Direct Debit Settlement March 2026', [Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
+            instrForDbtrAgt: ['Settle via RTGS system immediately', [Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
             
             // Debtor
             dbtrBic: ['BOFAUS3NXXX', BIC],
             dbtrName: ['BANK OF AMERICA NA', [Validators.maxLength(140), SAFE_NAME]],
-            dbtrLei: ['9DI4HL4JZ54KOAHE3750', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
+            dbtrLei: ['5493001KJTIIGC8Y1R12', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
             dbtrClrSysCd: ['USFW', Validators.maxLength(4)],
             dbtrClrSysMmbId: ['MEM-DBTR-01', Validators.maxLength(35)],
-            dbtrAddrType: ['structured'],
+            dbtrAddrType: ['hybrid'],
             
             // Debtor Agent
             dbtrAgtBic: ['WFBIUS6SXXX', BIC_OPT],
             dbtrAgtName: ['WELLS FARGO BANK NA', [Validators.maxLength(140), SAFE_NAME]],
-            dbtrAgtLei: ['KB1H1DSPRFMYMCUFXT09', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
+            dbtrAgtLei: ['724500PMK2A2M1SQQ228', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
             dbtrAgtClrSysCd: ['USFW', Validators.maxLength(4)],
             dbtrAgtClrSysMmbId: ['MEM-DAGT-01', Validators.maxLength(35)],
             dbtrAgtAddrType: ['structured'],
             
             // Instructing / Instructed Agents
             instgAgtBic: ['BOFAUS3NXXX', BIC],
-            instdAgtBic: ['CITIUS33XXX', BIC],
-            
-            // Accounts
-            dbtrAcct: ['DE89370400440532013000', [Validators.required, Validators.pattern(/^[A-Z0-9]{5,34}$/)]],
-            cdtrAcct: ['GB29NWBK60161331926819', [Validators.required, Validators.pattern(/^[A-Z0-9]{5,34}$/)]]
+            instdAgtBic: ['CITIUS33XXX', BIC]
         };
 
         const prefixes = [...this.agentPrefixes, ...this.partyPrefixes];
@@ -550,10 +555,10 @@ export class Pacs10Component implements OnInit {
             
             // Address field mapping per party
             const addrMap: any = {
-                dbtr:    { StrtNm: '100 North Tryon Street', BldgNb: '100', BldgNm: 'Bank of America Tower', Flr: '30th Floor', PstBx: 'PO Box 15220', Room: 'Suite 3000', PstCd: '28255', TwnNm: 'Charlotte', TwnLctnNm: 'Uptown', Dept: 'Treasury Operations', SubDept: 'Direct Debit Unit', Ctry: 'US' },
-                cdtr:    { StrtNm: '388 Greenwich Street', BldgNb: '388', BldgNm: 'Citigroup Center', Flr: '25th Floor', PstBx: 'PO Box 3290', Room: 'Room 2500', PstCd: '10013', TwnNm: 'New York', TwnLctnNm: 'Tribeca', Dept: 'Global Payments', SubDept: 'Interbank Settlement', Ctry: 'US' },
-                dbtrAgt: { StrtNm: '420 Montgomery Street', BldgNb: '420', BldgNm: 'Wells Fargo Building', Flr: '15th Floor', PstBx: 'PO Box 44000', Room: 'Room 1501', PstCd: '94104', TwnNm: 'San Francisco', TwnLctnNm: 'Financial District', Dept: 'Correspondent Banking', SubDept: 'FI Payments', Ctry: 'US' },
-                cdtrAgt: { StrtNm: '383 Madison Avenue', BldgNb: '383', BldgNm: 'JPMorgan Chase Tower', Flr: '20th Floor', PstBx: 'PO Box 2222', Room: 'Room 2001', PstCd: '10179', TwnNm: 'New York', TwnLctnNm: 'Midtown East', Dept: 'Payment Services', SubDept: 'Cash Management', Ctry: 'US' }
+                dbtr:    { Dept: 'Treasury Operations', SubDept: 'Corporate Payments', StrtNm: '10 Bishopsgate', BldgNb: '10', BldgNm: 'City Tower', Flr: '12th Floor', PstBx: 'PO Box 100', Room: 'Room 1201', PstCd: 'EC2N 4BQ', TwnNm: 'London', TwnLctnNm: 'Central London', Ctry: 'GB', AdrLine1: 'Central Business District', AdrLine2: 'Near Liverpool Street' },
+                cdtr:    { Dept: 'Treasury Operations', SubDept: 'Corporate Payments', StrtNm: '10 Bishopsgate', BldgNb: '10', BldgNm: 'City Tower', Flr: '12th Floor', PstBx: 'PO Box 100', Room: 'Room 1201', PstCd: 'EC2N 4BQ', TwnNm: 'London', TwnLctnNm: 'Central London', Ctry: 'GB', AdrLine1: 'Central Business District', AdrLine2: 'Near Liverpool Street' },
+                dbtrAgt: { Dept: 'Treasury Operations', SubDept: 'Corporate Payments', StrtNm: '10 Bishopsgate', BldgNb: '10', BldgNm: 'City Tower', Flr: '12th Floor', PstBx: 'PO Box 100', Room: 'Room 1201', PstCd: 'EC2N 4BQ', TwnNm: 'London', TwnLctnNm: 'Central London', Ctry: 'GB', AdrLine1: 'Central Business District', AdrLine2: 'Near Liverpool Street' },
+                cdtrAgt: { Dept: 'Treasury Operations', SubDept: 'Corporate Payments', StrtNm: '10 Bishopsgate', BldgNb: '10', BldgNm: 'City Tower', Flr: '12th Floor', PstBx: 'PO Box 100', Room: 'Room 1201', PstCd: 'EC2N 4BQ', TwnNm: 'London', TwnLctnNm: 'Central London', Ctry: 'GB', AdrLine1: 'Central Business District', AdrLine2: 'Near Liverpool Street' }
             };
             const defaults = addrMap[p] || {};
 
@@ -565,9 +570,9 @@ export class Pacs10Component implements OnInit {
                 if (f === 'Ctry') {
                     validators = [Validators.pattern(/^[A-Z]{2,2}$/)];
                 } else if (f.startsWith('AdrLine')) {
-                    validators = [Validators.maxLength(70), ADDR_PATTERN];
+                    validators = [Validators.maxLength(70), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)];
                 } else {
-                    validators = [Validators.maxLength(70), ADDR_PATTERN];
+                    validators = [Validators.maxLength(70), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)];
                 }
                 if (!c[p + f]) c[p + f] = [val, validators];
             });
@@ -581,35 +586,27 @@ export class Pacs10Component implements OnInit {
             if (!c[p + 'AcctIBAN']) {
                 c[p + 'AcctIBAN'] = ['', [Validators.pattern(/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/), Validators.minLength(10), Validators.maxLength(34)]];
             }
-            if (!c[p + 'AcctOthrId']) {
-                let acctVal = '4719' + Math.floor(Math.random() * 9000000000 + 1000000000);
-                c[p + 'AcctOthrId'] = [acctVal, [Validators.pattern(/^[A-Z0-9]{1,34}$/)]];
-            }
 
-            // Detailed Account fields per party
+            // Account defaults per party
             const acctMap: any = {
-                dbtr:    { AcctIBAN: '', AcctOthrId: '4719329012340001', AcctSchemeNm: 'BANK', AcctPrtry: '', AcctIssr: 'BOFAUS3NXXX', AcctTypeCd: 'CACC', AcctTypePrtry: '', AcctCcy: 'USD', AcctNm: 'BOFA DIRECT DEBIT OPERATING', AcctProxyId: 'dbtr@proxy.bofa.com', AcctProxyCd: 'EMAL', AcctProxyPrtry: '' },
-                cdtr:    { AcctIBAN: '', AcctOthrId: 'GB29NWBK60161331926819', AcctSchemeNm: 'BANK', AcctPrtry: '', AcctIssr: 'CITIUS33XXX', AcctTypeCd: 'CACC', AcctTypePrtry: '', AcctCcy: 'USD', AcctNm: 'CITI CREDITOR SETTLEMENT', AcctProxyId: 'cdtr@proxy.citi.com', AcctProxyCd: 'EMAL', AcctProxyPrtry: '' },
-                dbtrAgt: { AcctIBAN: '', AcctOthrId: '9283746501928374', AcctSchemeNm: 'BANK', AcctPrtry: '', AcctIssr: 'WFBIUS6SXXX', AcctTypeCd: 'CACC', AcctTypePrtry: '', AcctCcy: 'USD', AcctNm: 'WELLS FARGO AGENT ACCOUNT', AcctProxyId: '', AcctProxyCd: '', AcctProxyPrtry: '' },
-                cdtrAgt: { AcctIBAN: '', AcctOthrId: '1827364509182736', AcctSchemeNm: 'BANK', AcctPrtry: '', AcctIssr: 'CHASUS33XXX', AcctTypeCd: 'CACC', AcctTypePrtry: '', AcctCcy: 'USD', AcctNm: 'JPM AGENT SETTLEMENT ACCT', AcctProxyId: '', AcctProxyCd: '', AcctProxyPrtry: '' }
+                dbtr:    { AcctIBAN: 'GB82WEST12345698765432', AcctCcy: 'GBP', AcctNm: 'GBP DEBTOR SETTLEMENT ACCOUNT' },
+                cdtr:    { AcctIBAN: 'GB29NWBK60161331926819', AcctCcy: 'USD', AcctNm: 'CITI CREDITOR SETTLEMENT' },
+                dbtrAgt: { AcctIBAN: 'GB33BUKB20201555555555', AcctCcy: 'GBP', AcctNm: 'GBP DEBTOR AGENT SETTLEMENT ACCOUNT' },
+                cdtrAgt: { AcctIBAN: 'GB82WEST12345698765432', AcctCcy: 'USD', AcctNm: 'JPM AGENT SETTLEMENT ACCOUNT' }
             };
             const acctDefaults = acctMap[p] || {};
 
-            ['AcctSchemeNm', 'AcctPrtry', 'AcctIssr', 'AcctTypeCd', 'AcctTypePrtry', 'AcctCcy', 'AcctNm', 'AcctProxyId', 'AcctProxyCd', 'AcctProxyPrtry'].forEach(f => {
-                let val: any = acctDefaults[f] || '';
-                let v: any[] = [val];
-                if (f === 'AcctCcy') v = [val, [Validators.pattern(/^[A-Z]{3}$/)]];
-                c[p + f] = v;
-            });
-
-            // Set IBAN or OthrId per party
+            // Set IBAN per party
             if (acctDefaults.AcctIBAN) {
-                if (!c[p + 'AcctIBAN']) c[p + 'AcctIBAN'] = [acctDefaults.AcctIBAN, [Validators.pattern(/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/), Validators.minLength(10), Validators.maxLength(34)]];
-            } else {
-                if (!c[p + 'AcctIBAN']) c[p + 'AcctIBAN'] = ['', [Validators.pattern(/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/), Validators.minLength(10), Validators.maxLength(34)]];
+                c[p + 'AcctIBAN'] = [acctDefaults.AcctIBAN, [Validators.pattern(/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/), Validators.minLength(10), Validators.maxLength(34)]];
             }
-            if (!c[p + 'AcctOthrId']) {
-                c[p + 'AcctOthrId'] = [acctDefaults.AcctOthrId || '', [Validators.pattern(/^[A-Z0-9]{1,34}$/)]];
+
+            // Currency, Account Name
+            if (!c[p + 'AcctCcy']) {
+                c[p + 'AcctCcy'] = [acctDefaults.AcctCcy || '', [Validators.pattern(/^[A-Z]{3}$/)]];
+            }
+            if (!c[p + 'AcctNm']) {
+                c[p + 'AcctNm'] = [acctDefaults.AcctNm || ''];
             }
 
             if (!isAgent) {
@@ -618,7 +615,7 @@ export class Pacs10Component implements OnInit {
                 if (!c[p + 'OrgLEI']) c[p + 'OrgLEI'] = [c[p + 'Lei'] ? c[p + 'Lei'][0] : '54930084UKLVMY22DS16', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
                 if (!c[p + 'OrgClrSysCd']) c[p + 'OrgClrSysCd'] = ['USFW', Validators.maxLength(4)];
                 if (!c[p + 'OrgClrSysMmbId']) c[p + 'OrgClrSysMmbId'] = ['ORG-' + p.toUpperCase().substring(0, 5), Validators.maxLength(35)];
-                if (!c[p + 'OrgOthrId']) c[p + 'OrgOthrId'] = ['OTH-' + p.toUpperCase().substring(0, 5), [Validators.maxLength(35), ADDR_PATTERN]];
+                if (!c[p + 'OrgOthrId']) c[p + 'OrgOthrId'] = ['OTH-' + p.toUpperCase().substring(0, 5), [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]];
                 if (!c[p + 'OrgOthrSchmeNmCd']) c[p + 'OrgOthrSchmeNmCd'] = ['BANK', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{1,4}$/)]];
             }
         });
@@ -638,7 +635,9 @@ export class Pacs10Component implements OnInit {
         
         appHdr += `\t\t<CreDt>${creDtTm}</CreDt>\n`;
         if (v.copyDplct) appHdr += this.el('CpyDplct', v.copyDplct, 2);
-        if (v.pssblDplct) appHdr += this.el('PssblDplct', v.pssblDplct, 2);
+        if (v.pssblDplct === 'true' || v.pssblDplct === 'false') {
+            appHdr += this.el('PssblDplct', v.pssblDplct, 2);
+        }
         if (v.prty) appHdr += this.el('Prty', v.prty, 2);
 
         let xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -650,7 +649,7 @@ ${appHdr}\t</AppHdr>
 \t\t\t<GrpHdr>
 \t\t\t\t<MsgId>${this.e(v.msgId)}</MsgId>
 \t\t\t\t<CreDtTm>${creDtTm}</CreDtTm>
-\t\t\t\t<NbOfTxs>${this.e(v.nbOfTxs)}</NbOfTxs>
+\t\t\t\t<NbOfTxs>1</NbOfTxs>
 \t\t\t</GrpHdr>
 \t\t\t<CdtInstr>
 \t\t\t\t<CdtId>${this.e(v.cdtId)}</CdtId>
@@ -665,7 +664,7 @@ ${this.fullAcct('CdtrAcct', 'cdtr', v, 4)}
 ${this.el('InstrId', v.instrId, 6)}${this.el('EndToEndId', v.endToEndId, 6)}${this.el('TxId', v.txId, 6)}${this.el('UETR', v.uetr, 6)}${this.el('ClrSysRef', v.clrSysRef, 6)}
 \t\t\t\t\t</PmtId>
 ${this.pmtTpInf(v)}
-\t\t\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${this.e(v.amount)}</IntrBkSttlmAmt>
+\t\t\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${this.formatAmount(v.amount)}</IntrBkSttlmAmt>
 \t\t\t\t\t<IntrBkSttlmDt>${this.e(v.intrBkSttlmDt)}</IntrBkSttlmDt>
 ${this.sttlmTmReq(v)}${this.agt('Dbtr', 'dbtr', v, 5)}
 ${this.fullAcct('DbtrAcct', 'dbtr', v, 5)}
@@ -679,7 +678,8 @@ ${this.rmtInf(v)}
 \t\t</FIDrctDbt>
 \t</Document>
 </BusMsgEnvlp>`;
-        this.onEditorChange(xml, true);
+        this.generatedXml = xml;
+        this.formatXml();
     }
 
     private sttlmTmReq(v: any) {
@@ -728,38 +728,17 @@ ${this.rmtInf(v)}
         let id = this.formatAcctDetails(v, p, indent + 2);
         if (!id) return '';
         let res = this.tag('Id', id, indent + 1);
-        if (v[p + 'AcctTypeCd'] || v[p + 'AcctTypePrtry']) {
-            let tpVal = v[p + 'AcctTypePrtry'] ? this.el('Prtry', v[p + 'AcctTypePrtry'], indent + 3) : this.el('Cd', v[p + 'AcctTypeCd'], indent + 3);
-            res += this.tag('Tp', tpVal, indent + 1);
-        }
         if (v[p + 'AcctCcy'] && /^[A-Z]{3}$/.test(v[p + 'AcctCcy'])) {
             res += this.el('Ccy', v[p + 'AcctCcy'], indent + 1);
         }
         if (v[p + 'AcctNm']) res += this.el('Nm', v[p + 'AcctNm'], indent + 1);
-        if (v[p + 'AcctProxyId']) {
-            let pr = '';
-            if (v[p + 'AcctProxyCd'] || v[p + 'AcctProxyPrtry']) {
-                let tp = v[p + 'AcctProxyPrtry'] ? this.el('Prtry', v[p + 'AcctProxyPrtry'], indent + 4) : this.el('Cd', v[p + 'AcctProxyCd'], indent + 4);
-                pr += this.tag('Tp', tp, indent + 3);
-            }
-            pr += this.el('Id', v[p + 'AcctProxyId'], indent + 3);
-            res += this.tag('Prxy', pr, indent + 1);
-        }
         return this.tag(tag, res, indent);
     }
 
     private formatAcctDetails(v: any, p: string, tabs: number) {
+        // IBAN is the only identification allowed in this standardized suite
         if (v[p + 'AcctIBAN']) {
             return this.el('IBAN', v[p + 'AcctIBAN'], tabs);
-        }
-        if (v[p + 'AcctOthrId']) {
-            let othr = this.el('Id', v[p + 'AcctOthrId'], tabs + 2);
-            if (v[p + 'AcctSchemeNm'] || v[p + 'AcctPrtry']) {
-                let sn = v[p + 'AcctPrtry'] ? this.el('Prtry', v[p + 'AcctPrtry'], tabs + 4) : this.el('Cd', v[p + 'AcctSchemeNm'], tabs + 4);
-                othr += this.tag('SchmeNm', sn, tabs + 2);
-            }
-            if (v[p + 'AcctIssr']) othr += this.el('Issr', v[p + 'AcctIssr'], tabs + 2);
-            return this.tag('Othr', othr, tabs + 1);
         }
         return '';
     }
@@ -955,21 +934,92 @@ ${this.rmtInf(v)}
     }
 
     formatXml() {
+        if (!this.generatedXml?.trim()) return;
+        this.pushHistory();
+
         try {
-            const P = (n: any) => n.trim();
-            const nodes = this.generatedXml.split(/>\s*</);
-            let fmt = '', ind = '', tab = '    ';
-            nodes.forEach(n => {
-                if (n.startsWith('/')) ind = ind.substring(tab.length);
-                fmt += ind + (n.startsWith('<') ? '' : '<') + n + (n.endsWith('>') ? '' : '>') + '\r\n';
-                if (!n.startsWith('/') && !n.endsWith('/') && !n.startsWith('?')) ind += tab;
+            const tab = '    ';
+            let formatted = '';
+            let indent = '';
+
+            // Normalize XML
+            let xml = this.generatedXml.replace(/>\s+</g, '><').trim();
+
+            // Intelligent regex to split Tags, Comments, and Content
+            const reg = /(<[^>]+>[^<]*<\/([^>]+)>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
+            const nodes = xml.match(reg) || [];
+
+            nodes.forEach(node => {
+                const trimmed = node.trim();
+                if (!trimmed) return;
+
+                if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
+                    // One-liner element <tag>val</tag> or self-closing <tag/>
+                    formatted += indent + trimmed + '\r\n';
+                } else if (trimmed.startsWith('</')) {
+                    // Closing tag
+                    if (indent.length >= tab.length) indent = indent.substring(tab.length);
+                    formatted += indent + trimmed + '\r\n';
+                } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
+                    // Opening tag
+                    formatted += indent + trimmed + '\r\n';
+                    if (!trimmed.endsWith('/>')) indent += tab;
+                } else {
+                    // Plain text content or XML declaration
+                    formatted += indent + trimmed + '\r\n';
+                }
             });
-            this.generatedXml = fmt.trim();
+
+            this.generatedXml = formatted.trim();
             this.refreshLineCount();
-        } catch (e) { }
+            this.snackBar.open('XML Formatted', '', { duration: 1500 });
+        } catch (e) {
+            this.snackBar.open('Unable to format XML', '', { duration: 3000 });
+        }
     }
 
-    toggleCommentXml() { }
+    toggleCommentXml() {
+        if (!this.generatedXml) return;
+
+        const textarea = document.querySelector('.code-editor') as HTMLTextAreaElement;
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const value = textarea.value;
+
+        this.isInternalChange = true;
+        this.pushHistory();
+
+        // Identify start/end of lines
+        let lineStart = value.lastIndexOf('\n', start - 1) + 1;
+        let lineEnd = value.indexOf('\n', end);
+        if (lineEnd === -1) lineEnd = value.length;
+
+        const selection = value.substring(lineStart, lineEnd);
+        const before = value.substring(0, lineStart);
+        const after = value.substring(lineEnd);
+
+        let newResult = '';
+        const trimmed = selection.trim();
+
+        if (trimmed.startsWith('<!--') && trimmed.endsWith('-->')) {
+            // Uncomment
+            newResult = selection.replace('<!--', '').replace('-->', '');
+        } else {
+            // Comment
+            newResult = `<!-- ${selection} -->`;
+        }
+
+        this.generatedXml = before + newResult + after;
+        this.refreshLineCount();
+
+        setTimeout(() => {
+            textarea.focus();
+            textarea.setSelectionRange(lineStart, lineStart + newResult.length);
+            this.isInternalChange = false;
+        }, 0);
+    }
 
     parseXmlToForm(xml: string) { }
 
@@ -979,8 +1029,8 @@ ${this.rmtInf(v)}
     }
 
     validateMessage() {
+        this.generateXml(); // Re-ensure XML is fresh before validating
         this.validateFullMessageErrors();
-        this.generateXml();
         if (this.form.invalid) {
             this.form.markAllAsTouched();
         }
@@ -1071,12 +1121,14 @@ ${this.rmtInf(v)}
     }
 
     downloadXml() {
+        this.generateXml(); // Re-ensure XML is fresh
         const b = new Blob([this.generatedXml], { type: 'application/xml' });
         const a = document.createElement('a'); a.href = URL.createObjectURL(b);
         a.download = `pacs010-${Date.now()}.xml`; a.click();
     }
 
     copyToClipboard() {
+        this.generateXml(); // Re-ensure XML is fresh
         navigator.clipboard.writeText(this.generatedXml).then(() => {
             this.snackBar.open('Copied to clipboard!', 'Close', { duration: 2000 });
         });
@@ -1095,19 +1147,26 @@ ${this.rmtInf(v)}
         }
 
         const tFields = ['clstTm', 'tillTm', 'frTm', 'rjctTm'];
-        if (tFields.includes(c) && ctrl.errors?.['pattern']) return 'Invalid time format. Must include timezone offset (e.g., 09:00:00+05:30).';
-        
-        if (ctrl.errors?.['required']) return 'Required field.';
-        if (c === 'purposeCd' && ctrl.errors?.['pattern']) return 'Invalid Purpose Code. Please select from the list or enter a valid ISO 20022 Purpose Code.';
-        if (c === 'clrSysRef' && ctrl.errors?.['pattern']) return 'Invalid Pattern (Alphanumeric and standard special characters only, max 35 chars).';
-        if (ctrl.errors?.['pattern']) return 'Invalid format.';
-        if (ctrl.errors?.['maxlength']) return `Max ${ctrl.errors['maxlength'].requiredLength} chars.`;
-        if (ctrl.errors?.['target2']) return 'T2 requires EUR.';
-        if (ctrl.errors?.['chaps']) return 'CHAPS requires GBP.';
-        if (ctrl.errors?.['chips']) return 'CHIPS requires USD.';
-        if (ctrl.errors?.['fed']) return 'FED requires USD.';
-        if (ctrl.errors?.['forbidden']) return 'Clearing System Reference must NOT be sent if no active clearing system is used.';
-        if (ctrl.errors?.['linked']) return 'Name and Address must always be present together.';
+        if (tFields.includes(c) && ctrl!.errors?.['pattern'])
+            return 'Invalid time format. Must include timezone offset (e.g., 09:00:00+05:30).';
+
+        // ISO 20022 MX address field validation
+        const cl = c.toLowerCase();
+        if (cl.includes('bldgnb') || cl.includes('pstcd') || cl.includes('pstbx') || cl.includes('bldgnm') || cl.includes('twnnm') || cl.includes('twnlctn') || cl.includes('dstrctnm') || cl.includes('ctrysubdvsn') || cl.includes('strtnm') || cl.includes('dept') || cl.includes('subdept') || cl.includes('flr') || cl.includes('room') || cl.includes('adrline')) {
+            if (ctrl!.errors?.['pattern']) return 'Invalid character. Only ISO 20022 MX allowed characters permitted.';
+        }
+
+        if (ctrl!.errors?.['required']) return 'Required field.';
+        if (c === 'purposeCd' && ctrl!.errors?.['pattern']) return 'Invalid Purpose Code. Please select from the list or enter a valid ISO 20022 Purpose Code.';
+        if (c === 'clrSysRef' && ctrl!.errors?.['pattern']) return 'Invalid Pattern (Alphanumeric and standard special characters only, max 35 chars).';
+        if (ctrl!.errors?.['pattern']) return 'Invalid format.';
+        if (ctrl!.errors?.['maxlength']) return `Max ${ctrl!.errors!['maxlength'].requiredLength} chars.`;
+        if (ctrl!.errors?.['target2']) return 'T2 requires EUR.';
+        if (ctrl!.errors?.['chaps']) return 'CHAPS requires GBP.';
+        if (ctrl!.errors?.['chips']) return 'CHIPS requires USD.';
+        if (ctrl!.errors?.['fed']) return 'FED requires USD.';
+        if (ctrl!.errors?.['forbidden']) return 'Clearing System Reference must NOT be sent if no active clearing system is used.';
+        if (ctrl!.errors?.['linked']) return 'Name and Address must always be present together.';
         return 'Invalid value.';
     }
 
@@ -1122,6 +1181,18 @@ ${this.rmtInf(v)}
 
     @HostListener('keydown', ['$event'])
     onKeyDown(event: KeyboardEvent) {
+        // 1. History & Formatting Shortcuts
+        if (event.ctrlKey || event.metaKey) {
+            if (document.activeElement?.classList.contains('code-editor')) {
+                switch (event.key.toLowerCase()) {
+                    case 'z': event.preventDefault(); this.undoXml(); return;
+                    case 'y': event.preventDefault(); this.redoXml(); return;
+                    case 's': event.preventDefault(); this.formatXml(); return;
+                    case '/': event.preventDefault(); this.toggleCommentXml(); return;
+                }
+            }
+        }
+
         const target = event.target as HTMLInputElement;
         if (!target || (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA')) return;
         
@@ -1135,11 +1206,14 @@ ${this.rmtInf(v)}
         const val = target.value || '';
         const key = event.key;
 
-        // 1. Max length restriction (Hard block at key level)
+        // 1. Max length restriction (Warning & Block)
         const maxLen = target.maxLength;
         if (maxLen > 0 && val.length >= maxLen && target.selectionStart === target.selectionEnd) {
-            event.preventDefault();
-            return;
+            if (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey) {
+                this.showMaxLenWarning[name] = true;
+                if (this.warningTimeouts[name]) clearTimeout(this.warningTimeouts[name]);
+                this.warningTimeouts[name] = setTimeout(() => this.showMaxLenWarning[name] = false, 3000);
+            }
         }
 
         const n = name.toLowerCase();
@@ -1148,36 +1222,31 @@ ${this.rmtInf(v)}
         // Numeric only (Amount, nbOfTxs)
         if (n.includes('amount') || n === 'nboftxs') {
             if (!/^[0-9.]$/.test(key)) {
-                event.preventDefault();
-                return;
+                // restriction removed;
             }
             if (key === '.' && val.includes('.')) {
-                event.preventDefault(); // Only one dot allowed
-                return;
+                // restriction removed;
             }
         }
         
         // BIC/IBAN (Alphanumeric only)
         if (n.includes('bic') || n.includes('iban')) {
             if (!/^[A-Za-z0-9]$/.test(key)) {
-                event.preventDefault();
-                return;
+                // restriction removed;
             }
         }
 
         // LEI (Alphanumeric only)
         if (n.includes('lei')) {
             if (!/^[A-Za-z0-9]$/.test(key)) {
-                event.preventDefault();
-                return;
+                // restriction removed;
             }
         }
 
         // UETR (Hex + dashes)
         if (n === 'uetr') {
             if (!/^[a-fA-F0-9\-]$/.test(key)) {
-                event.preventDefault();
-                return;
+                // restriction removed;
             }
         }
 
@@ -1185,7 +1254,7 @@ ${this.rmtInf(v)}
         const mxSetRegex = /^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/;
         if (target.type === 'text' || target.type === 'textarea') {
             if (!mxSetRegex.test(key)) {
-                event.preventDefault();
+                // restriction removed;
             }
         }
     }
@@ -1200,15 +1269,17 @@ ${this.rmtInf(v)}
         const maxLen = target.maxLength;
         let val = target.value || '';
 
-        // Sanitize input (especially after paste)
+        // Sanitize input (especially after paste) - Strip literal escape characters
+        val = val.replace(/\\n/g, '').replace(/\\t/g, '');
+        
         const n = name.toLowerCase();
         if (n.includes('amount') || n === 'nboftxs') {
-            val = val.replace(/[^0-9.]/g, '');
+            // sanitization removed
             const parts = val.split('.');
             if (parts.length > 2) val = parts[0] + '.' + parts.slice(1).join('');
         }
         if (n.includes('bic') || n.includes('iban') || n.includes('lei')) {
-            val = val.replace(/[^A-Za-z0-9]/g, '');
+            // sanitization removed
         }
 
         // Enforce casing
@@ -1257,6 +1328,13 @@ ${this.rmtInf(v)}
                 (this.form.get(key)?.touched || this.form.get(key)?.dirty)
             );
         });
+    }
+
+    private formatAmount(val: any): string {
+        if (!val) return '0.00';
+        let numStr = val.toString().trim().replace(/,/g, '');
+        const num = parseFloat(numStr);
+        return isNaN(num) ? '0.00' : num.toFixed(2);
     }
 
 }
