@@ -190,7 +190,7 @@
                         <label>Category Purpose Code <span class="opt">Optional</span></label>
                         <select formControlName="ctgyPurpCd">
                             <option value="">None</option>
-                            <option *ngFor="let p of purposes" [value]="p">{{p}}</option>
+                            <option *ngFor="let p of categoryPurposes" [value]="p">{{p}}</option>
                         </select>
                         <div class="validation-msg" *ngIf="err('ctgyPurpCd') as e">{{e}}</div>
                     </div>

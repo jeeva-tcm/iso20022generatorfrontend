@@ -89,6 +89,23 @@ export class Pacs3Component implements OnInit {
 
     // Init history
     this.pushHistory();
+
+    // Enforce XOR logic for Payment Type Information choices
+    const choiceFields = ['svcLvl', 'lclInstrm', 'ctgyPurp'];
+    choiceFields.forEach(prefix => {
+      this.form.get(prefix + 'Cd')?.valueChanges.subscribe(val => {
+        if (val && this.form.get(prefix + 'Prtry')?.value) {
+          this.form.get(prefix + 'Prtry')?.setValue('', { emitEvent: false });
+          this.generateXml();
+        }
+      });
+      this.form.get(prefix + 'Prtry')?.valueChanges.subscribe(val => {
+        if (val && this.form.get(prefix + 'Cd')?.value) {
+          this.form.get(prefix + 'Cd')?.setValue('', { emitEvent: false });
+          this.generateXml();
+        }
+      });
+    });
   }
 
   private updateClearingSystemValidation() {
@@ -558,6 +575,29 @@ export class Pacs3Component implements OnInit {
       if (!c[p + 'PrvtOthrIssr']) c[p + 'PrvtOthrIssr'] = ['', Validators.maxLength(35)];
     });
 
+    // Add static address data to resolve "Name and Address must always be present together"
+    // AND the rule: "If Address Line is present and any other element is present, then Town Name and Country are mandatory"
+    c['dbtrAddrType'] = ['unstructured'];
+    c['dbtrCtry'] = ['US', Validators.pattern(/^[A-Z]{2,2}$/)];
+    c['dbtrTwnNm'] = ['New York', [Validators.maxLength(35), ADDR_PATTERN]];
+    c['dbtrAdrLine1'] = ['123 Wall Street', [Validators.maxLength(70), ADDR_PATTERN]];
+
+    c['cdtrAddrType'] = ['unstructured'];
+    c['cdtrCtry'] = ['GB', Validators.pattern(/^[A-Z]{2,2}$/)];
+    c['cdtrTwnNm'] = ['London', [Validators.maxLength(35), ADDR_PATTERN]];
+    c['cdtrAdrLine1'] = ['456 Canary Wharf', [Validators.maxLength(70), ADDR_PATTERN]];
+
+    // Also for Agents if required by some rules
+    c['dbtrAgtAddrType'] = ['unstructured'];
+    c['dbtrAgtCtry'] = ['US', Validators.pattern(/^[A-Z]{2,2}$/)];
+    c['dbtrAgtTwnNm'] = ['New York', [Validators.maxLength(35), ADDR_PATTERN]];
+    c['dbtrAgtAdrLine1'] = ['789 Banker Lane', [Validators.maxLength(70), ADDR_PATTERN]];
+
+    c['cdtrAgtAddrType'] = ['unstructured'];
+    c['cdtrAgtCtry'] = ['GB', Validators.pattern(/^[A-Z]{2,2}$/)];
+    c['cdtrAgtTwnNm'] = ['London', [Validators.maxLength(35), ADDR_PATTERN]];
+    c['cdtrAgtAdrLine1'] = ['321 Finance Square', [Validators.maxLength(70), ADDR_PATTERN]];
+
     // Set default names for mandatory agents
     c['dbtrAgtName'] = ['Debtor Agent', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
     c['cdtrAgtName'] = ['Creditor Agent', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
@@ -834,68 +874,68 @@ export class Pacs3Component implements OnInit {
 
     // DrctDbtTxInf — strict XSD element order for pacs.003.001.08
     let tx = '';
-    let pmtIdXml = this.el('InstrId', v.instrId) + this.el('EndToEndId', v.endToEndId) + this.el('TxId', v.txId) + this.el('UETR', v.uetr);
-    if (v.clrSysRef?.trim()) pmtIdXml += this.el('ClrSysRef', v.clrSysRef);
-    tx += this.tag('PmtId', pmtIdXml, 3);
+    let pmtIdXml = this.el('InstrId', v.instrId, 5) + this.el('EndToEndId', v.endToEndId, 5) + this.el('TxId', v.txId, 5) + this.el('UETR', v.uetr, 5);
+    if (v.clrSysRef?.trim()) pmtIdXml += this.el('ClrSysRef', v.clrSysRef, 5);
+    tx += this.tag('PmtId', pmtIdXml, 4);
 
     let pmtTpXml = '';
-    if (v.instrPrty?.trim()) pmtTpXml += this.el('InstrPrty', v.instrPrty, 4);
-    if (v.clrChanl?.trim()) pmtTpXml += this.el('ClrChanl', v.clrChanl, 4);
+    if (v.instrPrty?.trim()) pmtTpXml += this.el('InstrPrty', v.instrPrty, 5);
+    if (v.clrChanl?.trim()) pmtTpXml += this.el('ClrChanl', v.clrChanl, 5);
     
     // Multiple Service Levels (up to 3)
     [1, 2, 3].forEach(i => {
       const s = i === 1 ? '' : i.toString();
       if (v['svcLvlCd' + s]?.trim() || v['svcLvlPrtry' + s]?.trim()) {
-        let content = v['svcLvlCd' + s]?.trim() ? this.el('Cd', v['svcLvlCd' + s], 5) : this.el('Prtry', v['svcLvlPrtry' + s], 5);
-        pmtTpXml += this.tag('SvcLvl', content, 4);
+        let content = v['svcLvlCd' + s]?.trim() ? this.el('Cd', v['svcLvlCd' + s], 6) : this.el('Prtry', v['svcLvlPrtry' + s], 6);
+        pmtTpXml += this.tag('SvcLvl', content, 5);
       }
     });
 
     if (v.lclInstrmCd?.trim() || v.lclInstrmPrtry?.trim()) {
-      let content = v.lclInstrmCd?.trim() ? this.el('Cd', v.lclInstrmCd, 5) : this.el('Prtry', v.lclInstrmPrtry, 5);
-      pmtTpXml += this.tag('LclInstrm', content, 4);
+      let content = v.lclInstrmCd?.trim() ? this.el('Cd', v.lclInstrmCd, 6) : this.el('Prtry', v.lclInstrmPrtry, 6);
+      pmtTpXml += this.tag('LclInstrm', content, 5);
     }
-    if (v.seqTp?.trim()) pmtTpXml += this.el('SeqTp', v.seqTp, 4);
+    if (v.seqTp?.trim()) pmtTpXml += this.el('SeqTp', v.seqTp, 5);
     if (v.ctgyPurpCd?.trim() || v.ctgyPurpPrtry?.trim()) {
-      let content = v.ctgyPurpCd?.trim() ? this.el('Cd', v.ctgyPurpCd, 5) : this.el('Prtry', v.ctgyPurpPrtry, 5);
-      pmtTpXml += this.tag('CtgyPurp', content, 4);
+      let content = v.ctgyPurpCd?.trim() ? this.el('Cd', v.ctgyPurpCd, 6) : this.el('Prtry', v.ctgyPurpPrtry, 6);
+      pmtTpXml += this.tag('CtgyPurp', content, 5);
     }
-    if (pmtTpXml) tx += this.tag('PmtTpInf', pmtTpXml, 3);
+    if (pmtTpXml) tx += this.tag('PmtTpInf', pmtTpXml, 4);
 
     const formattedAmt = this.formatting.formatAmount(v.amount, v.currency);
-    tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${formattedAmt}</IntrBkSttlmAmt>\n`;
-    tx += this.el('IntrBkSttlmDt', v.sttlmDt, 3);
-    if (v.sttlmPrty?.trim()) tx += this.el('SttlmPrty', v.sttlmPrty, 3);
+    tx += `\t\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${formattedAmt}</IntrBkSttlmAmt>\n`;
+    tx += this.el('IntrBkSttlmDt', v.sttlmDt, 4);
+    if (v.sttlmPrty?.trim()) tx += this.el('SttlmPrty', v.sttlmPrty, 4);
     
     // SttlmTmIndctn
     if (v.dbtDtTm?.trim() || v.cdtDtTm?.trim()) {
       let stind = '';
-      if (v.dbtDtTm?.trim()) stind += this.el('DbtDtTm', this.fdt(v.dbtDtTm), 4);
-      if (v.cdtDtTm?.trim()) stind += this.el('CdtDtTm', this.fdt(v.cdtDtTm), 4);
-      tx += this.tag('SttlmTmIndctn', stind, 3);
+      if (v.dbtDtTm?.trim()) stind += this.el('DbtDtTm', this.fdt(v.dbtDtTm), 5);
+      if (v.cdtDtTm?.trim()) stind += this.el('CdtDtTm', this.fdt(v.cdtDtTm), 5);
+      tx += this.tag('SttlmTmIndctn', stind, 4);
     }
     
     // InstdAmt
     if (v.instdAmt?.trim() && v.instdAmtCcy?.trim()) {
       const formInstdAmt = Number(v.instdAmt).toFixed(this.getD(v.instdAmtCcy));
-      tx += `\t\t\t<InstdAmt Ccy="${this.e(v.instdAmtCcy)}">${formInstdAmt}</InstdAmt>\n`;
+      tx += `\t\t\t\t<InstdAmt Ccy="${this.e(v.instdAmtCcy)}">${formInstdAmt}</InstdAmt>\n`;
     }
     
-    if (v.xchgRate?.trim()) tx += this.el('XchgRate', v.xchgRate, 3);
-    tx += this.el('ChrgBr', v.chrgBr, 3);
+    if (v.xchgRate?.trim()) tx += this.el('XchgRate', v.xchgRate, 4);
+    tx += this.el('ChrgBr', v.chrgBr, 4);
     
     // Multiple Charges (up to 3)
     [1, 2, 3].forEach(i => {
       const s = i === 1 ? '' : i.toString();
       if (v['chrgsInfAmt' + s]?.trim() && v['chrgsInfCcy' + s]?.trim()) {
-        let chg = `\t\t\t\t<Amt Ccy="${this.e(v['chrgsInfCcy' + s])}">${Number(v['chrgsInfAmt' + s]).toFixed(this.getD(v['chrgsInfCcy' + s]))}</Amt>\n`;
+        let chg = `\t\t\t\t\t<Amt Ccy="${this.e(v['chrgsInfCcy' + s])}">${Number(v['chrgsInfAmt' + s]).toFixed(this.getD(v['chrgsInfCcy' + s]))}</Amt>\n`;
         const agtBic = v['chrgsInfAgtBic' + s] || v.cdtrAgtBic;
-        chg += `\t\t\t\t<Agt>\n\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t<BICFI>${this.e(agtBic)}</BICFI>\n\t\t\t\t\t</FinInstnId>\n\t\t\t\t</Agt>\n`;
-        tx += this.tag('ChrgsInf', chg, 3);
+        chg += `\t\t\t\t\t<Agt>\n\t\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t\t<BICFI>${this.e(agtBic)}</BICFI>\n\t\t\t\t\t\t</FinInstnId>\n\t\t\t\t\t</Agt>\n`;
+        tx += this.tag('ChrgsInf', chg, 4);
       }
     });
 
-    tx += this.el('ReqdColltnDt', v.reqdColltnDt, 3);
+    tx += this.el('ReqdColltnDt', v.reqdColltnDt, 4);
 
     const formatAcct = (val: string, tabs: number) => {
       if (!val) return '';
@@ -908,73 +948,71 @@ export class Pacs3Component implements OnInit {
     };
 
     // DrctDbtTx (Sequence: 12)
+    // DrctDbtTx (Sequence: 12)
     if (v.mndtId || v.dtOfSgntr || v.orgnlMndtId || v.orgnlCdtrSchmeIdNm) {
-      let mndtInf = '';
-      let ddtx = '';
-      if (v.mndtId) ddtx += this.el('MndtId', v.mndtId, 5);
-      if (v.dtOfSgntr) ddtx += this.el('DtOfSgntr', v.dtOfSgntr, 5);
+      let ddinf = '';
+      let mdt = '';
+      if (v.mndtId) mdt += this.el('MndtId', v.mndtId, 6);
+      if (v.dtOfSgntr) mdt += this.el('DtOfSgntr', v.dtOfSgntr, 6);
       if (v.amdmntInd === 'true' || v.amdmntInd === true) {
-        ddtx += this.el('AmdmntInd', 'true', 5);
+        mdt += this.el('AmdmntInd', 'true', 6);
         let amdmntDtls = '';
-        if (v.orgnlMndtId) amdmntDtls += this.el('OrgnlMndtId', v.orgnlMndtId, 6);
+        if (v.orgnlMndtId) amdmntDtls += this.el('OrgnlMndtId', v.orgnlMndtId, 7);
         if (v.orgnlCdtrSchmeIdNm || v.orgnlCdtrSchmeAddrType !== 'none' || v.orgnlCdtrSchmeCtryOfRes?.trim() || v.orgnlCdtrSchmeIdType !== 'none') {
-          let sc = this.el('Nm', v.orgnlCdtrSchmeIdNm, 7) + this.el('CtryOfRes', v.orgnlCdtrSchmeCtryOfRes, 7) + this.addrXml(v, 'orgnlCdtrSchme', 7) + this.partyIdXml(v, 'orgnlCdtrSchme', 7);
-          amdmntDtls += this.tag('OrgnlCdtrSchmeId', sc, 6);
+          let sc = this.el('Nm', v.orgnlCdtrSchmeIdNm, 8) + this.el('CtryOfRes', v.orgnlCdtrSchmeCtryOfRes, 8) + this.addrXml(v, 'orgnlCdtrSchme', 8) + this.partyIdXml(v, 'orgnlCdtrSchme', 8);
+          amdmntDtls += this.tag('OrgnlCdtrSchmeId', sc, 7);
         }
         if (v.orgnlCdtrAgtAcct?.trim() || v.orgnlCdtrAgtAcctTpCd?.trim() || v.orgnlCdtrAgtAcctCcy?.trim()) {
-          let acctXml = this.tag('Id', formatAcct(v.orgnlCdtrAgtAcct, 7), 7);
-          if (v.orgnlCdtrAgtAcctTpCd?.trim()) acctXml += this.tag('Tp', this.el('Cd', v.orgnlCdtrAgtAcctTpCd, 8), 7);
-          if (v.orgnlCdtrAgtAcctCcy?.trim()) acctXml += this.el('Ccy', v.orgnlCdtrAgtAcctCcy, 7);
-          if (v.orgnlCdtrAgtAcctNm?.trim()) acctXml += this.el('Nm', v.orgnlCdtrAgtAcctNm, 7);
-          amdmntDtls += this.tag('OrgnlCdtrAgtAcct', acctXml, 6);
+          let acctXml = this.tag('Id', formatAcct(v.orgnlCdtrAgtAcct, 8), 8);
+          if (v.orgnlCdtrAgtAcctTpCd?.trim()) acctXml += this.tag('Tp', this.el('Cd', v.orgnlCdtrAgtAcctTpCd, 9), 8);
+          if (v.orgnlCdtrAgtAcctCcy?.trim()) acctXml += this.el('Ccy', v.orgnlCdtrAgtAcctCcy, 8);
+          if (v.orgnlCdtrAgtAcctNm?.trim()) acctXml += this.el('Nm', v.orgnlCdtrAgtAcctNm, 8);
+          amdmntDtls += this.tag('OrgnlCdtrAgtAcct', acctXml, 7);
         }
-        if (amdmntDtls) ddtx += this.tag('AmdmntInfDtls', amdmntDtls, 5);
+        if (amdmntDtls) mdt += this.tag('AmdmntInfDtls', amdmntDtls, 6);
       }
-      let ddinf = '';
-      if (ddtx) ddinf += this.tag('MndtRltdInf', ddtx, 4);
-      ddinf += this.agt('OrgnlCdtrAgt', 'orgnlCdtrAgt', v);
+      if (mdt) ddinf += this.tag('MndtRltdInf', mdt, 5);
+      
+      ddinf += this.agt('OrgnlCdtrAgt', 'orgnlCdtrAgt', v, 5);
       if (v.orgnlDbtrName?.trim() || v.orgnlDbtrCtryOfRes?.trim() || (v.orgnlDbtrAddrType && v.orgnlDbtrAddrType !== 'none')) {
-        ddinf += this.tag('OrgnlDbtr', this.el('Nm', v.orgnlDbtrName, 5) + this.el('CtryOfRes', v.orgnlDbtrCtryOfRes, 5) + this.addrXml(v, 'orgnlDbtr', 5) + this.partyIdXml(v, 'orgnlDbtr', 5), 4);
+        ddinf += this.tag('OrgnlDbtr', this.el('Nm', v.orgnlDbtrName, 6) + this.el('CtryOfRes', v.orgnlDbtrCtryOfRes, 6) + this.addrXml(v, 'orgnlDbtr', 6) + this.partyIdXml(v, 'orgnlDbtr', 6), 5);
       }
-      tx += this.tag('DrctDbtTx', ddinf, 3);
+      tx += this.tag('DrctDbtTx', ddinf, 4);
     }
 
     // Cdtr Block (Sequence: 13-17)
-    tx += this.partyAgentXml('Cdtr', 'cdtr', v, 3);
-    if (v.cdtrAcct?.trim()) tx += this.tag('CdtrAcct', this.tag('Id', formatAcct(v.cdtrAcct, 4), 4), 3);
-    tx += this.agt('CdtrAgt', 'cdtrAgt', v);
-    if (v.cdtrAgtAcct?.trim()) tx += this.tag('CdtrAgtAcct', this.tag('Id', formatAcct(v.cdtrAgtAcct, 4), 4), 3);
+    tx += this.partyAgentXml('Cdtr', 'cdtr', v, 4);
+    if (v.cdtrAcct?.trim()) tx += this.tag('CdtrAcct', this.tag('Id', formatAcct(v.cdtrAcct, 5), 5), 4);
+    tx += this.agt('CdtrAgt', 'cdtrAgt', v, 4);
+    if (v.cdtrAgtAcct?.trim()) tx += this.tag('CdtrAgtAcct', this.tag('Id', formatAcct(v.cdtrAgtAcct, 5), 5), 4);
     if (v.ultmtCdtrName?.trim() || (v.ultmtCdtrAddrType && v.ultmtCdtrAddrType !== 'none') || (v.ultmtCdtrIdType && v.ultmtCdtrIdType !== 'none')) {
-      tx += this.tag('UltmtCdtr', this.el('Nm', v.ultmtCdtrName, 4) + this.addrXml(v, 'ultmtCdtr', 4) + this.partyIdXml(v, 'ultmtCdtr', 4), 3);
+      tx += this.tag('UltmtCdtr', this.el('Nm', v.ultmtCdtrName, 5) + this.addrXml(v, 'ultmtCdtr', 5) + this.partyIdXml(v, 'ultmtCdtr', 5), 4);
     }
 
     // Agent Block (Sequence: 18-26)
-    tx += this.agt('InstgAgt', 'instgAgt', v);
-    if (v.instgAgtAcct?.trim()) tx += this.tag('InstgAgtAcct', this.tag('Id', formatAcct(v.instgAgtAcct, 4), 4), 3);
-    tx += this.agt('InstdAgt', 'instdAgt', v);
-    if (v.instdAgtAcct?.trim()) tx += this.tag('InstdAgtAcct', this.tag('Id', formatAcct(v.instdAgtAcct, 4), 4), 3);
+    tx += this.agt('InstgAgt', 'instgAgt', v, 4);
+    if (v.instgAgtAcct?.trim()) tx += this.tag('InstgAgtAcct', this.tag('Id', formatAcct(v.instgAgtAcct, 5), 5), 4);
+    tx += this.agt('InstdAgt', 'instdAgt', v, 4);
+    if (v.instdAgtAcct?.trim()) tx += this.tag('InstdAgtAcct', this.tag('Id', formatAcct(v.instdAgtAcct, 5), 5), 4);
     ['intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'].forEach(p => {
-      tx += this.agt(p.charAt(0).toUpperCase() + p.slice(1), p, v);
+      tx += this.agt(p.charAt(0).toUpperCase() + p.slice(1), p, v, 4);
       if (v[p + 'Acct']?.trim()) {
-        tx += this.tag(p.charAt(0).toUpperCase() + p.slice(1) + 'Acct', this.tag('Id', formatAcct(v[p + 'Acct'], 4), 4), 3);
+        tx += this.tag(p.charAt(0).toUpperCase() + p.slice(1) + 'Acct', this.tag('Id', formatAcct(v[p + 'Acct'], 5), 5), 4);
       }
     });
 
     // InitgPty (Sequence: 27)
-    if (v.initgPtyName?.trim() || (v.initgPtyAddrType && v.initgPtyAddrType !== 'none') || (v.initgPtyIdType && v.initgPtyIdType !== 'none')) {
-       tx += this.tag('InitgPty', this.el('Nm', v.initgPtyName, 4) + this.addrXml(v, 'initgPty', 4) + this.partyIdXml(v, 'initgPty', 4), 3);
-    }
+    tx += this.initgPtyXml(v, 'initgPty', 4);
 
     // InstgPty (Sequence: 28)
-    if (v.instgPtyName?.trim() || (v.instgPtyAddrType && v.instgPtyAddrType !== 'none') || (v.instgPtyIdType && v.instgPtyIdType !== 'none')) {
-       tx += this.tag('InstgPty', this.el('Nm', v.instgPtyName, 4) + this.addrXml(v, 'instgPty', 4) + this.partyIdXml(v, 'instgPty', 4), 3);
-    }
+    tx += this.initgPtyXml(v, 'instgPty', 4);
+
 
     // Dbtr Block (Sequence: 29-33)
-    tx += this.partyAgentXml('Dbtr', 'dbtr', v, 3);
-    if (v.dbtrAcct?.trim()) tx += this.tag('DbtrAcct', this.tag('Id', formatAcct(v.dbtrAcct, 4), 4), 3);
-    tx += this.agt('DbtrAgt', 'dbtrAgt', v);
-    if (v.dbtrAgtAcct?.trim()) tx += this.tag('DbtrAgtAcct', this.tag('Id', formatAcct(v.dbtrAgtAcct, 4), 4), 3);
+    tx += this.partyAgentXml('Dbtr', 'dbtr', v, 4);
+    if (v.dbtrAcct?.trim()) tx += this.tag('DbtrAcct', this.tag('Id', formatAcct(v.dbtrAcct, 5), 5), 4);
+    tx += this.agt('DbtrAgt', 'dbtrAgt', v, 4);
+    if (v.dbtrAgtAcct?.trim()) tx += this.tag('DbtrAgtAcct', this.tag('Id', formatAcct(v.dbtrAgtAcct, 5), 5), 4);
     if (v.ultmtDbtrName?.trim() || (v.ultmtDbtrAddrType && v.ultmtDbtrAddrType !== 'none') || (v.ultmtDbtrIdType && v.ultmtDbtrIdType !== 'none')) {
       tx += this.tag('UltmtDbtr', this.el('Nm', v.ultmtDbtrName, 4) + this.addrXml(v, 'ultmtDbtr', 4) + this.partyIdXml(v, 'ultmtDbtr', 4), 3);
     }
@@ -1175,7 +1213,7 @@ ${tx}\t\t\t</DrctDbtTxInf>
     const bic = v[prefix + 'Bic']; if (!bic) return '';
     return `\t\t\t\t<${tag}>\n\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n${this.addrXml(v, prefix, 6)}\t\t\t\t\t</FinInstnId>\n\t\t\t\t</${tag}>\n`;
   }
-  agt(tag: string, prefix: string, v: any, forceEmpty = false) {
+  agt(tag: string, prefix: string, v: any, indent = 4) {
     const bic = v[prefix + 'Bic'];
     const name = v[prefix + 'Name'];
     const lei = v[prefix + 'Lei'];
@@ -1183,35 +1221,39 @@ ${tx}\t\t\t</DrctDbtTxInf>
     const clrMmb = v[prefix + 'ClrSysMmbId'];
 
     let content = '';
-    if (bic) content += `\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n`;
+    const t = this.tabs(indent + 2);
+    if (bic) content += `${t}<BICFI>${this.e(bic)}</BICFI>\n`;
     if (clrMmb || clrCd) {
-      content += `\t\t\t\t\t<ClrSysMmbId>\n`;
-      if (clrCd) content += `\t\t\t\t\t\t<ClrSysId>\n\t\t\t\t\t\t\t<Cd>${this.e(clrCd)}</Cd>\n\t\t\t\t\t\t</ClrSysId>\n`;
-      if (clrMmb) content += `\t\t\t\t\t\t<MmbId>${this.e(clrMmb)}</MmbId>\n`;
-      content += `\t\t\t\t\t</ClrSysMmbId>\n`;
+      content += `${t}<ClrSysMmbId>\n`;
+      if (clrCd) content += `${t}\t<ClrSysId>\n${t}\t\t<Cd>${this.e(clrCd)}</Cd>\n${t}\t</ClrSysId>\n`;
+      if (clrMmb) content += `${t}\t<MmbId>${this.e(clrMmb)}</MmbId>\n`;
+      content += `${t}</ClrSysMmbId>\n`;
     }
-    if (lei) content += `\t\t\t\t\t<LEI>${this.e(lei)}</LEI>\n`;
-    if (name) content += `\t\t\t\t\t<Nm>${this.e(name)}</Nm>\n`;
+    if (lei) content += `${t}<LEI>${this.e(lei)}</LEI>\n`;
+    if (name) content += `${t}<Nm>${this.e(name)}</Nm>\n`;
     
-    let addr = this.addrXml(v, prefix, 5, tag.startsWith('PrvsInstgAgt'));
+    let addr = this.addrXml(v, prefix, indent + 2, tag.startsWith('PrvsInstgAgt'));
     // Auto-populate postal address for Creditor/Debtor Agent if missing
     if (!addr && (prefix === 'cdtrAgt' || prefix === 'dbtrAgt')) {
-      addr = `\t\t\t\t\t<PstlAdr>\n\t\t\t\t\t\t<TwnNm>${prefix === 'cdtrAgt' ? 'London' : 'New York'}</TwnNm>\n\t\t\t\t\t\t<Ctry>${prefix === 'cdtrAgt' ? 'GB' : 'US'}</Ctry>\n\t\t\t\t\t\t<AdrLine>Address Line 1</AdrLine>\n\t\t\t\t\t\t<AdrLine>Address Line 2</AdrLine>\n\t\t\t\t\t</PstlAdr>\n`;
+      addr = `${this.tabs(indent + 2)}<PstlAdr>\n${this.tabs(indent + 3)}<TwnNm>${prefix === 'cdtrAgt' ? 'London' : 'New York'}</TwnNm>\n${this.tabs(indent + 3)}<Ctry>${prefix === 'cdtrAgt' ? 'GB' : 'US'}</Ctry>\n${this.tabs(indent + 3)}<AdrLine>Address Line 1</AdrLine>\n${this.tabs(indent + 3)}<AdrLine>Address Line 2</AdrLine>\n${this.tabs(indent + 2)}</PstlAdr>\n`;
     }
     content += addr;
 
-    if (!content.trim() && !forceEmpty) return '';
-    return `\t\t\t<${tag}>\n\t\t\t\t<FinInstnId>\n${content}\t\t\t\t</FinInstnId>\n\t\t\t</${tag}>\n`;
+    if (!content.trim()) return '';
+    return `${this.tabs(indent)}<${tag}>\n${this.tabs(indent + 1)}<FinInstnId>\n${content}${this.tabs(indent + 1)}</FinInstnId>\n${this.tabs(indent)}</${tag}>\n`;
   }
   addrXml(v: any, p: string, indent = 4, isPrvs = false): string {
     const type = v[p + 'AddrType']; if (!type || type === 'none') return '';
     const lines: string[] = []; const t = this.tabs(indent + 1);
-    if (type === 'structured' || type === 'hybrid') {
-      // PostalAddress27 XSD element order
-      if (!isPrvs) {
+    
+    // 1. AdrTp
+    if (!isPrvs) {
         if (v[p + 'AdrTpCd']) lines.push(`${t}<AdrTp>\n${t}\t<Cd>${this.e(v[p + 'AdrTpCd'])}</Cd>\n${t}</AdrTp>`);
         else if (v[p + 'AdrTpPrtry']) lines.push(`${t}<AdrTp>\n${t}\t<Prtry>${this.e(v[p + 'AdrTpPrtry'])}</Prtry>\n${t}</AdrTp>`);
-      }
+    }
+
+    // Structured fields (hybrid or structured)
+    if (['structured', 'hybrid'].includes(type)) {
       if (v[p + 'Dept']) lines.push(`${t}<Dept>${this.e(v[p + 'Dept'])}</Dept>`);
       if (v[p + 'SubDept']) lines.push(`${t}<SubDept>${this.e(v[p + 'SubDept'])}</SubDept>`);
       if (v[p + 'StrtNm']) lines.push(`${t}<StrtNm>${this.e(v[p + 'StrtNm'])}</StrtNm>`);
@@ -1221,17 +1263,21 @@ ${tx}\t\t\t</DrctDbtTxInf>
       if (v[p + 'PstBx']) lines.push(`${t}<PstBx>${this.e(v[p + 'PstBx'])}</PstBx>`);
       if (v[p + 'Room']) lines.push(`${t}<Room>${this.e(v[p + 'Room'])}</Room>`);
       if (v[p + 'PstCd']) lines.push(`${t}<PstCd>${this.e(v[p + 'PstCd'])}</PstCd>`);
-      if (v[p + 'TwnNm']) lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'])}</TwnNm>`);
-      if (v[p + 'TwnLctnNm']) lines.push(`${t}<TwnLctnNm>${this.e(v[p + 'TwnLctnNm'])}</TwnLctnNm>`);
-      if (v[p + 'DstrctNm']) lines.push(`${t}<DstrctNm>${this.e(v[p + 'DstrctNm'])}</DstrctNm>`);
-      if (v[p + 'CtrySubDvsn']) lines.push(`${t}<CtrySubDvsn>${this.e(v[p + 'CtrySubDvsn'])}</CtrySubDvsn>`);
-      if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
     }
-    // AdrLine: allowed in unstructured/hybrid, FORBIDDEN in structured
-    if (type === 'unstructured' || type === 'hybrid') {
+
+    // Geographic elements
+    if (v[p + 'TwnNm']) lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'])}</TwnNm>`);
+    if (v[p + 'TwnLctnNm']) lines.push(`${t}<TwnLctnNm>${this.e(v[p + 'TwnLctnNm'])}</TwnLctnNm>`);
+    if (v[p + 'DstrctNm']) lines.push(`${t}<DstrctNm>${this.e(v[p + 'DstrctNm'])}</DstrctNm>`);
+    if (v[p + 'CtrySubDvsn']) lines.push(`${t}<CtrySubDvsn>${this.e(v[p + 'CtrySubDvsn'])}</CtrySubDvsn>`);
+    if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
+
+    // AdrLine (unstructured or hybrid)
+    if (['unstructured', 'hybrid'].includes(type)) {
       if (v[p + 'AdrLine1']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine1'])}</AdrLine>`);
       if (v[p + 'AdrLine2']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine2'])}</AdrLine>`);
     }
+
     if (!lines.length) return '';
     return `${this.tabs(indent)}<PstlAdr>\n${lines.join('\n')}\n${this.tabs(indent)}</PstlAdr>\n`;
   }
@@ -1285,7 +1331,71 @@ ${tx}\t\t\t</DrctDbtTxInf>
     return '';
   }
 
+  /**
+   * Generic XML builder for any party block (InitgPty, InstgPty, etc.).
+   * Renders ALL available identifiers: Name, Address, AnyBIC, LEI,
+   * Clearing System Member ID, Other ID, Account — regardless of idType.
+   */
+  initgPtyXml(v: any, p: string, indent = 4): string {
+    let content = '';
+
+    // Name
+    if (v[p + 'Name']?.trim()) {
+      content += this.el('Nm', v[p + 'Name'], indent + 1);
+    }
+
+    // Postal Address
+    content += this.addrXml(v, p, indent + 1);
+
+    // Build Id/OrgId block from whatever is available: AnyBIC, LEI, ClrSys Member ID, Othr ID
+    const anyBic = v[p + 'OrgAnyBIC']?.trim();
+    const lei    = v[p + 'OrgLEI']?.trim();
+    const clrMmb = v[p + 'OrgClrSysMmbId']?.trim();
+    const clrCd  = v[p + 'OrgClrSysCd']?.trim();
+    const othrId = v[p + 'OrgOthrId']?.trim();
+
+    if (anyBic || lei || clrMmb || othrId) {
+      const t = this.tabs(indent + 3);
+      let org = '';
+      if (lei)    org += `${t}<LEI>${this.e(lei)}</LEI>\n`;
+      if (anyBic) org += `${t}<AnyBIC>${this.e(anyBic)}</AnyBIC>\n`;
+      if (clrMmb) {
+        org += `${t}<Othr>\n${t}\t<Id>${this.e(clrMmb)}</Id>\n`;
+        if (clrCd) org += `${t}\t<SchmeNm>\n${t}\t\t<Cd>${this.e(clrCd)}</Cd>\n${t}\t</SchmeNm>\n`;
+        org += `${t}</Othr>\n`;
+      }
+      if (othrId) {
+        const schemCd  = v[p + 'OrgOthrSchmeNmCd']?.trim();
+        const schemPrt = v[p + 'OrgOthrSchmeNmPrtry']?.trim();
+        const issr     = v[p + 'OrgOthrIssr']?.trim();
+        org += `${t}<Othr>\n${t}\t<Id>${this.e(othrId)}</Id>\n`;
+        if (schemCd)       org += `${t}\t<SchmeNm>\n${t}\t\t<Cd>${this.e(schemCd)}</Cd>\n${t}\t</SchmeNm>\n`;
+        else if (schemPrt) org += `${t}\t<SchmeNm>\n${t}\t\t<Prtry>${this.e(schemPrt)}</Prtry>\n${t}\t</SchmeNm>\n`;
+        if (issr) org += `${t}\t<Issr>${this.e(issr)}</Issr>\n`;
+        org += `${t}</Othr>\n`;
+      }
+      const t2 = this.tabs(indent + 2);
+      const tagName = p === 'instgPty' ? 'InstgPty' : 'InitgPty';
+      content += `${this.tabs(indent + 1)}<Id>\n${t2}<OrgId>\n${org}${t2}</OrgId>\n${this.tabs(indent + 1)}</Id>\n`;
+      if (!content.trim()) return '';
+      return `${this.tabs(indent)}<${tagName}>\n${content}${this.tabs(indent)}</${tagName}>\n`;
+    } else if (v[p + 'IdType'] === 'prvt') {
+      content += this.partyIdXml(v, p, indent + 1);
+    }
+
+    // Account (optional)
+    const acct = v[p + 'Acct']?.trim();
+    if (acct) {
+      content += `${this.tabs(indent + 1)}<Acct>\n${this.tabs(indent + 2)}<Id>\n${this.tabs(indent + 3)}<Othr>\n${this.tabs(indent + 4)}<Id>${this.e(acct)}</Id>\n${this.tabs(indent + 3)}</Othr>\n${this.tabs(indent + 2)}</Id>\n${this.tabs(indent + 1)}</Acct>\n`;
+    }
+
+    if (!content.trim()) return '';
+    const xmlTag = p === 'instgPty' ? 'InstgPty' : 'InitgPty';
+    return `${this.tabs(indent)}<${xmlTag}>\n${content}${this.tabs(indent)}</${xmlTag}>\n`;
+  }
+
   // Validation
+
   validateMessage() {
     this.generateXml();
     if (this.form.invalid) {
