@@ -1,12 +1,27 @@
 <div class="container" *ngIf="form">
         <header>
                 <h1>Customer Payment Cancellation Request (camt.055)</h1>
-                <p style="margin-top: -1rem;">Visual camt.055 Message Builder</p>
+                <p style="margin-top: -1rem;">Visual camt.055 Message Builder · ISO 20022 Compliant</p>
         </header>
 
         <div class="split-view">
                 <div class="left-panel">
                         <form [formGroup]="form" class="content-box">
+
+                                <!-- Validation Error Summary Banner -->
+                                <div class="validation-summary" *ngIf="showSubmissionErrors && formSubmissionErrors.length > 0">
+                                        <div class="validation-summary-header">
+                                                <mat-icon>error_outline</mat-icon>
+                                                <strong>{{formSubmissionErrors.length}} Validation Error(s) Found</strong>
+                                                <button class="validation-summary-close" (click)="showSubmissionErrors = false">
+                                                        <mat-icon>close</mat-icon>
+                                                </button>
+                                        </div>
+                                        <ul class="validation-summary-list">
+                                                <li *ngFor="let e of formSubmissionErrors">⚠️ {{e}}</li>
+                                        </ul>
+                                </div>
+
                                 <div class="grid">
 
                                         <div class="section-title">Application Header (AppHdr)</div>
@@ -16,29 +31,33 @@
                                                 style="font-weight: bold; margin-bottom: 0.5rem; color: var(--accent-color); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-light); padding-bottom: 4px;">
                                                 Originator (From FI)</div>
                                         <div class="form-group">
-                                                <label>From BIC</label>
+                                                <label>From BIC <span class="req">*</span></label>
                                                 <input formControlName="head_fromBic" maxlength="11"
-                                                        placeholder="Sender BIC">
+                                                        placeholder="e.g. HDFCINBB" class="auto-uppercase">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('head_fromBic', 11)" [class.at-limit]="isAtLimit('head_fromBic', 11)">{{charCount('head_fromBic', 11)}}</div>
                                                 <div class="validation-msg" *ngIf="err('head_fromBic') as e">{{e}}</div>
                                         </div>
                                         <div class="form-group">
-                                                <label>Clearing System Code (Cd)</label>
+                                                <label>Clearing System Code (Cd) <span class="opt">Optional</span></label>
                                                 <input formControlName="head_fromClrSysId" maxlength="5"
                                                         placeholder="e.g. T2, CHIP, FED">
+                                                <div class="char-counter">{{charCount('head_fromClrSysId', 5)}}</div>
                                                 <div class="validation-msg" *ngIf="err('head_fromClrSysId') as e">{{e}}
                                                 </div>
                                         </div>
                                         <div class="form-group">
-                                                <label>Member ID (MmbId)</label>
+                                                <label>Member ID (MmbId) <span class="opt">Optional</span></label>
                                                 <input formControlName="head_fromMmbId" maxlength="35"
-                                                        placeholder="Clearing Member ID">
+                                                        placeholder="e.g. MMBID001234">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('head_fromMmbId', 35)">{{charCount('head_fromMmbId', 35)}}</div>
                                                 <div class="validation-msg" *ngIf="err('head_fromMmbId') as e">{{e}}
                                                 </div>
                                         </div>
                                         <div class="form-group">
-                                                <label>LEI</label>
+                                                <label>LEI <span class="opt">Optional</span></label>
                                                 <input formControlName="head_fromLei" maxlength="20"
-                                                        placeholder="20-char LEI">
+                                                        placeholder="e.g. 7LTWFZYICNSX8D621K86">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('head_fromLei', 20)">{{charCount('head_fromLei', 20)}}</div>
                                                 <div class="validation-msg" *ngIf="err('head_fromLei') as e">{{e}}</div>
                                         </div>
                                         <div class="form-group full-width" *ngIf="err('head_from') as e"
@@ -51,29 +70,33 @@
                                                 style="font-weight: bold; margin-top: 1rem; margin-bottom: 0.5rem; color: var(--accent-color); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-light); padding-bottom: 4px;">
                                                 Receiver (To FI)</div>
                                         <div class="form-group">
-                                                <label>To BIC</label>
+                                                <label>To BIC <span class="req">*</span></label>
                                                 <input formControlName="head_toBic" maxlength="11"
-                                                        placeholder="Receiver BIC">
+                                                        placeholder="e.g. CHASUS33" class="auto-uppercase">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('head_toBic', 11)" [class.at-limit]="isAtLimit('head_toBic', 11)">{{charCount('head_toBic', 11)}}</div>
                                                 <div class="validation-msg" *ngIf="err('head_toBic') as e">{{e}}</div>
                                         </div>
                                         <div class="form-group">
-                                                <label>Clearing System Code (Cd)</label>
+                                                <label>Clearing System Code (Cd) <span class="opt">Optional</span></label>
                                                 <input formControlName="head_toClrSysId" maxlength="5"
                                                         placeholder="e.g. T2, CHIP, FED">
+                                                <div class="char-counter">{{charCount('head_toClrSysId', 5)}}</div>
                                                 <div class="validation-msg" *ngIf="err('head_toClrSysId') as e">{{e}}
                                                 </div>
                                         </div>
                                         <div class="form-group">
-                                                <label>Member ID (MmbId)</label>
+                                                <label>Member ID (MmbId) <span class="opt">Optional</span></label>
                                                 <input formControlName="head_toMmbId" maxlength="35"
-                                                        placeholder="Clearing Member ID">
+                                                        placeholder="e.g. MMBID001234">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('head_toMmbId', 35)">{{charCount('head_toMmbId', 35)}}</div>
                                                 <div class="validation-msg" *ngIf="err('head_toMmbId') as e">{{e}}
                                                 </div>
                                         </div>
                                         <div class="form-group">
-                                                <label>LEI</label>
+                                                <label>LEI <span class="opt">Optional</span></label>
                                                 <input formControlName="head_toLei" maxlength="20"
-                                                        placeholder="20-char LEI">
+                                                        placeholder="e.g. 7LTWFZYICNSX8D621K86">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('head_toLei', 20)">{{charCount('head_toLei', 20)}}</div>
                                                 <div class="validation-msg" *ngIf="err('head_toLei') as e">{{e}}</div>
                                         </div>
                                         <div class="form-group full-width" *ngIf="err('head_to') as e"
@@ -83,19 +106,25 @@
 
                                         <div class="form-group"><label>Business Msg ID <span
                                                                 class="req">*</span></label><input
-                                                        formControlName="head_bizMsgIdr" maxlength="35">
+                                                        formControlName="head_bizMsgIdr" maxlength="35"
+                                                        placeholder="e.g. ASSGMT-20240331-001234">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('head_bizMsgIdr', 35)">{{charCount('head_bizMsgIdr', 35)}}</div>
                                                 <div class="validation-msg" *ngIf="err('head_bizMsgIdr') as e">{{e}}
                                                 </div>
                                         </div>
                                         <div class="form-group"><label>Creation DateTime <span
                                                                 class="req">*</span></label><input
-                                                        formControlName="head_creDt">
+                                                        formControlName="head_creDt"
+                                                        placeholder="e.g. 2024-03-31T10:30:00+05:30">
                                                 <div class="validation-msg" *ngIf="err('head_creDt') as e">{{e}}</div>
+                                                <div class="field-hint">Format: YYYY-MM-DDThh:mm:ss±hh:mm</div>
                                         </div>
-                                        <div class="form-group"><label>Message Definition ID</label><input
-                                                        formControlName="head_msgDefIdr"></div>
-                                        <div class="form-group"><label>Business Service</label><input
-                                                        formControlName="head_bizSvc"></div>
+                                        <div class="form-group"><label>Message Definition ID <span class="req">*</span></label><input
+                                                        formControlName="head_msgDefIdr"
+                                                        placeholder="e.g. camt.055.001.08"></div>
+                                        <div class="form-group"><label>Business Service <span class="req">*</span></label><input
+                                                        formControlName="head_bizSvc"
+                                                        placeholder="e.g. swift.cbprplus.02"></div>
 
                                         <div class="form-group full-width"
                                                  style="font-weight: bold; margin-top: 1rem; margin-bottom: 0.5rem; color: var(--accent-color); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-light); padding-bottom: 4px;">
@@ -275,38 +304,43 @@
                                                 </div>
                                         </div>
 
-                                        <div class="section-title">Assignment Details</div>
+                                        <div class="section-title">Assignment Details (<code>&lt;Assgnmt&gt;</code>)</div>
                                         <div class="form-group"><label>Assignment ID <span
                                                                 class="req">*</span></label><input
-                                                        formControlName="assgnmt_id" maxlength="35">
+                                                        formControlName="assgnmt_id" maxlength="35"
+                                                        placeholder="e.g. ASSGMT-20240331-001234">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('assgnmt_id', 35)">{{charCount('assgnmt_id', 35)}}</div>
                                                 <div class="validation-msg" *ngIf="err('assgnmt_id') as e">{{e}}</div>
                                         </div>
                                         <div class="form-group"><label>Assignment DateTime <span
                                                                 class="req">*</span></label><input
-                                                        formControlName="assgnmt_creDtTm">
+                                                        formControlName="assgnmt_creDtTm"
+                                                        placeholder="e.g. 2024-03-31T10:30:00+05:30">
                                                 <div class="validation-msg" *ngIf="err('assgnmt_creDtTm') as e">{{e}}
                                                 </div>
+                                                <div class="field-hint">Format: YYYY-MM-DDThh:mm:ss±hh:mm</div>
                                         </div>
 
                                         <!-- Assignor -->
                                         <div class="party-group">
-                                                <div class="party-group-title mandatory">Assignor (Agent)</div>
+                                                <div class="party-group-title mandatory">Assignor (Agent) <span class="req">*</span></div>
                                                 <ng-container
                                                         *ngTemplateOutlet="partyForm; context:{prefix:'assgnr',isAgent:true, title:'Assignor'}"></ng-container>
                                         </div>
 
                                         <!-- Assignee -->
                                         <div class="party-group">
-                                                <div class="party-group-title mandatory">Assignee (Agent)</div>
+                                                <div class="party-group-title mandatory">Assignee (Agent) <span class="req">*</span></div>
                                                 <ng-container
                                                         *ngTemplateOutlet="partyForm; context:{prefix:'assgne',isAgent:true, title:'Assignee'}"></ng-container>
                                         </div>
 
-                                         <div class="section-title">Case & Creator (Case)</div>
+                                         <div class="section-title">Case & Creator (<code>&lt;Case&gt;</code>)</div>
                                          <div class="party-group full-width" style="padding: 1.5rem; background: var(--bg-card-hover); border-radius: 12px; border: 1px solid var(--border-light);">
                                                 <div class="form-group full-width" style="margin-bottom: 1.5rem;">
                                                         <label>Case ID <span class="opt">Optional</span></label>
-                                                        <input formControlName="case_id" maxlength="35" placeholder="Reference for the investigation">
+                                                        <input formControlName="case_id" maxlength="35" placeholder="e.g. CASE-20240331-001234">
+                                                        <div class="char-counter" [class.near-limit]="isNearLimit('case_id', 35)">{{charCount('case_id', 35)}}</div>
                                                 </div>
 
                                                 <!-- Creator (Cretr) nested inside Case -->
@@ -319,68 +353,88 @@
                                                 </div>
                                          </div>
 
-                                        <div class="section-title">Underlying Payment Information</div>
+                                        <div class="section-title">Underlying Payment Information (<code>&lt;Undrlyg&gt;</code>)</div>
                                         <div class="form-group"><label>Original Payment Information ID <span
                                                                 class="opt">Optional</span></label><input
-                                                        formControlName="orgnlPmtInfId" maxlength="35">
+                                                        formControlName="orgnlPmtInfId" maxlength="35"
+                                                        placeholder="e.g. PMTINF-20240330-009876">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('orgnlPmtInfId', 35)">{{charCount('orgnlPmtInfId', 35)}}</div>
                                                 <div class="validation-msg" *ngIf="err('orgnlPmtInfId') as e">{{e}}</div>
                                         </div>
                                         <div class="form-group"><label>Cancellation ID <span
                                                                 class="req">*</span></label><input
-                                                        formControlName="cxlId" maxlength="35">
+                                                        formControlName="cxlId" maxlength="35"
+                                                        placeholder="e.g. CXLID-20240331-001234">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('cxlId', 35)">{{charCount('cxlId', 35)}}</div>
                                                 <div class="validation-msg" *ngIf="err('cxlId') as e">{{e}}</div>
                                         </div>
                                         <div class="form-group"><label>Original Message ID <span
                                                                 class="req">*</span></label><input
-                                                        formControlName="orgnlMsgId" maxlength="35">
+                                                        formControlName="orgnlMsgId" maxlength="35"
+                                                        placeholder="e.g. MSGID-20240330-009876">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('orgnlMsgId', 35)">{{charCount('orgnlMsgId', 35)}}</div>
                                                 <div class="validation-msg" *ngIf="err('orgnlMsgId') as e">{{e}}</div>
                                          </div>
                                         <div class="form-group"><label>Original Creation DateTime <span
                                                                 class="req">*</span></label><input
-                                                        formControlName="orgnlCreDtTm">
+                                                        formControlName="orgnlCreDtTm"
+                                                        placeholder="e.g. 2024-03-30T14:00:00+05:30">
                                                 <div class="validation-msg" *ngIf="err('orgnlCreDtTm') as e">{{e}}
                                                 </div>
+                                                <div class="field-hint">Format: YYYY-MM-DDThh:mm:ss±hh:mm</div>
                                         </div>
                                         <div class="form-group"><label>Original Message Name <span
                                                                 class="req">*</span></label><input
-                                                        formControlName="orgnlMsgNmId">
+                                                        formControlName="orgnlMsgNmId"
+                                                        placeholder="e.g. pacs.008.001.08">
                                                 <div class="validation-msg" *ngIf="err('orgnlMsgNmId') as e">{{e}}
                                                 </div>
+                                                <div class="field-hint">Original message definition identifier</div>
                                         </div>
 
                                         <div class="form-group intermediary-field">
                                                 <label>Original UETR <span class="req">*</span></label>
                                                 <div class="uetr-control-row">
                                                         <input formControlName="orgnlUETR" maxlength="36"
-                                                                placeholder="xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx">
+                                                                placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000"
+                                                                class="auto-lowercase">
                                                         <button type="button" class="uetr-refresh-btn"
                                                                 (click)="refreshUetr()"
                                                                 title="Generate new UUID v4 UETR">
                                                                 <mat-icon title="Refresh">refresh</mat-icon>
                                                         </button>
                                                 </div>
+                                                <div class="char-counter">{{charCount('orgnlUETR', 36)}}</div>
                                                 <div class="validation-msg" *ngIf="err('orgnlUETR') as e">{{e}}</div>
+                                                <div class="field-hint">UUID v4 format — auto-converts to lowercase. Click refresh to auto-generate.</div>
                                         </div>
                                         <div class="form-group"><label>Original End To End ID <span
                                                                 class="opt">Optional</span></label><input
-                                                        formControlName="orgnlEndToEndId" maxlength="35">
+                                                        formControlName="orgnlEndToEndId" maxlength="35"
+                                                        placeholder="e.g. E2E-20240330-001234">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('orgnlEndToEndId', 35)">{{charCount('orgnlEndToEndId', 35)}}</div>
                                         </div>
                                         <div class="form-group"><label>Original Instruction ID <span
                                                                 class="opt">Optional</span></label><input
-                                                        formControlName="orgnlInstrId" maxlength="35">
+                                                        formControlName="orgnlInstrId" maxlength="35"
+                                                        placeholder="e.g. INSTRID-20240330-001234">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('orgnlInstrId', 35)">{{charCount('orgnlInstrId', 35)}}</div>
                                         </div>
                                         <div class="form-group"><label>Original Amount <span
                                                                 class="opt">Optional</span></label><input
-                                                        formControlName="orgnlInstdAmt_val" placeholder="0.00">
+                                                        formControlName="orgnlInstdAmt_val" placeholder="e.g. 1000.00">
                                                 <div class="validation-msg" *ngIf="err('orgnlInstdAmt_val') as e">{{e}}
                                                 </div>
+                                                <div class="field-hint">Numeric with up to 2 decimal places (max 18 digits)</div>
                                         </div>
                                         <div class="form-group"><label>Currency <span
                                                                 class="req">*</span></label><input
                                                         formControlName="orgnlInstdAmt_ccy" maxlength="3"
-                                                        placeholder="USD">
+                                                        placeholder="e.g. USD" class="auto-uppercase">
+                                                <div class="char-counter">{{charCount('orgnlInstdAmt_ccy', 3)}}</div>
                                                 <div class="validation-msg" *ngIf="err('orgnlInstdAmt_ccy') as e">{{e}}
                                                 </div>
+                                                <div class="field-hint">ISO 4217 currency code (3 uppercase letters)</div>
                                         </div>
 
                                          <!-- ═══ DATE CHOICE (OrgnlReqdExctnDt XOR OrgnlReqdColltnDt) ═══ -->
@@ -439,19 +493,22 @@
                                                  <div class="field-hint">Generates <code>&lt;OrgnlReqdColltnDt&gt;YYYY-MM-DD&lt;/OrgnlReqdColltnDt&gt;</code>. Cannot coexist with ExctnDt.</div>
                                          </div>
 
-                                        <div class="section-title">Cancellation Reason & Agent</div>
+                                        <div class="section-title">Cancellation Reason (<code>&lt;CxlRsnInf&gt;</code>)</div>
                                         <div class="form-group"><label>Cancellation Reason Code <span
                                                                 class="req">*</span></label>
                                                 <select formControlName="cxlRsnCd">
+                                                        <option value="" disabled>Select Reason Code</option>
                                                         <option *ngFor="let c of cancellationReasonCodes"
-                                                                [value]="c.code">{{c.code}} - {{c.label}}</option>
+                                                                [value]="c.code">{{c.code}} — {{c.label}}</option>
                                                 </select>
                                                 <div class="validation-msg" *ngIf="err('cxlRsnCd') as e">{{e}}</div>
+                                                <div class="field-hint">Predefined ISO 20022 cancellation reason codes only</div>
                                         </div>
                                         <div class="form-group"><label>Additional Info <span
                                                                 class="opt">Optional</span></label><input
                                                         formControlName="cxlRsnAddtlInf" maxlength="140"
-                                                        placeholder="Narrative text">
+                                                        placeholder="e.g. Duplicate payment cancellation request">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('cxlRsnAddtlInf', 140)" [class.at-limit]="isAtLimit('cxlRsnAddtlInf', 140)">{{charCount('cxlRsnAddtlInf', 140)}}</div>
                                         </div>
 
                                         <!-- Originator of Cancellation -->
@@ -519,12 +576,13 @@
                 <!-- BIC -->
                 <div class="form-group" *ngIf="isAgent">
                         <label>{{title}} BIC <span class="req" *ngIf="required">*</span></label>
-                        <input [formControlName]="prefix+'Bic'" maxlength="11" placeholder="e.g. NDEAFIHH">
+                        <input [formControlName]="prefix+'Bic'" maxlength="11" placeholder="e.g. HDFCINBB" class="auto-uppercase">
+                        <div class="char-counter">{{charCount(prefix+'Bic', 11)}}</div>
                         <div class="validation-msg" *ngIf="err(prefix+'Bic') as e">{{e}}</div>
                 </div>
                 <div class="form-group" *ngIf="!isAgent">
                         <label>{{title}} BIC <span class="req" *ngIf="required">*</span></label>
-                        <input [formControlName]="prefix+'OrgAnyBIC'" maxlength="11" placeholder="e.g. NDEAFIHH">
+                        <input [formControlName]="prefix+'OrgAnyBIC'" maxlength="11" placeholder="e.g. HDFCINBB" class="auto-uppercase">
                         <div class="validation-msg" *ngIf="err(prefix+'OrgAnyBIC') as e">{{e}}</div>
                 </div>
 

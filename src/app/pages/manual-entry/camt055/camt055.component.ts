@@ -40,17 +40,24 @@ export class Camt055Component implements OnInit {
   partyPrefixes = ['cretr', 'cxlRsnOrgtr'];
   countries: string[] = [];
   cancellationReasonCodes = [
-    { code: 'CUTA', label: 'Cancel Upon To Ability' },
     { code: 'DUPL', label: 'Duplicate Payment' },
-    { code: 'FRAD', label: 'Fraudulent Instruction' },
-    { code: 'AGNT', label: 'Agent Error' },
-    { code: 'AM09', label: 'Wrong Amount' },
-    { code: 'CURR', label: 'Wrong Currency' },
-    { code: 'NARR', label: 'Narrative Reason' },
-    { code: 'CUST', label: 'Requested By Customer' },
+    { code: 'FRAD', label: 'Fraudulent Origin' },
     { code: 'TECH', label: 'Technical Problem' },
-    { code: 'UPAY', label: 'Undue Payment' }
+    { code: 'CUST', label: 'Requested by Customer' },
+    { code: 'UPAY', label: 'Undue Payment' },
+    { code: 'CURR', label: 'Incorrect Currency' },
+    { code: 'MERI', label: 'Invalid Creditor Account' },
+    { code: 'AC03', label: 'Invalid Creditor Account Number' },
+    { code: 'AM09', label: 'Wrong Amount' },
+    { code: 'BE01', label: 'Inconsistent with End Customer' },
+    { code: 'CUTA', label: 'Cancel Upon To Ability' },
+    { code: 'AGNT', label: 'Agent Error' },
+    { code: 'NARR', label: 'Narrative Reason' }
   ];
+
+  // Form submission validation
+  formSubmissionErrors: string[] = [];
+  showSubmissionErrors = false;
 
   copyDplctCodes = ['COPY', 'CODU', 'DUPL'];
   priorityCodes = ['HIGH', 'NORM'];
@@ -307,6 +314,35 @@ export class Camt055Component implements OnInit {
       if (!this.isParsingXml && !this.isInternalChange) {
         this.generateXml();
         this.pushHistory();
+        // Clear submission errors on any change
+        if (this.showSubmissionErrors) {
+          this.showSubmissionErrors = false;
+          this.formSubmissionErrors = [];
+        }
+      }
+    });
+
+    // Auto-format: BIC fields → uppercase
+    const bicFields = ['head_fromBic', 'head_toBic', 'head_rltd_fromBic', 'head_rltd_toBic'];
+    bicFields.forEach(f => {
+      this.form.get(f)?.valueChanges.subscribe(val => {
+        if (val && val !== val.toUpperCase()) {
+          this.form.get(f)?.setValue(val.toUpperCase(), { emitEvent: false });
+        }
+      });
+    });
+
+    // Auto-format: UETR → lowercase
+    this.form.get('orgnlUETR')?.valueChanges.subscribe(val => {
+      if (val && val !== val.toLowerCase()) {
+        this.form.get('orgnlUETR')?.setValue(val.toLowerCase(), { emitEvent: false });
+      }
+    });
+
+    // Auto-format: Currency → uppercase
+    this.form.get('orgnlInstdAmt_ccy')?.valueChanges.subscribe(val => {
+      if (val && val !== val.toUpperCase()) {
+        this.form.get('orgnlInstdAmt_ccy')?.setValue(val.toUpperCase(), { emitEvent: false });
       }
     });
 
@@ -917,19 +953,19 @@ ${txInf.trimEnd()}
     // 1. Group-level XOR checks for date choice fields
     if (f === 'orgnlReqdExctnDt' || f === 'orgnlReqdExctnDtTm') {
       if (this.form.errors?.['orgnlReqdExctnDt_duplicate']) {
-        return 'Only one of Date (Dt) or DateTime (DtTm) is allowed';
+        return '⚠️ Only one of Date (Dt) or DateTime (DtTm) is allowed';
       }
     }
     // Mutual exclusivity: OrgnlReqdExctnDt vs OrgnlReqdColltnDt
     if (f === 'orgnlReqdExctnDt' || f === 'orgnlReqdExctnDtTm' || f === 'orgnlReqdColltnDt') {
       if (this.form.errors?.['date_choice_conflict']) {
-        return 'Only ONE of Execution Date or Collection Date is allowed in camt.055 (schema choice)';
+        return '⚠️ Only ONE of Execution Date or Collection Date is allowed in camt.055 (schema choice)';
       }
     }
     if (this.form.errors) {
-      if (this.form.errors[f + '_required']) return 'Other ID (Id) is required when a Scheme Code is selected.';
-      if (this.form.errors[f + '_lei']) return 'LEI must be exactly 20 characters.';
-      if (this.form.errors[f + '_duns']) return 'DUNS must be exactly 9 digits.';
+      if (this.form.errors[f + '_required']) return '⚠️ Other ID (Id) is required when a Scheme Code is selected.';
+      if (this.form.errors[f + '_lei']) return '⚠️ LEI must be exactly 20 characters.';
+      if (this.form.errors[f + '_duns']) return '⚠️ DUNS must be exactly 9 digits.';
     }
 
     const c = this.form.get(f);
@@ -940,35 +976,152 @@ ${txInf.trimEnd()}
                        f.startsWith('head_to') ? 'head_to' : 'head_rltd';
         
         if (this.form.errors?.[prefix + '_missing_identity']) {
-          return 'At least one of BIC, Clearing System, or LEI is required.';
+          return '⚠️ At least one of BIC, Clearing System, or LEI is required.';
         }
         if (this.form.errors?.[prefix + '_incomplete_clrsys']) {
-          return 'Both Clearing System Code and Member ID are mandatory if either is present.';
+          return '⚠️ Both Clearing System Code and Member ID are mandatory if either is present.';
         }
         // Custom check for Rltd mandatory fields if enabled
         if (prefix === 'head_rltd' && this.form.get('head_rltd_enabled')?.value) {
             const v = this.form.value;
-            if (!v.head_rltd_bizMsgIdr) return 'Business Message Identifier is required when Rltd is enabled.';
-            if (!v.head_rltd_msgDefIdr) return 'Message Definition Identifier is required when Rltd is enabled.';
-            if (!v.head_rltd_bizSvc) return 'Business Service is required when Rltd is enabled.';
-            if (!v.head_rltd_creDt) return 'Creation Date is required when Rltd is enabled.';
+            if (!v.head_rltd_bizMsgIdr) return '⚠️ Business Message Identifier is required when Rltd is enabled.';
+            if (!v.head_rltd_msgDefIdr) return '⚠️ Message Definition Identifier is required when Rltd is enabled.';
+            if (!v.head_rltd_bizSvc) return '⚠️ Business Service is required when Rltd is enabled.';
+            if (!v.head_rltd_creDt) return '⚠️ Creation Date is required when Rltd is enabled.';
         }
       }
       return null;
     }
     if (c.valid) return null;
-    if (c.errors?.['maxlength']) return `Max length ${c.errors['maxlength'].requiredLength} characters.`;
-    if (c.errors?.['future_date']) return 'Birth date cannot be in the future.';
+    if (c.errors?.['maxlength']) return `⚠️ Max length ${c.errors['maxlength'].requiredLength} characters.`;
+    if (c.errors?.['future_date']) return '⚠️ Birth date cannot be in the future.';
     if (!c.touched && !c.dirty) return null;
-    if (c.errors?.['required']) return 'Required field.';
-    if (c.errors?.['pattern']) return 'Invalid format.';
-    return 'Invalid value.';
+    if (c.errors?.['required']) {
+      // Field-specific required messages
+      return this.getRequiredMessage(f);
+    }
+    if (c.errors?.['pattern']) {
+      // Field-specific pattern messages
+      return this.getPatternMessage(f);
+    }
+    return '⚠️ Invalid value.';
+  }
+
+  private getRequiredMessage(f: string): string {
+    const fieldNames: Record<string, string> = {
+      'head_bizMsgIdr': 'Business Message ID',
+      'head_creDt': 'Creation DateTime',
+      'head_mktPrctcId': 'Market Practice ID',
+      'assgnmt_id': 'Assignment ID',
+      'assgnmt_creDtTm': 'Assignment DateTime',
+      'orgnlMsgId': 'Original Message ID',
+      'orgnlMsgNmId': 'Original Message Name',
+      'orgnlCreDtTm': 'Original Creation DateTime',
+      'cxlId': 'Cancellation ID',
+      'orgnlUETR': 'Original UETR',
+      'orgnlInstdAmt_ccy': 'Currency',
+      'cxlRsnCd': 'Cancellation Reason Code'
+    };
+    const name = fieldNames[f] || f;
+    return `⚠️ ${name} is required and must not be empty.`;
+  }
+
+  private getPatternMessage(f: string): string {
+    // BIC fields
+    if (f.includes('Bic') || f.includes('BICFI') || f === 'head_fromBic' || f === 'head_toBic' ||
+        f.includes('rltd_fromBic') || f.includes('rltd_toBic') || f.includes('OrgAnyBIC')) {
+      return '⚠️ Invalid BIC format. Must be 8 or 11 uppercase characters (e.g. HDFCINBB or HDFCINBBXXX).';
+    }
+    // UETR
+    if (f === 'orgnlUETR') {
+      return '⚠️ Invalid UETR. Must be a valid UUID v4 format (e.g. 550e8400-e29b-41d4-a716-446655440000).';
+    }
+    // Currency
+    if (f === 'orgnlInstdAmt_ccy') {
+      return '⚠️ Invalid currency. Must be a 3-letter ISO 4217 code (e.g. USD, EUR, INR).';
+    }
+    // Amount
+    if (f === 'orgnlInstdAmt_val') {
+      return '⚠️ Invalid amount. Use numeric value with up to 2 decimal places (e.g. 1000.00).';
+    }
+    // LEI
+    if (f.includes('Lei') || f.includes('LEI')) {
+      return '⚠️ Invalid LEI format. Must be 20 alphanumeric characters.';
+    }
+    // DateTime
+    if (f.includes('DtTm') || f === 'head_creDt' || f === 'assgnmt_creDtTm' || f === 'orgnlCreDtTm') {
+      return '⚠️ Invalid DateTime format. Use YYYY-MM-DDThh:mm:ss±hh:mm.';
+    }
+    // Date
+    if (f.includes('Dt')) {
+      return '⚠️ Invalid Date format. Use YYYY-MM-DD.';
+    }
+    return '⚠️ Invalid format.';
   }
 
   hint(f: string, max: number): string | null {
     const v = this.form.get(f)?.value || '';
     if (v.length >= max) return `${v.length}/${max} (at limit)`;
     return null;
+  }
+
+  /** Live character counter for text fields */
+  charCount(f: string, max: number): string {
+    const v = this.form.get(f)?.value || '';
+    return `${v.length}/${max}`;
+  }
+
+  /** Check if a character counter is near/at limit */
+  isNearLimit(f: string, max: number): boolean {
+    const v = this.form.get(f)?.value || '';
+    return v.length >= max * 0.85;
+  }
+
+  isAtLimit(f: string, max: number): boolean {
+    const v = this.form.get(f)?.value || '';
+    return v.length >= max;
+  }
+
+  /** Collect all validation errors for submission summary */
+  collectValidationErrors(): string[] {
+    const errors: string[] = [];
+    const mandatoryFields: { key: string, label: string }[] = [
+      { key: 'head_bizMsgIdr', label: 'Business Message ID' },
+      { key: 'head_creDt', label: 'Creation DateTime' },
+      { key: 'head_mktPrctcId', label: 'Market Practice ID' },
+      { key: 'assgnmt_id', label: 'Assignment ID' },
+      { key: 'assgnmt_creDtTm', label: 'Assignment DateTime' },
+      { key: 'orgnlMsgId', label: 'Original Message ID' },
+      { key: 'orgnlMsgNmId', label: 'Original Message Name' },
+      { key: 'orgnlCreDtTm', label: 'Original Creation DateTime' },
+      { key: 'cxlId', label: 'Cancellation ID' },
+      { key: 'orgnlUETR', label: 'Original UETR' },
+      { key: 'orgnlInstdAmt_ccy', label: 'Currency' },
+      { key: 'cxlRsnCd', label: 'Cancellation Reason Code' }
+    ];
+
+    mandatoryFields.forEach(({ key, label }) => {
+      const ctrl = this.form.get(key);
+      if (ctrl?.invalid) {
+        if (ctrl.errors?.['required']) {
+          errors.push(`${label} is required.`);
+        } else if (ctrl.errors?.['pattern']) {
+          errors.push(`${label} has an invalid format.`);
+        } else if (ctrl.errors?.['maxlength']) {
+          errors.push(`${label} exceeds maximum length (${ctrl.errors['maxlength'].requiredLength}).`);
+        }
+      }
+    });
+
+    // Group-level errors
+    if (this.form.errors?.['orgnlReqdExctnDt_duplicate']) {
+      errors.push('Only one of Execution Date (Dt) or DateTime (DtTm) is allowed.');
+    }
+    if (this.form.errors?.['date_choice_conflict']) {
+      errors.push('Execution Date and Collection Date are mutually exclusive.');
+    }
+
+    return errors;
   }
 
   refreshUetr(): void {
@@ -997,9 +1150,14 @@ ${txInf.trimEnd()}
     this.generateXml();
     this.form.markAllAsTouched();
     if (this.form.invalid) {
-      this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
+      // Show validation error summary at top of form
+      this.formSubmissionErrors = this.collectValidationErrors();
+      this.showSubmissionErrors = true;
+      this.snackBar.open(`${this.formSubmissionErrors.length} validation error(s) found. Please fix them before validating.`, 'Close', { duration: 4000 });
       return;
     }
+    this.showSubmissionErrors = false;
+    this.formSubmissionErrors = [];
     if (!this.generatedXml?.trim()) return;
 
     this.showValidationModal = true;
