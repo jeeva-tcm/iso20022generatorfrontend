@@ -789,26 +789,72 @@
                         </div>
                     </div>
 
-                    <div class="vm-issues" *ngIf="getValidationIssues().length > 0" style="margin-top: 1.5rem;">
-                        <div class="vm-issues-header" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: var(--bg-card-hover); border-bottom: 1px solid var(--border-light);">
-                            <mat-icon style="font-size: 18px; color: #ef4444;">report</mat-icon>
-                            <span>Issues Found ({{getValidationIssues().length}})</span>
-                        </div>
-                        <div class="vm-issue-list">
-                            <div class="vm-issue" *ngFor="let issue of getValidationIssues()" (click)="toggleValidationIssue(issue)" [class.expanded]="validationExpandedIssue === issue" style="border-bottom: 1px solid var(--border-light); cursor: pointer;">
-                                <div class="vm-issue-row" style="display: flex; align-items: center; gap: 10px; padding: 10px;">
-                                    <span class="vm-issue-severity" [class.error]="issue.severity === 'ERROR'" [class.warning]="issue.severity === 'WARNING'" style="font-size: 0.6rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">{{issue.severity}}</span>
-                                    <span class="vm-issue-layer" style="font-family: monospace; font-size: 0.7rem; color: var(--text-muted);">L{{issue.layer}}</span>
-                                    <span class="vm-issue-msg" style="flex: 1; font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{issue.message}}</span>
-                                    <mat-icon style="font-size: 18px; color: var(--text-muted);">{{validationExpandedIssue === issue ? 'expand_less' : 'expand_more'}}</mat-icon>
+                    <div class="vm-layered-results" style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 12px;">
+                        <div class="vm-layer-section" *ngFor="let k of getValidationLayers()" [class.has-issues]="getIssuesByLayer(k).length > 0">
+                            <div class="vm-layer-header" (click)="toggleLayer(k, $event)" [class.expanded]="expandedLayers.has(k)">
+                                <div class="vm-lh-left">
+                                    <mat-icon class="expand-icon" style="transition: transform 0.2s;">{{expandedLayers.has(k) ? 'expand_more' : 'chevron_right'}}</mat-icon>
+                                    <strong>{{getLayerName(k)}}</strong>
                                 </div>
-                                <div class="vm-issue-detail" *ngIf="validationExpandedIssue === issue" style="padding: 10px 10px 15px 40px; background: var(--bg-card-hover); font-size: 0.75rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 8px;">
-                                    <div class="vm-detail-row" style="display: flex; gap: 10px;"><strong>Message:</strong> <span>{{issue.message}}</span></div>
-                                    <div class="vm-detail-row" *ngIf="issue.path" style="display: flex; gap: 10px;"><strong>Path:</strong> <code style="background: rgba(0,0,0,0.1); padding: 2px 4px; border-radius: 3px;">{{issue.path}}</code></div>
-                                    <div class="vm-detail-row fix" *ngIf="issue.fix_suggestion" style="background: rgba(16, 185, 129, 0.1); padding: 8px; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.2); display: flex; align-items: center; gap: 10px;">
-                                        <mat-icon style="color: #10b981; font-size: 18px;">lightbulb</mat-icon>
-                                        <div style="flex: 1;"><strong>Fix Suggestion:</strong> {{issue.fix_suggestion}}</div>
-                                        <button class="action-btn-small" (click)="copyFix(issue.fix_suggestion, $event)" title="Copy fix"><mat-icon>content_copy</mat-icon></button>
+                                <div class="vm-lh-right" *ngIf="getIssuesByLayer(k).length > 0">
+                                    <div class="vm-count-pill err" *ngIf="getLayerErrorCount(k) > 0">
+                                        <mat-icon>cancel</mat-icon> {{getLayerErrorCount(k)}} Errors
+                                    </div>
+                                    <div class="vm-count-pill warn" *ngIf="getLayerWarningCount(k) > 0">
+                                        <mat-icon>warning</mat-icon> {{getLayerWarningCount(k)}} Warnings
+                                    </div>
+                                </div>
+                                <div class="vm-lh-right" *ngIf="getIssuesByLayer(k).length === 0">
+                                    <div class="vm-count-pill pass">
+                                        <mat-icon>check_circle</mat-icon> Passed
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="vm-issue-list" *ngIf="expandedLayers.has(k) && getIssuesByLayer(k).length > 0">
+                                <div class="vm-issue-card" *ngFor="let issue of getIssuesByLayer(k)" (click)="toggleValidationIssue(issue)" [class.expanded]="validationExpandedIssue === issue" [class.error]="issue.severity === 'ERROR'" [class.warning]="issue.severity === 'WARNING'">
+                                    <div class="vm-card-main">
+                                        <div class="vm-card-icon">
+                                            <mat-icon *ngIf="issue.severity === 'ERROR'">report_problem</mat-icon>
+                                            <mat-icon *ngIf="issue.severity === 'WARNING'">warning</mat-icon>
+                                        </div>
+                                        <div class="vm-card-content">
+                                            <div class="vm-card-msg">{{issue.message}}</div>
+                                            <div class="vm-card-meta">
+                                                <span class="vm-meta-item" *ngIf="issue.line">
+                                                    <mat-icon>transit_enterexit</mat-icon> {{issue.line}}
+                                                </span>
+                                                <span class="vm-meta-item" *ngIf="issue.code">
+                                                    <mat-icon>code</mat-icon> {{issue.code}}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <mat-icon class="vm-card-chevron">{{validationExpandedIssue === issue ? 'expand_less' : 'expand_more'}}</mat-icon>
+                                    </div>
+                                    <div class="vm-issue-detail" *ngIf="validationExpandedIssue === issue" (click)="$event.stopPropagation()">
+                                        <div class="vm-detail-grid">
+                                            <div class="vm-detail-box">
+                                                <div class="vm-box-label">OCCURRENCE PATH</div>
+                                                <div class="vm-box-val mono">{{issue.path || '?'}}</div>
+                                            </div>
+                                            <div class="vm-detail-box" *ngIf="issue.code">
+                                                <div class="vm-box-label">INTERNAL CODE</div>
+                                                <div class="vm-box-val mono">{{issue.code}}</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="vm-detail-fix" *ngIf="issue.fix_suggestion">
+                                            <div class="vm-fix-header">
+                                                <mat-icon>lightbulb</mat-icon>
+                                                <span>FIX SUGGESTION</span>
+                                            </div>
+                                            <div class="vm-fix-body">
+                                                <div class="vm-fix-text">{{issue.fix_suggestion}}</div>
+                                                <button class="vm-fix-copy-btn" (click)="copyFix(issue.fix_suggestion, $event)" title="Copy fix content">
+                                                    <mat-icon>content_copy</mat-icon>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

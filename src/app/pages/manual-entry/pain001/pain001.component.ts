@@ -40,6 +40,7 @@ export class Pain001Component implements OnInit {
   validationStatus: 'idle' | 'validating' | 'done' = 'idle';
   validationReport: any = null;
   validationExpandedIssue: any = null;
+  expandedLayers = new Set<string>(['2', '3']); // Default L2 and L3 to open if they have errors
   
   warningTimeouts: { [key: string]: any } = {};
   showMaxLenWarning: { [key: string]: boolean } = {};
@@ -893,6 +894,27 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
   getValidationIssues(): any[] { return this.validationReport?.details ?? []; }
   toggleValidationIssue(issue: any) {
     this.validationExpandedIssue = this.validationExpandedIssue === issue ? null : issue;
+  }
+
+  getIssuesByLayer(layer: string): any[] {
+    return this.getValidationIssues().filter(i => i.layer.toString() === layer);
+  }
+
+  toggleLayer(layer: string, e: MouseEvent) {
+    e.stopPropagation();
+    if (this.expandedLayers.has(layer)) {
+      this.expandedLayers.delete(layer);
+    } else {
+      this.expandedLayers.add(layer);
+    }
+  }
+
+  getLayerErrorCount(layer: string): number {
+    return this.getIssuesByLayer(layer).filter(i => i.severity === 'ERROR').length;
+  }
+
+  getLayerWarningCount(layer: string): number {
+    return this.getIssuesByLayer(layer).filter(i => i.severity === 'WARNING').length;
   }
   copyFix(text: string, e: MouseEvent) {
     e.stopPropagation();
