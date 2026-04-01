@@ -12,17 +12,17 @@
                     <div class="section-title">Message Header (AppHdr)</div>
                     <div class="form-group">
                         <label>Related Message ID <span class="opt">Optional</span></label>
-                        <input formControlName="rltdBizMsgId" maxlength="35" placeholder="e.g. REL-BMS-123">
-                        <div class="validation-msg" *ngIf="err('rltdBizMsgId') as e">{{e}}</div>
+                        <input formControlName="head_rltdBizMsgIdr" maxlength="35" placeholder="e.g. REL-BMS-123">
+                        <div class="validation-msg" *ngIf="err('head_rltdBizMsgIdr') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
                         <label>Character Set <span class="opt">Optional</span></label>
-                        <input formControlName="charSet" maxlength="2048" placeholder="e.g. UTF-8">
-                        <div class="validation-msg" *ngIf="err('charSet') as e">{{e}}</div>
+                        <input formControlName="head_charSet" maxlength="2048" placeholder="e.g. UTF-8">
+                        <div class="validation-msg" *ngIf="err('head_charSet') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
                         <label>Priority <span class="opt">Optional</span></label>
-                        <select formControlName="appHdrPrty">
+                        <select formControlName="head_prty">
                             <option value="">None</option>
                             <option value="HIGH">High [HIGH]</option>
                             <option value="NORM">Normal [NORM]</option>
@@ -30,7 +30,7 @@
                     </div>
                     <div class="form-group">
                         <label>Copy Duplicate <span class="opt">Optional</span></label>
-                        <select formControlName="cpyDplct">
+                        <select formControlName="head_cpyDplct">
                             <option value="">None</option>
                             <option value="COPY">Copy [COPY]</option>
                             <option value="CODU">Copy Duplicate [CODU]</option>
@@ -39,7 +39,7 @@
                     </div>
                     <div class="form-group">
                         <label>Possible Duplicate <span class="opt">Optional</span></label>
-                        <select formControlName="pssblDplct">
+                        <select formControlName="head_pssblDplct">
                             <option value="">None</option>
                             <option value="true">True</option>
                             <option value="false">False</option>
@@ -47,9 +47,8 @@
                     </div>
                     <div class="form-group">
                         <label>Sender BIC <span class="req">*</span></label>
-                        <input formControlName="fromBic" maxlength="11">
-                        <div class="validation-msg" *ngIf="err('fromBic') as e">{{e}}</div>
-                        <div class="field-hint at-limit" *ngIf="hint('fromBic', 11) as h">{{h}}</div>
+                        <input formControlName="head_fromBic" maxlength="11">
+                        <div class="validation-msg" *ngIf="err('head_fromBic') as e">{{e}}</div>
                     </div>
 
                     <!-- Fr > FIId > FinInstnId > ClrSysMmbId (optional) -->
@@ -60,31 +59,27 @@
                         <div class="party-grid">
                             <div class="form-group">
                                 <label>Clearing System Code <span class="opt">Optional</span></label>
-                                <input formControlName="fromClrSysCd" maxlength="5" placeholder="e.g. CHSIC, USABA">
-                                <div class="validation-msg" *ngIf="err('fromClrSysCd') as e">{{e}}</div>
-                                <div class="field-hint at-limit" *ngIf="hint('fromClrSysCd', 5) as h">{{h}}</div>
+                                <input formControlName="head_fromClrSysId" maxlength="5" placeholder="e.g. USABA">
+                                <div class="validation-msg" *ngIf="err('head_fromClrSysId') as e">{{e}}</div>
                             </div>
                             <div class="form-group">
                                 <label>Member ID <span class="opt">Optional</span></label>
-                                <input formControlName="fromClrSysMmbId" maxlength="35" placeholder="Clearing system member ID">
-                                <div class="validation-msg" *ngIf="err('fromClrSysMmbId') as e">{{e}}</div>
-                                <div class="field-hint at-limit" *ngIf="hint('fromClrSysMmbId', 35) as h">{{h}}</div>
+                                <input formControlName="head_fromMmbId" maxlength="35" placeholder="Clearing system member ID">
+                                <div class="validation-msg" *ngIf="err('head_fromMmbId') as e">{{e}}</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Fr > FIId > FinInstnId > LEI (optional) -->
                     <div class="form-group">
                         <label>Sender LEI <span class="opt">Optional</span></label>
-                        <input formControlName="fromLei" maxlength="20" placeholder="20-char LEI (e.g. 2594007XIACKNMUAW223)" style="text-transform:uppercase;">
-                        <div class="validation-msg" *ngIf="err('fromLei') as e">{{e}}</div>
+                        <input formControlName="head_fromLei" maxlength="20" placeholder="20-char LEI" style="text-transform:uppercase;">
+                        <div class="validation-msg" *ngIf="err('head_fromLei') as e">{{e}}</div>
                     </div>
 
                     <div class="form-group">
                         <label>Receiver BIC <span class="req">*</span></label>
-                        <input formControlName="toBic" maxlength="11">
-                        <div class="validation-msg" *ngIf="err('toBic') as e">{{e}}</div>
-                        <div class="field-hint at-limit" *ngIf="hint('toBic', 11) as h">{{h}}</div>
+                        <input formControlName="head_toBic" maxlength="11">
+                        <div class="validation-msg" *ngIf="err('head_toBic') as e">{{e}}</div>
                     </div>
 
                     <!-- To > FIId > FinInstnId > ClrSysMmbId (optional) -->
@@ -95,45 +90,50 @@
                         <div class="party-grid">
                             <div class="form-group">
                                 <label>Clearing System Code <span class="opt">Optional</span></label>
-                                <input formControlName="toClrSysCd" maxlength="5" placeholder="e.g. CHSIC, USABA">
-                                <div class="validation-msg" *ngIf="err('toClrSysCd') as e">{{e}}</div>
-                                <div class="field-hint at-limit" *ngIf="hint('toClrSysCd', 5) as h">{{h}}</div>
+                                <input formControlName="head_toClrSysId" maxlength="5" placeholder="e.g. GBFPS">
+                                <div class="validation-msg" *ngIf="err('head_toClrSysId') as e">{{e}}</div>
                             </div>
                             <div class="form-group">
                                 <label>Member ID <span class="opt">Optional</span></label>
-                                <input formControlName="toClrSysMmbId" maxlength="35" placeholder="Clearing system member ID">
-                                <div class="validation-msg" *ngIf="err('toClrSysMmbId') as e">{{e}}</div>
-                                <div class="field-hint at-limit" *ngIf="hint('toClrSysMmbId', 35) as h">{{h}}</div>
+                                <input formControlName="head_toMmbId" maxlength="35" placeholder="Clearing system member ID">
+                                <div class="validation-msg" *ngIf="err('head_toMmbId') as e">{{e}}</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- To > FIId > FinInstnId > LEI (optional) -->
                     <div class="form-group">
                         <label>Receiver LEI <span class="opt">Optional</span></label>
-                        <input formControlName="toLei" maxlength="20" placeholder="20-char LEI (e.g. 2594007XIACKNMUAW223)" style="text-transform:uppercase;">
-                        <div class="validation-msg" *ngIf="err('toLei') as e">{{e}}</div>
+                        <input formControlName="head_toLei" maxlength="20" placeholder="20-char LEI" style="text-transform:uppercase;">
+                        <div class="validation-msg" *ngIf="err('head_toLei') as e">{{e}}</div>
                     </div>
-                    <div class="form-group intermediary-field">
+                    
+                    <div class="form-group">
                         <label>Business Msg ID <span class="req">*</span></label>
-                        <input formControlName="bizMsgId" maxlength="35">
-                        <div class="validation-msg" *ngIf="err('bizMsgId') as e">{{e}}</div>
-                        <div class="field-hint at-limit" *ngIf="hint('bizMsgId', 35) as h">{{h}}</div>
+                        <input formControlName="head_bizMsgIdr" maxlength="35">
+                        <div class="validation-msg" *ngIf="err('head_bizMsgIdr') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
                         <label>Msg Def Identifier <span class="req">*</span></label>
-                        <input formControlName="msgDefIdr" maxlength="35">
-                        <div class="validation-msg" *ngIf="err('msgDefIdr') as e">{{e}}</div>
+                        <input formControlName="head_msgDefIdr" maxlength="35">
+                        <div class="validation-msg" *ngIf="err('head_msgDefIdr') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
-                        <label>Business Service <span class="opt">Optional</span></label>
-                        <input formControlName="bizSvc" maxlength="35">
-                        <div class="validation-msg" *ngIf="err('bizSvc') as e">{{e}}</div>
+                        <label>Business Service <span class="req">*</span></label>
+                        <input formControlName="head_bizSvc" maxlength="35">
+                        <div class="validation-msg" *ngIf="err('head_bizSvc') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
                         <label>Creation Date <span class="req">*</span></label>
-                        <input type="date" formControlName="creDt">
-                        <div class="validation-msg" *ngIf="err('creDt') as e">{{e}}</div>
+                        <input type="date" formControlName="head_creDt">
+                        <div class="validation-msg" *ngIf="err('head_creDt') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Mkt Practice Registry <span class="opt">Optional</span></label>
+                        <input formControlName="head_mktPrctcRegy" maxlength="35">
+                    </div>
+                    <div class="form-group">
+                        <label>Mkt Practice ID <span class="opt">Optional</span></label>
+                        <input formControlName="head_mktPrctcId" maxlength="35">
                     </div>
                     <!-- BAH fields end -->
 
@@ -617,91 +617,68 @@
                                     </div>
                                 </div>
 
-                                <div class="party-group-title" style="grid-column: 1 / -1; margin-top: 0.5rem; font-size: 0.7rem; background: rgba(255,255,255,0.02);">Extended Agents & Parties</div>
+                                <div class="party-group-title" style="grid-column: 1 / -1; margin-top: 0.5rem; font-size: 0.7rem; background: rgba(255,255,255,0.02);">Intermediary Agent 1</div>
                                 <div class="party-grid" style="grid-column: 1 / -1;">
-                                    <div class="form-group">
-                                        <label>Intermediary Agt BIC</label>
-                                        <input formControlName="intrmyAgt1Bic" maxlength="11">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Intermediary Agt 1 Acct</label>
-                                        <input formControlName="intrmyAgt1Acct" maxlength="34">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Intermediary Agt 2 BIC</label>
-                                        <input formControlName="intrmyAgt2Bic" maxlength="11">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Intermediary Agt 2 Acct</label>
-                                        <input formControlName="intrmyAgt2Acct" maxlength="34">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Intermediary Agt 3 BIC</label>
-                                        <input formControlName="intrmyAgt3Bic" maxlength="11">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Intermediary Agt 3 Acct</label>
-                                        <input formControlName="intrmyAgt3Acct" maxlength="34">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Ultimate Debtor Name</label>
-                                        <input formControlName="ultmtDbtrName" maxlength="140">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Ultimate Creditor Name</label>
-                                        <input formControlName="ultmtCdtrName" maxlength="140">
-                                    </div>
+                                    <div class="form-group"><label>BIC</label><input formControlName="intrmyAgt1Bic" maxlength="11"></div>
+                                    <div class="form-group"><label>LEI</label><input formControlName="intrmyAgt1Lei" maxlength="20"></div>
+                                    <div class="form-group"><label>Name</label><input formControlName="intrmyAgt1Name" maxlength="140"></div>
+                                    <div class="form-group"><label>Ctry</label><input formControlName="intrmyAgt1Ctry" maxlength="2"></div>
+                                    <div class="form-group"><label>Town</label><input formControlName="intrmyAgt1TwnNm" maxlength="35"></div>
+                                    <div class="form-group"><label>ClrSys Cd</label><input formControlName="intrmyAgt1ClrSysCd" maxlength="5"></div>
+                                    <div class="form-group"><label>Member ID</label><input formControlName="intrmyAgt1ClrSysMmbId" maxlength="35"></div>
+                                    <div class="form-group"><label>Account</label><input formControlName="intrmyAgt1Acct" maxlength="34"></div>
                                 </div>
-                                
+
+                                <div class="party-group-title" style="grid-column: 1 / -1; margin-top: 0.5rem; font-size: 0.7rem; background: rgba(255,255,255,0.02);">Intermediary Agent 2</div>
+                                <div class="party-grid" style="grid-column: 1 / -1;">
+                                    <div class="form-group"><label>BIC</label><input formControlName="intrmyAgt2Bic" maxlength="11"></div>
+                                    <div class="form-group"><label>LEI</label><input formControlName="intrmyAgt2Lei" maxlength="20"></div>
+                                    <div class="form-group"><label>Name</label><input formControlName="intrmyAgt2Name" maxlength="140"></div>
+                                    <div class="form-group"><label>Ctry</label><input formControlName="intrmyAgt2Ctry" maxlength="2"></div>
+                                    <div class="form-group"><label>Town</label><input formControlName="intrmyAgt2TwnNm" maxlength="35"></div>
+                                    <div class="form-group"><label>ClrSys Cd</label><input formControlName="intrmyAgt2ClrSysCd" maxlength="5"></div>
+                                    <div class="form-group"><label>Member ID</label><input formControlName="intrmyAgt2ClrSysMmbId" maxlength="35"></div>
+                                    <div class="form-group"><label>Account</label><input formControlName="intrmyAgt2Acct" maxlength="34"></div>
+                                </div>
+
+                                <div class="party-group-title" style="grid-column: 1 / -1; margin-top: 0.5rem; font-size: 0.7rem; background: rgba(255,255,255,0.02);">Intermediary Agent 3</div>
+                                <div class="party-grid" style="grid-column: 1 / -1;">
+                                    <div class="form-group"><label>BIC</label><input formControlName="intrmyAgt3Bic" maxlength="11"></div>
+                                    <div class="form-group"><label>LEI</label><input formControlName="intrmyAgt3Lei" maxlength="20"></div>
+                                    <div class="form-group"><label>Name</label><input formControlName="intrmyAgt3Name" maxlength="140"></div>
+                                    <div class="form-group"><label>Ctry</label><input formControlName="intrmyAgt3Ctry" maxlength="2"></div>
+                                    <div class="form-group"><label>Town</label><input formControlName="intrmyAgt3TwnNm" maxlength="35"></div>
+                                    <div class="form-group"><label>ClrSys Cd</label><input formControlName="intrmyAgt3ClrSysCd" maxlength="5"></div>
+                                    <div class="form-group"><label>Member ID</label><input formControlName="intrmyAgt3ClrSysMmbId" maxlength="35"></div>
+                                    <div class="form-group"><label>Account</label><input formControlName="intrmyAgt3Acct" maxlength="34"></div>
+                                </div>
+
+                                <div class="party-group-title" style="grid-column: 1 / -1; margin-top: 0.5rem; font-size: 0.7rem; background: rgba(255,255,255,0.02);">Creditor Agent</div>
+                                <div class="party-grid" style="grid-column: 1 / -1;">
+                                    <div class="form-group"><label>BIC</label><input formControlName="cdtrAgtBic" maxlength="11"></div>
+                                    <div class="form-group"><label>LEI</label><input formControlName="cdtrAgtLei" maxlength="20"></div>
+                                    <div class="form-group"><label>Name</label><input formControlName="cdtrAgtName" maxlength="140"></div>
+                                    <div class="form-group"><label>Ctry</label><input formControlName="cdtrAgtCtry" maxlength="2"></div>
+                                    <div class="form-group"><label>Town</label><input formControlName="cdtrAgtTwnNm" maxlength="35"></div>
+                                    <div class="form-group"><label>Street</label><input formControlName="cdtrAgtStrtNm" maxlength="70"></div>
+                                    <div class="form-group"><label>PostCode</label><input formControlName="cdtrAgtPstCd" maxlength="16"></div>
+                                    <div class="form-group"><label>ClrSys Cd</label><input formControlName="cdtrAgtClrSysCd" maxlength="5"></div>
+                                    <div class="form-group"><label>Member ID</label><input formControlName="cdtrAgtClrSysMmbId" maxlength="35"></div>
+                                    <div class="form-group"><label>Account</label><input formControlName="cdtrAgtAcct" maxlength="34"></div>
+                                </div>
+
                                 <div class="party-group-title" style="grid-column: 1 / -1; margin-top: 0.5rem; font-size: 0.7rem; background: rgba(255,255,255,0.02);">Creditor Details</div>
                                 <div class="party-grid" style="grid-column: 1 / -1;">
-                                    <div class="form-group">
-                                        <label>Creditor Name <span class="req">*</span></label>
-                                        <input formControlName="cdtrName" maxlength="140">
-                                        <div class="validation-msg" *ngIf="err('cdtrName', tx) as e">{{e}}</div>
-                                        <div class="field-hint at-limit" *ngIf="hint('cdtrName', 140, tx) as h">{{h}}</div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Creditor IBAN <span class="req">*</span></label>
-                                        <input formControlName="cdtrIban" maxlength="34">
-                                        <div class="validation-msg" *ngIf="err('cdtrIban', tx) as e">{{e}}</div>
-                                        <div class="field-hint at-limit" *ngIf="hint('cdtrIban', 34, tx) as h">{{h}}</div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Creditor Agent BIC <span class="req">*</span></label>
-                                        <input formControlName="cdtrAgtBic" maxlength="11">
-                                        <div class="validation-msg" *ngIf="err('cdtrAgtBic', tx) as e">{{e}}</div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Creditor Agent Acct</label>
-                                        <input formControlName="cdtrAgtAcct" maxlength="34">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Remittance Information <span class="opt">Optional</span></label>
-                                        <input formControlName="rmtInf" maxlength="140">
-                                        <div class="validation-msg" *ngIf="err('rmtInf', tx) as e">{{e}}</div>
-                                        <div class="field-hint at-limit" *ngIf="hint('rmtInf', 140, tx) as h">{{h}}</div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Purpose Code</label>
-                                        <input formControlName="purpCd" maxlength="4">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Tax ID</label>
-                                        <input formControlName="taxId" maxlength="35">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Tax Amount</label>
-                                        <input formControlName="taxAmt" placeholder="e.g. 5.50">
-                                    </div>
-                                    <div class="form-group" style="grid-column: 1 / -1;">
-                                        <label>Related Remittance URL</label>
-                                        <input formControlName="rltdRmtInfUrl" placeholder="https://example.com/invoice">
-                                    </div>
-                                    <div class="form-group" style="grid-column: 1 / -1;">
-                                        <label>Regulatory Reporting</label>
-                                        <input formControlName="rgltryRptg" maxlength="140">
-                                    </div>
+                                    <div class="form-group"><label>Name <span class="req">*</span></label><input formControlName="cdtrName" maxlength="140"></div>
+                                    <div class="form-group"><label>IBAN <span class="req">*</span></label><input formControlName="cdtrIban" maxlength="34"></div>
+                                    <div class="form-group"><label>Ultmt Dbtr Nm</label><input formControlName="ultmtDbtrName" maxlength="140"></div>
+                                    <div class="form-group"><label>Ultmt Cdtr Nm</label><input formControlName="ultmtCdtrName" maxlength="140"></div>
+                                    <div class="form-group"><label>Remittance Inf</label><input formControlName="rmtInf" maxlength="140"></div>
+                                    <div class="form-group"><label>Purpose Code</label><input formControlName="purpCd" maxlength="4"></div>
+                                    <div class="form-group"><label>Tax ID</label><input formControlName="taxId" maxlength="35"></div>
+                                    <div class="form-group"><label>Tax Amount</label><input formControlName="taxAmt" placeholder="0.00"></div>
+                                    <div class="form-group" style="grid-column: 1 / -1;"><label>Remittance URL</label><input formControlName="rltdRmtInfUrl"></div>
+                                    <div class="form-group" style="grid-column: 1 / -1;"><label>Regulatory Rpt</label><input formControlName="rgltryRptg" maxlength="140"></div>
                                 </div>
                             </div>
                         </div>
@@ -735,7 +712,7 @@
                             <mat-icon>redo</mat-icon>
                         </button>
                         <button class="action-btn-small" (click)="formatXml()" [disabled]="!generatedXml" matTooltip="Format XML (Ctrl+S)">
-                            <mat-icon>format_align_left</mat-icon>
+                            <mat-icon>subject</mat-icon>
                         </button>
                     </div>
                 </div>
@@ -822,10 +799,7 @@
                                             <div class="vm-card-msg">{{issue.message}}</div>
                                             <div class="vm-card-meta">
                                                 <span class="vm-meta-item" *ngIf="issue.line">
-                                                    <mat-icon>transit_enterexit</mat-icon> {{issue.line}}
-                                                </span>
-                                                <span class="vm-meta-item" *ngIf="issue.code">
-                                                    <mat-icon>code</mat-icon> {{issue.code}}
+                                                    <mat-icon>link</mat-icon> Line: {{issue.line}}
                                                 </span>
                                             </div>
                                         </div>
@@ -868,6 +842,6 @@
                     </div>
                 </div>
             </div>
-        </div>
     </div>
+</div>
 </div>

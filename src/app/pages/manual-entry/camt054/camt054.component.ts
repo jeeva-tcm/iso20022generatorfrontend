@@ -258,6 +258,15 @@ export class Camt054Component implements OnInit {
     this.expandedSections[section] = !this.expandedSections[section];
   }
 
+  onEditorChange(content: string, fromForm = false) {
+    if (!this.isInternalChange && !fromForm) {
+      this.pushHistory();
+      this.parseXmlToForm(content);
+    }
+    this.generatedXml = content;
+    this.refreshLineCount();
+  }
+
   generateXml() {
     if (this.isParsingXml) return;
     const v = this.form.value;
@@ -730,5 +739,225 @@ export class Camt054Component implements OnInit {
 
   syncScroll(editor: any, gutter: any) {
     gutter.scrollTop = editor.scrollTop;
+  }
+
+  parseXmlToForm(xml: string) {
+    if (!xml || xml.length < 50) return;
+    try {
+      this.isParsingXml = true;
+      const cleanXml = xml.replace(/<(\/?)(?:[\w]+:)/g, '<$1');
+      const doc = new DOMParser().parseFromString(cleanXml, 'text/xml');
+      if (doc.querySelector('parsererror')) {
+        this.isParsingXml = false;
+        return;
+      }
+
+      const getT = (t: string, p: any = doc): Element | null => {
+        const els = p.getElementsByTagName(t);
+        if (els.length > 0) return els[0];
+        const all = p.getElementsByTagName('*');
+        for (let i = 0; i < all.length; i++) {
+          if (all[i].localName === t) return all[i];
+        }
+        return null;
+      };
+      const tval = (t: string, p: any = doc) => getT(t, p)?.textContent?.trim() || '';
+
+      const patch: any = {};
+      const setVal = (f: string, v: string) => { if (v) patch[f] = v; };
+
+      // 1. AppHdr
+      const appHdr = getT('AppHdr');
+      if (appHdr) {
+        setVal('businessMsgId', tval('BizMsgIdr', appHdr));
+        setVal('msgDefId', tval('MsgDefIdr', appHdr));
+        setVal('creationDate', tval('CreDt', appHdr).replace('+00:00', '').replace('Z', ''));
+        setVal('charSet', tval('CharSet', appHdr));
+        setVal('copyDuplicate', tval('CpyDplct', appHdr));
+        setVal('priority', tval('Prty', appHdr));
+        setVal('possibleDuplicate', tval('PssblDplct', appHdr));
+        const mktPrctc = getT('MktPrctc', appHdr);
+        if (mktPrctc) {
+          setVal('marketPractice', tval('Regy', mktPrctc));
+          setVal('marketPracticeId', tval('Id', mktPrctc));
+        }
+
+        const mapPartyHead = (p: Element | null, prefix: string) => {
+          if (!p) return;
+          const fi = getT('FinInstnId', p);
+          if (fi) {
+            setVal(prefix + 'BIC', tval('BICFI', fi));
+            setVal(prefix + 'LEI', tval('LEI', fi));
+            const clr = getT('ClrSysMmbId', fi);
+            if (clr) {
+              setVal(prefix + 'MmbId', tval('MmbId', clr));
+              setVal(prefix + 'ClrSysIdCd', tval('Cd', getT('ClrSysId', clr) || clr));
+            }
+          }
+        };
+        mapPartyHead(getT('Fr', appHdr), 'from');
+        mapPartyHead(getT('To', appHdr), 'to');
+      }
+
+      // 2. GrpHdr
+      const grpHdr = getT('GrpHdr');
+      if (grpHdr) {
+        setVal('msgId', tval('MsgId', grpHdr));
+        setVal('creationDateTime', tval('CreDtTm', grpHdr).replace('+00:00', '').replace('Z', ''));
+        const rcpt = getT('MsgRcpt', grpHdr);
+        if (rcpt) {
+            setVal('rcptName', tval('Nm', rcpt));
+            const adr = getT('PstlAdr', rcpt);
+            if (adr) {
+                setVal('rcptCtry', tval('Ctry', adr));
+                const lines = adr.getElementsByTagName('AdrLine');
+                if (lines.length > 0) setVal('rcptAdrLine1', lines[0].textContent?.trim() || '');
+                if (lines.length > 1) setVal('rcptAdrLine2', lines[1].textContent?.trim() || '');
+            }
+            const id = getT('Id', rcpt);
+            if (id) {
+                setVal('rcptOrgIdAnyBIC', tval('AnyBIC', getT('OrgId', id) || id));
+                const prvt = getT('PrvtId', id);
+                if (prvt) {
+                    const dtPlc = getT('DtAndPlcOfBirth', prvt);
+                    if (dtPlc) {
+                        setVal('rcptPrvtIdBirthDt', tval('BirthDt', dtPlc));
+                        setVal('rcptPrvtIdCityOfBirth', tval('CityOfBirth', dtPlc));
+                        setVal('rcptPrvtIdCtryOfBirth', tval('CtryOfBirth', dtPlc));
+                    }
+                }
+            }
+            setVal('rcptContactNm', tval('Nm', getT('CtctDtls', rcpt) || rcpt));
+        }
+        setVal('originalBusinessQuery', tval('MsgId', getT('OrgnlBizQry', grpHdr) || grpHdr));
+        setVal('additionalInformation', tval('AddtlInf', grpHdr));
+      }
+
+      // 3. Notification
+      const ntf = getT('Ntfctn');
+      if (ntf) {
+        setVal('notificationId', tval('Id', ntf));
+        const ntfPgn = getT('NtfctnPgntn', ntf);
+        if (ntfPgn) {
+          setVal('pageNumber', tval('PgNb', ntfPgn));
+          patch.lastPageInd = tval('LastPgInd', ntfPgn) === 'true';
+        }
+        setVal('electronicSequenceNumber', tval('ElctrncSeqNb', ntf));
+        setVal('reportingSequence', tval('RptgSeq', ntf));
+        setVal('legalSeqNb', tval('LglSeqNb', ntf));
+        setVal('creationDateTimeNtf', tval('CreDtTm', ntf).replace('+00:00', '').replace('Z', ''));
+        
+        const frToDt = getT('FrToDt', ntf);
+        if (frToDt) {
+          setVal('fromDateTm', tval('FrDtTm', frToDt).replace('+00:00', '').replace('Z', ''));
+          setVal('toDateTm', tval('ToDtTm', frToDt).replace('+00:00', '').replace('Z', ''));
+        }
+        setVal('copyDuplicateIndicatorNtf', tval('CpyDplctInd', ntf));
+        setVal('reportingSource', tval('Prtry', getT('RptgSrc', ntf) || ntf));
+
+        // Account
+        const acct = getT('Acct', ntf);
+        if (acct) {
+          setVal('accountIBAN', tval('IBAN', getT('Id', acct) || acct));
+          setVal('accountTypeCd', tval('Cd', getT('Tp', acct) || acct));
+          setVal('currency', tval('Ccy', acct));
+          setVal('accountName', tval('Nm', acct));
+          setVal('accountProxyId', tval('Id', getT('Prxy', acct) || acct));
+          const ownr = getT('Ownr', acct);
+          if (ownr) {
+              setVal('accountOwnerName', tval('Nm', ownr));
+              setVal('accountOwnerCtry', tval('Ctry', getT('PstlAdr', ownr) || ownr));
+          }
+          const svcr = getT('Svcr', acct);
+          if (svcr) setVal('accountServicerBic', tval('BICFI', getT('FinInstnId', svcr) || svcr));
+        }
+
+        setVal('relatedAccountIBAN', tval('IBAN', getT('Id', getT('RltdAcct', ntf) || ntf) || ntf));
+        setVal('additionalNotificationInfo', tval('AddtlNtfctnInf', ntf));
+
+        // TxsSummry
+        const summ = getT('TxsSummry', ntf);
+        if (summ) {
+            setVal('totalEntries', tval('NbOfNtries', getT('TtlNtries', summ) || summ));
+            setVal('totalCreditEntries', tval('Sum', getT('TtlCdtNtries', summ) || summ));
+            setVal('totalDebitEntries', tval('Sum', getT('TtlDbtNtries', summ) || summ));
+        }
+
+        // Entries
+        const ntryEls = Array.from(ntf.querySelectorAll(':scope > Ntry'));
+        if (ntryEls.length > 0) {
+          this.entries.clear();
+          ntryEls.forEach(el => {
+            const g = this.createEntryGroup();
+            const p: any = {};
+            const tv = (t: string, parent: any = el) => getT(t, parent)?.textContent?.trim() || '';
+            const sv = (f: string, v: string) => { if (v) p[f] = v; };
+
+            sv('entryReference', tv('NtryRef'));
+            sv('amount', tv('Amt'));
+            sv('creditDebitIndicator', tv('CdtDbtInd'));
+            p.reversalIndicator = tv('RvslInd') === 'true';
+            sv('status', tv('Cd', getT('Sts', el) || el));
+            sv('bookingDate', tv('DtTm', getT('BookgDt', el) || el).replace('+00:00', '').replace('Z', ''));
+            sv('valueDate', tv('DtTm', getT('ValDt', el) || el).replace('+00:00', '').replace('Z', ''));
+            sv('accountServicerRef', tv('AcctSvcrRef'));
+            
+            const bkTx = getT('BkTxCd', el);
+            if (bkTx) {
+                const domn = getT('Domn', bkTx);
+                if (domn) {
+                    sv('bankTxnDomain', tv('Cd', domn));
+                    const fmly = getT('Fmly', domn);
+                    if (fmly) {
+                        sv('bankTxnFamily', tv('Cd', fmly));
+                        sv('bankTxnCode', tv('SubFmlyCd', fmly));
+                    }
+                }
+            }
+            sv('charges', tv('TtlChrgsAndTaxAmt', getT('Chrgs', el) || el));
+
+            const ntryDtls = getT('NtryDtls', el);
+            if (ntryDtls) {
+                const txDtls = getT('TxDtls', ntryDtls);
+                if (txDtls) {
+                    const refs = getT('Refs', txDtls);
+                    if (refs) {
+                        sv('instructionId', tv('InstrId', refs));
+                        sv('endToEndId', tv('EndToEndId', refs));
+                        sv('uetr', tv('UETR', refs));
+                    }
+                    sv('instructedAmount', tv('Amt', getT('InstdAmt', getT('AmtDtls', txDtls) || txDtls) || txDtls));
+                    
+                    const pties = getT('RltdPties', txDtls);
+                    if (pties) {
+                        sv('dbtrNm', tv('Nm', getT('Pty', getT('Dbtr', pties) || pties) || pties));
+                        sv('ultmtDbtrNm', tv('Nm', getT('Pty', getT('UltmtDbtr', pties) || pties) || pties));
+                        sv('cdtrNm', tv('Nm', getT('Pty', getT('Cdtr', pties) || pties) || pties));
+                        sv('ultmtCdtrNm', tv('Nm', getT('Pty', getT('UltmtCdtr', pties) || pties) || pties));
+                    }
+                    const agts = getT('RltdAgts', txDtls);
+                    if (agts) {
+                        sv('dbtrAgtBic', tv('BICFI', getT('FinInstnId', getT('DbtrAgt', agts) || agts) || agts));
+                        sv('cdtrAgtBic', tv('BICFI', getT('FinInstnId', getT('CdtrAgt', agts) || agts) || agts));
+                    }
+                    sv('purposeCode', tv('Cd', getT('Purp', txDtls) || txDtls));
+                    sv('remittanceInfo', tv('Ustrd', getT('RmtInf', txDtls) || txDtls));
+                }
+            }
+            p.waiverIndicator = tv('ComssnWvrInd') === 'true';
+            sv('additionalEntryInfo', tv('AddtlNtryInf'));
+
+            g.patchValue(p);
+            this.entries.push(g);
+          });
+        }
+      }
+
+      this.form.patchValue(patch, { emitEvent: false });
+    } catch (e) {
+      console.error('Error parsing camt.054 XML:', e);
+    } finally {
+      this.isParsingXml = false;
+    }
   }
 }

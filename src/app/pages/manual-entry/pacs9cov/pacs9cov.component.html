@@ -99,17 +99,29 @@
                         </select>
                         <div class="validation-msg" *ngIf="err('clrChanl') as e">{{e}}</div>
                     </div>
-                    <div class="form-group intermediary-field"><label>Service Level Code <span class="opt">Optional</span></label><input formControlName="svcLvlCd" [attr.formControlName]="'svcLvlCd'" maxlength="4" placeholder="e.g. SEPA">
+                    <div class="form-group intermediary-field">
+                        <label>Service Level Code <span class="opt">Optional</span></label>
+                        <input formControlName="svcLvlCd" maxlength="4" placeholder="e.g. SEPA">
                         <div class="validation-msg" *ngIf="err('svcLvlCd') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('svcLvlCd', 4) as h">{{h}}</div>
                     </div>
-                    <div class="form-group intermediary-field"><label>Service Level Proprietary <span class="opt">Optional</span></label><input formControlName="svcLvlPrtry" [attr.formControlName]="'svcLvlPrtry'" maxlength="35" placeholder="Max 35 chars">
+                    <div class="form-group intermediary-field">
+                        <label>Service Level Proprietary <span class="opt">Optional</span></label>
+                        <input formControlName="svcLvlPrtry" maxlength="35" placeholder="Max 35 chars">
                         <div class="validation-msg" *ngIf="err('svcLvlPrtry') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('svcLvlPrtry', 35) as h">{{h}}</div>
                     </div>
-                    <div class="form-group intermediary-field"><label>Local Instrument Code <span class="opt">Optional</span></label><input formControlName="lclInstrmCd" [attr.formControlName]="'lclInstrmCd'" maxlength="35" placeholder="e.g. ONCL">
+                    <div class="form-group intermediary-field">
+                        <label>Local Instrument Code <span class="opt">Optional</span></label>
+                        <input formControlName="lclInstrmCd" maxlength="35" placeholder="e.g. ONCL">
                         <div class="validation-msg" *ngIf="err('lclInstrmCd') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('lclInstrmCd', 35) as h">{{h}}</div>
+                    </div>
+                    <div class="form-group intermediary-field">
+                        <label>Local Instrument Proprietary <span class="opt">Optional</span></label>
+                        <input formControlName="lclInstrmPrtry" maxlength="35" placeholder="Max 35 chars">
+                        <div class="validation-msg" *ngIf="err('lclInstrmPrtry') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('lclInstrmPrtry', 35) as h">{{h}}</div>
                     </div>
                     
                     
@@ -481,8 +493,8 @@
                         [disabled]="!canRedoXml()"><mat-icon>redo</mat-icon></button>
                     <button class="action-btn-small"
                         (click)="formatXml()"><mat-icon>format_align_left</mat-icon></button>
-                    <button class="action-btn-small"
-                        (click)="toggleCommentXml()"><mat-icon>mode_comment</mat-icon></button>
+                    <!-- <button class="action-btn-small"
+                        (click)="toggleCommentXml()"><mat-icon>mode_comment</mat-icon></button> -->
                 </div>
                 <div class="editor-wrapper">
                     <div class="line-numbers" #lineNumbers>
@@ -569,13 +581,13 @@
                 <ng-container *ngIf="['unstructured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                     <div class="form-group">
                         <label>{{title}} Address Line 1</label>
-                        <input [formControlName]="prefix+'AdrLine1'" [attr.formControlName]="prefix+'AdrLine1'" maxlength="70">
+                        <input [formControlName]="prefix+'AdrLine1'" maxlength="70" placeholder="e.g. 123 Main Street">
                         <div class="validation-msg" *ngIf="err(prefix+'AdrLine1') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint(prefix+'AdrLine1', 70) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
                         <label>{{title}} Address Line 2</label>
-                        <input [formControlName]="prefix+'AdrLine2'" [attr.formControlName]="prefix+'AdrLine2'" maxlength="70">
+                        <input [formControlName]="prefix+'AdrLine2'" maxlength="70" placeholder="e.g. Suite 400">
                         <div class="validation-msg" *ngIf="err(prefix+'AdrLine2') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint(prefix+'AdrLine2', 70) as h">{{h}}</div>
                     </div>

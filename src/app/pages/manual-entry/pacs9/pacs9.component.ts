@@ -1091,7 +1091,6 @@ ${tx}\t\t\t</CdtTrfTxInf>
     parseXmlToForm(content: string) {
         if (!content?.trim()) {
             this.isParsingXml = true;
-            // Clear all fields to empty strings instead of defaults
             const emptyPatch: any = {};
             Object.keys(this.form.controls).forEach(key => {
                 emptyPatch[key] = '';
@@ -1100,7 +1099,11 @@ ${tx}\t\t\t</CdtTrfTxInf>
             this.isParsingXml = false;
             return;
         }
+        if (content.length < 50) return;
+        if (this.isParsingXml) return;
         try {
+            this.isParsingXml = true;
+            // Strip namespaces for easier selector matching
             const cleanXml = content.replace(/<(\/?)(?:[\w]+:)/g, '<$1');
             const doc = new DOMParser().parseFromString(cleanXml, 'text/xml');
             if (doc.querySelector('parsererror')) {
@@ -1108,164 +1111,215 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 return;
             }
 
+            const getT = (t: string, p: any = doc): Element | null => {
+                const els = p.getElementsByTagName(t);
+                if (els.length > 0) return els[0];
+                const all = p.getElementsByTagName('*');
+                for (let i = 0; i < all.length; i++) {
+                    if (all[i].localName === t) return all[i];
+                }
+                return null;
+            };
+            const tval = (t: string, p: any = doc) => getT(t, p)?.textContent?.trim() || '';
+
             const patch: any = {};
-            const tval = (t: string) => doc.getElementsByTagName(t)[0]?.textContent || '';
-            const setVal = (key: string, val: string) => { patch[key] = val; };
 
-            setVal('bizMsgId', tval('BizMsgIdr'));
-            setVal('msgId', tval('MsgId'));
-            setVal('instrId', tval('InstrId'));
-            setVal('endToEndId', tval('EndToEndId'));
-            setVal('txId', tval('TxId'));
-            setVal('uetr', tval('UETR'));
-            setVal('nbOfTxs', tval('NbOfTxs'));
-            setVal('sttlmMtd', tval('SttlmMtd'));
-            setVal('sttlmDt', tval('IntrBkSttlmDt'));
-
-            const amtEl = doc.getElementsByTagName('IntrBkSttlmAmt')[0] || doc.getElementsByTagName('EqvtAmt')[0];
-            setVal('amount', amtEl ? (amtEl.textContent || '') : '');
-            setVal('currency', amtEl ? (amtEl.getAttribute('Ccy') || '') : '');
-
-            const creDtTm = doc.getElementsByTagName('CreDtTm')[0] || doc.getElementsByTagName('CreDt')[0];
-            setVal('creDtTm', creDtTm ? (creDtTm.textContent || '') : '');
-
-            const tryTag = (parentOrEl: string | Element, child: string) => {
-                const p = typeof parentOrEl === 'string' ? doc.getElementsByTagName(parentOrEl)[0] : parentOrEl;
-                return p ? (p.getElementsByTagName(child)[0]?.textContent || '') : '';
-            };
-
-            const tryAcct = (group: string) => {
-                const groupEl = doc.getElementsByTagName(group)[0];
-                if (!groupEl) return '';
-                const idNode = groupEl.getElementsByTagName('Id')[0];
-                if (!idNode) return '';
-                const iban = idNode.getElementsByTagName('IBAN')[0]?.textContent;
-                if (iban) return iban;
-                const othr = idNode.getElementsByTagName('Othr')[0];
-                return othr?.getElementsByTagName('Id')[0]?.textContent || '';
-            };
-
-            setVal('instrPrty', tval('InstrPrty'));
-            setVal('clrChanl', tval('ClrChanl'));
-            setVal('svcLvlCd', tryTag('SvcLvl', 'Cd'));
-            setVal('svcLvlPrtry', tryTag('SvcLvl', 'Prtry'));
-            setVal('lclInstrmCd', tryTag('LclInstrm', 'Cd'));
-            setVal('lclInstrmPrtry', tryTag('LclInstrm', 'Prtry'));
-            setVal('ctgyPurpPrtry', tryTag('CtgyPurp', 'Prtry'));
-
-
-            setVal('fromBic', tryTag('Fr', 'BICFI'));
-            setVal('toBic', tryTag('To', 'BICFI'));
-
-            const instgBic = tryTag('InstgAgt', 'BICFI');
-            setVal('instgAgtBic', instgBic || patch.fromBic);
-            const instdBic = tryTag('InstdAgt', 'BICFI');
-            setVal('instdAgtBic', instdBic || patch.toBic);
-
-            this.agentPrefixes.forEach(p => {
-                let tag = p.charAt(0).toUpperCase() + p.slice(1);
-                if (p === 'dbtrFi') tag = 'Dbtr';
-                if (p === 'cdtrFi') tag = 'Cdtr';
-
-                const el = doc.getElementsByTagName(tag)[0];
-                if (el) {
-                    const fi = el.getElementsByTagName('FinInstnId')[0];
-                    if (fi) {
-                        patch[p + 'Bic'] = fi.getElementsByTagName('BICFI')[0]?.textContent || '';
-                        patch[p + 'Name'] = fi.getElementsByTagName('Nm')[0]?.textContent || '';
-                        patch[p + 'Lei'] = fi.getElementsByTagName('LEI')[0]?.textContent || '';
-                        const clr = fi.getElementsByTagName('ClrSysMmbId')[0];
-                        if (clr) {
-                            patch[p + 'ClrSysMmbId'] = clr.getElementsByTagName('MmbId')[0]?.textContent || '';
-                            patch[p + 'ClrSysCd'] = clr.getElementsByTagName('ClrSysId')[0]?.getElementsByTagName('Cd')[0]?.textContent || '';
-                        }
+            // 1. AppHdr (BAH)
+            const appHdr = getT('AppHdr');
+            if (appHdr) {
+                const fr = getT('Fr', appHdr);
+                if (fr) {
+                    patch.fromBic = tval('BICFI', fr);
+                    const clr = getT('ClrSysMmbId', fr);
+                    if (clr) {
+                        patch.fromMmbId = tval('MmbId', clr);
+                        patch.fromClrSysId = tval('Cd', getT('ClrSysId', clr) || clr);
                     }
+                    patch.fromLei = tval('LEI', fr);
                 }
-            });
-
-            // Fetch accounts for all agents/actors using the robust tryAcct helper
-            this.agentPrefixes.forEach(p => {
-                let tag = p.charAt(0).toUpperCase() + p.slice(1);
-                if (p === 'dbtrFi') tag = 'Dbtr'; // Exception for actor/agent mapping
-                if (p === 'cdtrFi') tag = 'Cdtr';
-                const acctTag = tag + 'Acct';
-                const val = tryAcct(acctTag);
-                if (val) patch[p + 'Acct'] = val;
-            });
-
-            const mapAddr = (tag: string, prefix: string) => {
-                ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry', 'AdrLine1', 'AdrLine2', 'AdrTpCd', 'AdrTpPrtry'].forEach(f => patch[prefix + f] = '');
-                patch[prefix + 'AddrType'] = 'none';
-
-                const p = doc.getElementsByTagName(tag)[0];
-                if (!p) return;
-                const addr = p.getElementsByTagName('PstlAdr')[0];
-                if (!addr) return;
-
-                const aV = (t: string) => addr.getElementsByTagName(t)[0]?.textContent || '';
-                if (aV('Ctry') || aV('TwnNm') || aV('StrtNm') || aV('BldgNb') || aV('TwnLctnNm') || aV('DstrctNm')) {
-                    patch[prefix + 'AddrType'] = 'structured';
-                    ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry'].forEach(f => patch[prefix + f] = aV(f));
-                    const adrTp = addr.getElementsByTagName('AdrTp')[0];
-                    if (adrTp) {
-                        patch[prefix + 'AdrTpCd'] = adrTp.getElementsByTagName('Cd')[0]?.textContent || '';
-                        patch[prefix + 'AdrTpPrtry'] = adrTp.getElementsByTagName('Prtry')[0]?.textContent || '';
+                const to = getT('To', appHdr);
+                if (to) {
+                    patch.toBic = tval('BICFI', to);
+                    const clr = getT('ClrSysMmbId', to);
+                    if (clr) {
+                        patch.toMmbId = tval('MmbId', clr);
+                        patch.toClrSysId = tval('Cd', getT('ClrSysId', clr) || clr);
                     }
-                } else if (addr.getElementsByTagName('AdrLine').length > 0) {
-                    patch[prefix + 'AddrType'] = 'unstructured';
-                    const lines = addr.getElementsByTagName('AdrLine');
-                    patch[prefix + 'AdrLine1'] = lines[0]?.textContent || '';
-                    patch[prefix + 'AdrLine2'] = lines[1]?.textContent || '';
+                    patch.toLei = tval('LEI', to);
                 }
-            };
-
-            this.agentPrefixes.forEach(p => {
-                let tag = p.charAt(0).toUpperCase() + p.slice(1);
-                if (p === 'dbtrFi') tag = 'Dbtr';
-                if (p === 'cdtrFi') tag = 'Cdtr';
-                mapAddr(tag, p);
-            });
-
-
-            setVal('purpCd', tryTag('Purp', 'Cd') || tval('Purp'));
-            setVal('ctgyPurpCd', tryTag('CtgyPurp', 'Cd') || tval('CtgyPurp'));
-
-            // Remittance
-            const rmtInf = doc.getElementsByTagName('RmtInf')[0];
-            if (rmtInf) {
-                const ustrd = rmtInf.getElementsByTagName('Ustrd')[0];
-                if (ustrd) {
-                    setVal('rmtInfType', 'ustrd');
-                    setVal('rmtInfUstrd', ustrd.textContent || '');
-                } else {
-                    const strd = rmtInf.getElementsByTagName('Strd')[0];
-                    if (strd) {
-                        setVal('rmtInfType', 'strd');
-                        const ref = strd.getElementsByTagName('CdtrRefInf')[0];
-                        if (ref) {
-                            setVal('rmtInfStrdCdtrRefType', ref.getElementsByTagName('Cd')[0]?.textContent || '');
-                            setVal('rmtInfStrdCdtrRef', ref.getElementsByTagName('Ref')[0]?.textContent || '');
-                        }
-                        setVal('rmtInfStrdAddtlRmtInf', strd.getElementsByTagName('AddtlRmtInf')[0]?.textContent || '');
-
-                        const rfrdDoc = strd.getElementsByTagName('RfrdDocInf')[0];
-                        if (rfrdDoc) {
-                            setVal('rmtInfStrdRfrdDocNb', rfrdDoc.getElementsByTagName('Nb')[0]?.textContent || '');
-                            setVal('rmtInfStrdRfrdDocCd', rfrdDoc.getElementsByTagName('Tp')[0]?.getElementsByTagName('CdOrPrtry')[0]?.getElementsByTagName('Cd')[0]?.textContent || '');
-                        }
-                        const rfrdAmt = strd.getElementsByTagName('RfrdDocAmt')[0];
-                        if (rfrdAmt) {
-                            setVal('rmtInfStrdRfrdDocAmt', rfrdAmt.getElementsByTagName('RmtAmt')[0]?.getElementsByTagName('DuePyblAmt')[0]?.textContent || '');
-                        }
-                    }
-                }
-            } else {
-                setVal('rmtInfType', 'none');
+                patch.bizMsgId = tval('BizMsgIdr', appHdr);
+                patch.appHdrPriority = tval('Prty', appHdr);
+                const rltd = getT('Rltd', appHdr);
+                if (rltd) patch.rltd = tval('BizMsgIdr', rltd);
             }
-            this.isParsingXml = true;
+
+            // 2. Document
+            const grpHdr = getT('GrpHdr');
+            if (grpHdr) {
+                patch.msgId = tval('MsgId', grpHdr);
+                patch.creDtTm = tval('CreDtTm', grpHdr);
+                patch.nbOfTxs = tval('NbOfTxs', grpHdr);
+                patch.sttlmMtd = tval('SttlmMtd', getT('SttlmInf', grpHdr) || grpHdr);
+            }
+
+            const tx = getT('CdtTrfTxInf');
+            if (tx) {
+                const pmtId = getT('PmtId', tx);
+                if (pmtId) {
+                    patch.instrId = tval('InstrId', pmtId);
+                    patch.endToEndId = tval('EndToEndId', pmtId);
+                    patch.txId = tval('TxId', pmtId);
+                    patch.uetr = tval('UETR', pmtId);
+                    patch.clrSysRef = tval('ClrSysRef', pmtId);
+                }
+
+                const pmtTp = getT('PmtTpInf', tx);
+                if (pmtTp) {
+                    patch.instrPrty = tval('InstrPrty', pmtTp);
+                    patch.clrChanl = tval('ClrChanl', pmtTp);
+                    const svcLvl = getT('SvcLvl', pmtTp);
+                    if (svcLvl) {
+                        patch.svcLvlCd = tval('Cd', svcLvl);
+                        patch.svcLvlPrtry = tval('Prtry', svcLvl);
+                    }
+                    const lclInstrm = getT('LclInstrm', pmtTp);
+                    if (lclInstrm) {
+                        patch.lclInstrmCd = tval('Cd', lclInstrm);
+                        patch.lclInstrmPrtry = tval('Prtry', lclInstrm);
+                    }
+                    const ctgyPurp = getT('CtgyPurp', pmtTp);
+                    if (ctgyPurp) {
+                        patch.ctgyPurpCd = tval('Cd', ctgyPurp);
+                        patch.ctgyPurpPrtry = tval('Prtry', ctgyPurp);
+                    }
+                }
+
+                const amtEl = getT('IntrBkSttlmAmt', tx);
+                if (amtEl) {
+                    patch.amount = amtEl.textContent?.trim() || '';
+                    patch.currency = amtEl.getAttribute('Ccy') || '';
+                }
+                patch.sttlmDt = tval('IntrBkSttlmDt', tx);
+                patch.sttlmPrty = tval('SttlmPrty', tx);
+
+                const instdAmt = getT('InstdAmt', tx);
+                if (instdAmt) {
+                    patch.instdAmt = instdAmt.textContent?.trim() || '';
+                    patch.instdAmtCcy = instdAmt.getAttribute('Ccy') || '';
+                }
+                patch.xchgRate = tval('XchgRate', tx);
+
+                const mapAgt = (p: string, tag: string) => {
+                    const el = getT(tag, tx);
+                    if (!el) return;
+                    const fi = getT('FinInstnId', el);
+                    if (fi) {
+                        patch[p + 'Bic'] = tval('BICFI', fi);
+                        patch[p + 'Lei'] = tval('LEI', fi);
+                        patch[p + 'Name'] = tval('Nm', fi);
+                        const mmb = getT('ClrSysMmbId', fi);
+                        if (mmb) {
+                            patch[p + 'ClrSysMmbId'] = tval('MmbId', mmb);
+                            patch[p + 'ClrSysCd'] = tval('Cd', getT('ClrSysId', mmb) || mmb);
+                        }
+                        const pstl = getT('PstlAdr', fi);
+                        if (pstl) {
+                            patch[p + 'Ctry'] = tval('Ctry', pstl);
+                            patch[p + 'TwnNm'] = tval('TwnNm', pstl);
+                            patch[p + 'StrtNm'] = tval('StrtNm', pstl);
+                            patch[p + 'BldgNb'] = tval('BldgNb', pstl);
+                            patch[p + 'BldgNm'] = tval('BldgNm', pstl);
+                            patch[p + 'PstCd'] = tval('PstCd', pstl);
+                            const lines = pstl.querySelectorAll(':scope > AdrLine');
+                            if (lines.length > 0) patch[p + 'AdrLine1'] = lines[0].textContent || '';
+                            if (lines.length > 1) patch[p + 'AdrLine2'] = lines[1].textContent || '';
+                            patch[p + 'AddrType'] = lines.length > 0 ? 'unstructured' : 'structured';
+                        }
+                    }
+                    const acct = getT(tag + 'Acct', tx);
+                    if (acct) {
+                        patch[p + 'Acct'] = tval('IBAN', getT('Id', acct) || acct) || tval('Id', getT('Othr', getT('Id', acct) || acct) || acct);
+                    }
+                };
+
+                mapAgt('prvsInstgAgt1', 'PrvsInstgAgt1');
+                mapAgt('prvsInstgAgt2', 'PrvsInstgAgt2');
+                mapAgt('prvsInstgAgt3', 'PrvsInstgAgt3');
+                mapAgt('instgAgt', 'InstgAgt');
+                mapAgt('instdAgt', 'InstdAgt');
+                mapAgt('intrmyAgt1', 'IntrmyAgt1');
+                mapAgt('intrmyAgt2', 'IntrmyAgt2');
+                mapAgt('intrmyAgt3', 'IntrmyAgt3');
+                mapAgt('dbtrFi', 'Dbtr');
+                mapAgt('dbtrAgt', 'DbtrAgt');
+                mapAgt('cdtrAgt', 'CdtrAgt');
+                mapAgt('cdtrFi', 'Cdtr');
+
+                const instrC = tx.querySelectorAll(':scope > InstrForCdtrAgt');
+                instrC.forEach((el, i) => {
+                    if (i < 2) {
+                        patch[`instrForCdtrAgt${i+1}Cd`] = tval('Cd', el);
+                        patch[`instrForCdtrAgt${i+1}InfTxt`] = tval('InstrInf', el);
+                    }
+                });
+
+                const instrN = tx.querySelectorAll(':scope > InstrForNxtAgt');
+                instrN.forEach((el, i) => {
+                    if (i < 6) {
+                        patch[`instrForNxtAgt${i+1}InfTxt`] = tval('InstrInf', el);
+                    }
+                });
+
+                patch.purpCd = tval('Cd', getT('Purp', tx) || tx);
+
+                const rgltry = tx.querySelectorAll(':scope > RgltryRptg');
+                rgltry.forEach((el, i) => {
+                    if (i < 3) {
+                        const dtls = getT('Dtls', el);
+                        if (dtls) {
+                            patch[`rgltryRptg${i+1}Code`] = tval('Cd', dtls);
+                            patch[`rgltryRptg${i+1}Inf`] = tval('Inf', dtls);
+                        }
+                    }
+                });
+
+                const rltdRmt = tx.querySelectorAll(':scope > RltdRmtInf');
+                rltdRmt.forEach((el, i) => {
+                    if (i < 3) patch[`rltdRmtInf${i+1}Ref`] = tval('Ref', el);
+                });
+
+                const rmtInf = getT('RmtInf', tx);
+                if (rmtInf) {
+                    const ustrd = getT('Ustrd', rmtInf);
+                    if (ustrd) {
+                        patch.rmtInfType = 'ustrd';
+                        patch.rmtInfUstrd = ustrd.textContent || '';
+                    } else {
+                        const strd = getT('Strd', rmtInf);
+                        if (strd) {
+                            patch.rmtInfType = 'strd';
+                            const cRef = getT('CdtrRefInf', strd);
+                            if (cRef) {
+                                patch.rmtInfStrdCdtrRefType = tval('Cd', getT('CdOrPrtry', getT('Tp', cRef) || cRef) || cRef);
+                                patch.rmtInfStrdCdtrRef = tval('Ref', cRef);
+                            }
+                            patch.rmtInfStrdAddtlRmtInf = tval('AddtlRmtInf', strd);
+                            const rfrd = getT('RfrdDocInf', strd);
+                            if (rfrd) {
+                                patch.rmtInfStrdRfrdDocNb = tval('Nb', rfrd);
+                                patch.rmtInfStrdRfrdDocCd = tval('Cd', getT('CdOrPrtry', getT('Tp', rfrd) || rfrd) || rfrd);
+                            }
+                        }
+                    }
+                } else {
+                    patch.rmtInfType = 'none';
+                }
+            }
+
             this.form.patchValue(patch, { emitEvent: false });
-            this.isParsingXml = false;
         } catch (e) {
+            console.warn('XML Parse failed', e);
+        } finally {
             this.isParsingXml = false;
         }
     }
