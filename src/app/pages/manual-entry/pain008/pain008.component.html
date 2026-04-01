@@ -1,0 +1,695 @@
+<div class="container" (click)="$event.stopPropagation()">
+    <header>
+        <h1>Customer Direct Debit Initiation (pain.008) <mat-icon class="title-icon">account_balance</mat-icon></h1>
+    </header>
+
+    <div class="split-view">
+        <div class="left-panel">
+            <form [formGroup]="form" class="content-box">
+                <div class="grid">
+                    <!-- ═══ AppHdr ═══ -->
+                    <div class="section-title">Message Header (AppHdr)</div>
+                    <div class="form-group"><label>CharSet</label><input formControlName="charSet" maxlength="20" placeholder="Optional"></div>
+                    <div class="form-group"><label>Sender BIC <span class="req">*</span></label><input formControlName="fromBic" maxlength="11">
+                        <div class="validation-msg" *ngIf="err('fromBic') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('fromBic', 11) as h">{{h}}</div>
+                    </div>
+                    <div class="form-group"><label>Sender ClrSys Code</label><input formControlName="fromClrSysCd" maxlength="5" placeholder="Optional"></div>
+                    <div class="form-group"><label>Sender Member ID</label><input formControlName="fromMmbId" maxlength="35" placeholder="Optional"></div>
+                    <div class="form-group"><label>Sender LEI</label><input formControlName="fromLei" maxlength="20" placeholder="Optional"></div>
+                    <div class="form-group"><label>Receiver BIC <span class="req">*</span></label><input formControlName="toBic" maxlength="11">
+                        <div class="validation-msg" *ngIf="err('toBic') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('toBic', 11) as h">{{h}}</div>
+                    </div>
+                    <div class="form-group"><label>Receiver ClrSys Code</label><input formControlName="toClrSysCd" maxlength="5" placeholder="Optional"></div>
+                    <div class="form-group"><label>Receiver Member ID</label><input formControlName="toMmbId" maxlength="35" placeholder="Optional"></div>
+                    <div class="form-group"><label>Receiver LEI</label><input formControlName="toLei" maxlength="20" placeholder="Optional"></div>
+                    <div class="form-group intermediary-field"><label>Business Msg ID <span class="req">*</span></label><input formControlName="bizMsgId" maxlength="35">
+                        <div class="validation-msg" *ngIf="err('bizMsgId') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('bizMsgId', 35) as h">{{h}}</div>
+                    </div>
+                    <div class="form-group"><label>Message Definition ID</label><input formControlName="msgDefIdr" readonly style="background: var(--bg-card-hover);"></div>
+                    <div class="form-group"><label>Business Service</label><input formControlName="bizSvc" maxlength="35"></div>
+                    <div class="form-group"><label>Market Practice Registry</label><input formControlName="mktPrctcRegy" maxlength="35" placeholder="Optional"></div>
+                    <div class="form-group"><label>Market Practice ID</label><input formControlName="mktPrctcId" maxlength="35" placeholder="Optional"></div>
+                    <div class="form-group"><label>Creation Date <span class="req">*</span></label><input formControlName="creDt">
+                        <div class="validation-msg" *ngIf="err('creDt') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group"><label>Copy/Duplicate</label>
+                        <select formControlName="cpyDplct"><option value="">None</option><option *ngFor="let c of copyDuplicates" [value]="c">{{c}}</option></select>
+                    </div>
+                    <div class="form-group"><label>Possible Duplicate</label>
+                        <select formControlName="pssblDplct"><option value="">None</option><option value="true">true</option><option value="false">false</option></select>
+                    </div>
+                    <div class="form-group"><label>Priority</label>
+                        <select formControlName="prty"><option value="">None</option><option *ngFor="let p of priorities" [value]="p">{{p}}</option></select>
+                    </div>
+
+                    <!-- ═══ Rltd (Related Header) ═══ -->
+                    <div class="party-group">
+                        <div class="party-group-title">Related Message (Rltd)</div>
+                        <div class="party-grid">
+                            <div class="form-group"><label>Charset</label><input formControlName="rltdCharSet" maxlength="20" placeholder="Optional"></div>
+                            <div class="form-group"><label>Fr BIC</label><input formControlName="rltdFrBic" maxlength="11" placeholder="Optional"></div>
+                            <div class="form-group"><label>Fr ClrSys Code</label><input formControlName="rltdFrClrSysCd" maxlength="5" placeholder="Optional"></div>
+                            <div class="form-group"><label>Fr Member ID</label><input formControlName="rltdFrMmbId" maxlength="35" placeholder="Optional"></div>
+                            <div class="form-group"><label>Fr LEI</label><input formControlName="rltdFrLei" maxlength="20" placeholder="Optional"></div>
+                            <div class="form-group"><label>To BIC</label><input formControlName="rltdToBic" maxlength="11" placeholder="Optional"></div>
+                            <div class="form-group"><label>To ClrSys Code</label><input formControlName="rltdToClrSysCd" maxlength="5" placeholder="Optional"></div>
+                            <div class="form-group"><label>To Member ID</label><input formControlName="rltdToMmbId" maxlength="35" placeholder="Optional"></div>
+                            <div class="form-group"><label>To LEI</label><input formControlName="rltdToLei" maxlength="20" placeholder="Optional"></div>
+                            <div class="form-group"><label>Biz Msg Idr</label><input formControlName="rltdBizMsgIdr" maxlength="35" placeholder="Optional"></div>
+                            <div class="form-group"><label>Msg Def Idr</label><input formControlName="rltdMsgDefIdr" maxlength="35" placeholder="Optional"></div>
+                            <div class="form-group"><label>Biz Svc</label><input formControlName="rltdBizSvc" maxlength="35" placeholder="Optional"></div>
+                            <div class="form-group"><label>Creation Date</label><input formControlName="rltdCreDt" placeholder="Optional"></div>
+                            <div class="form-group"><label>Copy/Duplicate</label>
+                                <select formControlName="rltdCpyDplct"><option value="">None</option><option *ngFor="let c of copyDuplicates" [value]="c">{{c}}</option></select></div>
+                            <div class="form-group"><label>Priority</label>
+                                <select formControlName="rltdPrty"><option value="">None</option><option *ngFor="let p of priorities" [value]="p">{{p}}</option></select></div>
+                        </div>
+                    </div>
+
+                    <!-- ═══ GrpHdr ═══ -->
+                    <div class="section-title">Group Header</div>
+                    <div class="form-group"><label>Message ID <span class="req">*</span></label><input formControlName="msgId" maxlength="35">
+                        <div class="validation-msg" *ngIf="err('msgId') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('msgId', 35) as h">{{h}}</div>
+                    </div>
+                    <div class="form-group"><label>Creation DateTime <span class="req">*</span></label><input formControlName="creDtTm">
+                        <div class="validation-msg" *ngIf="err('creDtTm') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group"><label>Authorisation Code</label>
+                        <select formControlName="authsnCd"><option value="">None</option><option *ngFor="let a of authCodes" [value]="a">{{a}}</option></select>
+                    </div>
+                    <div class="form-group"><label>Authorisation Proprietary</label><input formControlName="authsnPrtry" maxlength="128" placeholder="Optional"></div>
+                    <div class="form-group"><label>Number of Txns</label><input formControlName="nbOfTxs" readonly style="background: var(--bg-card-hover);"></div>
+
+                    <div class="party-group">
+                        <div class="party-group-title mandatory">Initiating Party</div>
+                        <div class="party-grid">
+                            <div class="form-group"><label>Party Name <span class="req">*</span></label><input formControlName="initgPtyName" maxlength="140">
+                                <div class="validation-msg" *ngIf="err('initgPtyName') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('initgPtyName', 140) as h">{{h}}</div>
+                            </div>
+                            <div class="form-group"><label>Party ID</label><input formControlName="initgPtyId" maxlength="35" placeholder="Optional"></div>
+                            <div class="form-group"><label>Country of Residence</label><input formControlName="initgPtyCtryOfRes" maxlength="2" placeholder="e.g. US"></div>
+                            <div class="form-group"><label>Address Type</label>
+                                <select formControlName="initgPtyAddrType">
+                                    <option value="none">None</option>
+                                    <option value="unstructured">Unstructured (AdrLine only)</option>
+                                    <option value="structured">Structured</option>
+                                    <option value="hybrid">Hybrid</option>
+                                </select>
+                            </div>
+                            <ng-container *ngIf="['structured', 'hybrid'].includes(form.value.initgPtyAddrType)">
+                                <div class="form-group"><label>Department</label><input formControlName="initgPtyDept" maxlength="70"></div>
+                                <div class="form-group"><label>Sub Department</label><input formControlName="initgPtySubDept" maxlength="70"></div>
+                                <div class="form-group"><label>Street Name</label><input formControlName="initgPtyStrtNm" maxlength="70"></div>
+                                <div class="form-group"><label>Building Number</label><input formControlName="initgPtyBldgNb" maxlength="16"></div>
+                                <div class="form-group"><label>Building Name</label><input formControlName="initgPtyBldgNm" maxlength="35"></div>
+                                <div class="form-group"><label>Floor</label><input formControlName="initgPtyFlr" maxlength="70"></div>
+                                <div class="form-group"><label>Post Box</label><input formControlName="initgPtyPstBx" maxlength="16"></div>
+                                <div class="form-group"><label>Room</label><input formControlName="initgPtyRoom" maxlength="70"></div>
+                                <div class="form-group"><label>Postal Code</label><input formControlName="initgPtyPstCd" maxlength="16"></div>
+                                <div class="form-group"><label>Town Location Name</label><input formControlName="initgPtyTwnLctnNm" maxlength="35"></div>
+                                <div class="form-group"><label>District Name</label><input formControlName="initgPtyDstrctNm" maxlength="35"></div>
+                                <div class="form-group"><label>Country Sub Division</label><input formControlName="initgPtyCtrySubDvsn" maxlength="35"></div>
+                            </ng-container>
+                            <ng-container *ngIf="['structured', 'unstructured', 'hybrid'].includes(form.value.initgPtyAddrType)">
+                                <div class="form-group"><label>Town Name</label><input formControlName="initgPtyTwnNm" maxlength="35"></div>
+                                <div class="form-group"><label>Country</label><input formControlName="initgPtyCtry" maxlength="2" placeholder="e.g. US"></div>
+                            </ng-container>
+                            <ng-container *ngIf="['unstructured', 'hybrid'].includes(form.value.initgPtyAddrType)">
+                                <div class="form-group"><label>Address Line 1</label><input formControlName="initgPtyAdrLine1" maxlength="70"></div>
+                                <div class="form-group"><label>Address Line 2</label><input formControlName="initgPtyAdrLine2" maxlength="70"></div>
+                            </ng-container>
+                        </div>
+                    </div>
+
+                    <div class="party-group">
+                        <div class="party-group-title">Forwarding Agent</div>
+                        <div class="party-grid">
+                            <div class="form-group"><label>BIC</label><input formControlName="fwdgAgtBic" maxlength="11" placeholder="Optional"></div>
+                            <div class="form-group"><label>ClrSys Code</label><input formControlName="fwdgAgtClrSysCd" maxlength="5" placeholder="Optional"></div>
+                            <div class="form-group"><label>Member ID</label><input formControlName="fwdgAgtMmbId" maxlength="35" placeholder="Optional"></div>
+                            <div class="form-group"><label>LEI</label><input formControlName="fwdgAgtLei" maxlength="20" placeholder="Optional"></div>
+                        </div>
+                    </div>
+
+                    <!-- ═══ PmtInf ═══ -->
+                    <div class="section-title">Payment Information</div>
+                    <div class="form-group"><label>Pmt Information ID <span class="req">*</span></label><input formControlName="pmtInfId" maxlength="35">
+                        <div class="validation-msg" *ngIf="err('pmtInfId') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('pmtInfId', 35) as h">{{h}}</div>
+                    </div>
+                    <div class="form-group"><label>Payment Method</label><input formControlName="pmtMtd" readonly value="DD" style="background: var(--bg-card-hover);"></div>
+                    <div class="form-group"><label>Batch Booking</label>
+                        <select formControlName="btchBookg"><option value="">None</option><option value="true">True</option><option value="false">False</option></select>
+                    </div>
+                    <div class="form-group"><label>Requested Collection Date <span class="req">*</span></label><input type="date" formControlName="reqdColltnDt">
+                        <div class="validation-msg" *ngIf="err('reqdColltnDt') as e">{{e}}</div>
+                    </div>
+
+                    <!-- Creditor (PmtInf level) -->
+                    <div class="party-group">
+                        <div class="party-group-title mandatory">Creditor</div>
+                        <div class="party-grid">
+                            <div class="form-group"><label>Creditor Name <span class="req">*</span></label><input formControlName="cdtrName" maxlength="140">
+                                <div class="validation-msg" *ngIf="err('cdtrName') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('cdtrName', 140) as h">{{h}}</div>
+                            </div>
+                            <div class="form-group"><label>Country of Residence</label><input formControlName="cdtrCtryOfRes" maxlength="2" placeholder="e.g. GB"></div>
+                            <div class="form-group"><label>Address Type</label>
+                                <select formControlName="cdtrAddrType">
+                                    <option value="none">None</option>
+                                    <option value="unstructured">Unstructured (AdrLine only)</option>
+                                    <option value="structured">Structured</option>
+                                    <option value="hybrid">Hybrid</option>
+                                </select>
+                            </div>
+                            <ng-container *ngIf="['structured', 'hybrid'].includes(form.value.cdtrAddrType)">
+                                <div class="form-group"><label>Department</label><input formControlName="cdtrDept" maxlength="70"></div>
+                                <div class="form-group"><label>Sub Department</label><input formControlName="cdtrSubDept" maxlength="70"></div>
+                                <div class="form-group"><label>Street Name</label><input formControlName="cdtrStrtNm" maxlength="70"></div>
+                                <div class="form-group"><label>Building Number</label><input formControlName="cdtrBldgNb" maxlength="16"></div>
+                                <div class="form-group"><label>Building Name</label><input formControlName="cdtrBldgNm" maxlength="35"></div>
+                                <div class="form-group"><label>Floor</label><input formControlName="cdtrFlr" maxlength="70"></div>
+                                <div class="form-group"><label>Post Box</label><input formControlName="cdtrPstBx" maxlength="16"></div>
+                                <div class="form-group"><label>Room</label><input formControlName="cdtrRoom" maxlength="70"></div>
+                                <div class="form-group"><label>Postal Code</label><input formControlName="cdtrPstCd" maxlength="16"></div>
+                                <div class="form-group"><label>Town Location Name</label><input formControlName="cdtrTwnLctnNm" maxlength="35"></div>
+                                <div class="form-group"><label>District Name</label><input formControlName="cdtrDstrctNm" maxlength="35"></div>
+                                <div class="form-group"><label>Country Sub Division</label><input formControlName="cdtrCtrySubDvsn" maxlength="35"></div>
+                            </ng-container>
+                            <ng-container *ngIf="['structured', 'unstructured', 'hybrid'].includes(form.value.cdtrAddrType)">
+                                <div class="form-group"><label>Town Name</label><input formControlName="cdtrTwnNm" maxlength="35"></div>
+                                <div class="form-group"><label>Country</label><input formControlName="cdtrCtry" maxlength="2" placeholder="e.g. GB"></div>
+                            </ng-container>
+                            <ng-container *ngIf="['unstructured', 'hybrid'].includes(form.value.cdtrAddrType)">
+                                <div class="form-group"><label>Address Line 1</label><input formControlName="cdtrAdrLine1" maxlength="70"></div>
+                                <div class="form-group"><label>Address Line 2</label><input formControlName="cdtrAdrLine2" maxlength="70"></div>
+                            </ng-container>
+                        </div>
+                    </div>
+
+                    <div class="party-group">
+                        <div class="party-group-title mandatory">Creditor Account</div>
+                        <div class="party-grid">
+                            <div class="form-group"><label>IBAN <span class="req">*</span></label><input formControlName="cdtrIban" maxlength="34">
+                                <div class="validation-msg" *ngIf="err('cdtrIban') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('cdtrIban', 34) as h">{{h}}</div>
+                            </div>
+                            <div class="form-group"><label>Other ID</label><input formControlName="cdtrAcctOthrId" maxlength="34" placeholder="Alternative to IBAN"></div>
+                            <div class="form-group"><label>Currency</label><input formControlName="cdtrAcctCcy" maxlength="3" placeholder="e.g. EUR"></div>
+                            <div class="form-group"><label>Account Name</label><input formControlName="cdtrAcctNm" maxlength="70" placeholder="Optional"></div>
+                            <div class="form-group"><label>Account Type Code</label><input formControlName="cdtrAcctTpCd" maxlength="4" placeholder="Optional"></div>
+                        </div>
+                    </div>
+
+                    <div class="party-group">
+                        <div class="party-group-title mandatory">Creditor Agent</div>
+                        <div class="party-grid">
+                            <div class="form-group"><label>BIC <span class="req">*</span></label><input formControlName="cdtrAgtBic" maxlength="11">
+                                <div class="validation-msg" *ngIf="err('cdtrAgtBic') as e">{{e}}</div>
+                            </div>
+                            <div class="form-group"><label>ClrSys Code</label><input formControlName="cdtrAgtClrSysCd" maxlength="5" placeholder="Optional"></div>
+                            <div class="form-group"><label>Member ID</label><input formControlName="cdtrAgtMmbId" maxlength="35" placeholder="Optional"></div>
+                            <div class="form-group"><label>LEI</label><input formControlName="cdtrAgtLei" maxlength="20" placeholder="Optional"></div>
+                            <div class="form-group"><label>Agent Name</label><input formControlName="cdtrAgtNm" maxlength="140" placeholder="Optional"></div>
+                        </div>
+                    </div>
+
+                    <div class="party-group">
+                        <div class="party-group-title">Creditor Agent Account</div>
+                        <div class="party-grid">
+                            <div class="form-group"><label>IBAN</label><input formControlName="cdtrAgtAcctIban" maxlength="34" placeholder="Optional"></div>
+                            <div class="form-group"><label>Other ID</label><input formControlName="cdtrAgtAcctOthrId" maxlength="34" placeholder="Optional"></div>
+                            <div class="form-group"><label>Currency</label><input formControlName="cdtrAgtAcctCcy" maxlength="3" placeholder="Optional"></div>
+                        </div>
+                    </div>
+
+                    <div class="party-group">
+                        <div class="party-group-title">Charges Account</div>
+                        <div class="party-grid">
+                            <div class="form-group"><label>IBAN</label><input formControlName="chrgsAcctIban" maxlength="34" placeholder="Optional"></div>
+                            <div class="form-group"><label>Other ID</label><input formControlName="chrgsAcctOthrId" maxlength="34" placeholder="Optional"></div>
+                            <div class="form-group"><label>Currency</label><input formControlName="chrgsAcctCcy" maxlength="3" placeholder="Optional"></div>
+                        </div>
+                    </div>
+
+                    <div class="party-group">
+                        <div class="party-group-title">Charges Account Agent</div>
+                        <div class="party-grid">
+                            <div class="form-group"><label>BIC</label><input formControlName="chrgsAcctAgtBic" maxlength="11" placeholder="Optional"></div>
+                            <div class="form-group"><label>Member ID</label><input formControlName="chrgsAcctAgtMmbId" maxlength="35" placeholder="Optional"></div>
+                            <div class="form-group"><label>LEI</label><input formControlName="chrgsAcctAgtLei" maxlength="20" placeholder="Optional"></div>
+                        </div>
+                    </div>
+
+                    <!-- ═══ Transactions (DrctDbtTxInf) ═══ -->
+                    <div class="section-title">
+                        <mat-icon style="font-size: 18px; width: 18px; height: 18px; color: var(--accent-color);">receipt_long</mat-icon>
+                        Direct Debit Transactions ({{transactions.length}})
+                        <button type="button" class="btn-add-tx" (click)="addTransaction()">
+                            <mat-icon>add_circle</mat-icon> ADD TRANSACTION
+                        </button>
+                    </div>
+
+                    <div formArrayName="transactions" class="tx-array">
+                        <div *ngFor="let tx of transactions.controls; let i = index" [formGroupName]="i" class="tx-card">
+                            <div class="tx-card-header">
+                                <span style="display: flex; align-items: center; gap: 8px;">
+                                    <mat-icon style="font-size: 16px; width: 16px; height: 16px; color: var(--accent-color);">summarize</mat-icon>
+                                    #{{i + 1}} DIRECT DEBIT TRANSACTION
+                                </span>
+                                <button type="button" class="btn-remove-tx" (click)="removeTransaction(i)" *ngIf="transactions.length > 1" title="Remove transaction">
+                                    <mat-icon>delete_outline</mat-icon>
+                                </button>
+                            </div>
+                            <div class="tx-grid">
+                                <!-- PmtId -->
+                                <div class="form-group"><label>Instruction ID <span class="req">*</span></label><input formControlName="instrId" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('instrId', tx) as e">{{e}}</div></div>
+                                <div class="form-group"><label>End To End ID <span class="req">*</span></label><input formControlName="endToEndId" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('endToEndId', tx) as e">{{e}}</div></div>
+                                <div class="form-group"><label>UETR <span class="req">*</span></label><input formControlName="uetr" maxlength="36" placeholder="UUID Format">
+                                    <div class="validation-msg" *ngIf="err('uetr', tx) as e">{{e}}</div></div>
+
+                                <!-- PmtTpInf -->
+                                <div class="form-group"><label>Instruction Priority</label>
+                                    <select formControlName="instrPrty"><option value="">None</option><option *ngFor="let p of priorities" [value]="p">{{p}}</option></select></div>
+                                <div class="form-group"><label>Service Level Code</label><input formControlName="svcLvlCd" maxlength="4" placeholder="e.g. SEPA"></div>
+                                <div class="form-group"><label>Service Level Proprietary</label><input formControlName="svcLvlPrtry" maxlength="35" placeholder="Optional"></div>
+                                <div class="form-group"><label>Local Instrument Code</label><input formControlName="lclInstrmCd" maxlength="35" placeholder="e.g. CORE"></div>
+                                <div class="form-group"><label>Local Instrument Proprietary</label><input formControlName="lclInstrmPrtry" maxlength="35" placeholder="Optional"></div>
+                                <div class="form-group"><label>Sequence Type <span class="req">*</span></label>
+                                    <select formControlName="seqTp"><option *ngFor="let s of sequenceTypes" [value]="s">{{s}}</option></select></div>
+                                <div class="form-group"><label>Category Purpose Code</label><input formControlName="ctgyPurpCd" maxlength="4" placeholder="e.g. CASH"></div>
+                                <div class="form-group"><label>Category Purpose Proprietary</label><input formControlName="ctgyPurpPrtry" maxlength="35" placeholder="Optional"></div>
+
+                                <!-- Amount -->
+                                <div class="form-group"><label>Amount <span class="req">*</span></label><input formControlName="amount" type="text" placeholder="0.00">
+                                    <div class="validation-msg" *ngIf="err('amount', tx) as e">{{e}}</div></div>
+                                <div class="form-group"><label>Currency <span class="req">*</span></label>
+                                    <select formControlName="currency"><option *ngFor="let c of currencies" [value]="c">{{c}}</option></select></div>
+                                <div class="form-group"><label>Charge Bearer</label>
+                                    <select formControlName="chrgBr"><option *ngFor="let cb of chargeBearers" [value]="cb">{{cb}}</option></select></div>
+
+                                <!-- ── Mandate Related Info ── -->
+                                <div class="mandate-section">
+                                    <div class="mandate-section-title"><mat-icon>description</mat-icon> Mandate Related Information</div>
+                                    <div class="mandate-grid">
+                                        <div class="form-group"><label>Mandate ID <span class="req">*</span></label><input formControlName="mndtId" maxlength="35">
+                                            <div class="validation-msg" *ngIf="err('mndtId', tx) as e">{{e}}</div></div>
+                                        <div class="form-group"><label>Date of Signature</label><input type="date" formControlName="dtOfSgntr"></div>
+                                        <div class="form-group"><label>Amendment Indicator</label>
+                                            <select formControlName="amdmntInd"><option value="false">false</option><option value="true">true</option></select></div>
+                                        <div class="form-group"><label>Original Mandate ID</label><input formControlName="orgnlMndtId" maxlength="35" placeholder="If amended"></div>
+                                        <div class="form-group"><label>Orgnl Cdtr Scheme Name</label><input formControlName="orgnlCdtrSchmeIdNm" maxlength="140" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Orgnl Cdtr Scheme BIC</label><input formControlName="orgnlCdtrSchmeIdBic" maxlength="11" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Orgnl Creditor Agent BIC</label><input formControlName="orgnlCdtrAgtBic" maxlength="11" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Orgnl Debtor Name</label><input formControlName="orgnlDbtrNm" maxlength="140" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Orgnl Debtor Acct IBAN</label><input formControlName="orgnlDbtrAcctIban" maxlength="34" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Orgnl Debtor Agent BIC</label><input formControlName="orgnlDbtrAgtBic" maxlength="11" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Orgnl Final Colltn Date</label><input type="date" formControlName="orgnlFnlColltnDt"></div>
+                                        <div class="form-group"><label>Orgnl Frequency Type</label>
+                                            <select formControlName="orgnlFrqcyTp"><option value="">None</option><option *ngFor="let f of frequencyTypes" [value]="f">{{f}}</option></select></div>
+                                        <div class="form-group"><label>Orgnl Reason Code</label><input formControlName="orgnlRsnCd" maxlength="4" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Orgnl Reason Proprietary</label><input formControlName="orgnlRsnPrtry" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Orgnl Tracking Days</label><input formControlName="orgnlTrckgDays" maxlength="2" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Electronic Signature</label><input formControlName="elctrncSgntr" maxlength="1025" placeholder="Optional"></div>
+                                        <div class="form-group"><label>First Collection Date</label><input type="date" formControlName="frstColltnDt"></div>
+                                        <div class="form-group"><label>Final Collection Date</label><input type="date" formControlName="fnlColltnDt"></div>
+                                        <div class="form-group"><label>Frequency Type</label>
+                                            <select formControlName="frqcyTp"><option value="">None</option><option *ngFor="let f of frequencyTypes" [value]="f">{{f}}</option></select></div>
+                                        <div class="form-group"><label>Frequency Period Type</label>
+                                            <select formControlName="frqcyPrdTp"><option value="">None</option><option *ngFor="let f of frequencyTypes" [value]="f">{{f}}</option></select></div>
+                                        <div class="form-group"><label>Count Per Period</label><input formControlName="frqcyPrdCntPerPrd" maxlength="4" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Reason Code</label><input formControlName="rsnCd" maxlength="4" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Reason Proprietary</label><input formControlName="rsnPrtry" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Tracking Days</label><input formControlName="trckgDays" maxlength="2" placeholder="Optional"></div>
+                                    </div>
+                                </div>
+
+                                <!-- CdtrSchmeId -->
+                                <div class="mandate-section">
+                                    <div class="mandate-section-title"><mat-icon>badge</mat-icon> Creditor Scheme Identification</div>
+                                    <div class="mandate-grid">
+                                        <div class="form-group"><label>Name</label><input formControlName="cdtrSchmeIdNm" maxlength="140" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Other ID</label><input formControlName="cdtrSchmeIdOthrId" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Scheme Name Code</label><input formControlName="cdtrSchmeIdOthrSchmeNmCd" maxlength="4" placeholder="e.g. SEPA"></div>
+                                        <div class="form-group"><label>Scheme Name Proprietary</label><input formControlName="cdtrSchmeIdOthrSchmeNmPrtry" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Issuer</label><input formControlName="cdtrSchmeIdOthrIssr" maxlength="35" placeholder="Optional"></div>
+                                    </div>
+                                </div>
+
+                                <!-- PreNtfctn -->
+                                <div class="form-group"><label>Pre-Notification ID</label><input formControlName="preNtfctnId" maxlength="35" placeholder="Optional"></div>
+                                <div class="form-group"><label>Pre-Notification Date</label><input type="date" formControlName="preNtfctnDt"></div>
+
+                                <!-- UltmtCdtr -->
+                                <div class="form-group"><label>Ultimate Creditor Name</label><input formControlName="ultmtCdtrName" maxlength="140" placeholder="Optional"></div>
+
+                                <!-- Debtor Agent -->
+                                <div class="party-group-title mandatory" style="grid-column: 1 / -1; margin-top: 0.5rem; font-size: 0.7rem;">Debtor Agent</div>
+                                <div class="form-group"><label>BIC <span class="req">*</span></label><input formControlName="dbtrAgtBic" maxlength="11">
+                                    <div class="validation-msg" *ngIf="err('dbtrAgtBic', tx) as e">{{e}}</div></div>
+                                <div class="form-group"><label>ClrSys Code</label><input formControlName="dbtrAgtClrSysCd" maxlength="5" placeholder="Optional"></div>
+                                <div class="form-group"><label>Member ID</label><input formControlName="dbtrAgtMmbId" maxlength="35" placeholder="Optional"></div>
+                                <div class="form-group"><label>LEI</label><input formControlName="dbtrAgtLei" maxlength="20" placeholder="Optional"></div>
+                                <div class="party-group-title" style="grid-column: 1 / -1; margin-top: 0.3rem; font-size: 0.65rem;">Debtor Agent Account</div>
+                                <div class="form-group"><label>IBAN</label><input formControlName="dbtrAgtAcctIban" maxlength="34" placeholder="Optional"></div>
+                                <div class="form-group"><label>Other ID</label><input formControlName="dbtrAgtAcctOthrId" maxlength="34" placeholder="Optional"></div>
+
+                                <!-- Debtor -->
+                                <div class="party-group-title mandatory" style="grid-column: 1 / -1; margin-top: 0.5rem; font-size: 0.7rem;">Debtor</div>
+                                <div class="form-group"><label>Name <span class="req">*</span></label><input formControlName="dbtrName" maxlength="140">
+                                    <div class="validation-msg" *ngIf="err('dbtrName', tx) as e">{{e}}</div></div>
+                                <div class="form-group"><label>Country of Residence</label><input formControlName="dbtrCtryOfRes" maxlength="2" placeholder="e.g. DE"></div>
+                                <div class="form-group"><label>Address Type</label>
+                                    <select formControlName="dbtrAddrType">
+                                        <option value="none">None</option>
+                                        <option value="unstructured">Unstructured (AdrLine only)</option>
+                                        <option value="structured">Structured</option>
+                                        <option value="hybrid">Hybrid</option>
+                                    </select>
+                                </div>
+                                <ng-container *ngIf="['structured', 'hybrid'].includes(tx.get('dbtrAddrType')?.value)">
+                                    <div class="form-group"><label>Department</label><input formControlName="dbtrDept" maxlength="70"></div>
+                                    <div class="form-group"><label>Sub Department</label><input formControlName="dbtrSubDept" maxlength="70"></div>
+                                    <div class="form-group"><label>Street Name</label><input formControlName="dbtrStrtNm" maxlength="70"></div>
+                                    <div class="form-group"><label>Building Number</label><input formControlName="dbtrBldgNb" maxlength="16"></div>
+                                    <div class="form-group"><label>Building Name</label><input formControlName="dbtrBldgNm" maxlength="35"></div>
+                                    <div class="form-group"><label>Floor</label><input formControlName="dbtrFlr" maxlength="70"></div>
+                                    <div class="form-group"><label>Post Box</label><input formControlName="dbtrPstBx" maxlength="16"></div>
+                                    <div class="form-group"><label>Room</label><input formControlName="dbtrRoom" maxlength="70"></div>
+                                    <div class="form-group"><label>Postal Code</label><input formControlName="dbtrPstCd" maxlength="16"></div>
+                                    <div class="form-group"><label>Town Location Name</label><input formControlName="dbtrTwnLctnNm" maxlength="35"></div>
+                                    <div class="form-group"><label>District Name</label><input formControlName="dbtrDstrctNm" maxlength="35"></div>
+                                    <div class="form-group"><label>Country Sub Division</label><input formControlName="dbtrCtrySubDvsn" maxlength="35"></div>
+                                </ng-container>
+                                <ng-container *ngIf="['structured', 'unstructured', 'hybrid'].includes(tx.get('dbtrAddrType')?.value)">
+                                    <div class="form-group"><label>Town Name</label><input formControlName="dbtrTwnNm" maxlength="35"></div>
+                                    <div class="form-group"><label>Country</label><input formControlName="dbtrCtry" maxlength="2" placeholder="e.g. DE"></div>
+                                </ng-container>
+                                <ng-container *ngIf="['unstructured', 'hybrid'].includes(tx.get('dbtrAddrType')?.value)">
+                                    <div class="form-group"><label>Address Line 1</label><input formControlName="dbtrAdrLine1" maxlength="70"></div>
+                                    <div class="form-group"><label>Address Line 2</label><input formControlName="dbtrAdrLine2" maxlength="70"></div>
+                                </ng-container>
+                                <div class="form-group"><label>OrgId AnyBIC</label><input formControlName="dbtrOrgIdAnyBic" maxlength="11" placeholder="Optional"></div>
+                                <div class="form-group"><label>OrgId LEI</label><input formControlName="dbtrOrgIdLei" maxlength="20" placeholder="Optional"></div>
+                                <div class="form-group"><label>OrgId Other ID</label><input formControlName="dbtrOrgIdOthrId" maxlength="35" placeholder="Optional"></div>
+                                <div class="form-group"><label>OrgId SchmeNm Code</label><input formControlName="dbtrOrgIdOthrSchmeNmCd" maxlength="4" placeholder="Optional"></div>
+                                <div class="form-group"><label>OrgId Issuer</label><input formControlName="dbtrOrgIdOthrIssr" maxlength="35" placeholder="Optional"></div>
+                                <div class="form-group"><label>PrvtId Birth Date</label><input type="date" formControlName="dbtrPrvtIdBirthDt"></div>
+                                <div class="form-group"><label>PrvtId City of Birth</label><input formControlName="dbtrPrvtIdCityOfBirth" maxlength="35" placeholder="Optional"></div>
+                                <div class="form-group"><label>PrvtId Country of Birth</label><input formControlName="dbtrPrvtIdCtryOfBirth" maxlength="2" placeholder="e.g. DE"></div>
+                                <div class="form-group"><label>PrvtId Other ID</label><input formControlName="dbtrPrvtIdOthrId" maxlength="35" placeholder="Optional"></div>
+                                <div class="form-group"><label>PrvtId SchmeNm Code</label><input formControlName="dbtrPrvtIdOthrSchmeNmCd" maxlength="4" placeholder="Optional"></div>
+                                <div class="form-group"><label>PrvtId Issuer</label><input formControlName="dbtrPrvtIdOthrIssr" maxlength="35" placeholder="Optional"></div>
+
+                                <!-- Debtor Account -->
+                                <div class="party-group-title mandatory" style="grid-column: 1 / -1; margin-top: 0.5rem; font-size: 0.7rem;">Debtor Account</div>
+                                <div class="form-group"><label>IBAN <span class="req">*</span></label><input formControlName="dbtrIban" maxlength="34">
+                                    <div class="validation-msg" *ngIf="err('dbtrIban', tx) as e">{{e}}</div></div>
+                                <div class="form-group"><label>Other ID</label><input formControlName="dbtrAcctOthrId" maxlength="34" placeholder="Alternative to IBAN"></div>
+                                <div class="form-group"><label>Currency</label><input formControlName="dbtrAcctCcy" maxlength="3" placeholder="e.g. EUR"></div>
+                                <div class="form-group"><label>Account Name</label><input formControlName="dbtrAcctNm" maxlength="70" placeholder="Optional"></div>
+                                <div class="form-group"><label>Account Type Code</label><input formControlName="dbtrAcctTpCd" maxlength="4" placeholder="Optional"></div>
+
+                                <!-- UltmtDbtr -->
+                                <div class="form-group"><label>Ultimate Debtor Name</label><input formControlName="ultmtDbtrName" maxlength="140" placeholder="Optional"></div>
+
+                                <!-- InstrForCdtrAgt -->
+                                <div class="form-group" style="grid-column: 1 / -1;"><label>Instruction for Creditor Agent</label><input formControlName="instrForCdtrAgt" maxlength="140" placeholder="Optional"></div>
+
+                                <!-- Purpose -->
+                                <div class="form-group"><label>Purpose Code</label><input formControlName="purpCd" maxlength="4" placeholder="e.g. CASH"></div>
+                                <div class="form-group"><label>Purpose Proprietary</label><input formControlName="purpPrtry" maxlength="35" placeholder="Optional"></div>
+
+                                <!-- RgltryRptg -->
+                                <div class="mandate-section">
+                                    <div class="mandate-section-title"><mat-icon>gavel</mat-icon> Regulatory Reporting</div>
+                                    <div class="mandate-grid">
+                                        <div class="form-group"><label>Debit/Credit Indicator</label>
+                                            <select formControlName="rgltryRptgInd"><option value="">None</option><option *ngFor="let r of dbtCdtRptgInd" [value]="r">{{r}}</option></select></div>
+                                        <div class="form-group"><label>Authority Name</label><input formControlName="rgltryRptgAuthrtyNm" maxlength="140" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Authority Country</label><input formControlName="rgltryRptgAuthrtyCtry" maxlength="2" placeholder="e.g. DE"></div>
+                                        <div class="form-group"><label>Details Type</label><input formControlName="rgltryRptgDtlsTp" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Details Date</label><input type="date" formControlName="rgltryRptgDtlsDt"></div>
+                                        <div class="form-group"><label>Details Code</label><input formControlName="rgltryRptgDtlsCd" maxlength="10" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Details Country</label><input formControlName="rgltryRptgDtlsCtry" maxlength="2" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Details Amount</label><input formControlName="rgltryRptgDtlsAmt" placeholder="0.00"></div>
+                                        <div class="form-group"><label>Details Amount Ccy</label><input formControlName="rgltryRptgDtlsAmtCcy" maxlength="3" placeholder="EUR"></div>
+                                        <div class="form-group"><label>Details Information</label><input formControlName="rgltryRptgDtlsInf" maxlength="35" placeholder="Optional"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Tax -->
+                                <div class="mandate-section">
+                                    <div class="mandate-section-title"><mat-icon>receipt</mat-icon> Tax Information</div>
+                                    <div class="mandate-grid">
+                                        <div class="form-group"><label>Creditor Tax ID</label><input formControlName="taxCdtrTaxId" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Creditor Regn ID</label><input formControlName="taxCdtrRegnId" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Creditor Tax Type</label><input formControlName="taxCdtrTaxTp" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Debtor Tax ID</label><input formControlName="taxDbtrTaxId" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Debtor Regn ID</label><input formControlName="taxDbtrRegnId" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Debtor Tax Type</label><input formControlName="taxDbtrTaxTp" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Authorisation Title</label><input formControlName="taxAuthsnTitl" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Authorisation Name</label><input formControlName="taxAuthsnNm" maxlength="140" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Admin Zone</label><input formControlName="taxAdmstnZone" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Reference Number</label><input formControlName="taxRefNb" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Method</label><input formControlName="taxMtd" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Total Taxable Base Amt</label><input formControlName="taxTtlTaxblBaseAmt" placeholder="0.00"></div>
+                                        <div class="form-group"><label>Total Taxable Base Ccy</label><input formControlName="taxTtlTaxblBaseAmtCcy" maxlength="3" placeholder="EUR"></div>
+                                        <div class="form-group"><label>Total Tax Amount</label><input formControlName="taxTtlTaxAmt" placeholder="0.00"></div>
+                                        <div class="form-group"><label>Total Tax Ccy</label><input formControlName="taxTtlTaxAmtCcy" maxlength="3" placeholder="EUR"></div>
+                                        <div class="form-group"><label>Date</label><input type="date" formControlName="taxDt"></div>
+                                        <div class="form-group"><label>Sequence Number</label><input formControlName="taxSeqNb" maxlength="18" placeholder="Optional"></div>
+                                    </div>
+                                </div>
+
+                                <!-- RltdRmtInf -->
+                                <div class="mandate-section">
+                                    <div class="mandate-section-title"><mat-icon>link</mat-icon> Related Remittance Information</div>
+                                    <div class="mandate-grid">
+                                        <div class="form-group"><label>Remittance ID</label><input formControlName="rltdRmtInfRmtId" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Method</label>
+                                            <select formControlName="rltdRmtInfMtd"><option value="">None</option><option *ngFor="let m of rmtMethods" [value]="m">{{m}}</option></select></div>
+                                        <div class="form-group"><label>Electronic Address</label><input formControlName="rltdRmtInfElctrncAdr" maxlength="2048" placeholder="Optional"></div>
+                                    </div>
+                                </div>
+
+                                <!-- RmtInf -->
+                                <div class="mandate-section">
+                                    <div class="mandate-section-title"><mat-icon>note</mat-icon> Remittance Information</div>
+                                    <div class="mandate-grid">
+                                        <div class="form-group" style="grid-column: 1 / -1;"><label>Unstructured</label><input formControlName="rmtInfUstrd" maxlength="140" placeholder="Free text (max 140)">
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfUstrd', 140, tx) as h">{{h}}</div></div>
+                                    </div>
+                                </div>
+                                <!-- Strd > RfrdDocInf -->
+                                <div class="mandate-section">
+                                    <div class="mandate-section-title"><mat-icon>description</mat-icon> Referred Document Info (Strd)</div>
+                                    <div class="mandate-grid">
+                                        <div class="form-group"><label>Doc Type Code</label>
+                                            <select formControlName="rmtInfStrdRfrdDocCd"><option value="">None</option><option *ngFor="let d of rfrdDocCodes" [value]="d">{{d}}</option></select></div>
+                                        <div class="form-group"><label>Doc Type Proprietary</label><input formControlName="rmtInfStrdRfrdDocPrtry" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Issuer</label><input formControlName="rmtInfStrdRfrdDocIssr" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Document Number</label><input formControlName="rmtInfStrdRfrdDocNb" maxlength="35" placeholder="e.g. INV-001"></div>
+                                        <div class="form-group"><label>Related Date</label><input type="date" formControlName="rmtInfStrdRfrdDocRltdDt"></div>
+                                        <div class="form-group"><label>Line Details Desc</label><input formControlName="rmtInfStrdRfrdDocLineDtlsDesc" maxlength="140" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Line Due Payable Amt</label><input formControlName="rmtInfStrdRfrdDocLineDtlsDuePyblAmt" placeholder="0.00"></div>
+                                        <div class="form-group"><label>Line Due Payable Ccy</label><input formControlName="rmtInfStrdRfrdDocLineDtlsDuePyblAmtCcy" maxlength="3" placeholder="EUR"></div>
+                                        <div class="form-group"><label>Line Credit Note Amt</label><input formControlName="rmtInfStrdRfrdDocLineDtlsCdtNoteAmt" placeholder="0.00"></div>
+                                        <div class="form-group"><label>Line Credit Note Ccy</label><input formControlName="rmtInfStrdRfrdDocLineDtlsCdtNoteAmtCcy" maxlength="3" placeholder="EUR"></div>
+                                        <div class="form-group"><label>Line Remitted Amt</label><input formControlName="rmtInfStrdRfrdDocLineDtlsRmtdAmt" placeholder="0.00"></div>
+                                        <div class="form-group"><label>Line Remitted Ccy</label><input formControlName="rmtInfStrdRfrdDocLineDtlsRmtdAmtCcy" maxlength="3" placeholder="EUR"></div>
+                                    </div>
+                                </div>
+                                <!-- Strd > RfrdDocAmt -->
+                                <div class="mandate-section">
+                                    <div class="mandate-section-title"><mat-icon>account_balance_wallet</mat-icon> Referred Document Amount (Strd)</div>
+                                    <div class="mandate-grid">
+                                        <div class="form-group"><label>Due Payable Amt</label><input formControlName="rmtInfStrdRfrdDocAmtDuePyblAmt" placeholder="0.00"></div>
+                                        <div class="form-group"><label>Due Payable Ccy</label><input formControlName="rmtInfStrdRfrdDocAmtDuePyblAmtCcy" maxlength="3" placeholder="EUR"></div>
+                                        <div class="form-group"><label>Discount Type Code</label><input formControlName="rmtInfStrdRfrdDocAmtDscntApldAmtTpCd" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Discount Amount</label><input formControlName="rmtInfStrdRfrdDocAmtDscntApldAmt" placeholder="0.00"></div>
+                                        <div class="form-group"><label>Discount Ccy</label><input formControlName="rmtInfStrdRfrdDocAmtDscntApldAmtCcy" maxlength="3" placeholder="EUR"></div>
+                                        <div class="form-group"><label>Credit Note Amt</label><input formControlName="rmtInfStrdRfrdDocAmtCdtNoteAmt" placeholder="0.00"></div>
+                                        <div class="form-group"><label>Credit Note Ccy</label><input formControlName="rmtInfStrdRfrdDocAmtCdtNoteAmtCcy" maxlength="3" placeholder="EUR"></div>
+                                        <div class="form-group"><label>Tax Amt Type Code</label><input formControlName="rmtInfStrdRfrdDocAmtTaxAmtTpCd" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Tax Amount</label><input formControlName="rmtInfStrdRfrdDocAmtTaxAmt" placeholder="0.00"></div>
+                                        <div class="form-group"><label>Tax Amount Ccy</label><input formControlName="rmtInfStrdRfrdDocAmtTaxAmtCcy" maxlength="3" placeholder="EUR"></div>
+                                        <div class="form-group"><label>Adj Amount</label><input formControlName="rmtInfStrdRfrdDocAmtAdjAmt" placeholder="0.00"></div>
+                                        <div class="form-group"><label>Adj Amount Ccy</label><input formControlName="rmtInfStrdRfrdDocAmtAdjAmtCcy" maxlength="3" placeholder="EUR"></div>
+                                        <div class="form-group"><label>Adj Cdt/Dbt Ind</label>
+                                            <select formControlName="rmtInfStrdRfrdDocAmtAdjCdtDbtInd"><option value="">None</option><option *ngFor="let c of cdtDbtInds" [value]="c">{{c}}</option></select></div>
+                                        <div class="form-group"><label>Adj Reason</label><input formControlName="rmtInfStrdRfrdDocAmtAdjRsn" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Adj Addtl Info</label><input formControlName="rmtInfStrdRfrdDocAmtAdjAddtlInf" maxlength="140" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Remitted Amount</label><input formControlName="rmtInfStrdRfrdDocAmtRmtdAmt" placeholder="0.00"></div>
+                                        <div class="form-group"><label>Remitted Ccy</label><input formControlName="rmtInfStrdRfrdDocAmtRmtdAmtCcy" maxlength="3" placeholder="EUR"></div>
+                                    </div>
+                                </div>
+                                <!-- Strd > CdtrRefInf -->
+                                <div class="mandate-section">
+                                    <div class="mandate-section-title"><mat-icon>credit_score</mat-icon> Creditor Reference Info (Strd)</div>
+                                    <div class="mandate-grid">
+                                        <div class="form-group"><label>Ref Type Code</label>
+                                            <select formControlName="rmtInfStrdCdtrRefCd"><option value="">None</option><option *ngFor="let c of cdtrRefCodes" [value]="c">{{c}}</option></select></div>
+                                        <div class="form-group"><label>Ref Type Prtry</label><input formControlName="rmtInfStrdCdtrRefPrtry" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Issuer</label><input formControlName="rmtInfStrdCdtrRefIssr" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Reference</label><input formControlName="rmtInfStrdCdtrRefRef" maxlength="35" placeholder="e.g. RF1853900000000"></div>
+                                    </div>
+                                </div>
+                                <!-- Strd > Invcr / Invcee -->
+                                <div class="mandate-section">
+                                    <div class="mandate-section-title"><mat-icon>storefront</mat-icon> Invoicer / Invoicee (Strd)</div>
+                                    <div class="mandate-grid">
+                                        <div class="form-group"><label>Invoicer Name</label><input formControlName="rmtInfStrdInvcrNm" maxlength="140" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Invoicer Town</label><input formControlName="rmtInfStrdInvcrTwnNm" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Invoicer Country</label><input formControlName="rmtInfStrdInvcrCtry" maxlength="2" placeholder="e.g. GB"></div>
+                                        <div class="form-group"><label>Invoicee Name</label><input formControlName="rmtInfStrdInvceeNm" maxlength="140" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Invoicee Town</label><input formControlName="rmtInfStrdInvceeTwnNm" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Invoicee Country</label><input formControlName="rmtInfStrdInvceeCtry" maxlength="2" placeholder="e.g. DE"></div>
+                                    </div>
+                                </div>
+                                <!-- Strd > TaxRmt -->
+                                <div class="mandate-section">
+                                    <div class="mandate-section-title"><mat-icon>account_balance</mat-icon> Tax Remittance (Strd)</div>
+                                    <div class="mandate-grid">
+                                        <div class="form-group"><label>Cdtr Tax ID</label><input formControlName="rmtInfStrdTaxRmtCdtrTaxId" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Cdtr Regn ID</label><input formControlName="rmtInfStrdTaxRmtCdtrRegnId" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Cdtr Tax Type</label><input formControlName="rmtInfStrdTaxRmtCdtrTaxTp" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Dbtr Tax ID</label><input formControlName="rmtInfStrdTaxRmtDbtrTaxId" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Dbtr Regn ID</label><input formControlName="rmtInfStrdTaxRmtDbtrRegnId" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Dbtr Tax Type</label><input formControlName="rmtInfStrdTaxRmtDbtrTaxTp" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>UltmtDbtr Tax ID</label><input formControlName="rmtInfStrdTaxRmtUltmtDbtrTaxId" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>UltmtDbtr Regn ID</label><input formControlName="rmtInfStrdTaxRmtUltmtDbtrRegnId" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>UltmtDbtr Tax Type</label><input formControlName="rmtInfStrdTaxRmtUltmtDbtrTaxTp" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Admin Zone</label><input formControlName="rmtInfStrdTaxRmtAdmstnZone" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Reference Number</label><input formControlName="rmtInfStrdTaxRmtRefNb" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Total Tax Amt</label><input formControlName="rmtInfStrdTaxRmtTtlTaxAmt" placeholder="0.00"></div>
+                                        <div class="form-group"><label>Total Tax Ccy</label><input formControlName="rmtInfStrdTaxRmtTtlTaxAmtCcy" maxlength="3" placeholder="EUR"></div>
+                                    </div>
+                                </div>
+                                <!-- Strd > GrnshmtRmt -->
+                                <div class="mandate-section">
+                                    <div class="mandate-section-title"><mat-icon>policy</mat-icon> Garnishment Remittance (Strd)</div>
+                                    <div class="mandate-grid">
+                                        <div class="form-group"><label>Type Code</label><input formControlName="rmtInfStrdGrnshmtTpCd" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Type Proprietary</label><input formControlName="rmtInfStrdGrnshmtTpPrtry" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Garnishee Name</label><input formControlName="rmtInfStrdGrnshmtGrnsheeNm" maxlength="140" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Garnishment Admin Name</label><input formControlName="rmtInfStrdGrnshmtGrnshmtAdmstrNm" maxlength="140" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Reference Number</label><input formControlName="rmtInfStrdGrnshmtRefNb" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Date</label><input type="date" formControlName="rmtInfStrdGrnshmtDt"></div>
+                                        <div class="form-group"><label>Remitted Amount</label><input formControlName="rmtInfStrdGrnshmtRmtdAmt" placeholder="0.00"></div>
+                                        <div class="form-group"><label>Remitted Ccy</label><input formControlName="rmtInfStrdGrnshmtRmtdAmtCcy" maxlength="3" placeholder="EUR"></div>
+                                        <div class="form-group"><label>Family Medical Insurance</label>
+                                            <select formControlName="rmtInfStrdGrnshmtFmlyMdclInsrncInd"><option value="">None</option><option value="true">true</option><option value="false">false</option></select></div>
+                                        <div class="form-group"><label>Employee Termination</label>
+                                            <select formControlName="rmtInfStrdGrnshmtMplyeeTermntnInd"><option value="">None</option><option value="true">true</option><option value="false">false</option></select></div>
+                                    </div>
+                                </div>
+                                <!-- Strd > AddtlRmtInf -->
+                                <div class="form-group" style="grid-column: 1 / -1;"><label>Additional Remittance Info (Strd)</label><input formControlName="rmtInfStrdAddtlRmtInf" maxlength="140" placeholder="Optional"></div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="right-panel">
+            <div class="bottom-actions" style="margin-top: 0; margin-bottom: 1rem;">
+                <div class="down">
+                    <button class="action-btn copy-btn" (click)="copyToClipboard()"><mat-icon>content_copy</mat-icon> Copy XML</button>
+                    <button class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon> Download XML</button>
+                    <button class="action-btn validate-btn" (click)="validateMessage()"><mat-icon>verified</mat-icon> Validate Message</button>
+                </div>
+            </div>
+            <div class="content-box preview-box">
+                <div class="editor-header">
+                    <div class="up">
+                        <button class="action-btn-small" (click)="undoXml()" [disabled]="!canUndoXml()" matTooltip="Undo (Ctrl+Z)"><mat-icon>undo</mat-icon></button>
+                        <button class="action-btn-small" (click)="redoXml()" [disabled]="!canRedoXml()" matTooltip="Redo (Ctrl+Y)"><mat-icon>redo</mat-icon></button>
+                        <button class="action-btn-small" (click)="formatXml()" [disabled]="!generatedXml" matTooltip="Format XML (Ctrl+S)"><mat-icon>format_align_left</mat-icon></button>
+                    </div>
+                </div>
+                <div class="editor-wrapper">
+                    <div class="line-numbers" #lineNumbers>
+                        <div *ngFor="let idx of editorLineCount; let i = index">{{i + 1}}</div>
+                    </div>
+                    <textarea class="code-editor" [(ngModel)]="generatedXml" (ngModelChange)="onEditorChange($event)" (scroll)="syncScroll(xmlEditor, lineNumbers)" #xmlEditor spellcheck="false" wrap="off"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Validation Modal -->
+    <div class="validation-overlay" *ngIf="showValidationModal" (click)="closeValidationModal()">
+        <div class="validation-modal" (click)="$event.stopPropagation()">
+            <div class="vm-header">
+                <div class="vm-title"><mat-icon>fact_check</mat-icon><span>CBPR+ SR2025 Validation Results</span></div>
+                <button class="vm-close" (click)="closeValidationModal()"><mat-icon>close</mat-icon></button>
+            </div>
+            <div class="vm-body">
+                <div class="vm-loading" *ngIf="validationStatus === 'validating'">
+                    <div class="vm-spinner"></div>
+                    <p>Scanning message for compliance...</p>
+                    <span class="vm-loading-sub">Running Layer 1-3 checks</span>
+                </div>
+                <div *ngIf="validationStatus === 'done' && validationReport">
+                    <div class="vm-status-banner" [class.pass]="validationReport.status === 'PASS'" [class.fail]="validationReport.status !== 'PASS'">
+                        <mat-icon>{{validationReport.status === 'PASS' ? 'check_circle' : 'cancel'}}</mat-icon>
+                        <div class="vm-status-text">
+                            <strong>{{validationReport.status === 'PASS' ? 'VALIDATION PASSED' : 'VALIDATION FAILED'}}</strong>
+                            <span>{{validationReport.errors || 0}} error(s), {{validationReport.warnings || 0}} warning(s) &bull; {{validationReport.total_time_ms || 0}}ms</span>
+                        </div>
+                    </div>
+                    <div class="vm-layers" style="display: flex; gap: 10px; margin-top: 1rem;">
+                        <div class="vm-layer" *ngFor="let k of getValidationLayers()" [class.layer-pass]="isLayerPass(k)" [class.layer-fail]="isLayerFail(k)" [class.layer-warn]="isLayerWarn(k)">
+                            <div class="vm-layer-icon">
+                                <mat-icon *ngIf="isLayerPass(k)" style="color: #10b981; font-size: 18px;">check_circle</mat-icon>
+                                <mat-icon *ngIf="isLayerFail(k)" style="color: #ef4444; font-size: 18px;">cancel</mat-icon>
+                                <mat-icon *ngIf="isLayerWarn(k)" style="color: #f59e0b; font-size: 18px;">warning</mat-icon>
+                            </div>
+                            <div class="vm-layer-info"><strong>{{getLayerName(k)}}</strong><span class="vm-layer-time">{{getLayerTime(k)}}ms</span></div>
+                        </div>
+                    </div>
+                    <div class="vm-issues" *ngIf="getValidationIssues().length > 0" style="margin-top: 1.5rem;">
+                        <div style="display: flex; align-items: center; gap: 8px; padding: 10px; background: var(--bg-card-hover); border-bottom: 1px solid var(--border-light);">
+                            <mat-icon style="font-size: 18px; color: #ef4444;">report</mat-icon>
+                            <span>Issues Found ({{getValidationIssues().length}})</span>
+                        </div>
+                        <div>
+                            <div class="vm-issue" *ngFor="let issue of getValidationIssues()" (click)="toggleValidationIssue(issue)" [class.expanded]="validationExpandedIssue === issue" style="border-bottom: 1px solid var(--border-light); cursor: pointer;">
+                                <div style="display: flex; align-items: center; gap: 10px; padding: 10px;">
+                                    <span class="vm-issue-severity" [class.error]="issue.severity === 'ERROR'" [class.warning]="issue.severity === 'WARNING'" style="font-size: 0.6rem; font-weight: 800; padding: 2px 6px; border-radius: 4px;">{{issue.severity}}</span>
+                                    <span style="font-family: monospace; font-size: 0.7rem; color: var(--text-muted);">L{{issue.layer}}</span>
+                                    <span style="flex: 1; font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{issue.message}}</span>
+                                    <mat-icon style="font-size: 18px; color: var(--text-muted);">{{validationExpandedIssue === issue ? 'expand_less' : 'expand_more'}}</mat-icon>
+                                </div>
+                                <div *ngIf="validationExpandedIssue === issue" style="padding: 10px 10px 15px 40px; background: var(--bg-card-hover); font-size: 0.75rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 8px;">
+                                    <div style="display: flex; gap: 10px;"><strong>Message:</strong> <span>{{issue.message}}</span></div>
+                                    <div *ngIf="issue.path" style="display: flex; gap: 10px;"><strong>Path:</strong> <code style="background: rgba(0,0,0,0.1); padding: 2px 4px; border-radius: 3px;">{{issue.path}}</code></div>
+                                    <div *ngIf="issue.fix_suggestion" style="background: rgba(16, 185, 129, 0.1); padding: 8px; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.2); display: flex; align-items: center; gap: 10px;">
+                                        <mat-icon style="color: #10b981; font-size: 18px;">lightbulb</mat-icon>
+                                        <div style="flex: 1;"><strong>Fix Suggestion:</strong> {{issue.fix_suggestion}}</div>
+                                        <button class="action-btn-small" (click)="copyFix(issue.fix_suggestion, $event)" title="Copy fix"><mat-icon>content_copy</mat-icon></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="vm-no-issues" *ngIf="getValidationIssues().length === 0" style="text-align: center; padding: 3rem;">
+                        <mat-icon style="font-size: 48px; width: 48px; height: 48px; color: #10b981; margin-bottom: 1rem;">check_circle</mat-icon>
+                        <p style="font-weight: 600;">Message is Valid!</p>
+                        <p style="color: var(--text-muted); font-size: 0.85rem;">No compliance issues detected in layers 1, 2, or 3.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
