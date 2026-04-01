@@ -739,148 +739,229 @@ ${txInf.trimEnd()}
     return `${this.tabs(indent)}<${tag}>\n${content.trimEnd()}\n${this.tabs(indent)}</${tag}>\n`;
   }
 
-  // Simplified parsing 
   parseXmlToForm(xml: string) {
-    if (!xml?.trim()) return;
+    if (!xml || xml.length < 50) return;
     try {
-      const doc = new DOMParser().parseFromString(xml, 'text/xml');
-      if (doc.getElementsByTagName('parsererror').length) return;
+      this.isParsingXml = true;
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xml, 'application/xml');
+      
+      const getT = (t: string, p: Element | Document = doc): Element | null => {
+        const els = p.getElementsByTagName(t);
+        if (els.length > 0) return els[0];
+        const all = p.getElementsByTagName('*');
+        for (let i = 0; i < all.length; i++) {
+          if (all[i].localName === t) return all[i];
+        }
+        return null;
+      };
+      const tval = (tag: string, p: Element | Document = doc) => getT(tag, p)?.textContent?.trim() || '';
+      
       const patch: any = {};
       const setVal = (f: string, v: string) => { if (v) patch[f] = v; };
 
-      const cxl = doc.getElementsByTagName('CstmrPmtCxlReq')[0];
-      if (!cxl) return;
+      // 1. AppHdr (head.001)
+      const head = getT('AppHdr');
+      if (head) {
+        setVal('head_charSet', tval('CharSet', head));
+        setVal('head_bizMsgIdr', tval('BizMsgIdr', head));
+        setVal('head_msgDefIdr', tval('MsgDefIdr', head));
+        setVal('head_bizSvc', tval('BizSvc', head));
+        setVal('head_creDt', tval('CreDt', head).replace('+00:00', '').replace('Z', ''));
+        setVal('head_cpyDplct', tval('CpyDplct', head));
+        patch.head_pssblDplct = tval('PssblDplct', head) === 'true';
+        setVal('head_prty', tval('Prty', head));
 
-      const assgnmt = cxl.getElementsByTagName('Assgnmt')[0];
-      if (assgnmt) {
-          // Use direct-child lookup to avoid picking up nested <Id> from Assgnr/Assgne
-          let assgnmtIdText = '';
-          for (let i = 0; i < assgnmt.childNodes.length; i++) {
-              const child = assgnmt.childNodes[i];
-              if (child.nodeType === 1 && child.nodeName === 'Id') {
-                  assgnmtIdText = child.textContent || '';
-                  break;
+        const mkt = getT('MktPrctc', head);
+        if (mkt) {
+            setVal('head_mktPrctcRegy', tval('Regy', mkt));
+            setVal('head_mktPrctcId', tval('Id', mkt));
+        }
+
+        const fr = getT('Fr', head);
+        if (fr) this.mapAddrToForm(fr, 'head_from', patch);
+        const to = getT('To', head);
+        if (to) this.mapAddrToForm(to, 'head_to', patch);
+
+        const rltd = getT('Rltd', head);
+        if (rltd) {
+            patch.head_rltd_enabled = true;
+            this.mapAddrToForm(getT('Fr', rltd), 'head_rltd_from', patch);
+            this.mapAddrToForm(getT('To', rltd), 'head_rltd_to', patch);
+            setVal('head_rltd_bizMsgIdr', tval('BizMsgIdr', rltd));
+            setVal('head_rltd_msgDefIdr', tval('MsgDefIdr', rltd));
+            setVal('head_rltd_bizSvc', tval('BizSvc', rltd));
+            setVal('head_rltd_creDt', tval('CreDt', rltd).replace('+00:00', '').replace('Z', ''));
+            setVal('head_rltd_cpyDplct', tval('CpyDplct', rltd));
+            setVal('head_rltd_prty', tval('Prty', rltd));
+        }
+      }
+
+      // 2. Document (camt.055)
+      const root = getT('CstmrPmtCxlReq');
+      if (root) {
+        const assgnmt = getT('Assgnmt', root);
+        if (assgnmt) {
+           setVal('assgnmt_id', tval('Id', assgnmt));
+           setVal('assgnmt_creDtTm', tval('CreDtTm', assgnmt).replace('+00:00', '').replace('Z', ''));
+           const assgnr = getT('Assgnr', assgnmt);
+           if (assgnr) this.mapAddrToForm(assgnr, 'assgnr', patch);
+           const assgne = getT('Assgne', assgnmt);
+           if (assgne) this.mapAddrToForm(assgne, 'assgne', patch);
+        }
+
+        const undrlyg = getT('Undrlyg', root);
+        if (undrlyg) {
+          const inf = getT('OrgnlPmtInfAndCxl', undrlyg);
+          if (inf) {
+            setVal('orgnlPmtInfId', tval('OrgnlPmtInfId', inf));
+            const grp = getT('OrgnlGrpInf', inf);
+            if (grp) {
+               setVal('orgnlMsgId', tval('OrgnlMsgId', grp));
+               setVal('orgnlMsgNmId', tval('OrgnlMsgNmId', grp));
+               setVal('orgnlCreDtTm', tval('OrgnlCreDtTm', grp).replace('+00:00', '').replace('Z', ''));
+            }
+
+            const tx = getT('TxInf', inf);
+            if (tx) {
+              setVal('cxlId', tval('CxlId', tx));
+              const cas = getT('Case', tx);
+              if (cas) {
+                setVal('case_id', tval('Id', cas));
+                const cretr = getT('Cretr', cas);
+                if (cretr) this.mapAddrToForm(cretr, 'cretr', patch);
               }
-          }
-          setVal('assgnmt_id', assgnmtIdText);
-          const assgnr = assgnmt.getElementsByTagName('Assgnr')[0];
-          if (assgnr) this.mapAddrToForm(assgnr, 'assgnr', patch);
-          const assgne = assgnmt.getElementsByTagName('Assgne')[0];
-          if (assgne) this.mapAddrToForm(assgne, 'assgne', patch);
-      }
-      
-      const pmtInfCxl = cxl.getElementsByTagName('OrgnlPmtInfAndCxl')[0];
-      if (pmtInfCxl) {
-          setVal('orgnlPmtInfId', pmtInfCxl.querySelector('OrgnlPmtInfId')?.textContent || '');
-      }
 
-      const txInf = cxl.getElementsByTagName('TxInf')[0];
-      if (txInf) {
-          setVal('cxlId', txInf.getElementsByTagName('CxlId')[0]?.textContent || '');
-          
-          // Use direct-child lookup for Case/Id to avoid picking up Cretr/Pty/Id
-          const caseEl = txInf.getElementsByTagName('Case')[0];
-          if (caseEl) {
-              let caseIdText = '';
-              for (let i = 0; i < caseEl.childNodes.length; i++) {
-                  const child = caseEl.childNodes[i];
-                  if (child.nodeType === 1 && child.nodeName === 'Id') {
-                      caseIdText = child.textContent || '';
-                      break;
-                  }
+              setVal('orgnlInstrId', tval('OrgnlInstrId', tx));
+              setVal('orgnlEndToEndId', tval('OrgnlEndToEndId', tx));
+              setVal('orgnlUETR', tval('OrgnlUETR', tx));
+
+              const amt = getT('OrgnlInstdAmt', tx);
+              if (amt) {
+                setVal('orgnlInstdAmt_val', amt.textContent?.trim() || '');
+                setVal('orgnlInstdAmt_ccy', amt.getAttribute('Ccy') || '');
               }
-              setVal('case_id', caseIdText);
-          }
-          setVal('orgnlUETR', txInf.getElementsByTagName('OrgnlUETR')[0]?.textContent || '');
-          
-          const cretr = txInf.getElementsByTagName('Cretr')[0];
-          if (cretr) this.mapAddrToForm(cretr, 'cretr', patch);
-          
-          const agt = txInf.getElementsByTagName('Agent')[0];
-          if (agt) this.mapAddrToForm(agt, 'agt', patch);
-          
-          const rsn = txInf.getElementsByTagName('CxlRsnInf')[0];
-          if (rsn) {
-              setVal('cxlRsnCd', rsn.getElementsByTagName('Rsn')[0]?.getElementsByTagName('Cd')[0]?.textContent || 'CUTA');
-              const orgtr = rsn.getElementsByTagName('Orgtr')[0];
-              if (orgtr) this.mapAddrToForm(orgtr, 'cxlRsnOrgtr', patch);
-          }
 
-          // OrgnlReqdExctnDt is DateAndDateTime2Choice — parse Dt/DtTm children
-          const reqdExctnDt = txInf.getElementsByTagName('OrgnlReqdExctnDt')[0];
-          if (reqdExctnDt) {
-              setVal('orgnlReqdExctnDt', reqdExctnDt.getElementsByTagName('Dt')[0]?.textContent || '');
-              setVal('orgnlReqdExctnDtTm', reqdExctnDt.getElementsByTagName('DtTm')[0]?.textContent || '');
+              const exctn = getT('OrgnlReqdExctnDt', tx);
+              if (exctn) {
+                setVal('orgnlReqdExctnDt', tval('Dt', exctn));
+                setVal('orgnlReqdExctnDtTm', tval('DtTm', exctn).replace('+00:00', '').replace('Z', ''));
+              }
+              setVal('orgnlReqdColltnDt', tval('OrgnlReqdColltnDt', tx));
+
+              const rsnInf = getT('CxlRsnInf', tx);
+              if (rsnInf) {
+                setVal('cxlRsnCd', tval('Cd', getT('Rsn', rsnInf) || rsnInf));
+                setVal('cxlRsnAddtlInf', tval('AddtlInf', rsnInf));
+                const orgtr = getT('Orgtr', rsnInf);
+                if (orgtr) {
+                  this.mapAddrToForm(orgtr, 'cxlRsnOrgtr', patch);
+                  setVal('cxlRsnOrgtrCtryOfRes', tval('CtryOfRes', orgtr));
+                }
+              }
+            }
           }
-          // OrgnlReqdColltnDt is ISODate (simple type) — direct text value, no children
-          const reqdColltnDt = txInf.getElementsByTagName('OrgnlReqdColltnDt')[0];
-          if (reqdColltnDt) {
-              const colltnVal = reqdColltnDt.textContent?.trim() || '';
-              if (colltnVal) setVal('orgnlReqdColltnDt', colltnVal);
-          }
+        }
       }
 
-      this.isParsingXml = true;
       this.form.patchValue(patch, { emitEvent: false });
+    } catch (e) {
+      console.error('Error parsing camt.055 XML:', e);
+    } finally {
       this.isParsingXml = false;
-    } catch (e) {}
+    }
   }
 
-  mapAddrToForm(p: Element, prefix: string, patch: any) {
-    const isParty = this.partyPrefixes.includes(prefix);
+  mapAddrToForm(p: Element | null, prefix: string, patch: any) {
+    if (!p) return;
     const ptyNode = p.getElementsByTagName('Pty')[0] || p;
     const finNode = p.getElementsByTagName('FinInstnId')[0];
 
     if (ptyNode) {
-      patch[prefix + 'Name'] = ptyNode.getElementsByTagName('Nm')[0]?.textContent || '';
+      patch[prefix + 'Name'] = ptyNode.getElementsByTagName('Nm')[0]?.textContent?.trim() || '';
       const addr = ptyNode.getElementsByTagName('PstlAdr')[0];
       if (addr) {
-        patch[prefix + 'Ctry'] = addr.getElementsByTagName('Ctry')[0]?.textContent || '';
-        const lines = addr.getElementsByTagName('AdrLine');
+        patch[prefix + 'Ctry'] = addr.getElementsByTagName('Ctry')[0]?.textContent?.trim() || '';
+        const lines = Array.from(addr.getElementsByTagName('AdrLine'));
         if (lines.length > 0) {
           patch[prefix + 'AddrType'] = lines.length > 1 ? 'hybrid' : 'unstructured';
           for (let i = 0; i < Math.min(lines.length, 3); i++) {
-            patch[prefix + 'AdrLine' + (i + 1)] = lines[i]?.textContent || '';
+            patch[prefix + 'AdrLine' + (i + 1)] = lines[i]?.textContent?.trim() || '';
           }
-        }
- else {
+        } else {
           patch[prefix + 'AddrType'] = 'structured';
-          patch[prefix + 'StrtNm'] = addr.getElementsByTagName('StrtNm')[0]?.textContent || '';
-          patch[prefix + 'BldgNb'] = addr.getElementsByTagName('BldgNb')[0]?.textContent || '';
-          patch[prefix + 'BldgNm'] = addr.getElementsByTagName('BldgNm')[0]?.textContent || '';
-          patch[prefix + 'PstCd'] = addr.getElementsByTagName('PstCd')[0]?.textContent || '';
-          patch[prefix + 'TwnNm'] = addr.getElementsByTagName('TwnNm')[0]?.textContent || '';
+          patch[prefix + 'StrtNm'] = addr.getElementsByTagName('StrtNm')[0]?.textContent?.trim() || '';
+          patch[prefix + 'BldgNb'] = addr.getElementsByTagName('BldgNb')[0]?.textContent?.trim() || '';
+          patch[prefix + 'BldgNm'] = addr.getElementsByTagName('BldgNm')[0]?.textContent?.trim() || '';
+          patch[prefix + 'PstCd'] = addr.getElementsByTagName('PstCd')[0]?.textContent?.trim() || '';
+          patch[prefix + 'TwnNm'] = addr.getElementsByTagName('TwnNm')[0]?.textContent?.trim() || '';
         }
       }
       
       const idNode = ptyNode.getElementsByTagName('Id')[0];
       if (idNode) {
-          const orgId = idNode.getElementsByTagName('OrgId')[0];
-          if (orgId) {
-              patch[prefix + 'OrgAnyBIC'] = orgId.getElementsByTagName('AnyBIC')[0]?.textContent || '';
-              patch[prefix + 'OrgLEI'] = orgId.getElementsByTagName('LEI')[0]?.textContent || '';
-              const clr = orgId.getElementsByTagName('ClrSysMmbId')[0];
-              if (clr) {
-                  patch[prefix + 'OrgClrSysMmbId'] = clr.getElementsByTagName('MmbId')[0]?.textContent || '';
-                  patch[prefix + 'OrgClrSysCd'] = clr.getElementsByTagName('ClrSysId')[0]?.getElementsByTagName('Cd')[0]?.textContent || '';
-              }
+        const orgId = idNode.getElementsByTagName('OrgId')[0];
+        if (orgId) {
+          patch[prefix + 'IdType'] = 'org';
+          patch[prefix + 'OrgAnyBIC'] = orgId.getElementsByTagName('AnyBIC')[0]?.textContent?.trim() || '';
+          patch[prefix + 'OrgLEI'] = orgId.getElementsByTagName('LEI')[0]?.textContent?.trim() || '';
+          const clr = orgId.getElementsByTagName('ClrSysMmbId')[0];
+          if (clr) {
+            patch[prefix + 'OrgClrSysMmbId'] = clr.getElementsByTagName('MmbId')[0]?.textContent?.trim() || '';
+            const clrId = clr.getElementsByTagName('ClrSysId')[0];
+            patch[prefix + 'OrgClrSysCd'] = (clrId?.getElementsByTagName('Cd')[0] || clrId)?.textContent?.trim() || '';
           }
+          const othr = orgId.getElementsByTagName('Othr')[0];
+          if (othr) {
+            patch[prefix + 'OrgOthrId'] = othr.getElementsByTagName('Id')[0]?.textContent?.trim() || '';
+            const schme = othr.getElementsByTagName('SchmeNm')[0];
+            patch[prefix + 'OrgOthrCd'] = (schme?.getElementsByTagName('Cd')[0] || schme)?.textContent?.trim() || '';
+            patch[prefix + 'OrgOthrIssr'] = othr.getElementsByTagName('Issr')[0]?.textContent?.trim() || '';
+          }
+        } else {
+          const prvtId = idNode.getElementsByTagName('PrvtId')[0];
+          if (prvtId) {
+            patch[prefix + 'IdType'] = 'prvt';
+            const birth = prvtId.getElementsByTagName('DtAndPlcOfBirth')[0];
+            if (birth) {
+              patch[prefix + 'PrvtBirthDt'] = birth.getElementsByTagName('BirthDt')[0]?.textContent?.trim() || '';
+              patch[prefix + 'PrvtPrvcOfBirth'] = birth.getElementsByTagName('PrvcOfBirth')[0]?.textContent?.trim() || '';
+              patch[prefix + 'PrvtCityOfBirth'] = birth.getElementsByTagName('CityOfBirth')[0]?.textContent?.trim() || '';
+              patch[prefix + 'PrvtCtryOfBirth'] = birth.getElementsByTagName('CtryOfBirth')[0]?.textContent?.trim() || '';
+            }
+            const othr = prvtId.getElementsByTagName('Othr')[0];
+            if (othr) {
+              patch[prefix + 'PrvtOthrId'] = othr.getElementsByTagName('Id')[0]?.textContent?.trim() || '';
+              const schme = othr.getElementsByTagName('SchmeNm')[0];
+              patch[prefix + 'PrvtOthrCd'] = (schme?.getElementsByTagName('Cd')[0] || schme)?.textContent?.trim() || '';
+              patch[prefix + 'PrvtOthrIssr'] = othr.getElementsByTagName('Issr')[0]?.textContent?.trim() || '';
+            }
+          }
+        }
       }
     }
 
     if (finNode) {
-      patch[prefix + 'Bic'] = finNode.getElementsByTagName('BICFI')[0]?.textContent || '';
-      patch[prefix + 'Lei'] = finNode.getElementsByTagName('LEI')[0]?.textContent || '';
-      patch[prefix + 'Name'] = finNode.getElementsByTagName('Nm')[0]?.textContent || '';
+      const isHead = prefix.startsWith('head_');
+      patch[prefix + 'Bic'] = finNode.getElementsByTagName('BICFI')[0]?.textContent?.trim() || '';
+      patch[prefix + 'Lei'] = finNode.getElementsByTagName('LEI')[0]?.textContent?.trim() || '';
+      patch[prefix + 'Name'] = finNode.getElementsByTagName('Nm')[0]?.textContent?.trim() || '';
       const clr = finNode.getElementsByTagName('ClrSysMmbId')[0];
       if (clr) {
-        patch[prefix + 'ClrSysMmbId'] = clr.getElementsByTagName('MmbId')[0]?.textContent || '';
-        patch[prefix + 'ClrSysCd'] = clr.getElementsByTagName('ClrSysId')[0]?.getElementsByTagName('Cd')[0]?.textContent || '';
+        patch[prefix + 'MmbId'] = clr.getElementsByTagName('MmbId')[0]?.textContent?.trim() || '';
+        const clrId = clr.getElementsByTagName('ClrSysId')[0];
+        const cd = (clrId?.getElementsByTagName('Cd')[0] || clrId)?.textContent?.trim() || '';
+        if (isHead) patch[prefix + 'ClrSysId'] = cd;
+        else patch[prefix + 'ClrSysCd'] = cd;
+        
+        // Handle assgnr/assgne special naming (they use ClrSysMmbId instead of MmbId in form)
+        if (prefix === 'assgnr' || prefix === 'assgne') {
+          patch[prefix + 'ClrSysMmbId'] = patch[prefix + 'MmbId'];
+        }
       }
     }
   }
 
-  // History & Editor Logic
   onEditorChange(content: string) {
     if (this.isInternalChange) return;
     this.generatedXml = content;
@@ -950,13 +1031,11 @@ ${txInf.trimEnd()}
   }
 
   err(f: string): string | null {
-    // 1. Group-level XOR checks for date choice fields
     if (f === 'orgnlReqdExctnDt' || f === 'orgnlReqdExctnDtTm') {
       if (this.form.errors?.['orgnlReqdExctnDt_duplicate']) {
         return '⚠️ Only one of Date (Dt) or DateTime (DtTm) is allowed';
       }
     }
-    // Mutual exclusivity: OrgnlReqdExctnDt vs OrgnlReqdColltnDt
     if (f === 'orgnlReqdExctnDt' || f === 'orgnlReqdExctnDtTm' || f === 'orgnlReqdColltnDt') {
       if (this.form.errors?.['date_choice_conflict']) {
         return '⚠️ Only ONE of Execution Date or Collection Date is allowed in camt.055 (schema choice)';
@@ -970,7 +1049,6 @@ ${txInf.trimEnd()}
 
     const c = this.form.get(f);
     if (!c) {
-      // 2. Group-level identity checks for AppHdr prefixes
       if (f.startsWith('head_from') || f.startsWith('head_to') || f.startsWith('head_rltd')) {
         const prefix = f.startsWith('head_from') ? 'head_from' : 
                        f.startsWith('head_to') ? 'head_to' : 'head_rltd';
@@ -981,7 +1059,6 @@ ${txInf.trimEnd()}
         if (this.form.errors?.[prefix + '_incomplete_clrsys']) {
           return '⚠️ Both Clearing System Code and Member ID are mandatory if either is present.';
         }
-        // Custom check for Rltd mandatory fields if enabled
         if (prefix === 'head_rltd' && this.form.get('head_rltd_enabled')?.value) {
             const v = this.form.value;
             if (!v.head_rltd_bizMsgIdr) return '⚠️ Business Message Identifier is required when Rltd is enabled.';
@@ -996,14 +1073,8 @@ ${txInf.trimEnd()}
     if (c.errors?.['maxlength']) return `⚠️ Max length ${c.errors['maxlength'].requiredLength} characters.`;
     if (c.errors?.['future_date']) return '⚠️ Birth date cannot be in the future.';
     if (!c.touched && !c.dirty) return null;
-    if (c.errors?.['required']) {
-      // Field-specific required messages
-      return this.getRequiredMessage(f);
-    }
-    if (c.errors?.['pattern']) {
-      // Field-specific pattern messages
-      return this.getPatternMessage(f);
-    }
+    if (c.errors?.['required']) return this.getRequiredMessage(f);
+    if (c.errors?.['pattern']) return this.getPatternMessage(f);
     return '⚠️ Invalid value.';
   }
 
@@ -1027,32 +1098,25 @@ ${txInf.trimEnd()}
   }
 
   private getPatternMessage(f: string): string {
-    // BIC fields
     if (f.includes('Bic') || f.includes('BICFI') || f === 'head_fromBic' || f === 'head_toBic' ||
         f.includes('rltd_fromBic') || f.includes('rltd_toBic') || f.includes('OrgAnyBIC')) {
       return '⚠️ Invalid BIC format. Must be 8 or 11 uppercase characters (e.g. HDFCINBB or HDFCINBBXXX).';
     }
-    // UETR
     if (f === 'orgnlUETR') {
       return '⚠️ Invalid UETR. Must be a valid UUID v4 format (e.g. 550e8400-e29b-41d4-a716-446655440000).';
     }
-    // Currency
     if (f === 'orgnlInstdAmt_ccy') {
       return '⚠️ Invalid currency. Must be a 3-letter ISO 4217 code (e.g. USD, EUR, INR).';
     }
-    // Amount
     if (f === 'orgnlInstdAmt_val') {
       return '⚠️ Invalid amount. Use numeric value with up to 2 decimal places (e.g. 1000.00).';
     }
-    // LEI
     if (f.includes('Lei') || f.includes('LEI')) {
-      return '⚠️ Invalid LEI format. Must be 20 alphanumeric characters.';
+       return '⚠️ Invalid LEI format. Must be 20 alphanumeric characters.';
     }
-    // DateTime
     if (f.includes('DtTm') || f === 'head_creDt' || f === 'assgnmt_creDtTm' || f === 'orgnlCreDtTm') {
       return '⚠️ Invalid DateTime format. Use YYYY-MM-DDThh:mm:ss±hh:mm.';
     }
-    // Date
     if (f.includes('Dt')) {
       return '⚠️ Invalid Date format. Use YYYY-MM-DD.';
     }
@@ -1065,13 +1129,11 @@ ${txInf.trimEnd()}
     return null;
   }
 
-  /** Live character counter for text fields */
   charCount(f: string, max: number): string {
     const v = this.form.get(f)?.value || '';
     return `${v.length}/${max}`;
   }
 
-  /** Check if a character counter is near/at limit */
   isNearLimit(f: string, max: number): boolean {
     const v = this.form.get(f)?.value || '';
     return v.length >= max * 0.85;
@@ -1082,10 +1144,9 @@ ${txInf.trimEnd()}
     return v.length >= max;
   }
 
-  /** Collect all validation errors for submission summary */
   collectValidationErrors(): string[] {
     const errors: string[] = [];
-    const mandatoryFields: { key: string, label: string }[] = [
+    const fields: { key: string, label: string }[] = [
       { key: 'head_bizMsgIdr', label: 'Business Message ID' },
       { key: 'head_creDt', label: 'Creation DateTime' },
       { key: 'head_mktPrctcId', label: 'Market Practice ID' },
@@ -1100,27 +1161,16 @@ ${txInf.trimEnd()}
       { key: 'cxlRsnCd', label: 'Cancellation Reason Code' }
     ];
 
-    mandatoryFields.forEach(({ key, label }) => {
+    fields.forEach(({ key, label }) => {
       const ctrl = this.form.get(key);
       if (ctrl?.invalid) {
-        if (ctrl.errors?.['required']) {
-          errors.push(`${label} is required.`);
-        } else if (ctrl.errors?.['pattern']) {
-          errors.push(`${label} has an invalid format.`);
-        } else if (ctrl.errors?.['maxlength']) {
-          errors.push(`${label} exceeds maximum length (${ctrl.errors['maxlength'].requiredLength}).`);
-        }
+        if (ctrl.errors?.['required']) errors.push(`${label} is required.`);
+        else if (ctrl.errors?.['pattern']) errors.push(`${label} has an invalid format.`);
+        else if (ctrl.errors?.['maxlength']) errors.push(`${label} exceeds maximum length.`);
       }
     });
-
-    // Group-level errors
-    if (this.form.errors?.['orgnlReqdExctnDt_duplicate']) {
-      errors.push('Only one of Execution Date (Dt) or DateTime (DtTm) is allowed.');
-    }
-    if (this.form.errors?.['date_choice_conflict']) {
-      errors.push('Execution Date and Collection Date are mutually exclusive.');
-    }
-
+    if (this.form.errors?.['orgnlReqdExctnDt_duplicate']) errors.push('Only one of Execution Date (Dt) or DateTime (DtTm) is allowed.');
+    if (this.form.errors?.['date_choice_conflict']) errors.push('Execution Date and Collection Date are mutually exclusive.');
     return errors;
   }
 
@@ -1150,10 +1200,9 @@ ${txInf.trimEnd()}
     this.generateXml();
     this.form.markAllAsTouched();
     if (this.form.invalid) {
-      // Show validation error summary at top of form
       this.formSubmissionErrors = this.collectValidationErrors();
       this.showSubmissionErrors = true;
-      this.snackBar.open(`${this.formSubmissionErrors.length} validation error(s) found. Please fix them before validating.`, 'Close', { duration: 4000 });
+      this.snackBar.open(`${this.formSubmissionErrors.length} validation error(s) found.`, 'Close', { duration: 4000 });
       return;
     }
     this.showSubmissionErrors = false;
@@ -1163,7 +1212,6 @@ ${txInf.trimEnd()}
     this.showValidationModal = true;
     this.validationStatus = 'validating';
     this.validationReport = null;
-    this.validationExpandedIssue = null;
 
     this.http.post(this.config.getApiUrl('/validate'), {
       xml_content: this.generatedXml,
@@ -1183,7 +1231,7 @@ ${txInf.trimEnd()}
           details: [{
             severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
             path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend error.'),
-            fix_suggestion: 'Verify your network or if the validation service is up.'
+            fix_suggestion: 'Verify network or service status.'
           }]
         };
         this.validationStatus = 'done';
@@ -1214,16 +1262,8 @@ ${txInf.trimEnd()}
     });
   }
 
-  viewXmlModal() {
-    this.closeValidationModal();
-  }
-
-  editXmlModal() {
-    this.closeValidationModal();
-  }
-
-  runValidationModal() {
-    this.validateMessage();
-  }
+  viewXmlModal() { this.closeValidationModal(); }
+  editXmlModal() { this.closeValidationModal(); }
+  runValidationModal() { this.validateMessage(); }
 }
 

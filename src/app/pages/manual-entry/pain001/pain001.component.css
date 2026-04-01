@@ -294,28 +294,28 @@ textarea {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bg-card-hover);
-    border: 1px solid var(--border-light);
-    color: var(--text-muted);
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
+    background: #f8faff;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
     cursor: pointer;
     transition: all 0.15s;
 }
 
 .action-btn-small mat-icon {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
 }
 
 .action-btn-small:hover:not(:disabled) {
-    background: var(--accent-light);
-    color: var(--accent-text);
-    border-color: var(--accent-color);
+    background: #fdfdfd;
+    color: #4f46e5;
+    border-color: #4f46e5;
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.12);
 }
 
 .action-btn-small:disabled {
@@ -401,11 +401,18 @@ textarea.code-editor {
     justify-content: center;
 }
 
-/* .editor-header .up {
+.editor-header {
+    display: flex;
     justify-content: flex-end;
-    width: 100%;
-    padding: 2px 5px;
-} */
+    padding: 0 4px;
+    margin-bottom: 8px;
+}
+
+.editor-header .up {
+    margin: 0;
+    justify-content: flex-end;
+    width: auto;
+}
 /* Spinner */
 .spinner-row {
     display: flex;
@@ -1284,7 +1291,7 @@ textarea.code-editor {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    padding: 14px;
+    padding: 8px 12px;
 }
 
 body.dark-theme .vm-issue-list {
@@ -1298,7 +1305,6 @@ body.dark-theme .vm-issue-list {
     overflow: hidden;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    border-left: 4px solid transparent;
 }
 
 body.dark-theme .vm-issue-card {
@@ -1311,19 +1317,13 @@ body.dark-theme .vm-issue-card {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.vm-issue-card.error {
-    border-left-color: #ef4444;
-}
 
-.vm-issue-card.warning {
-    border-left-color: #f59e0b;
-}
 
 .vm-card-main {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 12px 14px;
+    gap: 12px;
+    padding: 10px 8px;
 }
 
 .vm-card-icon {

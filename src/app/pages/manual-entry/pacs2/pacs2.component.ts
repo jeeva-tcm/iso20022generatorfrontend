@@ -501,7 +501,6 @@ ${txInf.trimEnd()}
           formatted += indent + trimmed + '\r\n';
         }
       });
-      
       this.generatedXml = formatted.trim();
       this.refreshLineCount();
       this.snackBar.open('XML Formatted', '', { duration: 1500 });
@@ -510,82 +509,175 @@ ${txInf.trimEnd()}
     }
   }
 
-  parseXmlToForm(xml: string) {
-    if (!xml?.trim()) return;
+  parseXmlToForm(content: string) {
+    if (!content || content.length < 50) return;
+    if (this.isParsingXml) return;
     try {
-      const doc = new DOMParser().parseFromString(xml, 'text/xml');
-      if (doc.getElementsByTagName('parsererror').length) return;
-      
-      const t = (tag: string, parent?: Element | Document) => (parent || doc).getElementsByTagName(tag)[0]?.textContent || '';
-      const patch: any = {};
-      
-      // Top level / Header
-      patch.fromBic = t('BICFI'); // First instance
-      patch.bizMsgId = t('BizMsgIdr');
-      patch.msgId = t('MsgId');
-      patch.creDtTm = t('CreDt') || t('CreDtTm');
-      patch.bizSvc = t('BizSvc');
-
-      // OrgnlGrpInf
-      patch.orgnlCreDtTm = t('OrgnlCreDtTm');
-
-      // StsRsnOrgtr complex fields
-      const orgtr = doc.getElementsByTagName('Orgtr')[0];
-      if (orgtr) {
-        patch.stsRsnOrgtrName = t('Nm', orgtr);
-        patch.stsRsnOrgtrAnyBIC = t('AnyBIC', orgtr);
-        patch.stsRsnOrgtrLei = t('LEI', orgtr);
-        patch.stsRsnOrgtrCtryOfRes = t('CtryOfRes', orgtr);
-
-        const orgId = orgtr.getElementsByTagName('OrgId')[0];
-        if (orgId) {
-            const orgOthr = orgId.getElementsByTagName('Othr')[0];
-            if (orgOthr) {
-                patch.stsRsnOrgtrOrgIdOthrId = t('Id', orgOthr);
-                patch.stsRsnOrgtrOrgIdOthrSchmeNmCd = t('Cd', orgOthr);
-                patch.stsRsnOrgtrOrgIdOthrSchmeNmPrtry = t('Prtry', orgOthr);
-                patch.stsRsnOrgtrOrgIdOthrIssr = t('Issr', orgOthr);
-            }
-        }
-
-        const prvtId = orgtr.getElementsByTagName('PrvtId')[0];
-        if (prvtId) {
-            patch.stsRsnOrgtrBirthDt = t('BirthDt', prvtId);
-            patch.stsRsnOrgtrPrvcOfBirth = t('PrvcOfBirth', prvtId);
-            patch.stsRsnOrgtrCityOfBirth = t('CityOfBirth', prvtId);
-            patch.stsRsnOrgtrCtryOfBirth = t('CtryOfBirth', prvtId);
-
-            const prvtOthr = prvtId.getElementsByTagName('Othr')[0];
-            if (prvtOthr) {
-                patch.stsRsnOrgtrPrvtIdOthrId = t('Id', prvtOthr);
-                patch.stsRsnOrgtrPrvtIdOthrSchmeNmCd = t('Cd', prvtOthr);
-                patch.stsRsnOrgtrPrvtIdOthrSchmeNmPrtry = t('Prtry', prvtOthr);
-                patch.stsRsnOrgtrPrvtIdOthrIssr = t('Issr', prvtOthr);
-            }
-        }
+      this.isParsingXml = true;
+      const cleanXml = content.replace(/<(\/?)(?:[\w]+:)/g, '<$1');
+      const doc = new DOMParser().parseFromString(cleanXml, 'text/xml');
+      if (doc.querySelector('parsererror')) {
+        this.snackBar.open('Invalid XML: Unable to parse content.', 'Close', { duration: 3000 });
+        return;
       }
 
-      // Refs
-      patch.orgnlInstrId = t('OrgnlInstrId');
-      patch.orgnlEndToEndId = t('OrgnlEndToEndId');
-      patch.orgnlTxId = t('OrgnlTxId');
-      patch.orgnlUETR = t('OrgnlUETR');
+      const getT = (t: string, p: any = doc): Element | null => {
+        const els = p.getElementsByTagName(t);
+        if (els.length > 0) return els[0];
+        const all = p.getElementsByTagName('*');
+        for (let i = 0; i < all.length; i++) {
+          if (all[i].localName === t) return all[i];
+        }
+        return null;
+      };
+      const tval = (t: string, p: any = doc) => getT(t, p)?.textContent?.trim() || '';
 
-      // Status
-      patch.txSts = t('TxSts');
-      patch.clrSysRef = t('ClrSysRef');
-      patch.stsRsnCd = t('Cd');
-      patch.stsRsnPrtry = t('Prtry');
-      patch.stsRsnAddtlInf = t('AddtlInf');
+      const patch: any = {};
 
-      // FctvIntrBkSttlmDt
-      patch.effDt = t('Dt');
-      patch.effDtTm = t('DtTm');
+      // BAH
+      const appHdr = getT('AppHdr');
+      if (appHdr) {
+        const fr = getT('Fr', appHdr);
+        if (fr) {
+          patch.fromBic = tval('BICFI', fr);
+        }
+        const to = getT('To', appHdr);
+        if (to) {
+          patch.toBic = tval('BICFI', to);
+        }
+        patch.bizMsgId = tval('BizMsgIdr', appHdr);
+        patch.msgDefIdr = tval('MsgDefIdr', appHdr);
+        patch.bizSvc = tval('BizSvc', appHdr);
+        patch.creDtTm = tval('CreDt', appHdr) || tval('CreDtTm', appHdr);
+      }
 
-      this.isParsingXml = true;
+      // Document
+      const grpHdr = getT('GrpHdr');
+      if (grpHdr) {
+        patch.msgId = tval('MsgId', grpHdr);
+      }
+
+      const tx = getT('TxInfAndSts');
+      if (tx) {
+        const grpInf = getT('OrgnlGrpInf', tx);
+        if (grpInf) {
+          patch.orgnlMsgId = tval('OrgnlMsgId', grpInf);
+          patch.orgnlMsgNmId = tval('OrgnlMsgNmId', grpInf);
+          patch.orgnlCreDtTm = tval('OrgnlCreDtTm', grpInf);
+        }
+
+        patch.orgnlInstrId = tval('OrgnlInstrId', tx);
+        patch.orgnlEndToEndId = tval('OrgnlEndToEndId', tx);
+        patch.orgnlTxId = tval('OrgnlTxId', tx);
+        patch.orgnlUETR = tval('OrgnlUETR', tx);
+        patch.txSts = tval('TxSts', tx);
+        patch.clrSysRef = tval('ClrSysRef', tx);
+
+        const rsnInf = getT('StsRsnInf', tx);
+        if (rsnInf) {
+          const orgtr = getT('Orgtr', rsnInf);
+          if (orgtr) {
+            patch.stsRsnOrgtrName = tval('Nm', orgtr);
+            const pstl = getT('PstlAdr', orgtr);
+            if (pstl) {
+              patch.stsRsnOrgtrStrtNm = tval('StrtNm', pstl);
+              patch.stsRsnOrgtrBldgNb = tval('BldgNb', pstl);
+              patch.stsRsnOrgtrBldgNm = tval('BldgNm', pstl);
+              patch.stsRsnOrgtrFlr = tval('Flr', pstl);
+              patch.stsRsnOrgtrPstBx = tval('PstBx', pstl);
+              patch.stsRsnOrgtrRoom = tval('Room', pstl);
+              patch.stsRsnOrgtrPstCd = tval('PstCd', pstl);
+              patch.stsRsnOrgtrTwnNm = tval('TwnNm', pstl);
+              patch.stsRsnOrgtrTwnLctnNm = tval('TwnLctnNm', pstl);
+              patch.stsRsnOrgtrDstrctNm = tval('DstrctNm', pstl);
+              patch.stsRsnOrgtrCtrySubDvsn = tval('CtrySubDvsn', pstl);
+              patch.stsRsnOrgtrCtry = tval('Ctry', pstl);
+              const lines = pstl.querySelectorAll(':scope > AdrLine');
+              if (lines.length > 0) patch.stsRsnOrgtrAdrLine1 = lines[0].textContent || '';
+              if (lines.length > 1) patch.stsRsnOrgtrAdrLine2 = lines[1].textContent || '';
+            }
+
+            const id = getT('Id', orgtr);
+            if (id) {
+              const orgId = getT('OrgId', id);
+              if (orgId) {
+                patch.stsRsnOrgtrAnyBIC = tval('AnyBIC', orgId);
+                patch.stsRsnOrgtrLei = tval('LEI', orgId);
+                const othr = getT('Othr', orgId);
+                if (othr) {
+                  patch.stsRsnOrgtrOrgIdOthrId = tval('Id', othr);
+                  const scheme = getT('SchmeNm', othr);
+                  if (scheme) {
+                    patch.stsRsnOrgtrOrgIdOthrSchmeNmCd = tval('Cd', scheme);
+                    patch.stsRsnOrgtrOrgIdOthrSchmeNmPrtry = tval('Prtry', scheme);
+                  }
+                  patch.stsRsnOrgtrOrgIdOthrIssr = tval('Issr', othr);
+                }
+              }
+
+              const prvtId = getT('PrvtId', id);
+              if (prvtId) {
+                const birth = getT('DtAndPlcOfBirth', prvtId);
+                if (birth) {
+                  patch.stsRsnOrgtrBirthDt = tval('BirthDt', birth);
+                  patch.stsRsnOrgtrPrvcOfBirth = tval('PrvcOfBirth', birth);
+                  patch.stsRsnOrgtrCityOfBirth = tval('CityOfBirth', birth);
+                  patch.stsRsnOrgtrCtryOfBirth = tval('CtryOfBirth', birth);
+                }
+                const othr = getT('Othr', prvtId);
+                if (othr) {
+                  patch.stsRsnOrgtrPrvtIdOthrId = tval('Id', othr);
+                  const scheme = getT('SchmeNm', othr);
+                  if (scheme) {
+                    patch.stsRsnOrgtrPrvtIdOthrSchmeNmCd = tval('Cd', scheme);
+                    patch.stsRsnOrgtrPrvtIdOthrSchmeNmPrtry = tval('Prtry', scheme);
+                  }
+                  patch.stsRsnOrgtrPrvtIdOthrIssr = tval('Issr', othr);
+                }
+              }
+            }
+            patch.stsRsnOrgtrCtryOfRes = tval('CtryOfRes', orgtr);
+          }
+
+          const rsn = getT('Rsn', rsnInf);
+          if (rsn) {
+            patch.stsRsnCd = tval('Cd', rsn);
+            patch.stsRsnPrtry = tval('Prtry', rsn);
+          }
+          patch.stsRsnAddtlInf = tval('AddtlInf', rsnInf);
+        }
+
+        const effDt = getT('FctvIntrBkSttlmDt', tx);
+        if (effDt) {
+          patch.effDt = tval('Dt', effDt);
+          patch.effDtTm = tval('DtTm', effDt);
+        }
+
+        const mapAgt = (p: string, tag: string, parent: any = tx) => {
+          const el = getT(tag, parent);
+          if (!el) return;
+          const fi = getT('FinInstnId', el);
+          if (fi) {
+            patch[p + 'Bic'] = tval('BICFI', fi);
+            patch[p + 'Lei'] = tval('LEI', fi);
+            const mmb = getT('ClrSysMmbId', fi);
+            if (mmb) {
+              patch[p + 'MmbId'] = tval('MmbId', mmb);
+              patch[p + 'ClrSysCd'] = tval('Cd', getT('ClrSysId', mmb) || mmb);
+            }
+          }
+        };
+
+        mapAgt('instgAgt', 'InstgAgt');
+        mapAgt('instdAgt', 'InstdAgt');
+      }
+
       this.form.patchValue(patch, { emitEvent: false });
+    } catch (e) {
+      console.warn('XML Parse failed', e);
+    } finally {
       this.isParsingXml = false;
-    } catch (e) {}
+    }
   }
 
   validateMessage() {
