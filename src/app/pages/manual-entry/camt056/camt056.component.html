@@ -1,0 +1,747 @@
+<div class="container" (click)="$event.stopPropagation()">
+    <header>
+        <h1>FI to FI Payment Cancellation Request (camt.056 SR2025) <mat-icon class="title-icon">cancel_schedule_send</mat-icon></h1>
+        <p>CBPR+ Usage Guideline • camt.056.001.08</p>
+    </header>
+
+    <div class="split-view">
+        <div class="left-panel">
+            <form [formGroup]="form" class="content-box">
+                <div class="grid">
+                    
+                    <!-- Business Application Header -->
+                    <div class="section-title" (click)="toggleSection('appHdr')" style="cursor:pointer">
+                        Business Application Header (AppHdr)
+                        <mat-icon>{{expandedSections['appHdr'] ? 'expand_less' : 'expand_more'}}</mat-icon>
+                    </div>
+                    
+                    <div class="party-group" *ngIf="expandedSections['appHdr']">
+                        <div class="party-group-title">Header Details</div>
+                        <div class="party-grid">
+                            <div class="form-group">
+                                <label>From BIC <span class="req">*</span></label>
+                                <input type="text" formControlName="fromBIC" maxlength="11">
+                                <span class="validation-msg" *ngIf="err('fromBIC')">{{err('fromBIC')}}</span>
+                            </div>
+                            <div class="form-group">
+                                <label>From Clearing Sys ID</label>
+                                <input type="text" formControlName="fromClrSysId" maxlength="35">
+                            </div>
+                            <div class="form-group">
+                                <label>From Member ID</label>
+                                <input type="text" formControlName="fromMmbId" maxlength="35">
+                            </div>
+                            <div class="form-group">
+                                <label>From LEI</label>
+                                <input type="text" formControlName="fromLEI" maxlength="20">
+                            </div>
+
+                            <div class="form-group">
+                                <label>To BIC <span class="req">*</span></label>
+                                <input type="text" formControlName="toBIC" maxlength="11">
+                                <span class="validation-msg" *ngIf="err('toBIC')">{{err('toBIC')}}</span>
+                            </div>
+                            <div class="form-group">
+                                <label>To Clearing Sys ID</label>
+                                <input type="text" formControlName="toClrSysId" maxlength="35">
+                            </div>
+                            <div class="form-group">
+                                <label>To Member ID</label>
+                                <input type="text" formControlName="toMmbId" maxlength="35">
+                            </div>
+                            <div class="form-group">
+                                <label>To LEI</label>
+                                <input type="text" formControlName="toLEI" maxlength="20">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Business Message Identifier <span class="req">*</span></label>
+                                <input type="text" formControlName="businessMsgId" maxlength="35">
+                                <span class="validation-msg" *ngIf="err('businessMsgId')">{{err('businessMsgId')}}</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Message Definition ID <span class="req">*</span></label>
+                                <input type="text" formControlName="msgDefId">
+                            </div>
+                            <div class="form-group">
+                                <label>Business Service <span class="req">*</span></label>
+                                <input type="text" formControlName="bizSvc">
+                            </div>
+                            <div class="form-group">
+                                <label>Market Practice Registry</label>
+                                <input type="text" formControlName="mktPrctcRegy" maxlength="35">
+                            </div>
+                            <div class="form-group">
+                                <label>Market Practice ID</label>
+                                <input type="text" formControlName="mktPrctcId" maxlength="35">
+                            </div>
+                            <div class="form-group">
+                                <label>Creation Date <span class="req">*</span></label>
+                                <input type="text" formControlName="creationDate">
+                                <span class="validation-msg" *ngIf="err('creationDate')">{{err('creationDate')}}</span>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Copy/Duplicate</label>
+                                <select formControlName="cpyDplct">
+                                    <option value="">[None]</option>
+                                    <option value="COPY">Copy [COPY]</option>
+                                    <option value="CODU">Copy Duplicate [CODU]</option>
+                                    <option value="DUPL">Duplicate [DUPL]</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Possible Duplicate</label>
+                                <select formControlName="pssblDplct">
+                                    <option [ngValue]="false">False</option>
+                                    <option [ngValue]="true">True</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Priority</label>
+                                <select formControlName="priority">
+                                    <option value="NORM">Normal [NORM]</option>
+                                    <option value="HIGH">High [HIGH]</option>
+                                </select>
+                            </div>
+
+                            <!-- Related Header Fields -->
+                            <div class="field-divider">Related Header (Rltd)</div>
+                            <div class="form-group">
+                                <label>Related From BIC</label>
+                                <input type="text" formControlName="rltdFromBIC" maxlength="11">
+                            </div>
+                            <div class="form-group">
+                                <label>Related From Clr Sys ID</label>
+                                <input type="text" formControlName="rltdFromClrSysId" maxlength="35">
+                            </div>
+                            <div class="form-group">
+                                <label>Related From Member ID</label>
+                                <input type="text" formControlName="rltdFromMmbId" maxlength="35">
+                            </div>
+                            <div class="form-group">
+                                <label>Related From LEI</label>
+                                <input type="text" formControlName="rltdFromLEI" maxlength="20">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Related To BIC</label>
+                                <input type="text" formControlName="rltdToBIC" maxlength="11">
+                            </div>
+                            <div class="form-group">
+                                <label>Related To Clr Sys ID</label>
+                                <input type="text" formControlName="rltdToClrSysId" maxlength="35">
+                            </div>
+                            <div class="form-group">
+                                <label>Related To Member ID</label>
+                                <input type="text" formControlName="rltdToMmbId" maxlength="35">
+                            </div>
+                            <div class="form-group">
+                                <label>Related To LEI</label>
+                                <input type="text" formControlName="rltdToLEI" maxlength="20">
+                            </div>
+
+                            <!-- Related Header Details -->
+                            <div class="form-group">
+                                <label>Related Biz Msg ID</label>
+                                <input type="text" formControlName="rltdBizMsgIdr" maxlength="35">
+                            </div>
+                            <div class="form-group">
+                                <label>Related Msg Def ID</label>
+                                <input type="text" formControlName="rltdMsgDefIdr">
+                            </div>
+                            <div class="form-group">
+                                <label>Related Biz Svc</label>
+                                <input type="text" formControlName="rltdBizSvc">
+                            </div>
+                            <div class="form-group">
+                                <label>Related Creation Date</label>
+                                <input type="text" formControlName="rltdCreDt">
+                            </div>
+                            <div class="form-group">
+                                <label>Related Copy/Duplicate</label>
+                                <select formControlName="rltdCpyDplct">
+                                    <option value="">[None]</option>
+                                    <option value="COPY">Copy [COPY]</option>
+                                    <option value="CODU">Copy Duplicate [CODU]</option>
+                                    <option value="DUPL">Duplicate [DUPL]</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Related Priority</label>
+                                <select formControlName="rltdPrty">
+                                    <option value="">[None]</option>
+                                    <option value="NORM">Normal [NORM]</option>
+                                    <option value="HIGH">High [HIGH]</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Case Assignment -->
+                    <div class="section-title" (click)="toggleSection('assgnmt')" style="cursor:pointer">
+                        Case Assignment
+                        <mat-icon>{{expandedSections['assgnmt'] ? 'expand_less' : 'expand_more'}}</mat-icon>
+                    </div>
+                    <div class="party-group" *ngIf="expandedSections['assgnmt']">
+                        <div class="party-grid">
+                            <div class="form-group">
+                                <label>Assignment ID <span class="req">*</span></label>
+                                <input type="text" formControlName="assgnmtId" maxlength="35">
+                                <span class="validation-msg" *ngIf="err('assgnmtId')">{{err('assgnmtId')}}</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Creation Date Time <span class="req">*</span></label>
+                                <input type="text" formControlName="assgnmtCreDtTm">
+                                <span class="validation-msg" *ngIf="err('assgnmtCreDtTm')">{{err('assgnmtCreDtTm')}}</span>
+                            </div>
+
+                            <div class="field-divider" style="grid-column: 1 / -1">Assigner Identification</div>
+                            <div class="form-group">
+                                <label>Assigner BIC <span class="req">*</span></label>
+                                <input type="text" formControlName="assgnrBic" maxlength="11">
+                                <span class="validation-msg" *ngIf="err('assgnrBic')">{{err('assgnrBic')}}</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Assigner Clr Sys ID</label>
+                                <input type="text" formControlName="assgnrClrSysId" maxlength="35">
+                            </div>
+                            <div class="form-group">
+                                <label>Assigner Member ID</label>
+                                <input type="text" formControlName="assgnrMmbId" maxlength="35">
+                            </div>
+                            <div class="form-group">
+                                <label>Assigner LEI</label>
+                                <input type="text" formControlName="assgnrLEI" maxlength="20">
+                            </div>
+
+                            <div class="field-divider" style="grid-column: 1 / -1">Assignee Identification</div>
+                            <div class="form-group">
+                                <label>Assignee BIC <span class="req">*</span></label>
+                                <input type="text" formControlName="assgneBic" maxlength="11">
+                                <span class="validation-msg" *ngIf="err('assgneBic')">{{err('assgneBic')}}</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Assignee Clr Sys ID</label>
+                                <input type="text" formControlName="assgneClrSysId" maxlength="35">
+                            </div>
+                            <div class="form-group">
+                                <label>Assignee Member ID</label>
+                                <input type="text" formControlName="assgneMmbId" maxlength="35">
+                            </div>
+                            <div class="form-group">
+                                <label>Assignee LEI</label>
+                                <input type="text" formControlName="assgneLEI" maxlength="20">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Underlying Transaction -->
+                    <div class="section-title" (click)="toggleSection('underlying')" style="cursor:pointer">
+                        Underlying Transaction Information
+                        <mat-icon>{{expandedSections['underlying'] ? 'expand_less' : 'expand_more'}}</mat-icon>
+                    </div>
+                    <div formGroupName="txInf" class="party-group" *ngIf="expandedSections['underlying']">
+                        <div class="party-group-title" style="background: var(--accent-light); padding: 8px 1rem;">Transaction Details & Underlying Reference</div>
+                        <div class="party-grid">
+                            <div class="form-group">
+                                <label>Cancellation ID</label>
+                                <input type="text" formControlName="cxlId" maxlength="35">
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1">
+                                <label>Case Creator Type <span class="req">*</span></label>
+                                <select formControlName="caseCretrType">
+                                    <option value="AGENT">Agent (Bank)</option>
+                                    <option value="PARTY">Party (Company/Individual)</option>
+                                </select>
+                            </div>
+                            <ng-container *ngIf="form.get('txInf.caseCretrType')?.value === 'AGENT'">
+                                <div class="form-group">
+                                    <label>Case Creator Agent BIC</label>
+                                    <input type="text" formControlName="caseCretrAgtBic" maxlength="11">
+                                </div>
+                                <div class="form-group">
+                                    <label>Case Creator Agent LEI</label>
+                                    <input type="text" formControlName="caseCretrAgtLEI" maxlength="20">
+                                </div>
+                                <div class="form-group">
+                                    <label>Case Creator Agent Name</label>
+                                    <input type="text" formControlName="caseCretrAgtNm">
+                                </div>
+                                <div class="form-group">
+                                    <label>Case Creator Agent Country</label>
+                                    <select formControlName="caseCretrAgtCtry">
+                                        <option value="">[Select Country]</option>
+                                        <option *ngFor="let c of countries" [value]="c">{{c}}</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Case Creator Clr Sys ID</label>
+                                    <input type="text" formControlName="caseCretrAgtClrSysId" maxlength="35">
+                                </div>
+                                <div class="form-group">
+                                    <label>Case Creator Agent Member ID</label>
+                                    <input type="text" formControlName="caseCretrAgtMmbId" maxlength="35">
+                                </div>
+
+                                <!-- Postal Address Agent -->
+                                <div class="field-divider" style="grid-column: 1 / -1; margin-top: 1rem;">Case Creator Agent Address</div>
+                                <div class="form-group" style="grid-column: 1 / -1">
+                                    <label>Address Type</label>
+                                    <select formControlName="caseCretrAgtAdrType">
+                                        <option value="STRUCTURED">Structured</option>
+                                        <option value="UNSTRUCTURED">Unstructured</option>
+                                        <option value="HYBRID">Hybrid</option>
+                                    </select>
+                                </div>
+                                
+                                <ng-container *ngIf="form.get('txInf.caseCretrAgtAdrType')?.value !== 'UNSTRUCTURED'">
+                                    <div class="form-group">
+                                        <label>Building Number</label>
+                                        <input type="text" formControlName="caseCretrAgtBldgNb">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Building Name</label>
+                                        <input type="text" formControlName="caseCretrAgtBldgNm">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Street Name</label>
+                                        <input type="text" formControlName="caseCretrAgtStrtNm">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Post Code</label>
+                                        <input type="text" formControlName="caseCretrAgtPstCd">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Town Name</label>
+                                        <input type="text" formControlName="caseCretrAgtTwnNm">
+                                    </div>
+                                </ng-container>
+
+                                <div class="form-group">
+                                    <label>Country Code (ISO)</label>
+                                    <select formControlName="caseCretrAgtCtry">
+                                        <option value="">[Select Country]</option>
+                                        <option *ngFor="let c of countries" [value]="c">{{c}}</option>
+                                    </select>
+                                </div>
+
+                                <ng-container *ngIf="form.get('txInf.caseCretrAgtAdrType')?.value !== 'STRUCTURE'">
+                                    <div class="form-group">
+                                        <label>Address Line 1</label>
+                                        <input type="text" formControlName="caseCretrAgtAdrLine1">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Address Line 2</label>
+                                        <input type="text" formControlName="caseCretrAgtAdrLine2">
+                                    </div>
+                                </ng-container>
+                            </ng-container>
+
+                            <ng-container *ngIf="form.get('txInf.caseCretrType')?.value === 'PARTY'">
+                                <div class="form-group">
+                                    <label>Case Creator Party Name</label>
+                                    <input type="text" formControlName="caseCretrPtyNm">
+                                </div>
+                                <div class="form-group">
+                                    <label>Case Creator Party BIC</label>
+                                    <input type="text" formControlName="caseCretrPtyBic" maxlength="11">
+                                </div>
+                                <div class="form-group">
+                                    <label>Case Creator Party LEI</label>
+                                    <input type="text" formControlName="caseCretrPtyLei" maxlength="20">
+                                </div>
+
+                                <!-- Postal Address Party -->
+                                <div class="field-divider" style="grid-column: 1 / -1; margin-top: 1rem;">Case Creator Party Address</div>
+                                <div class="form-group" style="grid-column: 1 / -1">
+                                    <label>Address Type</label>
+                                    <select formControlName="caseCretrPtyAdrType">
+                                        <option value="STRUCTURED">Structured</option>
+                                        <option value="UNSTRUCTURED">Unstructured</option>
+                                        <option value="HYBRID">Hybrid</option>
+                                    </select>
+                                </div>
+
+                                <ng-container *ngIf="form.get('txInf.caseCretrPtyAdrType')?.value !== 'UNSTRUCTURED'">
+                                    <div class="form-group">
+                                        <label>Building Number</label>
+                                        <input type="text" formControlName="caseCretrPtyBldgNb">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Building Name</label>
+                                        <input type="text" formControlName="caseCretrPtyBldgNm">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Street Name</label>
+                                        <input type="text" formControlName="caseCretrPtyStrtNm">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Post Code</label>
+                                        <input type="text" formControlName="caseCretrPtyPstCd">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Town Name</label>
+                                        <input type="text" formControlName="caseCretrPtyTwnNm">
+                                    </div>
+                                </ng-container>
+
+                                <div class="form-group">
+                                    <label>Country Code (ISO)</label>
+                                    <select formControlName="caseCretrPtyCtry">
+                                        <option value="">[Select Country]</option>
+                                        <option *ngFor="let c of countries" [value]="c">{{c}}</option>
+                                    </select>
+                                </div>
+
+                                <ng-container *ngIf="form.get('txInf.caseCretrPtyAdrType')?.value !== 'STRUCTURED'">
+                                    <div class="form-group">
+                                        <label>Address Line 1</label>
+                                        <input type="text" formControlName="caseCretrPtyAdrLine1">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Address Line 2</label>
+                                        <input type="text" formControlName="caseCretrPtyAdrLine2">
+                                    </div>
+                                </ng-container>
+                            </ng-container>
+                            <div class="form-group">
+                                <label>Case ID <span class="req">*</span></label>
+                                <input type="text" formControlName="caseId" maxlength="35">
+                                <span class="validation-msg" *ngIf="err('caseId', form.get('txInf'))">{{err('caseId', form.get('txInf'))}}</span>
+                            </div>
+                        
+                            <div class="field-divider" style="grid-column: 1 / -1">Original Group Information</div>
+                            <div class="form-group">
+                                <label>Org Msg ID <span class="req">*</span></label>
+                                <input type="text" formControlName="orgnlMsgId" maxlength="35">
+                                <span class="validation-msg" *ngIf="err('orgnlMsgId', form.get('txInf'))">{{err('orgnlMsgId', form.get('txInf'))}}</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Org Msg Name ID <span class="req">*</span></label>
+                                <input type="text" formControlName="orgnlMsgNmId" maxlength="35">
+                                <span class="validation-msg" *ngIf="err('orgnlMsgNmId', form.get('txInf'))">{{err('orgnlMsgNmId', form.get('txInf'))}}</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Org Creation Date Time</label>
+                                <input type="text" formControlName="orgnlCreDtTm">
+                            </div>
+
+                            <div class="field-divider" style="grid-column: 1 / -1">Original Transaction Reference</div>
+                            <div class="form-group">
+                                <label>Org Instruction ID</label>
+                                <input type="text" formControlName="orgnlInstrId" maxlength="35">
+                            </div>
+                            <div class="form-group">
+                                <label>Org EndToEnd ID <span class="req">*</span></label>
+                                <input type="text" formControlName="orgnlEndToEndId" maxlength="35">
+                                <span class="validation-msg" *ngIf="err('orgnlEndToEndId', form.get('txInf'))">{{err('orgnlEndToEndId', form.get('txInf'))}}</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Org Transaction ID</label>
+                                <input type="text" formControlName="orgnlTxId" maxlength="35">
+                            </div>
+                            <div class="form-group">
+                                <label>Org UETR <span class="req">*</span></label>
+                                <div class="uetr-control-row">
+                                    <input type="text" formControlName="orgnlUetr" maxlength="36">
+                                    <button type="button" class="uetr-refresh-btn" (click)="refreshUetr()">
+                                        <mat-icon>autorenew</mat-icon>
+                                    </button>
+                                </div>
+                                <span class="validation-msg" *ngIf="err('orgnlUetr', form.get('txInf'))">{{err('orgnlUetr', form.get('txInf'))}}</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Org Clearing Sys Ref</label>
+                                <input type="text" formControlName="orgnlClrSysRef" maxlength="35">
+                            </div>
+                            <div class="form-group">
+                                <label>Org Settlement Amount <span class="req">*</span></label>
+                                <div class="amount-row">
+                                    <input type="text" formControlName="orgnlIntrBkSttlmAmt">
+                                    <select formControlName="orgnlIntrBkSttlmCcy">
+                                        <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
+                                    </select>
+                                </div>
+                                <span class="validation-msg" *ngIf="err('orgnlIntrBkSttlmAmt', form.get('txInf'))">{{err('orgnlIntrBkSttlmAmt', form.get('txInf'))}}</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Org Settlement Date <span class="req">*</span></label>
+                                <input type="date" formControlName="orgnlIntrBkSttlmDt">
+                                <span class="validation-msg" *ngIf="err('orgnlIntrBkSttlmDt', form.get('txInf'))">{{err('orgnlIntrBkSttlmDt', form.get('txInf'))}}</span>
+                            </div>
+
+                            <div class="field-divider" style="grid-column: 1 / -1">Cancellation Reason Information</div>
+                            
+                            <!-- Originator Details -->
+                            <div class="form-group" style="grid-column: 1 / -1">
+                                <label>Originator Name</label>
+                                <input type="text" formControlName="cxlOrgtrNm" maxlength="140">
+                            </div>
+
+                            <div class="form-group" style="grid-column: 1 / -1">
+                                <label>Originator ID Type</label>
+                                <select formControlName="cxlOrgtrIdType">
+                                    <option value="ORG">Organization (Company/Bank)</option>
+                                    <option value="PRVT">Private (Individual)</option>
+                                </select>
+                            </div>
+
+                            <!-- Org ID Section -->
+                            <ng-container *ngIf="form.get('txInf.cxlOrgtrIdType')?.value === 'ORG'">
+                                <div class="form-group">
+                                    <label>Originator BIC (AnyBIC)</label>
+                                    <input type="text" formControlName="cxlOrgtrBic" maxlength="11">
+                                </div>
+                                <div class="form-group">
+                                    <label>Originator LEI</label>
+                                    <input type="text" formControlName="cxlOrgtrLei" maxlength="20">
+                                </div>
+                                <div class="form-group">
+                                    <label>Other ID</label>
+                                    <input type="text" formControlName="cxlOrgtrOrgOthrId">
+                                </div>
+                                <div class="form-group">
+                                    <label>Scheme Code (Standard)</label>
+                                    <input type="text" formControlName="cxlOrgtrOrgOthrSchme">
+                                </div>
+                                <div class="form-group">
+                                    <label>Scheme (Proprietary)</label>
+                                    <input type="text" formControlName="cxlOrgtrOrgOthrPrtry">
+                                </div>
+                                <div class="form-group">
+                                    <label>Issuer</label>
+                                    <input type="text" formControlName="cxlOrgtrOrgOthrIssr">
+                                </div>
+                            </ng-container>
+
+                            <!-- Private ID Section -->
+                            <ng-container *ngIf="form.get('txInf.cxlOrgtrIdType')?.value === 'PRVT'">
+                                <div class="form-group">
+                                    <label>Date of Birth</label>
+                                    <input type="date" formControlName="cxlOrgtrBirthDt">
+                                </div>
+                                <div class="form-group">
+                                    <label>Province of Birth</label>
+                                    <input type="text" formControlName="cxlOrgtrPrvcOfBirth">
+                                </div>
+                                <div class="form-group">
+                                    <label>City of Birth</label>
+                                    <input type="text" formControlName="cxlOrgtrCityOfBirth">
+                                </div>
+                                <div class="form-group">
+                                    <label>Country of Birth</label>
+                                    <select formControlName="cxlOrgtrCtryOfBirth">
+                                        <option value="">[Select Country]</option>
+                                        <option *ngFor="let c of countries" [value]="c">{{c}}</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Other ID</label>
+                                    <input type="text" formControlName="cxlOrgtrPrvtOthrId">
+                                </div>
+                                <div class="form-group">
+                                    <label>Scheme Code (Standard)</label>
+                                    <input type="text" formControlName="cxlOrgtrPrvtOthrSchme">
+                                </div>
+                                <div class="form-group">
+                                    <label>Scheme (Proprietary)</label>
+                                    <input type="text" formControlName="cxlOrgtrPrvtOthrPrtry">
+                                </div>
+                                <div class="form-group">
+                                    <label>Issuer</label>
+                                    <input type="text" formControlName="cxlOrgtrPrvtOthrIssr">
+                                </div>
+                            </ng-container>
+
+                            <!-- Originator Address -->
+                            <div class="field-divider" style="grid-column: 1 / -1; margin-top: 1rem;">Originator Address & Residency</div>
+                            <div class="form-group" style="grid-column: 1 / -1">
+                                <label>Originator Address Type</label>
+                                <select formControlName="cxlOrgtrAdrType">
+                                    <option value="STRUCTURED">Structured</option>
+                                    <option value="UNSTRUCTURED">Unstructured</option>
+                                    <option value="HYBRID">Hybrid</option>
+                                </select>
+                            </div>
+
+                            <ng-container *ngIf="form.get('txInf.cxlOrgtrAdrType')?.value !== 'UNSTRUCTURED'">
+                                <div class="form-group">
+                                    <label>Building Number</label>
+                                    <input type="text" formControlName="cxlOrgtrBldgNb">
+                                </div>
+                                <div class="form-group">
+                                    <label>Building Name</label>
+                                    <input type="text" formControlName="cxlOrgtrBldgNm">
+                                </div>
+                                <div class="form-group">
+                                    <label>Street Name</label>
+                                    <input type="text" formControlName="cxlOrgtrStrtNm">
+                                </div>
+                                <div class="form-group">
+                                    <label>Post Code</label>
+                                    <input type="text" formControlName="cxlOrgtrPstCd">
+                                </div>
+                                <div class="form-group">
+                                    <label>Town Name</label>
+                                    <input type="text" formControlName="cxlOrgtrTwnNm">
+                                </div>
+                            </ng-container>
+
+                            <div class="form-group">
+                                <label>Country Code (ISO)</label>
+                                <select formControlName="cxlOrgtrCtry">
+                                    <option value="">[Select Country]</option>
+                                    <option *ngFor="let c of countries" [value]="c">{{c}}</option>
+                                </select>
+                            </div>
+
+                            <ng-container *ngIf="form.get('txInf.cxlOrgtrAdrType')?.value !== 'STRUCTURED'">
+                                <div class="form-group">
+                                    <label>Address Line 1</label>
+                                    <input type="text" formControlName="cxlOrgtrAdrLine1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Address Line 2</label>
+                                    <input type="text" formControlName="cxlOrgtrAdrLine2">
+                                </div>
+                            </ng-container>
+
+                            <div class="form-group">
+                                <label>Country of Residence</label>
+                                <select formControlName="cxlOrgtrCtryOfRes">
+                                    <option value="">[Select Country]</option>
+                                    <option *ngFor="let c of countries" [value]="c">{{c}}</option>
+                                </select>
+                            </div>
+
+                            <div class="field-divider" style="grid-column: 1 / -1">Reason Details</div>
+
+                            <div class="form-group">
+                                <label>Cancellation Reason Code <span class="req">*</span></label>
+                                <select formControlName="cxlRsnCd">
+                                    <option *ngFor="let r of cancellationReasons" [value]="r">{{r}}</option>
+                                </select>
+                                <span class="validation-msg" *ngIf="err('cxlRsnCd', form.get('txInf'))">{{err('cxlRsnCd', form.get('txInf'))}}</span>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1">
+                                <label>Additional Information</label>
+                                <textarea formControlName="cxlRsnAddtlInf" rows="2" maxlength="105"></textarea>
+                                <span class="validation-msg" *ngIf="err('cxlRsnAddtlInf', form.get('txInf'))">{{err('cxlRsnAddtlInf', form.get('txInf'))}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="right-panel">
+            <div class="bottom-actions" style="margin-top: 0; margin-bottom: 1rem;">
+                <div class="down" style="display: flex; gap: 0.5rem; justify-content: flex-end; width: 100%;">
+                    <button class="action-btn copy-btn" (click)="copyToClipboard()">
+                        <mat-icon>content_copy</mat-icon> Copy XML
+                    </button>
+                    <button class="action-btn" (click)="downloadXml()">
+                        <mat-icon>download</mat-icon> Download XML
+                    </button>
+                    <button class="action-btn validate-btn" (click)="validateMessage()">
+                         <mat-icon>verified</mat-icon> Validate Message
+                    </button>
+                </div>
+            </div>
+
+            <div class="content-box preview-box">
+                <div class="up" style="border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 0.5rem; margin-bottom: 0.5rem; display: flex; gap: 0.5rem;">
+                    <button class="action-btn-small" (click)="undoXml()" matTooltip="Undo">
+                        <mat-icon>undo</mat-icon>
+                    </button>
+                    <button class="action-btn-small" (click)="redoXml()" matTooltip="Redo">
+                        <mat-icon>redo</mat-icon>
+                    </button>
+                    <button class="action-btn-small" (click)="formatXml()" matTooltip="Format">
+                        <mat-icon>format_align_left</mat-icon>
+                    </button>
+                </div>
+                <div class="editor-wrapper">
+                    <div class="line-numbers" #gutter>
+                        <div *ngFor="let line of editorLineCount">{{line}}</div>
+                    </div>
+                    <textarea class="code-editor" #editor spellcheck="false" 
+                               [(ngModel)]="generatedXml" (scroll)="syncScroll(editor, gutter)"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Validation Results Modal -->
+<div class="validation-overlay" *ngIf="showValidationModal" (click)="closeValidationModal()">
+    <div class="validation-modal" (click)="$event.stopPropagation()">
+        <div class="vm-header">
+            <div class="vm-title">
+                <mat-icon>verified</mat-icon>
+                <span>Validation Results</span>
+                <span class="vm-msg-type" *ngIf="validationReport?.message">{{validationReport.message}}</span>
+            </div>
+            <button class="vm-close" (click)="closeValidationModal()"><mat-icon>close</mat-icon></button>
+        </div>
+        
+        <div class="vm-loading" *ngIf="validationStatus === 'validating'">
+            <div class="vm-spinner"></div>
+            <p>Validating message...</p>
+        </div>
+
+        <div class="vm-body" *ngIf="validationStatus === 'done' && validationReport">
+            <div class="vm-status-banner" [class.pass]="validationReport.status === 'PASS'" [class.fail]="validationReport.status !== 'PASS'">
+                <mat-icon>{{validationReport.status === 'PASS' ? 'check_circle' : 'cancel'}}</mat-icon>
+                <div class="vm-status-text">
+                    <strong>{{validationReport.status === 'PASS' ? 'VALIDATION PASSED' : 'VALIDATION FAILED'}}</strong>
+                    <span>{{validationReport.errors || 0}} error(s), {{validationReport.warnings || 0}} warning(s) &bull; {{validationReport.total_time_ms || 0}}ms</span>
+                </div>
+            </div>
+
+            <div class="vm-layers">
+                <div class="vm-layer" *ngFor="let k of ['1', '2', '3']" 
+                     [class.layer-pass]="isLayerPass(k)" 
+                     [class.layer-fail]="isLayerFail(k)"
+                     [class.layer-warn]="isLayerWarn(k)">
+                    <mat-icon class="vm-layer-icon">{{isLayerPass(k) ? 'check_circle' : (isLayerFail(k) ? 'cancel' : 'info')}}</mat-icon>
+                    <div class="vm-layer-info">
+                        <strong>Layer {{k}}: {{getSimplifiedLayerName(k)}}</strong>
+                        <span class="vm-layer-time">{{getLayerTime(k)}}ms</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="vm-issues" *ngIf="getValidationIssues().length > 0">
+                <div class="vm-issues-header">
+                    <mat-icon>report</mat-icon>
+                    <span>Issues ({{getValidationIssues().length}})</span>
+                </div>
+                <div class="vm-issue-list">
+                    <div class="vm-issue" *ngFor="let issue of getValidationIssues()" (click)="toggleValidationIssue(issue)" [class.expanded]="validationExpandedIssue === issue">
+                        <div class="vm-issue-row">
+                            <span class="vm-issue-severity" [class.error]="issue.severity === 'ERROR'" [class.warning]="issue.severity === 'WARNING'">{{issue.severity}}</span>
+                            <span class="vm-issue-layer">L{{issue.layer || 2}}</span>
+                            <span class="vm-issue-msg">{{issue.message}}</span>
+                            <mat-icon class="vm-issue-chevron">{{validationExpandedIssue === issue ? 'expand_less' : 'expand_more'}}</mat-icon>
+                        </div>
+                        <div class="vm-issue-detail" *ngIf="validationExpandedIssue === issue">
+                            <div class="vm-detail-row" *ngIf="issue.path"><strong>Path:</strong> <code>{{issue.path}}</code></div>
+                            <div class="vm-detail-row" *ngIf="issue.code"><strong>Code:</strong> <code>{{issue.code}}</code></div>
+                            <div class="vm-detail-row fix" *ngIf="issue.fix_suggestion">
+                                <strong>Fix:</strong> <span>{{issue.fix_suggestion}}</span>
+                                <button class="vm-copy-btn" (click)="copyFix(issue.fix_suggestion, $event)"><mat-icon>content_copy</mat-icon></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="vm-no-issues" *ngIf="getValidationIssues().length === 0">
+                <mat-icon>celebration</mat-icon>
+                <p>No issues found! Your message is valid.</p>
+            </div>
+        </div>
+    </div>
+</div>
