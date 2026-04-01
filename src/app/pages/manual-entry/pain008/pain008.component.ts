@@ -162,7 +162,7 @@ export class Pain008Component implements OnInit {
       cdtrCtry: ['US'],
       cdtrAdrLine1: ['Floor 5'],
       cdtrAdrLine2: ['Suite 500'],
-      cdtrIban: ['GB29NWBK60161331926819', [Validators.required, Validators.maxLength(34)]],
+      cdtrIban: ['GB82WEST12345698765432', [Validators.required, Validators.maxLength(34)]],
       cdtrAcctOthrId: [''],
       cdtrAcctCcy: [''],
       cdtrAcctNm: [''],
@@ -175,14 +175,14 @@ export class Pain008Component implements OnInit {
       cdtrAgtLei: ['549300V6YF7100J0J012'],
       cdtrAgtNm: [''],
       // CdtrAgtAcct
-      cdtrAgtAcctIban: ['GB29NWBK60161331926821'],
+      cdtrAgtAcctIban: ['GB33BUKB20201555555555'],
       cdtrAgtAcctOthrId: [''],
       cdtrAgtAcctCcy: ['GBP'],
 
       // Charges Account
-      chrgsAcctIban: ['GB29NWBK60161331926820'],
+      chrgsAcctIban: ['GB15MIDL40051512345678'],
       chrgsAcctOthrId: [''],
-      chrgsAcctCcy: ['EUR'],
+      chrgsAcctCcy: ['GBP'],
 
       // Charges Account Agent
       chrgsAcctAgtBic: ['BANCGB2LXXX'],
@@ -213,7 +213,7 @@ export class Pain008Component implements OnInit {
 
       // InstdAmt
       amount: ['100.00', [Validators.required, Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],
-      currency: ['EUR', Validators.required],
+      currency: ['GBP', Validators.required],
 
       // ChrgBr
       chrgBr: ['SHAR'],
@@ -228,7 +228,7 @@ export class Pain008Component implements OnInit {
       orgnlCdtrSchmeIdBic: ['OLDCCU33XXX'],
       orgnlCdtrAgtBic: ['OLDCAU33XXX'],
       orgnlDbtrNm: ['Original Debtor Name'],
-      orgnlDbtrAcctIban: ['GB29NWBK60161331926822'],
+      orgnlDbtrAcctIban: ['GB94BARC20201530093459'],
       orgnlDbtrAgtBic: ['OLDDAU33XXX'],
       orgnlFnlColltnDt: [this.isoNowDate()],
       orgnlFrqcyTp: ['YEAR'],
@@ -265,7 +265,7 @@ export class Pain008Component implements OnInit {
       dbtrAgtMmbId: ['445566'],
       dbtrAgtLei: ['12345678901234567891'],
       // DbtrAgtAcct
-      dbtrAgtAcctIban: ['DE89370400440532013001'],
+      dbtrAgtAcctIban: ['GB82WEST12345698765432'],
       dbtrAgtAcctOthrId: [''],
 
       // Debtor
@@ -301,7 +301,7 @@ export class Pain008Component implements OnInit {
       dbtrPrvtIdOthrIssr: ['ISSUER-Z'],
 
       // Debtor Account
-      dbtrIban: ['DE89370400440532013000', [Validators.required, Validators.maxLength(34)]],
+      dbtrIban: ['GB33BUKB20201555555555', [Validators.required, Validators.maxLength(34)]],
       dbtrAcctOthrId: [''],
       dbtrAcctCcy: [''],
       dbtrAcctNm: [''],
@@ -366,21 +366,21 @@ export class Pain008Component implements OnInit {
       // Strd > RfrdDocAmt
       rmtInfStrdRfrdDocAmtDuePyblAmt: [''],
       rmtInfStrdRfrdDocAmtDuePyblAmtCcy: [''],
-      rmtInfStrdRfrdDocAmtDscntApldAmtTpCd: ['DSCT'],
-      rmtInfStrdRfrdDocAmtDscntApldAmt: ['10.00'],
-      rmtInfStrdRfrdDocAmtDscntApldAmtCcy: ['EUR'],
-      rmtInfStrdRfrdDocAmtCdtNoteAmt: ['0.00'],
-      rmtInfStrdRfrdDocAmtCdtNoteAmtCcy: ['EUR'],
-      rmtInfStrdRfrdDocAmtTaxAmtTpCd: ['VAT'],
-      rmtInfStrdRfrdDocAmtTaxAmt: ['20.00'],
-      rmtInfStrdRfrdDocAmtTaxAmtCcy: ['EUR'],
-      rmtInfStrdRfrdDocAmtAdjRsn: ['Reason'],
-      rmtInfStrdRfrdDocAmtAdjAmt: ['5.00'],
-      rmtInfStrdRfrdDocAmtAdjAmtCcy: ['EUR'],
-      rmtInfStrdRfrdDocAmtAdjCdtDbtInd: ['DBIT'],
-      rmtInfStrdRfrdDocAmtAdjAddtlInf: ['Adjustment info'],
-      rmtInfStrdRfrdDocAmtRmtdAmt: ['150.00'],
-      rmtInfStrdRfrdDocAmtRmtdAmtCcy: ['EUR'],
+      rmtInfStrdRfrdDocAmtDscntApldAmtTpCd: [''],
+      rmtInfStrdRfrdDocAmtDscntApldAmt: [''],
+      rmtInfStrdRfrdDocAmtDscntApldAmtCcy: [''],
+      rmtInfStrdRfrdDocAmtCdtNoteAmt: [''],
+      rmtInfStrdRfrdDocAmtCdtNoteAmtCcy: [''],
+      rmtInfStrdRfrdDocAmtTaxAmtTpCd: [''],
+      rmtInfStrdRfrdDocAmtTaxAmt: [''],
+      rmtInfStrdRfrdDocAmtTaxAmtCcy: [''],
+      rmtInfStrdRfrdDocAmtAdjRsn: [''],
+      rmtInfStrdRfrdDocAmtAdjAmt: [''],
+      rmtInfStrdRfrdDocAmtAdjAmtCcy: [''],
+      rmtInfStrdRfrdDocAmtAdjCdtDbtInd: [''],
+      rmtInfStrdRfrdDocAmtAdjAddtlInf: [''],
+      rmtInfStrdRfrdDocAmtRmtdAmt: [''],
+      rmtInfStrdRfrdDocAmtRmtdAmtCcy: [''],
       // Strd > CdtrRefInf
       rmtInfStrdCdtrRefCd: ['SCOR'],
       rmtInfStrdCdtrRefPrtry: [''],
@@ -554,7 +554,7 @@ export class Pain008Component implements OnInit {
           + (tx.orgnlDbtrAcctIban ? this.tag('OrgnlDbtrAcct', this.tag('Id', this.el('IBAN', tx.orgnlDbtrAcctIban, 10), 9), 8) : '')
           + (tx.orgnlDbtrAgtBic ? this.tag('OrgnlDbtrAgt', this.tag('FinInstnId', this.el('BICFI', tx.orgnlDbtrAgtBic, 10), 9), 8) : '')
           + this.el('OrgnlFnlColltnDt', tx.orgnlFnlColltnDt, 8)
-          + (tx.orgnlFrqcyTp ? this.tag('OrgnlFrqcy', this.tag('Tp', this.el('Cd', tx.orgnlFrqcyTp, 10), 9), 8) : '')
+          + (tx.orgnlFrqcyTp ? this.tag('OrgnlFrqcy', this.el('Tp', tx.orgnlFrqcyTp, 9), 8) : '')
           + (tx.orgnlRsnCd || tx.orgnlRsnPrtry ? this.tag('OrgnlRsn', this.el('Cd', tx.orgnlRsnCd, 9) + this.el('Prtry', tx.orgnlRsnPrtry, 9), 8) : '')
           + this.el('OrgnlTrckgDays', tx.orgnlTrckgDays, 8), 7) : '';
       const frqcy = tx.frqcyTp ? (tx.frqcyPrdTp ? this.tag('Frqcy', this.tag('Prd', this.el('Tp', tx.frqcyPrdTp, 9) + this.el('CntPerPrd', tx.frqcyPrdCntPerPrd, 9), 8), 7) : this.tag('Frqcy', this.tag('Tp', this.el('Cd', tx.frqcyTp, 10), 9), 7)) : '';
@@ -663,7 +663,7 @@ export class Pain008Component implements OnInit {
           }
           strd += this.tag('RfrdDocInf',
             this.tag('Tp', (tx.rmtInfStrdRfrdDocCd ? this.tag('CdOrPrtry', this.el('Cd', tx.rmtInfStrdRfrdDocCd, 9), 8) : this.tag('CdOrPrtry', this.el('Prtry', tx.rmtInfStrdRfrdDocPrtry, 9), 8)) + this.el('Issr', tx.rmtInfStrdRfrdDocIssr, 8), 7)
-            + this.el('Nb', tx.rmtInfStrdRfrdDocNb, 7) + (tx.rmtInfStrdRfrdDocRltdDt ? this.tag('RltdDt', this.el('Dt', tx.rmtInfStrdRfrdDocRltdDt, 8), 7) : '') + rfrdLineDtls, 6);
+            + this.el('Nb', tx.rmtInfStrdRfrdDocNb, 7) + (tx.rmtInfStrdRfrdDocRltdDt ? this.tag('RltdDt', this.tag('Tp', this.el('Cd', 'ISDT', 9), 8) + this.el('Dt', tx.rmtInfStrdRfrdDocRltdDt, 8), 7) : '') + rfrdLineDtls, 6);
         }
         // RfrdDocAmt
         if (tx.rmtInfStrdRfrdDocAmtDuePyblAmt || tx.rmtInfStrdRfrdDocAmtCdtNoteAmt || tx.rmtInfStrdRfrdDocAmtRmtdAmt || tx.rmtInfStrdRfrdDocAmtDscntApldAmt || tx.rmtInfStrdRfrdDocAmtTaxAmt || tx.rmtInfStrdRfrdDocAmtAdjAmt) {
