@@ -1,6 +1,6 @@
 <div class="container">
     <header>
-        <h1>Interbank Direct Debit (pacs.010) <mat-icon class="title-icon">account_balance_wallet</mat-icon></h1>
+        <h1>Interbank Direct Debit - Margin Collection (pacs.010.001.03) <mat-icon class="title-icon">account_balance_wallet</mat-icon></h1>
     </header>
 
     <div class="split-view">
@@ -61,6 +61,14 @@
                         <select formControlName="prty">
                             <option value=""></option>
                             <option *ngFor="let p of priorityEnums" [value]="p">{{p}}</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Settlement Method <span class="req">*</span></label>
+                        <select formControlName="sttlmMethod">
+                            <option value="CLRG">Clearing [CLRG]</option>
+                            <option value="INGA">Instructing Agent [INGA]</option>
+                            <option value="INDA">Instructed Agent [INDA]</option>
                         </select>
                     </div>
 
@@ -183,7 +191,7 @@
                         <label>Category Purpose Code <span class="opt">Optional</span></label>
                         <select formControlName="ctgyPurpCd">
                             <option value="">None</option>
-                            <option *ngFor="let p of purposes" [value]="p">{{p}}</option>
+                            <option *ngFor="let p of categoryPurposes" [value]="p">{{p}}</option>
                         </select>
                         <div class="validation-msg" *ngIf="err('ctgyPurpCd') as e">{{e}}</div>
                     </div>
@@ -207,6 +215,13 @@
                         <label>Purpose Proprietary <span class="opt">Optional</span></label>
                         <input formControlName="purposePrtry" name="purposePrtry" placeholder="Max 35 chars" maxlength="35">
                         <div class="validation-msg" *ngIf="err('purposePrtry') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group intermediary-field">
+                        <label>Charge Bearer <span class="req">*</span></label>
+                        <select formControlName="chrgBr">
+                            <option *ngFor="let b of chargeBearers" [value]="b">{{b}}</option>
+                        </select>
+                        <div class="validation-msg" *ngIf="err('chrgBr') as e">{{e}}</div>
                     </div>
 
                     <div class="section-title">Transaction Agents</div>
@@ -405,6 +420,18 @@
                         <input [formControlName]="prefix+'TwnNm'" maxlength="35">
                         <div class="validation-msg" *ngIf="err(prefix+'TwnNm') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint(prefix+'TwnNm', 35) as h">{{h}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Town Location Name</label>
+                        <input [formControlName]="prefix+'TwnLctnNm'" maxlength="35">
+                        <div class="validation-msg" *ngIf="err(prefix+'TwnLctnNm') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint(prefix+'TwnLctnNm', 35) as h">{{h}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Country Subdivision</label>
+                        <input [formControlName]="prefix+'CtrySubDvsn'" maxlength="35">
+                        <div class="validation-msg" *ngIf="err(prefix+'CtrySubDvsn') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint(prefix+'CtrySubDvsn', 35) as h">{{h}}</div>
                     </div>
 
                     <!-- Country -->

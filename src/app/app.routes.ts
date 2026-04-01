@@ -17,6 +17,7 @@ import { ManualEntryComponent } from './pages/manual-entry/manual-entry.componen
 import { Pacs2Component } from './pages/manual-entry/pacs2/pacs2.component';
 import { Pacs9AdvComponent } from './pages/manual-entry/pacs9adv/pacs9adv.component';
 import { Pacs10Component } from './pages/manual-entry/pacs10/pacs10.component';
+import { Pacs10v3Component } from './pages/manual-entry/pacs10v3/pacs10v3.component';
 import { Camt053Component } from './pages/manual-entry/camt053/camt053.component';
 import { Camt054Component } from './pages/manual-entry/camt054/camt054.component';
 import { MtToMxComponent } from './pages/mt-to-mx/mt-to-mx.component';
@@ -39,6 +40,7 @@ export const routes: Routes = [
     { path: 'generate/pacs4', component: Pacs4Component },
     { path: 'generate/pacs2', component: Pacs2Component },
     { path: 'generate/pacs10', component: Pacs10Component },
+    { path: 'generate/pacs10v3', component: Pacs10v3Component },
     { path: 'generate/camt57', component: Camt057Component },
     { path: 'generate/camt052', component: Camt052Component },
     { path: 'generate/camt053', component: Camt053Component },

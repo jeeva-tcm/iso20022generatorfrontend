@@ -11,13 +11,13 @@ import { UetrService } from '../../../services/uetr.service';
 import { ISO_PURPOSE_CODES } from '../../../constants/purpose-codes';
 
 @Component({
-    selector: 'app-pacs10',
+    selector: 'app-pacs10v3',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, RouterModule],
-    templateUrl: './pacs10.component.html',
-    styleUrl: './pacs10.component.css'
+    templateUrl: './pacs10v3.component.html',
+    styleUrl: './pacs10v3.component.css'
 })
-export class Pacs10Component implements OnInit {
+export class Pacs10v3Component implements OnInit {
     form!: FormGroup;
     generatedXml = '';
     currentTab: 'form' | 'preview' = 'form';
@@ -111,6 +111,7 @@ export class Pacs10Component implements OnInit {
                         [p + 'PstCd']: 'EC2N 4BQ',
                         [p + 'TwnNm']: 'London',
                         [p + 'TwnLctnNm']: 'Central London',
+                        [p + 'CtrySubDvsn']: 'Greater London',
                         [p + 'Ctry']: 'GB'
                     }, { emitEvent: false });
                 } else if (type === 'unstructured') {
@@ -120,7 +121,7 @@ export class Pacs10Component implements OnInit {
                         [p + 'AdrLine3']: 'London GB'
                     }, { emitEvent: false });
                     // Clear structured fields
-                    const structured = ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'Ctry'];
+                    const structured = ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'CtrySubDvsn', 'Ctry'];
                     structured.forEach(f => this.form.get(p + f)?.patchValue('', { emitEvent: false }));
                 } else if (type === 'hybrid') {
                     this.form.patchValue({
@@ -135,6 +136,7 @@ export class Pacs10Component implements OnInit {
                         [p + 'PstCd']: 'EC2N 4BQ',
                         [p + 'TwnNm']: 'London',
                         [p + 'TwnLctnNm']: 'Central London',
+                        [p + 'CtrySubDvsn']: 'Greater London',
                         [p + 'Ctry']: 'GB',
                         [p + 'AdrLine1']: 'Central Business District',
                         [p + 'AdrLine2']: 'Near Liverpool Street',
@@ -416,10 +418,10 @@ export class Pacs10Component implements OnInit {
         this.http.get<any>(this.config.getApiUrl('/codelists/ctgyPurp')).subscribe({
             next: (res) => {
                 const existing = res && res.codes ? res.codes : [];
-                this.categoryPurposes = [...new Set([...existing, 'ADVA', 'AGRT', 'CASH', 'COLL', 'DIVD', 'GOVT', 'HEDG', 'INTC', 'LOAN', 'OTHR', 'PENS', 'SALA', 'SUPP', 'TAXS', 'TREA', 'VATX'])].sort();
+                this.categoryPurposes = [...new Set([...existing, 'ADVA', 'AGRT', 'CASH', 'COLL', 'DIVD', 'GOVT', 'HEDG', 'INTC', 'LOAN', 'MARG', 'OTHR', 'PENS', 'SALA', 'SUPP', 'TAXS', 'TREA', 'VATX'])].sort();
             },
             error: () => {
-                this.categoryPurposes = ['ADVA', 'AGRT', 'CASH', 'COLL', 'DIVD', 'GOVT', 'HEDG', 'INTC', 'LOAN', 'OTHR', 'PENS', 'SALA', 'SUPP', 'TAXS', 'TREA', 'VATX'].sort();
+                this.categoryPurposes = ['ADVA', 'AGRT', 'CASH', 'COLL', 'DIVD', 'GOVT', 'HEDG', 'INTC', 'LOAN', 'MARG', 'OTHR', 'PENS', 'SALA', 'SUPP', 'TAXS', 'TREA', 'VATX'].sort();
             }
         });
         this.http.get<any>(this.config.getApiUrl('/codelists/purp')).subscribe({
@@ -508,9 +510,9 @@ export class Pacs10Component implements OnInit {
             instrPrty: ['HIGH'],
             svcLvlCd: ['G001', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{1,4}$/)]], 
             svcLvlPrtry: ['PRIORITY-SVC', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
-            lclInstrmCd: ['ONCL', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{1,4}$/)]], 
+            lclInstrmCd: ['MARG', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{1,4}$/)]], 
             lclInstrmPrtry: ['INSTANT-SETTLM', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
-            ctgyPurpCd: ['INTC', [Validators.pattern(/^[A-Z]{4}$/)]], 
+            ctgyPurpCd: ['MARG', [Validators.pattern(/^[A-Z]{4}$/)]], 
             ctgyPurpPrtry: ['CORP-CASH-POOL', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
             
             amount: ['50000', [Validators.required, Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],
@@ -524,6 +526,8 @@ export class Pacs10Component implements OnInit {
             purposePrtry: ['INTERBANK-XFER', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
             remittanceInfo: ['Interbank Direct Debit Settlement March 2026', [Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
             instrForDbtrAgt: ['Settle via RTGS system immediately', [Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
+            chrgBr: ['SHAR', Validators.required],
+            sttlmMethod: ['CLRG', Validators.required],
             
             // Debtor
             dbtrBic: ['BOFAUS3NXXX', BIC],
@@ -555,14 +559,14 @@ export class Pacs10Component implements OnInit {
             
             // Address field mapping per party
             const addrMap: any = {
-                dbtr:    { Dept: 'Treasury Operations', SubDept: 'Corporate Payments', StrtNm: '10 Bishopsgate', BldgNb: '10', BldgNm: 'City Tower', Flr: '12th Floor', PstBx: 'PO Box 100', Room: 'Room 1201', PstCd: 'EC2N 4BQ', TwnNm: 'London', TwnLctnNm: 'Central London', Ctry: 'GB', AdrLine1: 'Central Business District', AdrLine2: 'Near Liverpool Street' },
+                dbtr:    { Dept: 'Treasury Operations', SubDept: 'Corporate Payments', StrtNm: '10 Bishopsgate', BldgNb: '10', BldgNm: 'City Tower', Flr: '12th Floor', PstBx: 'PO Box 100', Room: 'Room 1201', PstCd: 'EC2N 4BQ', TwnNm: 'London', TwnLctnNm: 'Central London', CtrySubDvsn: 'Greater London', Ctry: 'GB', AdrLine1: 'Central Business District', AdrLine2: 'Near Liverpool Street' },
                 cdtr:    { Dept: 'Treasury Operations', SubDept: 'Corporate Payments', StrtNm: '10 Bishopsgate', BldgNb: '10', BldgNm: 'City Tower', Flr: '12th Floor', PstBx: 'PO Box 100', Room: 'Room 1201', PstCd: 'EC2N 4BQ', TwnNm: 'London', TwnLctnNm: 'Central London', Ctry: 'GB', AdrLine1: 'Central Business District', AdrLine2: 'Near Liverpool Street' },
                 dbtrAgt: { Dept: 'Treasury Operations', SubDept: 'Corporate Payments', StrtNm: '10 Bishopsgate', BldgNb: '10', BldgNm: 'City Tower', Flr: '12th Floor', PstBx: 'PO Box 100', Room: 'Room 1201', PstCd: 'EC2N 4BQ', TwnNm: 'London', TwnLctnNm: 'Central London', Ctry: 'GB', AdrLine1: 'Central Business District', AdrLine2: 'Near Liverpool Street' },
                 cdtrAgt: { Dept: 'Treasury Operations', SubDept: 'Corporate Payments', StrtNm: '10 Bishopsgate', BldgNb: '10', BldgNm: 'City Tower', Flr: '12th Floor', PstBx: 'PO Box 100', Room: 'Room 1201', PstCd: 'EC2N 4BQ', TwnNm: 'London', TwnLctnNm: 'Central London', Ctry: 'GB', AdrLine1: 'Central Business District', AdrLine2: 'Near Liverpool Street' }
             };
             const defaults = addrMap[p] || {};
 
-            ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'Ctry', 'AdrLine1', 'AdrLine2', 'AdrLine3'].forEach(f => {
+            ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'CtrySubDvsn', 'Ctry', 'AdrLine1', 'AdrLine2', 'AdrLine3'].forEach(f => {
                 let val = defaults[f] || '';
                 
                 // Per-field ISO 20022 validators
@@ -598,7 +602,9 @@ export class Pacs10Component implements OnInit {
 
             // Set IBAN per party
             if (acctDefaults.AcctIBAN) {
-                c[p + 'AcctIBAN'] = [acctDefaults.AcctIBAN, [Validators.pattern(/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/), Validators.minLength(10), Validators.maxLength(34)]];
+                const validators = [Validators.pattern(/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/), Validators.minLength(10), Validators.maxLength(34)];
+                if (['dbtr', 'cdtr'].includes(p)) validators.push(Validators.required);
+                c[p + 'AcctIBAN'] = [acctDefaults.AcctIBAN, validators];
             }
 
             // Currency, Account Name
@@ -631,7 +637,7 @@ export class Pacs10Component implements OnInit {
 
         let appHdr = `\t\t<Fr><FIId><FinInstnId><BICFI>${this.e(v.fromBic)}</BICFI></FinInstnId></FIId></Fr>\n`;
         appHdr += `\t\t<To><FIId><FinInstnId><BICFI>${this.e(v.toBic)}</BICFI></FinInstnId></FIId></To>\n`;
-        appHdr += `\t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>\n\t\t<MsgDefIdr>pacs.010.001.03</MsgDefIdr>\n\t\t<BizSvc>swift.cbprplus.02</BizSvc>\n`;
+        appHdr += `\t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>\n\t\t<MsgDefIdr>pacs.010.001.03</MsgDefIdr>\n\t\t<BizSvc>swift.cbprplus.col.02</BizSvc>\n`;
         
         appHdr += `\t\t<CreDt>${creDtTm}</CreDt>\n`;
         if (v.copyDplct) appHdr += this.el('CpyDplct', v.copyDplct, 2);
@@ -650,15 +656,18 @@ ${appHdr}\t</AppHdr>
 \t\t\t\t<MsgId>${this.e(v.msgId)}</MsgId>
 \t\t\t\t<CreDtTm>${creDtTm}</CreDtTm>
 \t\t\t\t<NbOfTxs>1</NbOfTxs>
+\t\t\t\t<SttlmInf>
+\t\t\t\t\t<SttlmMtd>${this.e(v.sttlmMethod)}</SttlmMtd>
+\t\t\t\t</SttlmInf>
 \t\t\t</GrpHdr>
 \t\t\t<CdtInstr>
 \t\t\t\t<CdtId>${this.e(v.cdtId)}</CdtId>
 ${this.agt('InstgAgt', 'instgAgt', v, 4, true)}
 ${this.agt('InstdAgt', 'instdAgt', v, 4, true)}
-${this.agt('CdtrAgt', 'cdtrAgt', v, 4)}
-${this.fullAcct('CdtrAgtAcct', 'cdtrAgt', v, 4)}
 ${this.agt('Cdtr', 'cdtr', v, 4)}
 ${this.fullAcct('CdtrAcct', 'cdtr', v, 4)}
+${this.agt('CdtrAgt', 'cdtrAgt', v, 4)}
+${this.fullAcct('CdtrAgtAcct', 'cdtrAgt', v, 4)}
 \t\t\t\t<DrctDbtTxInf>
 \t\t\t\t\t<PmtId>
 ${this.el('InstrId', v.instrId, 6)}${this.el('EndToEndId', v.endToEndId, 6)}${this.el('TxId', v.txId, 6)}${this.el('UETR', v.uetr, 6)}${this.el('ClrSysRef', v.clrSysRef, 6)}
@@ -672,6 +681,7 @@ ${this.agt('DbtrAgt', 'dbtrAgt', v, 5)}
 ${this.fullAcct('DbtrAgtAcct', 'dbtrAgt', v, 5)}
 ${this.el('InstrForDbtrAgt', v.instrForDbtrAgt, 5)}
 ${this.purp(v)}
+${this.el('ChrgBr', v.chrgBr, 5)}
 ${this.rmtInf(v)}
 \t\t\t\t</DrctDbtTxInf>
 \t\t\t</CdtInstr>
@@ -822,7 +832,7 @@ ${this.rmtInf(v)}
         const t = this.tabs(indent + 1);
         
         if (type === 'structured' || type === 'hybrid') {
-            const structuredFields = ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm'];
+            const structuredFields = ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'CtrySubDvsn'];
             structuredFields.forEach(f => {
                 if (v[p + f]) lines.push(`${t}<${f}>${this.e(v[p + f])}</${f}>`);
             });
@@ -1152,7 +1162,7 @@ ${this.rmtInf(v)}
 
         // ISO 20022 MX address field validation
         const cl = c.toLowerCase();
-        if (cl.includes('bldgnb') || cl.includes('pstcd') || cl.includes('pstbx') || cl.includes('bldgnm') || cl.includes('twnnm') || cl.includes('twnlctn') || cl.includes('dstrctnm') || cl.includes('ctrysubdvsn') || cl.includes('strtnm') || cl.includes('dept') || cl.includes('subdept') || cl.includes('flr') || cl.includes('room') || cl.includes('adrline')) {
+        if (cl.includes('bldgnb') || cl.includes('pstcd') || cl.includes('pstbx') || cl.includes('bldgnm') || cl.includes('twnnm') || cl.includes('twnlctn') || cl.includes('ctrysubdvsn') || cl.includes('strtnm') || cl.includes('dept') || cl.includes('subdept') || cl.includes('flr') || cl.includes('room') || cl.includes('adrline')) {
             if (ctrl!.errors?.['pattern']) return 'Invalid character. Only ISO 20022 MX allowed characters permitted.';
         }
 
