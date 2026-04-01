@@ -13,6 +13,7 @@ import { Camt057Component } from './pages/manual-entry/camt057/camt057.component
 import { Camt052Component } from './pages/manual-entry/camt052/camt052.component';
 import { Pain001Component } from './pages/manual-entry/pain001/pain001.component';
 import { Pain002Component } from './pages/manual-entry/pain002/pain002.component';
+import { Pain008Component } from './pages/manual-entry/pain008/pain008.component';
 import { ManualEntryComponent } from './pages/manual-entry/manual-entry.component';
 import { Pacs2Component } from './pages/manual-entry/pacs2/pacs2.component';
 import { Pacs9AdvComponent } from './pages/manual-entry/pacs9adv/pacs9adv.component';
@@ -47,6 +48,7 @@ export const routes: Routes = [
     { path: 'generate/camt055', component: Camt055Component },
     { path: 'generate/pain001', component: Pain001Component },
     { path: 'generate/pain002', component: Pain002Component },
+    { path: 'generate/pain008', component: Pain008Component },
     { path: 'generate/:type', component: ManualEntryComponent },
     { path: 'mt-to-mx', component: MtToMxComponent },
     { path: '**', redirectTo: '' }

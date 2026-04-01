@@ -91,6 +91,23 @@ export class Pacs9Component implements OnInit {
         // Init history
         this.pushHistory();
         this.updateAmountValidator();
+
+        // Enforce XOR logic for Payment Type Information choices
+        const choiceFields = ['svcLvl', 'lclInstrm', 'ctgyPurp'];
+        choiceFields.forEach(prefix => {
+            this.form.get(prefix + 'Cd')?.valueChanges.subscribe(val => {
+                if (val && this.form.get(prefix + 'Prtry')?.value) {
+                    this.form.get(prefix + 'Prtry')?.setValue('', { emitEvent: false });
+                    this.generateXml();
+                }
+            });
+            this.form.get(prefix + 'Prtry')?.valueChanges.subscribe(val => {
+                if (val && this.form.get(prefix + 'Cd')?.value) {
+                    this.form.get(prefix + 'Cd')?.setValue('', { emitEvent: false });
+                    this.generateXml();
+                }
+            });
+        });
     }
 
     @HostListener('input', ['$event'])
@@ -352,6 +369,30 @@ export class Pacs9Component implements OnInit {
             if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
             if (!c[p + 'Acct']) c[p + 'Acct'] = ['', [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
         });
+
+        // Add static address data to resolve "Name and Address must always be present together"
+        // AND the rule: "If Address Line is present and any other element is present, then Town Name and Country are mandatory"
+        c['dbtrFiAddrType'] = ['unstructured'];
+        c['dbtrFiCtry'] = ['US', Validators.pattern(/^[A-Z]{2,2}$/)];
+        c['dbtrFiTwnNm'] = ['New York', [Validators.maxLength(35), ADDR_PATTERN]];
+        c['dbtrFiAdrLine1'] = ['123 Wall Street', [Validators.maxLength(70), ADDR_PATTERN]];
+
+        c['cdtrFiAddrType'] = ['unstructured'];
+        c['cdtrFiCtry'] = ['GB', Validators.pattern(/^[A-Z]{2,2}$/)];
+        c['cdtrFiTwnNm'] = ['London', [Validators.maxLength(35), ADDR_PATTERN]];
+        c['cdtrFiAdrLine1'] = ['456 Canary Wharf', [Validators.maxLength(70), ADDR_PATTERN]];
+
+        // Also for Agents
+        c['dbtrAgtAddrType'] = ['unstructured'];
+        c['dbtrAgtCtry'] = ['US', Validators.pattern(/^[A-Z]{2,2}$/)];
+        c['dbtrAgtTwnNm'] = ['New York', [Validators.maxLength(35), ADDR_PATTERN]];
+        c['dbtrAgtAdrLine1'] = ['789 Banker Lane', [Validators.maxLength(70), ADDR_PATTERN]];
+
+        c['cdtrAgtAddrType'] = ['unstructured'];
+        c['cdtrAgtCtry'] = ['GB', Validators.pattern(/^[A-Z]{2,2}$/)];
+        c['cdtrAgtTwnNm'] = ['London', [Validators.maxLength(35), ADDR_PATTERN]];
+        c['cdtrAgtAdrLine1'] = ['321 Finance Square', [Validators.maxLength(70), ADDR_PATTERN]];
+
         // Set default names for mandatory parties
         c['dbtrFiName'] = ['Debtor FI', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
         c['cdtrFiName'] = ['Creditor FI', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
@@ -593,25 +634,25 @@ export class Pacs9Component implements OnInit {
 
         let pmtTpXml = '';
         if (v.instrPrty?.trim()) pmtTpXml += this.el('InstrPrty', v.instrPrty, 4);
-        if (v.clrChanl?.trim()) pmtTpXml += this.el('ClrChanl', v.clrChanl, 4);
+        if (v.clrChanl?.trim()) pmtTpXml += this.el('ClrChanl', v.clrChanl, 5);
         if (v.svcLvlCd?.trim() || v.svcLvlPrtry?.trim()) {
-            let content = v.svcLvlCd?.trim() ? this.el('Cd', v.svcLvlCd, 5) : this.el('Prtry', v.svcLvlPrtry, 5);
-            pmtTpXml += this.tag('SvcLvl', content, 4);
+            let content = v.svcLvlCd?.trim() ? this.el('Cd', v.svcLvlCd, 6) : this.el('Prtry', v.svcLvlPrtry, 6);
+            pmtTpXml += this.tag('SvcLvl', content, 5);
         }
         if (v.lclInstrmCd?.trim() || v.lclInstrmPrtry?.trim()) {
-            let content = v.lclInstrmCd?.trim() ? this.el('Cd', v.lclInstrmCd, 5) : this.el('Prtry', v.lclInstrmPrtry, 5);
-            pmtTpXml += this.tag('LclInstrm', content, 4);
+            let content = v.lclInstrmCd?.trim() ? this.el('Cd', v.lclInstrmCd, 6) : this.el('Prtry', v.lclInstrmPrtry, 6);
+            pmtTpXml += this.tag('LclInstrm', content, 5);
         }
         if (v.ctgyPurpCd?.trim() || v.ctgyPurpPrtry?.trim()) {
-            let content = v.ctgyPurpCd?.trim() ? this.el('Cd', v.ctgyPurpCd, 5) : this.el('Prtry', v.ctgyPurpPrtry, 5);
-            pmtTpXml += this.tag('CtgyPurp', content, 4);
+            let content = v.ctgyPurpCd?.trim() ? this.el('Cd', v.ctgyPurpCd, 6) : this.el('Prtry', v.ctgyPurpPrtry, 6);
+            pmtTpXml += this.tag('CtgyPurp', content, 5);
         }
 
-        if (pmtTpXml) tx += this.tag('PmtTpInf', pmtTpXml, 3);
+        if (pmtTpXml) tx += this.tag('PmtTpInf', pmtTpXml, 4);
         const formattedAmt = this.formatting.formatAmount(v.amount, v.currency);
-        tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${formattedAmt}</IntrBkSttlmAmt>\n`;
-        tx += this.el('IntrBkSttlmDt', v.sttlmDt, 3);
-        if (v.sttlmPrty?.trim()) tx += this.el('SttlmPrty', v.sttlmPrty, 3);
+        tx += `\t\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${formattedAmt}</IntrBkSttlmAmt>\n`;
+        tx += this.el('IntrBkSttlmDt', v.sttlmDt, 4);
+        if (v.sttlmPrty?.trim()) tx += this.el('SttlmPrty', v.sttlmPrty, 4);
 
         const formatAcct = (val: string, tabs: number) => {
             if (!val) return '';
@@ -625,29 +666,29 @@ export class Pacs9Component implements OnInit {
 
         if (v.instdAmt && v.instdAmtCcy) {
             const formattedInstdAmt = this.formatting.formatAmount(v.instdAmt, v.instdAmtCcy);
-            tx += `\t\t\t<InstdAmt Ccy="${this.e(v.instdAmtCcy)}">${formattedInstdAmt}</InstdAmt>\n`;
+            tx += `\t\t\t\t<InstdAmt Ccy="${this.e(v.instdAmtCcy)}">${formattedInstdAmt}</InstdAmt>\n`;
         }
-        if (v.xchgRate) tx += this.el('XchgRate', v.xchgRate, 3);
+        if (v.xchgRate) tx += this.el('XchgRate', v.xchgRate, 4);
         // PrvsInstgAgts
-        tx += this.agtWithAcct('PrvsInstgAgt1', 'prvsInstgAgt1', v);
-        tx += this.agtWithAcct('PrvsInstgAgt2', 'prvsInstgAgt2', v);
-        tx += this.agtWithAcct('PrvsInstgAgt3', 'prvsInstgAgt3', v);
+        tx += this.agtWithAcct('PrvsInstgAgt1', 'prvsInstgAgt1', v, 4);
+        tx += this.agtWithAcct('PrvsInstgAgt2', 'prvsInstgAgt2', v, 4);
+        tx += this.agtWithAcct('PrvsInstgAgt3', 'prvsInstgAgt3', v, 4);
         // InstgAgt/InstdAgt
-        tx += this.agtWithAcct('InstgAgt', 'instgAgt', v);
-        tx += this.agtWithAcct('InstdAgt', 'instdAgt', v);
+        tx += this.agtWithAcct('InstgAgt', 'instgAgt', v, 4);
+        tx += this.agtWithAcct('InstdAgt', 'instdAgt', v, 4);
         // IntrmyAgts
-        tx += this.agtWithAcct('IntrmyAgt1', 'intrmyAgt1', v);
-        tx += this.agtWithAcct('IntrmyAgt2', 'intrmyAgt2', v);
-        tx += this.agtWithAcct('IntrmyAgt3', 'intrmyAgt3', v);
+        tx += this.agtWithAcct('IntrmyAgt1', 'intrmyAgt1', v, 4);
+        tx += this.agtWithAcct('IntrmyAgt2', 'intrmyAgt2', v, 4);
+        tx += this.agtWithAcct('IntrmyAgt3', 'intrmyAgt3', v, 4);
 
         // Dbtr
-        tx += this.agtWithAcct('Dbtr', 'dbtrFi', v);
+        tx += this.agtWithAcct('Dbtr', 'dbtrFi', v, 4);
         // DbtrAgt
-        tx += this.agtWithAcct('DbtrAgt', 'dbtrAgt', v);
+        tx += this.agtWithAcct('DbtrAgt', 'dbtrAgt', v, 4);
         // CdtrAgt
-        tx += this.agtWithAcct('CdtrAgt', 'cdtrAgt', v);
+        tx += this.agtWithAcct('CdtrAgt', 'cdtrAgt', v, 4);
         // Cdtr
-        tx += this.agtWithAcct('Cdtr', 'cdtrFi', v);
+        tx += this.agtWithAcct('Cdtr', 'cdtrFi', v, 4);
 
         // Instructions for Creditor Agent (0..2)
         for (let i = 1; i <= 2; i++) {
@@ -664,7 +705,7 @@ export class Pacs9Component implements OnInit {
         for (let i = 1; i <= 6; i++) {
             const txt = v[`instrForNxtAgt${i}InfTxt`]?.trim();
             if (txt) {
-                tx += this.tag('InstrForNxtAgt', this.el('InstrInf', txt, 5), 4);
+                tx += this.tag('InstrForNxtAgt', this.el('InstrInf', txt, 6), 5);
             }
         }
 
@@ -771,23 +812,23 @@ ${tx}\t\t\t</CdtTrfTxInf>
         const bic = v[prefix + 'Bic']; if (!bic) return '';
         return `\t\t\t\t<${tag}>\n\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n${this.addrXml(v, prefix, 6)}\t\t\t\t\t</FinInstnId>\n\t\t\t\t</${tag}>\n`;
     }
-    agtWithAcct(tag: string, prefix: string, v: any) {
-        let res = this.agt(tag, prefix, v);
+    agtWithAcct(tag: string, prefix: string, v: any, indent = 4) {
+        let res = this.agt(tag, prefix, v, indent);
         if (v[prefix + 'Acct']?.trim()) {
             const val = v[prefix + 'Acct'];
             const ibanCountries = ['AD', 'AE', 'AL', 'AT', 'AZ', 'BA', 'BE', 'BG', 'BH', 'BR', 'BY', 'CH', 'CR', 'CY', 'CZ', 'DE', 'DK', 'DO', 'EE', 'EG', 'ES', 'FI', 'FO', 'FR', 'GB', 'GE', 'GI', 'GL', 'GR', 'GT', 'HR', 'HU', 'IE', 'IL', 'IQ', 'IS', 'IT', 'JO', 'KW', 'KZ', 'LB', 'LI', 'LT', 'LU', 'LV', 'MC', 'MD', 'ME', 'MK', 'MR', 'MT', 'MU', 'NL', 'NO', 'PK', 'PL', 'PS', 'PT', 'QA', 'RO', 'RS', 'RU', 'SA', 'SC', 'SE', 'SI', 'SK', 'SM', 'ST', 'SV', 'TL', 'TN', 'TR', 'UA', 'VA', 'VG', 'XK'];
             let idContent = '';
             if (val.length >= 14 && ibanCountries.includes(val.substring(0, 2).toUpperCase()) && /^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/i.test(val)) {
-                idContent = this.el('IBAN', val, 6);
+                idContent = this.el('IBAN', val, indent + 2);
             } else {
-                idContent = `\n\t\t\t\t\t\t<Othr>\n\t\t\t\t\t\t\t<Id>${this.e(val)}</Id>\n\t\t\t\t\t\t</Othr>\n\t\t\t\t\t`;
+                idContent = `\n${this.tabs(indent + 2)}<Othr>\n${this.tabs(indent + 3)}<Id>${this.e(val)}</Id>\n${this.tabs(indent + 2)}</Othr>\n${this.tabs(indent + 1)}`;
             }
-            res += this.tag(tag + 'Acct', this.tag('Id', idContent, 5), 4);
+            res += this.tag(tag + 'Acct', this.tag('Id', idContent, indent + 1), indent);
         }
         return res;
     }
 
-    agt(tag: string, prefix: string, v: any) {
+    agt(tag: string, prefix: string, v: any, indent = 4) {
         const bic = v[prefix + 'Bic'];
         const name = v[prefix + 'Name'];
         const lei = v[prefix + 'Lei'];
@@ -795,32 +836,34 @@ ${tx}\t\t\t</CdtTrfTxInf>
         const clrMmb = v[prefix + 'ClrSysMmbId'];
 
         let content = '';
-        // Indent 6 for children of FinInstnId
-        if (bic) content += `\t\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n`;
-    if (clrMmb || clrCd) {
-            content += `\t\t\t\t\t\t<ClrSysMmbId>\n`;
-            if (clrCd) content += `\t\t\t\t\t\t\t<ClrSysId>\n\t\t\t\t\t\t\t\t<Cd>${this.e(clrCd)}</Cd>\n\t\t\t\t\t\t\t</ClrSysId>\n`;
-            if (clrMmb) content += `\t\t\t\t\t\t\t<MmbId>${this.e(clrMmb)}</MmbId>\n`;
-            content += `\t\t\t\t\t\t</ClrSysMmbId>\n`;
+        const t = this.tabs(indent + 2);
+        if (bic) content += `${t}<BICFI>${this.e(bic)}</BICFI>\n`;
+        if (clrMmb || clrCd) {
+            content += `${t}<ClrSysMmbId>\n`;
+            if (clrCd) content += `${t}\t<ClrSysId>\n${t}\t\t<Cd>${this.e(clrCd)}</Cd>\n${t}\t</ClrSysId>\n`;
+            if (clrMmb) content += `${t}\t<MmbId>${this.e(clrMmb)}</MmbId>\n`;
+            content += `${t}</ClrSysMmbId>\n`;
         }
-        if (lei) content += `\t\t\t\t\t\t<LEI>${this.e(lei)}</LEI>\n`;
+        if (lei) content += `${t}<LEI>${this.e(lei)}</LEI>\n`;
+        if (name) content += `${t}<Nm>${this.e(name)}</Nm>\n`;
+        content += this.addrXml(v, prefix, indent + 2, tag.startsWith('PrvsInstgAgt'));
 
-        if (name) content += `\t\t\t\t\t\t<Nm>${this.e(name)}</Nm>\n`;
-        content += this.addrXml(v, prefix, 6, tag.startsWith('PrvsInstgAgt'));
-
-        // Indent 4 for transaction level agents (Dbtr, Cdtr, etc.)
         if (!content.trim()) return '';
-        return `\t\t\t\t<${tag}>\n\t\t\t\t\t<FinInstnId>\n${content}\t\t\t\t\t</FinInstnId>\n\t\t\t\t</${tag}>\n`;
+        return `${this.tabs(indent)}<${tag}>\n${this.tabs(indent + 1)}<FinInstnId>\n${content}${this.tabs(indent + 1)}</FinInstnId>\n${this.tabs(indent)}</${tag}>\n`;
     }
+
     addrXml(v: any, p: string, indent = 4, isPrvs = false): string {
         const type = v[p + 'AddrType']; if (!type || type === 'none') return '';
         const lines: string[] = []; const t = this.tabs(indent + 1);
-        if (type === 'structured' || type === 'hybrid') {
-            // PostalAddress27 XSD element order
-            if (!isPrvs) {
-                if (v[p + 'AdrTpCd']) lines.push(`${t}<AdrTp>\n${t}\t<Cd>${this.e(v[p + 'AdrTpCd'])}</Cd>\n${t}</AdrTp>`);
-                else if (v[p + 'AdrTpPrtry']) lines.push(`${t}<AdrTp>\n${t}\t<Prtry>${this.e(v[p + 'AdrTpPrtry'])}</Prtry>\n${t}</AdrTp>`);
-            }
+        
+        // 1. AdrTp
+        if (!isPrvs) {
+            if (v[p + 'AdrTpCd']) lines.push(`${t}<AdrTp>\n${t}\t<Cd>${this.e(v[p + 'AdrTpCd'])}</Cd>\n${t}</AdrTp>`);
+            else if (v[p + 'AdrTpPrtry']) lines.push(`${t}<AdrTp>\n${t}\t<Prtry>${this.e(v[p + 'AdrTpPrtry'])}</Prtry>\n${t}</AdrTp>`);
+        }
+
+        // Structured fields (hybrid or structured)
+        if (['structured', 'hybrid'].includes(type)) {
             if (v[p + 'Dept']) lines.push(`${t}<Dept>${this.e(v[p + 'Dept'])}</Dept>`);
             if (v[p + 'SubDept']) lines.push(`${t}<SubDept>${this.e(v[p + 'SubDept'])}</SubDept>`);
             if (v[p + 'StrtNm']) lines.push(`${t}<StrtNm>${this.e(v[p + 'StrtNm'])}</StrtNm>`);
@@ -830,14 +873,17 @@ ${tx}\t\t\t</CdtTrfTxInf>
             if (v[p + 'PstBx']) lines.push(`${t}<PstBx>${this.e(v[p + 'PstBx'])}</PstBx>`);
             if (v[p + 'Room']) lines.push(`${t}<Room>${this.e(v[p + 'Room'])}</Room>`);
             if (v[p + 'PstCd']) lines.push(`${t}<PstCd>${this.e(v[p + 'PstCd'])}</PstCd>`);
-            if (v[p + 'TwnNm']) lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'])}</TwnNm>`);
-            if (v[p + 'TwnLctnNm']) lines.push(`${t}<TwnLctnNm>${this.e(v[p + 'TwnLctnNm'])}</TwnLctnNm>`);
-            if (v[p + 'DstrctNm']) lines.push(`${t}<DstrctNm>${this.e(v[p + 'DstrctNm'])}</DstrctNm>`);
-            if (v[p + 'CtrySubDvsn']) lines.push(`${t}<CtrySubDvsn>${this.e(v[p + 'CtrySubDvsn'])}</CtrySubDvsn>`);
         }
+
+        // Geographic elements (Allowed in ALL modes; must precede Ctry/AdrLine)
+        if (v[p + 'TwnNm']) lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'])}</TwnNm>`);
+        if (v[p + 'TwnLctnNm']) lines.push(`${t}<TwnLctnNm>${this.e(v[p + 'TwnLctnNm'])}</TwnLctnNm>`);
+        if (v[p + 'DstrctNm']) lines.push(`${t}<DstrctNm>${this.e(v[p + 'DstrctNm'])}</DstrctNm>`);
+        if (v[p + 'CtrySubDvsn']) lines.push(`${t}<CtrySubDvsn>${this.e(v[p + 'CtrySubDvsn'])}</CtrySubDvsn>`);
         if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
-        // AdrLine: allowed in unstructured/hybrid, FORBIDDEN in structured
-        if (type === 'unstructured' || type === 'hybrid') {
+
+        // AdrLine (unstructured or hybrid)
+        if (['unstructured', 'hybrid'].includes(type)) {
             if (v[p + 'AdrLine1']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine1'])}</AdrLine>`);
             if (v[p + 'AdrLine2']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine2'])}</AdrLine>`);
         }

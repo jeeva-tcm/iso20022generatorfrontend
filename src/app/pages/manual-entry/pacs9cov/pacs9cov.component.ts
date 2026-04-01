@@ -94,13 +94,30 @@ export class Pacs9CovComponent implements OnInit {
         // Init history
         this.pushHistory();
         this.updateAmountValidator();
+
+        // Enforce XOR logic for Payment Type Information choices
+        const choiceFields = ['svcLvl', 'lclInstrm', 'ctgyPurp'];
+        choiceFields.forEach(prefix => {
+            this.form.get(prefix + 'Cd')?.valueChanges.subscribe(val => {
+                if (val && this.form.get(prefix + 'Prtry')?.value) {
+                    this.form.get(prefix + 'Prtry')?.setValue('', { emitEvent: false });
+                    this.generateXml();
+                }
+            });
+            this.form.get(prefix + 'Prtry')?.valueChanges.subscribe(val => {
+                if (val && this.form.get(prefix + 'Cd')?.value) {
+                    this.form.get(prefix + 'Cd')?.setValue('', { emitEvent: false });
+                    this.generateXml();
+                }
+            });
+        });
     }
 
     @HostListener('input', ['$event'])
     onInput(event: any) {
         const target = event.target as HTMLInputElement;
         if (!target) return;
-        const name = target.getAttribute('formControlName');
+        const name = target.getAttribute('formControlName') || target.getAttribute('formcontrolname') || target.getAttribute('name');
         if (!name) return;
 
         // Character limit warning logic (Immediate on-hit detection)
@@ -269,7 +286,7 @@ export class Pacs9CovComponent implements OnInit {
                 }
             }
 
-            if (addrType === 'structured' || addrType === 'hybrid') {
+            if (addrType && addrType !== 'none') {
                 if (!twnNmCtrl?.hasValidator(Validators.required)) {
                     twnNmCtrl?.setValidators([Validators.required, Validators.maxLength(35), ADDR_PATTERN]);
                     twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
@@ -312,10 +329,10 @@ export class Pacs9CovComponent implements OnInit {
             ctgyPurpPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
             instrPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
             clrChanl: ['', [Validators.pattern(/^(BOOK|MPNS|RTGS|RTNS)$/)]],
-            svcLvlCd: ['', [Validators.pattern(/^[A-Z0-9]{1,4}$/)]],
-            svcLvlPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
-            lclInstrmCd: ['', [Validators.pattern(/^[A-Z0-9]{1,4}$/)]],
-            lclInstrmPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
+            svcLvlCd: ['', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{1,4}$/)]],
+            svcLvlPrtry: ['', [Validators.maxLength(35), Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
+            lclInstrmCd: ['', [Validators.maxLength(35), Validators.pattern(/^[A-Z0-9]{1,4}$/)]],
+            lclInstrmPrtry: ['', [Validators.maxLength(35), Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
 
             rmtInfType: ['none'],
             rmtInfUstrd: ['', [Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/)]],
@@ -325,7 +342,7 @@ export class Pacs9CovComponent implements OnInit {
             rmtInfStrdAddtlRmtInf: ['', [Validators.maxLength(140), Validators.pattern(/^[0-9a-zA-Z\/\-\?:\(\)\.,\'\+ !#$%&\*=\^_`\{\|\}~";<>@\[\\\]]+$/)]],
             rmtInfStrdRfrdDocNb: ['', Validators.maxLength(35)],
             rmtInfStrdRfrdDocCd: [''],
-            rmtInfStrdRfrdDocAmt: ['', [Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],
+            rmtInfStrdRfrdDocAmt: ['', [Validators.maxLength(18), Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],
             rmtInfStrdInvcrNm: ['', Validators.maxLength(140)],
             rmtInfStrdInvceeNm: ['', Validators.maxLength(140)],
             rmtInfStrdTaxRmtId: ['', Validators.maxLength(35)],
@@ -334,13 +351,13 @@ export class Pacs9CovComponent implements OnInit {
             fromBic: ['RBOSGB2L', BIC], toBic: ['NDEAFIHH', BIC], bizMsgId: ['pacs9bizmsgidr01', Validators.required],
             msgId: ['pacs9bizmsgidr01', Validators.required], creDtTm: [this.isoNow(), Validators.required],
             sttlmPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
-            nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['INDA', Validators.required],
+            nbOfTxs: ['1', [Validators.required, Validators.maxLength(15), Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['INDA', Validators.required],
             instgAgtBic: ['RBOSGB2L', BIC], instdAgtBic: ['NDEAFIHH', BIC],
             instrId: ['pacs9bizmsgidr01', Validators.required], endToEndId: ['pacs8bizmsgidr01', Validators.required],
             uetr: ['8a562c67-ca16-48ba-b074-65581be6f001', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
             clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
             appHdrPriority: [''],
-            amount: ['1500000', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['EUR', Validators.required],
+            amount: ['1500000', [Validators.required, Validators.maxLength(18), Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['EUR', Validators.required],
             sttlmDt: [new Date().toISOString().split('T')[0], [Validators.required, Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]],
             // Debtor FI (required)
             dbtrFiBic: ['BBBBUS33XXX', BIC],
@@ -420,11 +437,11 @@ export class Pacs9CovComponent implements OnInit {
             if (!c[p + 'AdrTpCd']) c[p + 'AdrTpCd'] = [''];
             if (!c[p + 'AdrTpPrtry']) c[p + 'AdrTpPrtry'] = ['', Validators.maxLength(35)];
             if (!c[p + 'Name']) c[p + 'Name'] = ['', [Validators.maxLength(140), SAFE_NAME]];
-            if (!c[p + 'Bic']) c[p + 'Bic'] = ['', [Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
-            if (!c[p + 'Lei']) c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
-            if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['', Validators.maxLength(4)];
+            if (!c[p + 'Bic']) c[p + 'Bic'] = ['', [Validators.maxLength(11), Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
+            if (!c[p + 'Lei']) c[p + 'Lei'] = ['', [Validators.maxLength(20), Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
+            if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['', Validators.maxLength(5)];
             if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
-            if (!c[p + 'Acct']) c[p + 'Acct'] = ['', [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
+            if (!c[p + 'Acct']) c[p + 'Acct'] = ['', [Validators.maxLength(34), Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
         });
         // Address prefixes for COV parties (Debtor / Creditor in UndrlygCstmrCdtTrf)
         this.covPartyPrefixes.forEach(p => {
@@ -465,10 +482,11 @@ export class Pacs9CovComponent implements OnInit {
                 if (!c[p + 'PrvtOthrSchmeNmPrtry']) c[p + 'PrvtOthrSchmeNmPrtry'] = ['', Validators.maxLength(35)];
                 if (!c[p + 'PrvtOthrIssr']) c[p + 'PrvtOthrIssr'] = ['', Validators.maxLength(35)];
             } else {
-                if (!c[p + 'Bic']) c[p + 'Bic'] = ['', [Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
-                if (!c[p + 'Lei']) c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
+                if (!c[p + 'Bic']) c[p + 'Bic'] = ['', [Validators.maxLength(11), Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
+                if (!c[p + 'Lei']) c[p + 'Lei'] = ['', [Validators.maxLength(20), Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
                 if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['', Validators.maxLength(5)];
                 if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
+                if (!c[p + 'Acct']) c[p + 'Acct'] = ['', [Validators.maxLength(34), Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
             }
         });
         // Set default names for mandatory parties
@@ -617,7 +635,7 @@ export class Pacs9CovComponent implements OnInit {
             // Still show warning on keydown if trying to type past limit
             if (target.selectionStart !== null && target.selectionStart !== target.selectionEnd) return;
             if (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey) {
-                const controlName = target.getAttribute('formControlName') || target.getAttribute('name');
+                const controlName = target.getAttribute('formControlName') || target.getAttribute('formcontrolname') || target.getAttribute('name');
                 if (controlName) {
                     this.showMaxLenWarning[controlName] = true;
                     if (this.warningTimeouts[controlName]) clearTimeout(this.warningTimeouts[controlName]);
@@ -697,41 +715,47 @@ export class Pacs9CovComponent implements OnInit {
         let tx = '';
         let pmtIdXml = this.el('InstrId', v.instrId) + this.el('EndToEndId', v.endToEndId) + this.el('UETR', v.uetr);
         if (v.clrSysRef?.trim()) pmtIdXml += this.el('ClrSysRef', v.clrSysRef);
-        tx += this.tag('PmtId', pmtIdXml, 3);
+        tx += this.tag('PmtId', pmtIdXml, 4);
 
         let pmtTpXml = '';
-        if (v.instrPrty?.trim()) pmtTpXml += this.el('InstrPrty', v.instrPrty, 4);
-        if (v.clrChanl?.trim()) pmtTpXml += this.el('ClrChanl', v.clrChanl, 4);
-        if (v.svcLvlCd?.trim()) pmtTpXml += this.tag('SvcLvl', this.el('Cd', v.svcLvlCd, 5), 4);
-        else if (v.svcLvlPrtry?.trim()) pmtTpXml += this.tag('SvcLvl', this.el('Prtry', v.svcLvlPrtry, 5), 4);
-        if (v.lclInstrmCd?.trim()) pmtTpXml += this.tag('LclInstrm', this.el('Cd', v.lclInstrmCd, 5), 4);
-        else if (v.lclInstrmPrtry?.trim()) pmtTpXml += this.tag('LclInstrm', this.el('Prtry', v.lclInstrmPrtry, 5), 4);
-        if (v.ctgyPurpCd?.trim()) pmtTpXml += this.tag('CtgyPurp', this.el('Cd', v.ctgyPurpCd, 5), 4);
-        else if (v.ctgyPurpPrtry?.trim()) pmtTpXml += this.tag('CtgyPurp', this.el('Prtry', v.ctgyPurpPrtry, 5), 4);
-        if (pmtTpXml) tx += this.tag('PmtTpInf', pmtTpXml, 3);
+        if (v.instrPrty?.trim()) pmtTpXml += this.el('InstrPrty', v.instrPrty, 5);
+        if (v.clrChanl?.trim()) pmtTpXml += this.el('ClrChanl', v.clrChanl, 5);
+        if (v.svcLvlCd?.trim() || v.svcLvlPrtry?.trim()) {
+            let content = v.svcLvlCd?.trim() ? this.el('Cd', v.svcLvlCd, 6) : this.el('Prtry', v.svcLvlPrtry, 6);
+            pmtTpXml += this.tag('SvcLvl', content, 5);
+        }
+        if (v.lclInstrmCd?.trim() || v.lclInstrmPrtry?.trim()) {
+            let content = v.lclInstrmCd?.trim() ? this.el('Cd', v.lclInstrmCd, 6) : this.el('Prtry', v.lclInstrmPrtry, 6);
+            pmtTpXml += this.tag('LclInstrm', content, 5);
+        }
+        if (v.ctgyPurpCd?.trim() || v.ctgyPurpPrtry?.trim()) {
+            let content = v.ctgyPurpCd?.trim() ? this.el('Cd', v.ctgyPurpCd, 6) : this.el('Prtry', v.ctgyPurpPrtry, 6);
+            pmtTpXml += this.tag('CtgyPurp', content, 5);
+        }
+        if (pmtTpXml) tx += this.tag('PmtTpInf', pmtTpXml, 4);
         const formattedAmt = this.formatting.formatAmount(v.amount, v.currency);
-        tx += `\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${formattedAmt}</IntrBkSttlmAmt>\n`;
-        tx += this.el('IntrBkSttlmDt', v.sttlmDt, 3);
-        if (v.sttlmPrty?.trim()) tx += this.el('SttlmPrty', v.sttlmPrty, 3);
+        tx += `\t\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${formattedAmt}</IntrBkSttlmAmt>\n`;
+        tx += this.el('IntrBkSttlmDt', v.sttlmDt, 4);
+        if (v.sttlmPrty?.trim()) tx += this.el('SttlmPrty', v.sttlmPrty, 4);
         // PrvsInstgAgts
-        tx += this.agtWithAcct('PrvsInstgAgt1', 'prvsInstgAgt1', v);
-        tx += this.agtWithAcct('PrvsInstgAgt2', 'prvsInstgAgt2', v);
-        tx += this.agtWithAcct('PrvsInstgAgt3', 'prvsInstgAgt3', v);
+        tx += this.agtWithAcct('PrvsInstgAgt1', 'prvsInstgAgt1', v, 4);
+        tx += this.agtWithAcct('PrvsInstgAgt2', 'prvsInstgAgt2', v, 4);
+        tx += this.agtWithAcct('PrvsInstgAgt3', 'prvsInstgAgt3', v, 4);
         // InstgAgt/InstdAgt
-        tx += this.agtWithAcct('InstgAgt', 'instgAgt', v);
-        tx += this.agtWithAcct('InstdAgt', 'instdAgt', v);
+        tx += this.agtWithAcct('InstgAgt', 'instgAgt', v, 4);
+        tx += this.agtWithAcct('InstdAgt', 'instdAgt', v, 4);
         // IntrmyAgts
-        tx += this.agtWithAcct('IntrmyAgt1', 'intrmyAgt1', v);
-        tx += this.agtWithAcct('IntrmyAgt2', 'intrmyAgt2', v);
-        tx += this.agtWithAcct('IntrmyAgt3', 'intrmyAgt3', v);
+        tx += this.agtWithAcct('IntrmyAgt1', 'intrmyAgt1', v, 4);
+        tx += this.agtWithAcct('IntrmyAgt2', 'intrmyAgt2', v, 4);
+        tx += this.agtWithAcct('IntrmyAgt3', 'intrmyAgt3', v, 4);
         // Dbtr
-        tx += this.agtWithAcct('Dbtr', 'dbtrFi', v);
+        tx += this.agtWithAcct('Dbtr', 'dbtrFi', v, 4);
         // DbtrAgt
-        tx += this.agtWithAcct('DbtrAgt', 'dbtrAgt', v);
+        tx += this.agtWithAcct('DbtrAgt', 'dbtrAgt', v, 4);
         // CdtrAgt
-        tx += this.agtWithAcct('CdtrAgt', 'cdtrAgt', v);
+        tx += this.agtWithAcct('CdtrAgt', 'cdtrAgt', v, 4);
         // Cdtr (FI)
-        tx += this.agtWithAcct('Cdtr', 'cdtrFi', v);
+        tx += this.agtWithAcct('Cdtr', 'cdtrFi', v, 4);
 
 
         // UndrlygCstmrCdtTrf (COV)
@@ -797,15 +821,23 @@ ${tx}\t\t\t</CdtTrfTxInf>
         const bic = v[prefix + 'Bic']; if (!bic) return '';
         return `\t\t\t\t<${tag}>\n\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n${this.addrXml(v, prefix, 6)}\t\t\t\t\t</FinInstnId>\n\t\t\t\t</${tag}>\n`;
     }
-    agtWithAcct(tag: string, prefix: string, v: any) {
-        let res = this.agt(tag, prefix, v);
+    agtWithAcct(tag: string, prefix: string, v: any, indent = 4) {
+        let res = this.agt(tag, prefix, v, indent);
         if (v[prefix + 'Acct']?.trim()) {
-            res += this.tag(tag + 'Acct', this.tag('Id', this.tag('Othr', this.el('Id', v[prefix + 'Acct'], 6), 5), 4), 3);
+            const val = v[prefix + 'Acct'];
+            const ibanCountries = ['AD', 'AE', 'AL', 'AT', 'AZ', 'BA', 'BE', 'BG', 'BH', 'BR', 'BY', 'CH', 'CR', 'CY', 'CZ', 'DE', 'DK', 'DO', 'EE', 'EG', 'ES', 'FI', 'FO', 'FR', 'GB', 'GE', 'GI', 'GL', 'GR', 'GT', 'HR', 'HU', 'IE', 'IL', 'IQ', 'IS', 'IT', 'JO', 'KW', 'KZ', 'LB', 'LI', 'LT', 'LU', 'LV', 'MC', 'MD', 'ME', 'MK', 'MR', 'MT', 'MU', 'NL', 'NO', 'PK', 'PL', 'PS', 'PT', 'QA', 'RO', 'RS', 'RU', 'SA', 'SC', 'SE', 'SI', 'SK', 'SM', 'ST', 'SV', 'TL', 'TN', 'TR', 'UA', 'VA', 'VG', 'XK'];
+            let idContent = '';
+            if (val.length >= 14 && ibanCountries.includes(val.substring(0, 2).toUpperCase()) && /^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/i.test(val)) {
+                idContent = this.el('IBAN', val, indent + 2);
+            } else {
+                idContent = `\n${this.tabs(indent + 2)}<Othr>\n${this.tabs(indent + 3)}<Id>${this.e(val)}</Id>\n${this.tabs(indent + 2)}</Othr>\n${this.tabs(indent + 1)}`;
+            }
+            res += this.tag(tag + 'Acct', this.tag('Id', idContent, indent + 1), indent);
         }
         return res;
     }
 
-    agt(tag: string, prefix: string, v: any) {
+    agt(tag: string, prefix: string, v: any, indent = 4) {
         const bic = v[prefix + 'Bic'];
         const name = v[prefix + 'Name'];
         const lei = v[prefix + 'Lei'];
@@ -813,23 +845,24 @@ ${tx}\t\t\t</CdtTrfTxInf>
         const clrMmb = v[prefix + 'ClrSysMmbId'];
 
         let content = '';
-        if (bic) content += `\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n`;
-    if (clrMmb || clrCd) {
-            content += `\t\t\t\t\t<ClrSysMmbId>\n`;
-            if (clrCd) content += `\t\t\t\t\t\t<ClrSysId>\n\t\t\t\t\t\t\t<Cd>${this.e(clrCd)}</Cd>\n\t\t\t\t\t\t</ClrSysId>\n`;
-            if (clrMmb) content += `\t\t\t\t\t\t<MmbId>${this.e(clrMmb)}</MmbId>\n`;
-            content += `\t\t\t\t\t</ClrSysMmbId>\n`;
+        const t = this.tabs(indent + 2);
+        if (bic) content += `${t}<BICFI>${this.e(bic)}</BICFI>\n`;
+        if (clrMmb || clrCd) {
+            content += `${t}<ClrSysMmbId>\n`;
+            if (clrCd) content += `${t}\t<ClrSysId>\n${t}\t\t<Cd>${this.e(clrCd)}</Cd>\n${t}\t</ClrSysId>\n`;
+            if (clrMmb) content += `${t}\t<MmbId>${this.e(clrMmb)}</MmbId>\n`;
+            content += `${t}</ClrSysMmbId>\n`;
         }
-        if (lei) content += `\t\t\t\t\t<LEI>${this.e(lei)}</LEI>\n`;
+        if (lei) content += `${t}<LEI>${this.e(lei)}</LEI>\n`;
 
         // Filter: Nm and PstlAdr are NOT allowed for InstgAgt and InstdAgt as per MyStandards requirements
         if (tag !== 'InstgAgt' && tag !== 'InstdAgt') {
-            if (name) content += `\t\t\t\t\t<Nm>${this.e(name)}</Nm>\n`;
-            content += this.addrXml(v, prefix, 5, tag.startsWith('PrvsInstgAgt'));
+            if (name) content += `${t}<Nm>${this.e(name)}</Nm>\n`;
+            content += this.addrXml(v, prefix, indent + 2, tag.startsWith('PrvsInstgAgt'));
         }
 
         if (!content.trim()) return '';
-        return `\t\t\t<${tag}>\n\t\t\t\t<FinInstnId>\n${content}\t\t\t\t</FinInstnId>\n\t\t\t</${tag}>\n`;
+        return `${this.tabs(indent)}<${tag}>\n${this.tabs(indent + 1)}<FinInstnId>\n${content}${this.tabs(indent + 1)}</FinInstnId>\n${this.tabs(indent)}</${tag}>\n`;
     }
 
     partyAgentXml(tag: string, prefix: string, v: any, indent = 4) {
@@ -851,12 +884,13 @@ ${tx}\t\t\t</CdtTrfTxInf>
     addrXml(v: any, p: string, indent = 4, isPrvs = false): string {
         const type = v[p + 'AddrType']; if (!type || type === 'none') return '';
         const lines: string[] = []; const t = this.tabs(indent + 1);
-        if (type === 'structured' || type === 'hybrid') {
-            // PostalAddress27 XSD element order
-            if (!isPrvs) {
-                if (v[p + 'AdrTpCd']) lines.push(`${t}<AdrTp>\n${t}\t<Cd>${this.e(v[p + 'AdrTpCd'])}</Cd>\n${t}</AdrTp>`);
-                else if (v[p + 'AdrTpPrtry']) lines.push(`${t}<AdrTp>\n${t}\t<Prtry>${this.e(v[p + 'AdrTpPrtry'])}</Prtry>\n${t}</AdrTp>`);
-            }
+        
+        if (!isPrvs) {
+            if (v[p + 'AdrTpCd']) lines.push(`${t}<AdrTp>\n${t}\t<Cd>${this.e(v[p + 'AdrTpCd'])}</Cd>\n${t}</AdrTp>`);
+            else if (v[p + 'AdrTpPrtry']) lines.push(`${t}<AdrTp>\n${t}\t<Prtry>${this.e(v[p + 'AdrTpPrtry'])}</Prtry>\n${t}</AdrTp>`);
+        }
+
+        if (['structured', 'hybrid'].includes(type)) {
             if (v[p + 'Dept']) lines.push(`${t}<Dept>${this.e(v[p + 'Dept'])}</Dept>`);
             if (v[p + 'SubDept']) lines.push(`${t}<SubDept>${this.e(v[p + 'SubDept'])}</SubDept>`);
             if (v[p + 'StrtNm']) lines.push(`${t}<StrtNm>${this.e(v[p + 'StrtNm'])}</StrtNm>`);
@@ -866,11 +900,15 @@ ${tx}\t\t\t</CdtTrfTxInf>
             if (v[p + 'PstBx']) lines.push(`${t}<PstBx>${this.e(v[p + 'PstBx'])}</PstBx>`);
             if (v[p + 'Room']) lines.push(`${t}<Room>${this.e(v[p + 'Room'])}</Room>`);
             if (v[p + 'PstCd']) lines.push(`${t}<PstCd>${this.e(v[p + 'PstCd'])}</PstCd>`);
-            if (v[p + 'TwnNm']) lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'])}</TwnNm>`);
-            if (v[p + 'CtrySubDvsn']) lines.push(`${t}<CtrySubDvsn>${this.e(v[p + 'CtrySubDvsn'])}</CtrySubDvsn>`);
         }
+
+        if (v[p + 'TwnNm']) lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'])}</TwnNm>`);
+        if (v[p + 'TwnLctnNm']) lines.push(`${t}<TwnLctnNm>${this.e(v[p + 'TwnLctnNm'])}</TwnLctnNm>`);
+        if (v[p + 'DstrctNm']) lines.push(`${t}<DstrctNm>${this.e(v[p + 'DstrctNm'])}</DstrctNm>`);
+        if (v[p + 'CtrySubDvsn']) lines.push(`${t}<CtrySubDvsn>${this.e(v[p + 'CtrySubDvsn'])}</CtrySubDvsn>`);
         if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
-        if (type === 'unstructured' || type === 'hybrid') {
+
+        if (['unstructured', 'hybrid'].includes(type)) {
             if (v[p + 'AdrLine1']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine1'])}</AdrLine>`);
             if (v[p + 'AdrLine2']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine2'])}</AdrLine>`);
         }
@@ -987,8 +1025,8 @@ ${tx}\t\t\t</CdtTrfTxInf>
             const txt = v[`covInstrForNxtAgt${i}InfTxt`]?.trim();
             if (cd || txt) {
                 let inner = '';
-                if (cd) inner += this.el('Cd', cd, 5);
-                if (txt) inner += this.el('InstrInf', txt, 5);
+                if (cd) inner += this.el('Cd', cd, 6);
+                if (txt) inner += this.el('InstrInf', txt, 6);
                 b += `\t\t\t\t<InstrForNxtAgt>\n${inner}\t\t\t\t</InstrForNxtAgt>\n`;
             }
         }

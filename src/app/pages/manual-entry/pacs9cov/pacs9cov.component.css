@@ -145,8 +145,39 @@ header p {
     background: var(--bg-card);
     border: 1px solid var(--border-light);
     border-radius: 12px;
-    padding: 1.25rem 1.5rem;
+    padding: 1rem 1.25rem;
     box-shadow: var(--shadow-md);
+}
+
+.grid {
+    gap: 0.6rem 0.8rem !important;
+}
+
+.section-title {
+    margin: 1.2rem 0 0.6rem !important;
+    padding-bottom: 6px !important;
+}
+
+.party-group {
+    margin: 0 0.2rem 0.6rem 0 !important;
+}
+
+.party-grid .form-group {
+    padding: 3px 12px !important;
+}
+
+.party-grid label {
+    flex: 0 0 140px !important;
+    padding-right: 10px !important;
+}
+
+.party-grid .validation-msg,
+.party-grid .field-hint {
+    padding-top: 1px !important;
+    padding-bottom: 1px !important;
+    margin-top: 0 !important;
+    margin-bottom: 1px !important;
+    margin-left: 140px !important;
 }
 
 .preview-box {
@@ -171,19 +202,19 @@ textarea {
 
 .addr-type-row {
     grid-column: 1/-1;
-    margin-top: .25rem;
+    margin-top: .15rem;
 }
 
 .subsection {
     grid-column: 1/-1;
     background: var(--bg-card-hover);
-    padding: .75rem;
+    padding: .5rem;
     border-radius: 8px;
     border: 1px solid var(--border-light);
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: .5rem .75rem;
-    margin-bottom: .25rem;
+    gap: .4rem .6rem;
+    margin-bottom: .15rem;
 }
 
 .subsection-header {

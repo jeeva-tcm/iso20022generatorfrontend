@@ -59,7 +59,8 @@ export class ManualEntryComponent implements OnInit {
         { id: 'camt.052.001.08', name: 'Bank To Customer Report', type: 'camt', route: 'camt052' },
         { id: 'camt.053.001.08', name: 'Bank To Customer Statement', type: 'camt', route: 'camt053' },
         { id: 'pain.001.001.09', name: 'Credit Transfer Init', type: 'pain', route: 'pain001' },
-        { id: 'pain.002.001.10', name: 'Pmt Status Report', type: 'pain', route: 'pain002' }
+        { id: 'pain.002.001.10', name: 'Pmt Status Report', type: 'pain', route: 'pain002' },
+        { id: 'pain.008.001.08', name: 'Direct Debit Initiation', type: 'pain', route: 'pain008' }
     ];
 
     constructor(

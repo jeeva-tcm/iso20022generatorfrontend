@@ -273,20 +273,23 @@
                       <div class="issue-details-panel" *ngIf="expandedIssue === issue" (click)="$event.stopPropagation()">
                         <div class="detail-grid">
                           <div class="detail-item">
-                            <label>Occurrence Path</label>
-                            <div class="value mono">{{issue.path || 'Root Element'}}</div>
+                            <div class="di-label">OCCURRENCE PATH</div>
+                            <div class="di-val mono">{{issue.path || '?'}}</div>
                           </div>
                           <div class="detail-item" *ngIf="issue.code">
-                            <label>Internal Code</label>
-                            <div class="value mono">{{issue.code}}</div>
+                            <div class="di-label">INTERNAL CODE</div>
+                            <div class="di-val mono">{{issue.code}}</div>
                           </div>
                         </div>
 
-                        <div class="detail-item fix-item" *ngIf="issue.fix_suggestion">
-                          <label><mat-icon>lightbulb</mat-icon> Fix Suggestion</label>
-                          <div class="fix-container">
-                            <div class="value fix-text">{{issue.fix_suggestion}}</div>
-                            <button class="fix-copy-btn" (click)="copyFix(issue.fix_suggestion, $event)" matTooltip="Copy fix to clipboard">
+                        <div class="detail-fix-box" *ngIf="issue.fix_suggestion">
+                          <div class="df-header">
+                            <mat-icon>lightbulb</mat-icon>
+                            <span>FIX SUGGESTION</span>
+                          </div>
+                          <div class="df-body">
+                            <div class="df-text">{{issue.fix_suggestion}}</div>
+                            <button class="df-copy-btn" (click)="copyFix(issue.fix_suggestion, $event)" title="Copy fix">
                               <mat-icon>content_copy</mat-icon>
                             </button>
                           </div>
