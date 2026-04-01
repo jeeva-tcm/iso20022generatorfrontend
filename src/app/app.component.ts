@@ -8,6 +8,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { filter } from 'rxjs/operators';
 import { ThemeService } from './services/theme.service';
+import { ChatbotComponent } from './chatbot/chatbot.component';
 
 
 @Component({
@@ -22,7 +23,8 @@ import { ThemeService } from './services/theme.service';
         MatButtonModule,
         MatIconModule,
         MatChipsModule,
-        MatTooltipModule
+        MatTooltipModule,
+        ChatbotComponent
     ],
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.css']
