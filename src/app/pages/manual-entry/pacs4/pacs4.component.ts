@@ -249,6 +249,13 @@ export class Pacs4Component implements OnInit {
         return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}${s}${p(Math.floor(Math.abs(off) / 60))}:${p(Math.abs(off) % 60)}`;
     }
 
+    fdt(dt: string): string {
+        if (!dt) return dt;
+        let s = dt.trim().replace(/\.\d+/, '').replace('Z', '+00:00');
+        if (s && !/([+-]\d{2}:\d{2})$/.test(s)) s += '+00:00';
+        return s;
+    }
+
     generateXml() {
         if (this.isParsingXml) return;
         const v = this.form.value;
@@ -257,48 +264,39 @@ export class Pacs4Component implements OnInit {
         // Transaction Info
         let tx = '';
         
-        // 1. RtrId (Return Identification - Mandatory in some profiles)
         tx += this.el('RtrId', v.rtrId, 4);
 
-        // 2. OrgnlGrpInf (Mandatory and must be inside TxInf in this profile)
-        let orgnlGrpInf = '';
-        orgnlGrpInf += this.el('OrgnlMsgId', v.orgnlMsgId, 5);
-        orgnlGrpInf += this.el('OrgnlMsgNmId', v.orgnlMsgNmId, 5);
+        let orgnlGrpInf = this.el('OrgnlMsgId', v.orgnlMsgId, 5) + this.el('OrgnlMsgNmId', v.orgnlMsgNmId, 5);
+        if (v.orgnlCreDtTm) orgnlGrpInf += this.el('OrgnlCreDtTm', this.fdt(v.orgnlCreDtTm), 5);
         tx += this.tag('OrgnlGrpInf', orgnlGrpInf, 4);
 
-        // 2. Original Identifiers
         tx += this.el('OrgnlInstrId', v.orgnlInstrId, 4);
         tx += this.el('OrgnlEndToEndId', v.orgnlEndToEndId, 4);
         tx += this.el('OrgnlTxId', v.orgnlTxId, 4);
-        tx += this.el('OrgnlUETR', v.orgnlUETR, 4); // Mandatory in TxInf for this profile
+        tx += this.el('OrgnlUETR', v.orgnlUETR, 4); 
         
-        // 3. Original Settlement Details (in TxInf)
         if (v.orgnlAmount) {
             tx += `${this.tabs(4)}<OrgnlIntrBkSttlmAmt Ccy="${this.e(v.orgnlCurrency)}">${this.formatting.formatAmount(v.orgnlAmount, v.orgnlCurrency)}</OrgnlIntrBkSttlmAmt>\n`;
         }
         tx += this.el('OrgnlIntrBkSttlmDt', v.orgnlSttlmDt, 4);
 
-        // 4. Return Details
         tx += `\t\t\t\t<RtrdIntrBkSttlmAmt Ccy="${this.e(v.currency)}">${this.formatting.formatAmount(v.amount, v.currency)}</RtrdIntrBkSttlmAmt>\n`;
-        tx += this.el('IntrBkSttlmDt', v.sttlmDt, 4); // Return Interbank Settlement Date (Mandatory in this profile)
+        tx += this.el('IntrBkSttlmDt', v.sttlmDt, 4); 
         tx += this.el('ChrgBr', v.chrgBr, 4);
 
-        // 5. Agents (Moved from GrpHdr to TxInf)
         tx += this.agt('InstgAgt', 'instgAgt', v, 4);
         tx += this.agt('InstdAgt', 'instdAgt', v, 4);
 
-        // 6. Return Chain
         let rtrChain = '';
-        rtrChain += this.partyAgentXml('Dbtr', 'dbtr', v, 5);
+        rtrChain += this.party('Dbtr', 'dbtr', v, 5);
         rtrChain += this.agt('DbtrAgt', 'dbtrAgt', v, 5);
         rtrChain += this.agt('CdtrAgt', 'cdtrAgt', v, 5);
-        rtrChain += this.partyAgentXml('Cdtr', 'cdtr', v, 5);
+        rtrChain += this.party('Cdtr', 'cdtr', v, 5);
         tx += this.tag('RtrChain', rtrChain, 4);
 
-        // 7. Reason
-        let rtrRsn = this.tag('Rsn', this.el('Cd', v.rtrRsnCd, 6), 5);
-        if (v.rtrRsnAddtlInf) rtrRsn += this.el('AddtlInf', v.rtrRsnAddtlInf, 5);
-        tx += this.tag('RtrRsnInf', rtrRsn, 4);
+        let rtrRsnInner = this.tag('Rsn', this.el('Cd', v.rtrRsnCd, 6), 5);
+        if (v.rtrRsnAddtlInf) rtrRsnInner += this.el('AddtlInf', v.rtrRsnAddtlInf, 5);
+        tx += this.tag('RtrRsnInf', rtrRsnInner, 4);
 
         // Final Document Assembly
         this.generatedXml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -352,63 +350,57 @@ ${tx}\t\t\t</TxInf>
         const bic = v[prefix + 'Bic'];
         const lei = v[prefix + 'Lei'];
         const mmbId = v[prefix + 'MmbId'];
-        const clrCd = v[prefix + 'ClrSysCd'];
+        const clrSys = v[prefix + 'ClrSysCd'];
+
+        if (!bic && !lei && !mmbId) return '';
 
         let fi = '';
-        if (bic) fi += `${this.tabs(indent + 2)}<BICFI>${this.e(bic)}</BICFI>\n`;
+        if (bic) fi += this.el('BICFI', bic, indent + 2);
         if (mmbId) {
-            let clrId = '';
-            if (clrCd) clrId += this.tag('ClrSysId', this.el('Cd', clrCd, indent + 5), indent + 4);
-            clrId += this.el('MmbId', mmbId, indent + 4);
-            fi += this.tag('ClrSysMmbId', clrId, indent + 3);
+            let clr = '';
+            if (clrSys) clr += this.tag('ClrSysId', this.el('Cd', clrSys, indent + 5), indent + 4);
+            clr += this.el('MmbId', mmbId, indent + 4);
+            fi += this.tag('ClrSysMmbId', clr, indent + 2);
         }
         if (lei) fi += this.el('LEI', lei, indent + 2);
 
-        if (!fi.trim()) return '';
         return this.tag(tag, this.tag('FinInstnId', fi, indent + 1), indent);
     }
 
-    partyAgentXml(tag: string, prefix: string, v: any, indent = 4) {
+    party(tag: string, prefix: string, v: any, indent = 4) {
         const bic = v[prefix + 'Bic'];
-        const name = v[prefix + 'Name'];
+        const name = (v[prefix + 'Name'] || '').trim();
         const lei = v[prefix + 'Lei'];
-        const mmbId = v[prefix + 'MmbId'];
-        const clrCd = v[prefix + 'ClrSysCd'];
+
+        if (!bic && !name && !lei && (v[prefix + 'AddrType'] === 'none' || !v[prefix + 'AddrType'])) return '';
 
         let content = '';
+        if (bic) content += this.tag('Id', this.tag('OrgId', this.el('AnyBIC', bic, indent + 3), indent + 2), indent + 1);
+        else if (lei) content += this.tag('Id', this.tag('OrgId', this.el('LEI', lei, indent + 3), indent + 2), indent + 1);
+
         if (name) content += this.el('Nm', name, indent + 1);
         content += this.addrXml(v, prefix, indent + 1);
 
-        let id = '';
-        if (bic || lei || mmbId || clrCd) {
-            let org = '';
-            if (bic) org += this.el('AnyBIC', bic, indent + 4);
-            if (lei) org += this.el('LEI', lei, indent + 4);
-            if (mmbId || clrCd) {
-                let clrId = '';
-                if (clrCd) clrId += this.tag('SchmeNm', this.el('Cd', clrCd, indent + 7), indent + 6);
-                if (mmbId) clrId += this.el('Id', mmbId, indent + 6);
-                org += this.tag('Othr', clrId, indent + 5);
-            }
-            id = this.tag('Id', this.tag('OrgId', org, indent + 3), indent + 2);
+        let res = this.tag(tag, content, indent);
+        if (v[prefix + 'Acct']) {
+            const acct = this.tag('Id', this.tag('Othr', this.el('Id', v[prefix + 'Acct'], indent + 3), indent + 2), indent + 1);
+            res += this.tag(tag + 'Acct', acct, indent);
         }
-        content += id;
-
-        // If it's a party, it might have a tag child wrapper depending on the parent
-        if (!content.trim()) return '';
-        return this.tag(tag, this.tag('Pty', content, indent + 1), indent);
+        return res;
     }
 
     addrXml(v: any, p: string, indent = 4): string {
         const type = v[p + 'AddrType'];
         if (!type || type === 'none') return '';
+        
         let content = '';
-        if (v[p + 'StrtNm']) content += this.el('StrtNm', v[p + 'StrtNm'], indent + 2);
-        if (v[p + 'BldgNb']) content += this.el('BldgNb', v[p + 'BldgNb'], indent + 2);
-        if (v[p + 'PstCd']) content += this.el('PstCd', v[p + 'PstCd'], indent + 2);
-        if (v[p + 'TwnNm']) content += this.el('TwnNm', v[p + 'TwnNm'], indent + 2);
-        if (v[p + 'Ctry']) content += this.el('Ctry', v[p + 'Ctry'], indent + 2);
-        return this.tag('PstlAdr', content, indent + 1);
+        if (v[p + 'StrtNm']) content += this.el('StrtNm', v[p + 'StrtNm'], indent + 1);
+        if (v[p + 'BldgNb']) content += this.el('BldgNb', v[p + 'BldgNb'], indent + 1);
+        if (v[p + 'PstCd']) content += this.el('PstCd', v[p + 'PstCd'], indent + 1);
+        if (v[p + 'TwnNm']) content += this.el('TwnNm', v[p + 'TwnNm'], indent + 1);
+        if (v[p + 'Ctry']) content += this.el('Ctry', v[p + 'Ctry'], indent + 1);
+        
+        return content ? this.tag('PstlAdr', content, indent) : '';
     }
 
     onEditorChange(content: string, fromForm = false) {

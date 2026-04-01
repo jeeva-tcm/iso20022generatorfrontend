@@ -21,6 +21,7 @@ import { Pacs10Component } from './pages/manual-entry/pacs10/pacs10.component';
 import { Camt053Component } from './pages/manual-entry/camt053/camt053.component';
 import { Camt054Component } from './pages/manual-entry/camt054/camt054.component';
 import { MtToMxComponent } from './pages/mt-to-mx/mt-to-mx.component';
+import { Camt055Component } from './pages/manual-entry/camt055/camt055.component';
 
 
 export const routes: Routes = [
@@ -44,6 +45,7 @@ export const routes: Routes = [
     { path: 'generate/camt053', component: Camt053Component },
 
     { path: 'generate/camt054', component: Camt054Component },
+    { path: 'generate/camt055', component: Camt055Component },
     { path: 'generate/pain001', component: Pain001Component },
     { path: 'generate/pain002', component: Pain002Component },
     { path: 'generate/pain008', component: Pain008Component },

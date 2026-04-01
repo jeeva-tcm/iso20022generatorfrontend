@@ -1,0 +1,891 @@
+<div class="container" *ngIf="form">
+        <header>
+                <h1>Customer Payment Cancellation Request (camt.055)</h1>
+
+        </header>
+
+        <div class="split-view">
+                <div class="left-panel">
+                        <form [formGroup]="form" class="content-box">
+
+                                <!-- Validation Error Summary Banner -->
+                                <div class="validation-summary" *ngIf="showSubmissionErrors && formSubmissionErrors.length > 0">
+                                        <div class="validation-summary-header">
+                                                <mat-icon>error_outline</mat-icon>
+                                                <strong>{{formSubmissionErrors.length}} Validation Error(s) Found</strong>
+                                                <button class="validation-summary-close" (click)="showSubmissionErrors = false">
+                                                        <mat-icon>close</mat-icon>
+                                                </button>
+                                        </div>
+                                        <ul class="validation-summary-list">
+                                                <li *ngFor="let e of formSubmissionErrors">⚠️ {{e}}</li>
+                                        </ul>
+                                </div>
+
+                                <div class="grid">
+
+                                        <div class="section-title">Application Header (AppHdr)</div>
+
+                                        <!-- From Section -->
+                                        <div class="form-group full-width"
+                                                style="font-weight: bold; margin-bottom: 0.5rem; color: var(--accent-color); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-light); padding-bottom: 4px;">
+                                                Originator (From FI)</div>
+                                        <div class="form-group">
+                                                <label>From BIC <span class="req">*</span></label>
+                                                <input formControlName="head_fromBic" maxlength="11"
+                                                        placeholder="e.g. HDFCINBB" class="auto-uppercase">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('head_fromBic', 11)" [class.at-limit]="isAtLimit('head_fromBic', 11)">{{charCount('head_fromBic', 11)}}</div>
+                                                <div class="validation-msg" *ngIf="err('head_fromBic') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group">
+                                                <label>Clearing System Code (Cd) <span class="opt">Optional</span></label>
+                                                <input formControlName="head_fromClrSysId" maxlength="5"
+                                                        placeholder="e.g. T2, CHIP, FED">
+                                                <div class="char-counter">{{charCount('head_fromClrSysId', 5)}}</div>
+                                                <div class="validation-msg" *ngIf="err('head_fromClrSysId') as e">{{e}}
+                                                </div>
+                                        </div>
+                                        <div class="form-group">
+                                                <label>Member ID (MmbId) <span class="opt">Optional</span></label>
+                                                <input formControlName="head_fromMmbId" maxlength="35"
+                                                        placeholder="e.g. MMBID001234">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('head_fromMmbId', 35)">{{charCount('head_fromMmbId', 35)}}</div>
+                                                <div class="validation-msg" *ngIf="err('head_fromMmbId') as e">{{e}}
+                                                </div>
+                                        </div>
+                                        <div class="form-group">
+                                                <label>LEI <span class="opt">Optional</span></label>
+                                                <input formControlName="head_fromLei" maxlength="20"
+                                                        placeholder="e.g. 7LTWFZYICNSX8D621K86">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('head_fromLei', 20)">{{charCount('head_fromLei', 20)}}</div>
+                                                <div class="validation-msg" *ngIf="err('head_fromLei') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group full-width" *ngIf="err('head_from') as e"
+                                                style="margin-top: -0.5rem;">
+                                                <div class="validation-msg">{{e}}</div>
+                                        </div>
+
+                                        <!-- To Section -->
+                                        <div class="form-group full-width"
+                                                style="font-weight: bold; margin-top: 1rem; margin-bottom: 0.5rem; color: var(--accent-color); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-light); padding-bottom: 4px;">
+                                                Receiver (To FI)</div>
+                                        <div class="form-group">
+                                                <label>To BIC <span class="req">*</span></label>
+                                                <input formControlName="head_toBic" maxlength="11"
+                                                        placeholder="e.g. CHASUS33" class="auto-uppercase">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('head_toBic', 11)" [class.at-limit]="isAtLimit('head_toBic', 11)">{{charCount('head_toBic', 11)}}</div>
+                                                <div class="validation-msg" *ngIf="err('head_toBic') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group">
+                                                <label>Clearing System Code (Cd) <span class="opt">Optional</span></label>
+                                                <input formControlName="head_toClrSysId" maxlength="5"
+                                                        placeholder="e.g. T2, CHIP, FED">
+                                                <div class="char-counter">{{charCount('head_toClrSysId', 5)}}</div>
+                                                <div class="validation-msg" *ngIf="err('head_toClrSysId') as e">{{e}}
+                                                </div>
+                                        </div>
+                                        <div class="form-group">
+                                                <label>Member ID (MmbId) <span class="opt">Optional</span></label>
+                                                <input formControlName="head_toMmbId" maxlength="35"
+                                                        placeholder="e.g. MMBID001234">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('head_toMmbId', 35)">{{charCount('head_toMmbId', 35)}}</div>
+                                                <div class="validation-msg" *ngIf="err('head_toMmbId') as e">{{e}}
+                                                </div>
+                                        </div>
+                                        <div class="form-group">
+                                                <label>LEI <span class="opt">Optional</span></label>
+                                                <input formControlName="head_toLei" maxlength="20"
+                                                        placeholder="e.g. 7LTWFZYICNSX8D621K86">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('head_toLei', 20)">{{charCount('head_toLei', 20)}}</div>
+                                                <div class="validation-msg" *ngIf="err('head_toLei') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group full-width" *ngIf="err('head_to') as e"
+                                                style="margin-top: -0.5rem;">
+                                                <div class="validation-msg">{{e}}</div>
+                                        </div>
+
+                                        <div class="form-group"><label>Business Msg ID <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="head_bizMsgIdr" maxlength="35"
+                                                        placeholder="e.g. ASSGMT-20240331-001234">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('head_bizMsgIdr', 35)">{{charCount('head_bizMsgIdr', 35)}}</div>
+                                                <div class="validation-msg" *ngIf="err('head_bizMsgIdr') as e">{{e}}
+                                                </div>
+                                        </div>
+                                        <div class="form-group"><label>Creation DateTime <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="head_creDt"
+                                                        placeholder="e.g. 2024-03-31T10:30:00+05:30">
+                                                <div class="validation-msg" *ngIf="err('head_creDt') as e">{{e}}</div>
+                                                <div class="field-hint">Format: YYYY-MM-DDThh:mm:ss±hh:mm</div>
+                                        </div>
+                                        <div class="form-group"><label>Message Definition ID <span class="req">*</span></label><input
+                                                        formControlName="head_msgDefIdr"
+                                                        placeholder="e.g. camt.055.001.08"></div>
+                                        <div class="form-group"><label>Business Service <span class="req">*</span></label><input
+                                                        formControlName="head_bizSvc"
+                                                        placeholder="e.g. swift.cbprplus.02"></div>
+
+                                        <div class="form-group full-width"
+                                                 style="font-weight: bold; margin-top: 1rem; margin-bottom: 0.5rem; color: var(--accent-color); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-light); padding-bottom: 4px;">
+                                                 Market Practice (MktPrctc)</div>
+                                         <div class="form-group"><label>Regulatory Code (Regy)</label><input
+                                                         formControlName="head_mktPrctcRegy" maxlength="35"
+                                                         placeholder="Regulatory Code">
+                                                 <div class="validation-msg" *ngIf="err('head_mktPrctcRegy') as e">{{e}}</div>
+                                         </div>
+                                         <div class="form-group"><label>Market Practice ID (Id) <span class="req">*</span></label><input
+                                                         formControlName="head_mktPrctcId" maxlength="35"
+                                                         placeholder="Regulatory Identifier">
+                                                 <div class="validation-msg" *ngIf="err('head_mktPrctcId') as e">{{e}}</div>
+                                         </div>
+
+                                        <div class="form-group"><label>Copy/Duplicate <span
+                                                                class="opt">Optional</span></label>
+                                                <select formControlName="head_cpyDplct">
+                                                        <option value="">None</option>
+                                                        <option *ngFor="let c of copyDplctCodes" [value]="c">{{c}}
+                                                        </option>
+                                                </select>
+                                        </div>
+                                        <div class="form-group"><label>Priority <span
+                                                                class="opt">Optional</span></label>
+                                                <select formControlName="head_prty">
+                                                        <option *ngFor="let p of priorityCodes" [value]="p">{{p}}
+                                                        </option>
+                                                </select>
+                                        </div>
+
+                                        <!-- Related Header Segment -->
+                                        <div class="party-group full-width" style="margin-top: 1rem;">
+                                                <div class="party-group-title"
+                                                        style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card-hover); border: 1px solid var(--border-light); border-bottom: none; border-radius: 10px 10px 0 0; padding: 0.5rem 1rem;">
+                                                        <span
+                                                                style="font-weight: bold; color: var(--accent-color); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Related
+                                                                Header (Rltd)</span>
+                                                        <label
+                                                                style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.75rem;">
+                                                                <input type="checkbox"
+                                                                        formControlName="head_rltd_enabled"
+                                                                        style="width: 16px; height: 16px;">
+                                                                Enable
+                                                        </label>
+                                                </div>
+                                                <div class="grid" *ngIf="form.get('head_rltd_enabled')?.value"
+                                                        style="padding: 1rem; border: 1px solid var(--border-light); border-radius: 0 0 10px 10px; gap: 1rem; margin-bottom: 1rem;">
+                                                        <!-- Related From Identities -->
+                                                        <div class="form-group">
+                                                                <label>Related From BIC</label>
+                                                                <input formControlName="head_rltd_fromBic"
+                                                                        maxlength="11" placeholder="Related Sender BIC">
+                                                                <div class="validation-msg"
+                                                                        *ngIf="err('head_rltd_fromBic') as e">{{e}}
+                                                                </div>
+                                                        </div>
+                                                        <div class="form-group">
+                                                                <label>Related From ClrSys Code</label>
+                                                                <input formControlName="head_rltd_fromClrSysId"
+                                                                        maxlength="5" placeholder="e.g. T2, CHIPS, FED">
+                                                                <div class="validation-msg"
+                                                                        *ngIf="err('head_rltd_fromClrSysId') as e">{{e}}
+                                                                </div>
+                                                        </div>
+                                                        <div class="form-group">
+                                                                <label>Related From Member ID</label>
+                                                                <input formControlName="head_rltd_fromMmbId"
+                                                                        maxlength="35" placeholder="Clearing Member ID">
+                                                                <div class="validation-msg"
+                                                                        *ngIf="err('head_rltd_fromMmbId') as e">{{e}}
+                                                                </div>
+                                                        </div>
+                                                        <div class="form-group">
+                                                                <label>Related From LEI</label>
+                                                                <input formControlName="head_rltd_fromLei"
+                                                                        maxlength="20" placeholder="20-char LEI">
+                                                                <div class="validation-msg"
+                                                                        *ngIf="err('head_rltd_fromLei') as e">{{e}}
+                                                                </div>
+                                                        </div>
+                                                        <div class="form-group full-width"
+                                                                *ngIf="err('head_rltd_from') as e"
+                                                                style="margin-top: -0.5rem;">
+                                                                <div class="validation-msg">{{e}}</div>
+                                                        </div>
+
+                                                        <!-- Related To Identities -->
+                                                        <div class="form-group">
+                                                                <label>Related To BIC</label>
+                                                                <input formControlName="head_rltd_toBic" maxlength="11"
+                                                                        placeholder="Related Receiver BIC">
+                                                                <div class="validation-msg"
+                                                                        *ngIf="err('head_rltd_toBic') as e">{{e}}
+                                                                </div>
+                                                        </div>
+                                                        <div class="form-group">
+                                                                <label>Related To ClrSys Code</label>
+                                                                <input formControlName="head_rltd_toClrSysId"
+                                                                        maxlength="5" placeholder="e.g. T2, CHIPS, FED">
+                                                                <div class="validation-msg"
+                                                                        *ngIf="err('head_rltd_toClrSysId') as e">{{e}}
+                                                                </div>
+                                                        </div>
+                                                        <div class="form-group">
+                                                                <label>Related To Member ID</label>
+                                                                <input formControlName="head_rltd_toMmbId"
+                                                                        maxlength="35" placeholder="Clearing Member ID">
+                                                                <div class="validation-msg"
+                                                                        *ngIf="err('head_rltd_toMmbId') as e">{{e}}
+                                                                </div>
+                                                        </div>
+                                                        <div class="form-group">
+                                                                <label>Related To LEI</label>
+                                                                <input formControlName="head_rltd_toLei" maxlength="20"
+                                                                        placeholder="20-char LEI">
+                                                                <div class="validation-msg"
+                                                                        *ngIf="err('head_rltd_toLei') as e">{{e}}
+                                                                </div>
+                                                        </div>
+                                                        <div class="form-group full-width"
+                                                                *ngIf="err('head_rltd_to') as e"
+                                                                style="margin-top: -0.5rem;">
+                                                                <div class="validation-msg">{{e}}</div>
+                                                        </div>
+                                                        <div class="form-group" style="grid-column: span 1;">
+                                                                <label>Related Business Msg ID</label>
+                                                                <input formControlName="head_rltd_bizMsgIdr"
+                                                                        maxlength="35">
+                                                                <div class="validation-msg"
+                                                                        *ngIf="err('head_rltd_bizMsgIdr') as e">
+                                                                        {{e}}</div>
+                                                        </div>
+                                                        <div class="form-group" style="grid-column: span 1;">
+                                                                <label>Related Message Def ID</label>
+                                                                <input formControlName="head_rltd_msgDefIdr"
+                                                                        placeholder="e.g. pacs.008.001.08">
+                                                                <div class="validation-msg"
+                                                                        *ngIf="err('head_rltd_msgDefIdr') as e">
+                                                                        {{e}}</div>
+                                                        </div>
+                                                        <div class="form-group" style="grid-column: span 1;">
+                                                                <label>Related Business Service</label>
+                                                                <input formControlName="head_rltd_bizSvc"
+                                                                        placeholder="e.g. swift.cbprplus.02">
+                                                                <div class="validation-msg"
+                                                                        *ngIf="err('head_rltd_bizSvc') as e">{{e}}
+                                                                </div>
+                                                        </div>
+                                                        <div class="form-group" style="grid-column: span 1;">
+                                                                <label>Related Creation DateTime</label>
+                                                                <input formControlName="head_rltd_creDt"
+                                                                        placeholder="YYYY-MM-DDTHH:mm:ss+HH:mm">
+                                                                <div class="validation-msg"
+                                                                        *ngIf="err('head_rltd_creDt') as e">{{e}}
+                                                                </div>
+                                                        </div>
+                                                        <div class="form-group" style="grid-column: span 1;">
+                                                                <label>Related Copy Duplicate</label>
+                                                                <select formControlName="head_rltd_cpyDplct">
+                                                                        <option value="">None</option>
+                                                                        <option *ngFor="let c of copyDplctCodes" [value]="c">
+                                                                                {{c}}</option>
+                                                                </select>
+                                                        </div>
+                                                        <div class="form-group" style="grid-column: span 1;">
+                                                                <label>Related Priority</label>
+                                                                <select formControlName="head_rltd_prty">
+                                                                        <option value="">None</option>
+                                                                        <option *ngFor="let p of priorityCodes" [value]="p">
+                                                                                {{p}}</option>
+                                                                </select>
+                                                        </div>
+                                                        <div class="form-group full-width" *ngIf="err('head_rltd') as e">
+                                                                <div class="validation-msg">{{e}}</div>
+                                                        </div>
+                                                </div>
+                                        </div>
+
+                                        <div class="section-title">Assignment Details (<code>&lt;Assgnmt&gt;</code>)</div>
+                                        <div class="form-group"><label>Assignment ID <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="assgnmt_id" maxlength="35"
+                                                        placeholder="e.g. ASSGMT-20240331-001234">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('assgnmt_id', 35)">{{charCount('assgnmt_id', 35)}}</div>
+                                                <div class="validation-msg" *ngIf="err('assgnmt_id') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Assignment DateTime <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="assgnmt_creDtTm"
+                                                        placeholder="e.g. 2024-03-31T10:30:00+05:30">
+                                                <div class="validation-msg" *ngIf="err('assgnmt_creDtTm') as e">{{e}}
+                                                </div>
+                                                <div class="field-hint">Format: YYYY-MM-DDThh:mm:ss±hh:mm</div>
+                                        </div>
+
+                                        <!-- Assignor -->
+                                        <div class="party-group">
+                                                <div class="party-group-title mandatory">Assignor (Agent) <span class="req">*</span></div>
+                                                <ng-container
+                                                        *ngTemplateOutlet="partyForm; context:{prefix:'assgnr',isAgent:true, title:'Assignor'}"></ng-container>
+                                        </div>
+
+                                        <!-- Assignee -->
+                                        <div class="party-group">
+                                                <div class="party-group-title mandatory">Assignee (Agent) <span class="req">*</span></div>
+                                                <ng-container
+                                                        *ngTemplateOutlet="partyForm; context:{prefix:'assgne',isAgent:true, title:'Assignee'}"></ng-container>
+                                        </div>
+
+                                         <div class="section-title">Case & Creator (<code>&lt;Case&gt;</code>)</div>
+                                         <div class="party-group full-width" style="padding: 1.5rem; background: var(--bg-card-hover); border-radius: 12px; border: 1px solid var(--border-light);">
+                                                <div class="form-group full-width" style="margin-bottom: 1.5rem;">
+                                                        <label>Case ID <span class="opt">Optional</span></label>
+                                                        <input formControlName="case_id" maxlength="35" placeholder="e.g. CASE-20240331-001234">
+                                                        <div class="char-counter" [class.near-limit]="isNearLimit('case_id', 35)">{{charCount('case_id', 35)}}</div>
+                                                </div>
+
+                                                <!-- Creator (Cretr) nested inside Case -->
+                                                <div style="border-top: 1px solid var(--border-light); padding-top: 1.5rem;">
+                                                        <div style="font-size: 0.75rem; font-weight: bold; color: var(--accent-color); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px;">
+                                                                Creator of Case (Cretr) — Party Only
+                                                        </div>
+                                                        <ng-container
+                                                                *ngTemplateOutlet="partyForm; context:{prefix:'cretr',isAgent:false, title:'Creator Party (Pty)'}"></ng-container>
+                                                </div>
+                                         </div>
+
+                                        <div class="section-title">Underlying Payment Information (<code>&lt;Undrlyg&gt;</code>)</div>
+                                        <div class="form-group"><label>Original Payment Information ID <span
+                                                                class="opt">Optional</span></label><input
+                                                        formControlName="orgnlPmtInfId" maxlength="35"
+                                                        placeholder="e.g. PMTINF-20240330-009876">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('orgnlPmtInfId', 35)">{{charCount('orgnlPmtInfId', 35)}}</div>
+                                                <div class="validation-msg" *ngIf="err('orgnlPmtInfId') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Cancellation ID <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="cxlId" maxlength="35"
+                                                        placeholder="e.g. CXLID-20240331-001234">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('cxlId', 35)">{{charCount('cxlId', 35)}}</div>
+                                                <div class="validation-msg" *ngIf="err('cxlId') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Original Message ID <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="orgnlMsgId" maxlength="35"
+                                                        placeholder="e.g. MSGID-20240330-009876">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('orgnlMsgId', 35)">{{charCount('orgnlMsgId', 35)}}</div>
+                                                <div class="validation-msg" *ngIf="err('orgnlMsgId') as e">{{e}}</div>
+                                         </div>
+                                        <div class="form-group"><label>Original Creation DateTime <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="orgnlCreDtTm"
+                                                        placeholder="e.g. 2024-03-30T14:00:00+05:30">
+                                                <div class="validation-msg" *ngIf="err('orgnlCreDtTm') as e">{{e}}
+                                                </div>
+                                                <div class="field-hint">Format: YYYY-MM-DDThh:mm:ss±hh:mm</div>
+                                        </div>
+                                        <div class="form-group"><label>Original Message Name <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="orgnlMsgNmId"
+                                                        placeholder="e.g. pacs.008.001.08">
+                                                <div class="validation-msg" *ngIf="err('orgnlMsgNmId') as e">{{e}}
+                                                </div>
+                                                <div class="field-hint">Original message definition identifier</div>
+                                        </div>
+
+                                        <div class="form-group intermediary-field">
+                                                <label>Original UETR <span class="req">*</span></label>
+                                                <div class="uetr-control-row">
+                                                        <input formControlName="orgnlUETR" maxlength="36"
+                                                                placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000"
+                                                                class="auto-lowercase">
+                                                        <button type="button" class="uetr-refresh-btn"
+                                                                (click)="refreshUetr()"
+                                                                title="Generate new UUID v4 UETR">
+                                                                <mat-icon title="Refresh">refresh</mat-icon>
+                                                        </button>
+                                                </div>
+                                                <div class="char-counter">{{charCount('orgnlUETR', 36)}}</div>
+                                                <div class="validation-msg" *ngIf="err('orgnlUETR') as e">{{e}}</div>
+                                                <div class="field-hint">UUID v4 format — auto-converts to lowercase. Click refresh to auto-generate.</div>
+                                        </div>
+                                        <div class="form-group"><label>Original End To End ID <span
+                                                                class="opt">Optional</span></label><input
+                                                        formControlName="orgnlEndToEndId" maxlength="35"
+                                                        placeholder="e.g. E2E-20240330-001234">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('orgnlEndToEndId', 35)">{{charCount('orgnlEndToEndId', 35)}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Original Instruction ID <span
+                                                                class="opt">Optional</span></label><input
+                                                        formControlName="orgnlInstrId" maxlength="35"
+                                                        placeholder="e.g. INSTRID-20240330-001234">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('orgnlInstrId', 35)">{{charCount('orgnlInstrId', 35)}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Original Amount <span
+                                                                class="opt">Optional</span></label><input
+                                                        formControlName="orgnlInstdAmt_val" placeholder="e.g. 1000.00">
+                                                <div class="validation-msg" *ngIf="err('orgnlInstdAmt_val') as e">{{e}}
+                                                </div>
+                                                <div class="field-hint">Numeric with up to 2 decimal places (max 18 digits)</div>
+                                        </div>
+                                        <div class="form-group"><label>Currency <span
+                                                                class="req">*</span></label><input
+                                                        formControlName="orgnlInstdAmt_ccy" maxlength="3"
+                                                        placeholder="e.g. USD" class="auto-uppercase">
+                                                <div class="char-counter">{{charCount('orgnlInstdAmt_ccy', 3)}}</div>
+                                                <div class="validation-msg" *ngIf="err('orgnlInstdAmt_ccy') as e">{{e}}
+                                                </div>
+                                                <div class="field-hint">ISO 4217 currency code (3 uppercase letters)</div>
+                                        </div>
+
+                                         <!-- ═══ DATE CHOICE (OrgnlReqdExctnDt XOR OrgnlReqdColltnDt) ═══ -->
+                                         <!-- ISO 20022 camt.055 TxInf allows ONLY ONE of these two date types -->
+                                         <div class="form-group full-width"
+                                              style="font-weight:bold; margin-top:1rem; margin-bottom:0.25rem; color:var(--accent-color); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid var(--border-light); padding-bottom:4px;">
+                                              Original Date (choose ONE — mutually exclusive)
+                                         </div>
+
+                                         <!-- Conflict error banner — shown when BOTH are filled -->
+                                         <div class="form-group full-width"
+                                              *ngIf="form.errors?.['date_choice_conflict']"
+                                              style="margin-bottom:0.5rem;">
+                                              <div class="validation-msg" style="background:rgba(239,68,68,0.1); padding:0.5rem 0.75rem; border-radius:6px; border:1px solid #ef4444;">
+                                                   ⚠️ Both Execution Date and Collection Date are filled. Only ONE is allowed per ISO 20022 schema. Clear one before generating XML.
+                                              </div>
+                                         </div>
+
+                                         <!-- Execution Date group -->
+                                         <div class="form-group"
+                                              [style.opacity]="form.get('orgnlReqdColltnDt')?.value ? '0.45' : '1'">
+                                                 <label>Original Requested Execution Date (Dt)
+                                                     <span class="field-hint" style="display:inline; margin-left:4px;">ExctnDt ↔ ColltnDt: pick one</span>
+                                                 </label>
+                                                 <input formControlName="orgnlReqdExctnDt" type="date"
+                                                         [attr.disabled]="(form.get('orgnlReqdExctnDtTm')?.value || form.get('orgnlReqdColltnDt')?.value) ? true : null">
+                                                 <div class="validation-msg" *ngIf="err('orgnlReqdExctnDt') as e">{{e}}</div>
+                                                 <div class="field-hint">Only one of Dt or DtTm within ExctnDt, and ExctnDt cannot coexist with ColltnDt.</div>
+                                         </div>
+                                         <div class="form-group"
+                                              [style.opacity]="form.get('orgnlReqdColltnDt')?.value ? '0.45' : '1'">
+                                                 <label>Original Requested Execution DateTime (DtTm)</label>
+                                                 <input formControlName="orgnlReqdExctnDtTm" type="datetime-local" step="1"
+                                                         [attr.disabled]="(form.get('orgnlReqdExctnDt')?.value || form.get('orgnlReqdColltnDt')?.value) ? true : null">
+                                                 <div class="validation-msg" *ngIf="err('orgnlReqdExctnDtTm') as e">{{e}}</div>
+                                         </div>
+
+                                         <!-- Divider -->
+                                         <div class="form-group full-width"
+                                              style="display:flex; align-items:center; gap:0.5rem; color:var(--text-muted); font-size:0.7rem; margin:0.25rem 0;">
+                                              <span style="flex:1; border-top:1px dashed var(--border-light);"></span>
+                                              <span>OR</span>
+                                              <span style="flex:1; border-top:1px dashed var(--border-light);"></span>
+                                         </div>
+
+                                         <!-- Collection Date (simple ISODate, no DtTm variant) -->
+                                         <div class="form-group full-width"
+                                              [style.opacity]="(form.get('orgnlReqdExctnDt')?.value || form.get('orgnlReqdExctnDtTm')?.value) ? '0.45' : '1'">
+                                                 <label>Original Requested Collection Date <span class="opt">Optional</span>
+                                                     <span class="field-hint" style="display:inline; margin-left:4px; font-size:0.65rem;">(plain ISODate — no DtTm variant)</span>
+                                                 </label>
+                                                 <input formControlName="orgnlReqdColltnDt" type="date"
+                                                         [attr.disabled]="(form.get('orgnlReqdExctnDt')?.value || form.get('orgnlReqdExctnDtTm')?.value) ? true : null"
+                                                         style="max-width:220px;">
+                                                 <div class="validation-msg" *ngIf="err('orgnlReqdColltnDt') as e">{{e}}</div>
+                                                 <div class="field-hint">Generates <code>&lt;OrgnlReqdColltnDt&gt;YYYY-MM-DD&lt;/OrgnlReqdColltnDt&gt;</code>. Cannot coexist with ExctnDt.</div>
+                                         </div>
+
+                                        <div class="section-title">Cancellation Reason (<code>&lt;CxlRsnInf&gt;</code>)</div>
+                                        <div class="form-group"><label>Cancellation Reason Code <span
+                                                                class="req">*</span></label>
+                                                <select formControlName="cxlRsnCd">
+                                                        <option value="" disabled>Select Reason Code</option>
+                                                        <option *ngFor="let c of cancellationReasonCodes"
+                                                                [value]="c.code">{{c.code}} — {{c.label}}</option>
+                                                </select>
+                                                <div class="validation-msg" *ngIf="err('cxlRsnCd') as e">{{e}}</div>
+                                                <div class="field-hint">Predefined ISO 20022 cancellation reason codes only</div>
+                                        </div>
+                                        <div class="form-group"><label>Additional Info <span
+                                                                class="opt">Optional</span></label><input
+                                                        formControlName="cxlRsnAddtlInf" maxlength="140"
+                                                        placeholder="e.g. Duplicate payment cancellation request">
+                                                <div class="char-counter" [class.near-limit]="isNearLimit('cxlRsnAddtlInf', 140)" [class.at-limit]="isAtLimit('cxlRsnAddtlInf', 140)">{{charCount('cxlRsnAddtlInf', 140)}}</div>
+                                        </div>
+
+                                        <!-- Originator of Cancellation -->
+                                        <div class="party-group">
+                                                <div class="party-group-title">Originator of Cancellation (Party)</div>
+                                                <ng-container
+                                                        *ngTemplateOutlet="partyForm; context:{prefix:'cxlRsnOrgtr',isAgent:false, title:'Originator'}"></ng-container>
+                                        </div>
+
+
+                                </div>
+                        </form>
+                </div>
+
+                <div class="right-panel">
+                        <!-- Top Actions -->
+                        <div class="bottom-actions" style="margin-top: 0; margin-bottom: 1rem;">
+                                <div class="down">
+                                        <button class="action-btn copy-btn"
+                                                (click)="copyXml()"><mat-icon>content_copy</mat-icon> Copy
+                                                XML</button>
+                                        <button class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon>
+                                                Download XML</button>
+                                        <button class="action-btn validate-btn" (click)="validateMessage()"
+                                                [disabled]="form.invalid">
+                                                <mat-icon>verified</mat-icon> Validate Message
+                                        </button>
+                                </div>
+                        </div>
+
+                        <!-- XML Preview & Actions -->
+                        <div class="content-box preview-box">
+                                <div class="up">
+                                        <button class="action-btn-small" (click)="undoXml()"
+                                                [disabled]="!canUndoXml()" title="Undo">
+                                                <mat-icon>undo</mat-icon>
+                                        </button>
+                                        <button class="action-btn-small" (click)="redoXml()"
+                                                [disabled]="!canRedoXml()" title="Redo">
+                                                <mat-icon>redo</mat-icon>
+                                        </button>
+                                        <button class="action-btn-small" (click)="formatXml()"
+                                                [disabled]="!generatedXml" title="Format XML">
+                                                <mat-icon>format_align_left</mat-icon>
+                                        </button>
+                                </div>
+                                <div class="editor-wrapper">
+                                        <div class="line-numbers" #lineNumbers>
+                                                <div *ngFor="let idx of editorLineCount; let i = index">{{i + 1}}</div>
+                                        </div>
+                                        <textarea class="code-editor" [(ngModel)]="generatedXml"
+                                                [ngModelOptions]="{standalone: true}"
+                                                (ngModelChange)="onEditorChange($event)"
+                                                (scroll)="syncScroll(xmlEditor, lineNumbers)" #xmlEditor
+                                                spellcheck="false" wrap="off"></textarea>
+                                </div>
+                        </div>
+                </div>
+        </div>
+</div>
+
+
+<ng-template #partyForm let-prefix="prefix" let-isAgent="isAgent" let-title="title" let-required="required">
+        <div [formGroup]="form" class="party-grid">
+                <!-- BIC -->
+                <div class="form-group" *ngIf="isAgent">
+                        <label>{{title}} BIC <span class="req" *ngIf="required">*</span></label>
+                        <input [formControlName]="prefix+'Bic'" maxlength="11" placeholder="e.g. HDFCINBB" class="auto-uppercase">
+                        <div class="char-counter">{{charCount(prefix+'Bic', 11)}}</div>
+                        <div class="validation-msg" *ngIf="err(prefix+'Bic') as e">{{e}}</div>
+                </div>
+                <div class="form-group" *ngIf="!isAgent">
+                        <label>{{title}} BIC <span class="req" *ngIf="required">*</span></label>
+                        <input [formControlName]="prefix+'OrgAnyBIC'" maxlength="11" placeholder="e.g. HDFCINBB" class="auto-uppercase">
+                        <div class="validation-msg" *ngIf="err(prefix+'OrgAnyBIC') as e">{{e}}</div>
+                </div>
+
+                <!-- Address Type -->
+                <div class="form-group" *ngIf="prefix !== 'assgnr' && prefix !== 'assgne'">
+                        <label>{{title}} Address Type</label>
+                        <select [formControlName]="prefix+'AddrType'">
+                                <option value="none">None (BIC/ID Only)</option>
+                                <option value="structured">Structured</option>
+                                <option value="unstructured">Unstructured</option>
+                                <option value="hybrid">Hybrid</option>
+                        </select>
+                </div>
+
+                <!-- Dynamic Address Fields -->
+                <ng-container *ngIf="prefix !== 'assgnr' && prefix !== 'assgne' && form.get(prefix+'AddrType')?.value !== 'none'">
+                        <div class="address-subgrid">
+                                <div class="form-group"
+                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        <label>{{title}} Street Name</label>
+                                        <input [formControlName]="prefix+'StrtNm'" maxlength="70">
+                                </div>
+                                <div class="form-group"
+                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        <label>{{title}} Building Number</label>
+                                        <input [formControlName]="prefix+'BldgNb'" maxlength="16">
+                                </div>
+                                <div class="form-group"
+                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        <label>{{title}} Building Name</label>
+                                        <input [formControlName]="prefix+'BldgNm'" maxlength="35">
+                                </div>
+                                <div class="form-group"
+                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        <label>{{title}} Post Code</label>
+                                        <input [formControlName]="prefix+'PstCd'" maxlength="16">
+                                </div>
+                                <div class="form-group"
+                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        <label>{{title}} Town Name</label>
+                                        <input [formControlName]="prefix+'TwnNm'" maxlength="35">
+                                </div>
+                                <div class="form-group">
+                                        <label>{{title}} Country</label>
+                                        <select [formControlName]="prefix + 'Ctry'">
+                                                <option value="">Select Country</option>
+                                                <option *ngFor="let c of countries" [value]="c">{{c}}</option>
+                                        </select>
+                                </div>
+                                <ng-container
+                                        *ngIf="['unstructured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        <div class="form-group">
+                                                <label>{{title}} Address Line 1</label>
+                                                <input [formControlName]="prefix+'AdrLine1'" maxlength="70">
+                                        </div>
+                                </ng-container>
+                                <ng-container
+                                        *ngIf="['unstructured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        <div class="form-group">
+                                                <label>{{title}} Address Line 2</label>
+                                                <input [formControlName]="prefix+'AdrLine2'" maxlength="70">
+                                        </div>
+                                </ng-container>
+                                <ng-container
+                                        *ngIf="form.get(prefix+'AddrType')?.value === 'unstructured'">
+                                        <div class="form-group">
+                                                <label>{{title}} Address Line 3</label>
+                                                <input [formControlName]="prefix+'AdrLine3'" maxlength="70">
+                                        </div>
+                                </ng-container>
+                        </div>
+                </ng-container>
+
+                <div class="form-group" *ngIf="prefix !== 'assgnr' && prefix !== 'assgne'">
+                        <label>{{title}} Name</label>
+                        <input [formControlName]="prefix+'Name'" maxlength="140">
+                </div>
+
+                <div class="form-group" *ngIf="prefix === 'cxlRsnOrgtr'">
+                        <label>{{title}} Country of Residence</label>
+                        <select [formControlName]="prefix+'CtryOfRes'">
+                                <option value="">Select Country</option>
+                                <option *ngFor="let c of countries" [value]="c">{{c}}</option>
+                        </select>
+                </div>
+
+                <!-- Party Identification (Org OR Prvt — mutually exclusive) -->
+                <ng-container *ngIf="!isAgent">
+                        <div class="identity-section" style="margin-top: 1rem; border-top: 1px solid var(--border-light); padding-top: 1rem;">
+                                <!-- IdType Dropdown -->
+                                <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1rem;">
+                                        <div style="font-size: 0.75rem; font-weight: bold; color: var(--accent-color); text-transform: uppercase;">Identification Type</div>
+                                        <select [formControlName]="prefix+'IdType'" 
+                                                style="padding: 4px 8px; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--border-light); background: var(--bg-card); color: var(--text-main); cursor: pointer; min-width: 160px;">
+                                                <option value="org">Organisation (OrgId)</option>
+                                                <option value="prvt">Individual (PrvtId)</option>
+                                        </select>
+                                </div>
+
+                                <!-- OrgId Fields (shown only when IdType = 'org') -->
+                                <ng-container *ngIf="form.get(prefix+'IdType')?.value === 'org'">
+                                        <div style="font-size: 0.7rem; font-weight: bold; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Organisation Identification (OrgId)</div>
+                                        <div class="address-subgrid">
+                                                 <div class="form-group">
+                                                         <label>Other ID (Id)</label>
+                                                         <input [formControlName]="prefix+'OrgOthrId'" maxlength="35">
+                                                         <div class="field-hint" *ngIf="getSchemeGuidance(prefix, 'Org') as hint">
+                                                                 <mat-icon style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle;">info</mat-icon> {{hint}}
+                                                         </div>
+                                                 </div>
+                                                 <div class="form-group">
+                                                         <label>Scheme Name Code (Cd)</label>
+                                                         <select [formControlName]="prefix+'OrgOthrCd'">
+                                                                 <option value="">Select Code</option>
+                                                                 <option *ngFor="let c of orgSchemeCodes" [value]="c">{{c}}</option>
+                                                         </select>
+                                                 </div>
+                                                 <div class="form-group"><label>Issuer (Issr)</label>
+                                                         <input [formControlName]="prefix+'OrgOthrIssr'" maxlength="35"></div>
+                                         </div>
+                                </ng-container>
+
+                                <!-- PrvtId Fields (shown only when IdType = 'prvt') -->
+                                <ng-container *ngIf="form.get(prefix+'IdType')?.value === 'prvt'">
+                                         <div style="font-size: 0.7rem; font-weight: bold; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Private Identification (PrvtId)</div>
+                                         <div class="address-subgrid">
+                                                 <div class="form-group"><label>Birth Date</label>
+                                                         <input [formControlName]="prefix+'PrvtBirthDt'" type="date">
+                                                         <div class="validation-msg" *ngIf="err(prefix+'PrvtBirthDt') as e">{{e}}</div>
+                                                 </div>
+                                                 <div class="form-group"><label>Province of Birth</label>
+                                                         <input [formControlName]="prefix+'PrvtPrvcOfBirth'" maxlength="35"></div>
+                                                 <div class="form-group"><label>City of Birth</label>
+                                                         <input [formControlName]="prefix+'PrvtCityOfBirth'" maxlength="35"></div>
+                                                 <div class="form-group"><label>Country of Birth</label>
+                                                         <select [formControlName]="prefix+'PrvtCtryOfBirth'">
+                                                                 <option value="">Select Country</option>
+                                                                 <option *ngFor="let c of countries" [value]="c">{{c}}</option>
+                                                         </select>
+                                                 </div>
+                                                 <div class="form-group">
+                                                         <label>Prvt Other ID</label>
+                                                         <input [formControlName]="prefix+'PrvtOthrId'" maxlength="35">
+                                                         <div class="field-hint" *ngIf="getSchemeGuidance(prefix, 'Prvt') as hint">
+                                                                 <mat-icon style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle;">info</mat-icon> {{hint}}
+                                                         </div>
+                                                 </div>
+                                                 <div class="form-group">
+                                                         <label>Prvt Scheme Cd</label>
+                                                         <select [formControlName]="prefix+'PrvtOthrCd'">
+                                                                 <option value="">Select Code</option>
+                                                                 <option *ngFor="let c of prvtSchemeCodes" [value]="c">{{c}}</option>
+                                                         </select>
+                                                 </div>
+                                                 <div class="form-group"><label>Prvt Issuer</label>
+                                                         <input [formControlName]="prefix+'PrvtOthrIssr'" maxlength="35"></div>
+                                         </div>
+                                </ng-container>
+                        </div>
+                </ng-container>
+
+                <!-- Agent Specific Identifiers -->
+                <ng-container *ngIf="isAgent">
+                        <!-- Member ID -->
+                        <div class="form-group">
+                                <label>{{title}} Member ID</label>
+                                <input [formControlName]="prefix+'ClrSysMmbId'"
+                                        maxlength="35" placeholder="Clearing Member ID">
+                        </div>
+
+                        <!-- Clearing System Code -->
+                        <div class="form-group">
+                                <label>{{title}} Clearing System Code</label>
+                                <input [formControlName]="prefix+'ClrSysCd'" maxlength="5"
+                                        placeholder="e.g. USABA, CHAPS">
+                        </div>
+                </ng-container>
+
+                <!-- LEI (Common) -->
+                <div class="form-group">
+                        <label>{{title}} LEI</label>
+                        <input [formControlName]="isAgent ? prefix+'Lei' : prefix+'OrgLEI'" maxlength="20"
+                                placeholder="20-char LEI">
+                </div>
+
+        </div>
+</ng-template>
+
+
+
+<!-- Validation Results Modal -->
+<div class="validation-overlay" *ngIf="showValidationModal" (click)="closeValidationModal()">
+    <div class="validation-modal" (click)="$event.stopPropagation()">
+        <!-- Modal Header -->
+        <div class="vm-header">
+            <div class="vm-title">
+                <mat-icon>verified</mat-icon>
+                <span>Validation Results</span>
+                <span class="vm-msg-type" *ngIf="validationReport?.message">{{validationReport.message}}</span>
+            </div>
+
+            <div class="vm-header-actions" *ngIf="validationStatus === 'done'">
+                <button class="vm-action-btn" (click)="viewXmlModal()">
+                    <mat-icon>visibility</mat-icon> VIEW XML
+                </button>
+                <button class="vm-action-btn" (click)="editXmlModal()">
+                    <mat-icon>edit</mat-icon> EDIT
+                </button>
+                <button class="vm-action-btn run" (click)="runValidationModal()">
+                    <mat-icon>play_circle</mat-icon> RUN
+                </button>
+            </div>
+
+            <button class="vm-close" (click)="closeValidationModal()">
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
+
+        <!-- Loading State -->
+        <div class="vm-loading" *ngIf="validationStatus === 'validating'">
+            <div class="vm-spinner"></div>
+            <p>Validating your XML message...</p>
+            <span class="vm-loading-sub">Running Layer 1-3 checks</span>
+        </div>
+
+        <!-- Results -->
+        <div class="vm-body" *ngIf="validationStatus === 'done' && validationReport">
+            <!-- Status Banner -->
+            <div class="vm-status-banner" [class.pass]="validationReport.status === 'PASS'"
+                [class.fail]="validationReport.status !== 'PASS'">
+                <mat-icon>{{validationReport.status === 'PASS' ? 'check_circle' : 'cancel'}}</mat-icon>
+                <div class="vm-status-text">
+                    <strong>{{validationReport.status === 'PASS' ? 'VALIDATION PASSED' : 'VALIDATION FAILED'}}</strong>
+                    <span>{{validationReport.errors || 0}} error(s), {{validationReport.warnings || 0}} warning(s)
+                        &bull; {{validationReport.total_time_ms || 0}}ms</span>
+                </div>
+            </div>
+
+            <!-- Layer Results -->
+            <div class="vm-layers" *ngIf="getValidationLayers().length > 0">
+                <div class="vm-layer" *ngFor="let k of getValidationLayers()" [class.layer-pass]="isLayerPass(k)"
+                    [class.layer-fail]="isLayerFail(k)" [class.layer-warn]="isLayerWarn(k)">
+                    <div class="vm-layer-icon">
+                        <span *ngIf="isLayerPass(k)"><mat-icon style="color: #10b981; font-size: 20px;">check_circle</mat-icon></span>
+                        <span *ngIf="isLayerFail(k)"><mat-icon style="color: #ef4444; font-size: 20px;">cancel</mat-icon></span>
+                        <span *ngIf="isLayerWarn(k)"><mat-icon style="color: #f59e0b; font-size: 20px;">warning</mat-icon></span>
+                    </div>
+                    <div class="vm-layer-info">
+                        <strong>Layer {{k}}: {{getLayerName(k)}}</strong>
+                        <span class="vm-layer-time">{{getLayerTime(k)}}ms</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Issues List -->
+            <div class="vm-issues" *ngIf="getValidationIssues().length > 0">
+                <div class="vm-issues-header">
+                    <mat-icon>report</mat-icon>
+                    <span>Issues ({{getValidationIssues().length}})</span>
+                </div>
+                <div class="vm-issue-list">
+                    <div class="vm-issue" *ngFor="let issue of getValidationIssues()"
+                        (click)="toggleValidationIssue(issue)" [class.expanded]="validationExpandedIssue === issue">
+                        <div class="vm-issue-row">
+                            <span class="vm-issue-severity" [class.error]="issue.severity === 'ERROR'"
+                                [class.warning]="issue.severity === 'WARNING'">
+                                {{issue.severity}}
+                            </span>
+                            <span class="vm-issue-layer">L{{issue.layer}}</span>
+                            <span class="vm-issue-msg">{{issue.message}}</span>
+                            <mat-icon class="vm-issue-chevron">
+                                {{validationExpandedIssue === issue ? 'expand_less' : 'expand_more'}}
+                            </mat-icon>
+                        </div>
+                        <div class="vm-issue-detail" *ngIf="validationExpandedIssue === issue">
+                            <div class="vm-detail-row" *ngIf="issue.severity === 'ERROR'">
+                                <strong>Error Details:</strong>
+                                <span>{{issue.message}}</span>
+                            </div>
+                            <div class="vm-detail-row" *ngIf="issue.path">
+                                <strong>Path:</strong> <code>{{issue.path}}</code>
+                            </div>
+                            <div class="vm-detail-row" *ngIf="issue.code">
+                                <strong>Code:</strong> <code>{{issue.code}}</code>
+                            </div>
+                            <div class="vm-detail-row fix" *ngIf="issue.fix_suggestion">
+                                <strong><mat-icon style="font-size: 16px; width: 16px; height: 16px; vertical-align: middle;">lightbulb</mat-icon> Fix:</strong>
+                                <span>{{issue.fix_suggestion}}</span>
+                                <button class="vm-copy-btn" (click)="copyFix(issue.fix_suggestion, $event)"
+                                    matTooltip="Copy fix suggestion">
+                                    <mat-icon>content_copy</mat-icon>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- No Issues -->
+            <div class="vm-no-issues" *ngIf="getValidationIssues().length === 0">
+                <mat-icon>celebration</mat-icon>
+                <p>No issues found! Your message is valid.</p>
+            </div>
+        </div>
+    </div>
+</div>
