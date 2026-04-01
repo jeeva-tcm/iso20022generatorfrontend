@@ -100,7 +100,7 @@ export class Pacs9CovComponent implements OnInit {
     onInput(event: any) {
         const target = event.target as HTMLInputElement;
         if (!target) return;
-        const name = target.getAttribute('formControlName');
+        const name = target.getAttribute('formControlName') || target.getAttribute('formcontrolname') || target.getAttribute('name');
         if (!name) return;
 
         // Character limit warning logic (Immediate on-hit detection)
@@ -312,10 +312,10 @@ export class Pacs9CovComponent implements OnInit {
             ctgyPurpPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
             instrPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
             clrChanl: ['', [Validators.pattern(/^(BOOK|MPNS|RTGS|RTNS)$/)]],
-            svcLvlCd: ['', [Validators.pattern(/^[A-Z0-9]{1,4}$/)]],
-            svcLvlPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
-            lclInstrmCd: ['', [Validators.pattern(/^[A-Z0-9]{1,4}$/)]],
-            lclInstrmPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
+            svcLvlCd: ['', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{1,4}$/)]],
+            svcLvlPrtry: ['', [Validators.maxLength(35), Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
+            lclInstrmCd: ['', [Validators.maxLength(35), Validators.pattern(/^[A-Z0-9]{1,4}$/)]],
+            lclInstrmPrtry: ['', [Validators.maxLength(35), Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
 
             rmtInfType: ['none'],
             rmtInfUstrd: ['', [Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/)]],
@@ -325,7 +325,7 @@ export class Pacs9CovComponent implements OnInit {
             rmtInfStrdAddtlRmtInf: ['', [Validators.maxLength(140), Validators.pattern(/^[0-9a-zA-Z\/\-\?:\(\)\.,\'\+ !#$%&\*=\^_`\{\|\}~";<>@\[\\\]]+$/)]],
             rmtInfStrdRfrdDocNb: ['', Validators.maxLength(35)],
             rmtInfStrdRfrdDocCd: [''],
-            rmtInfStrdRfrdDocAmt: ['', [Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],
+            rmtInfStrdRfrdDocAmt: ['', [Validators.maxLength(18), Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],
             rmtInfStrdInvcrNm: ['', Validators.maxLength(140)],
             rmtInfStrdInvceeNm: ['', Validators.maxLength(140)],
             rmtInfStrdTaxRmtId: ['', Validators.maxLength(35)],
@@ -334,13 +334,13 @@ export class Pacs9CovComponent implements OnInit {
             fromBic: ['RBOSGB2L', BIC], toBic: ['NDEAFIHH', BIC], bizMsgId: ['pacs9bizmsgidr01', Validators.required],
             msgId: ['pacs9bizmsgidr01', Validators.required], creDtTm: [this.isoNow(), Validators.required],
             sttlmPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
-            nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['INDA', Validators.required],
+            nbOfTxs: ['1', [Validators.required, Validators.maxLength(15), Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['INDA', Validators.required],
             instgAgtBic: ['RBOSGB2L', BIC], instdAgtBic: ['NDEAFIHH', BIC],
             instrId: ['pacs9bizmsgidr01', Validators.required], endToEndId: ['pacs8bizmsgidr01', Validators.required],
             uetr: ['8a562c67-ca16-48ba-b074-65581be6f001', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
             clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
             appHdrPriority: [''],
-            amount: ['1500000', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['EUR', Validators.required],
+            amount: ['1500000', [Validators.required, Validators.maxLength(18), Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['EUR', Validators.required],
             sttlmDt: [new Date().toISOString().split('T')[0], [Validators.required, Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]],
             // Debtor FI (required)
             dbtrFiBic: ['BBBBUS33XXX', BIC],
@@ -420,11 +420,11 @@ export class Pacs9CovComponent implements OnInit {
             if (!c[p + 'AdrTpCd']) c[p + 'AdrTpCd'] = [''];
             if (!c[p + 'AdrTpPrtry']) c[p + 'AdrTpPrtry'] = ['', Validators.maxLength(35)];
             if (!c[p + 'Name']) c[p + 'Name'] = ['', [Validators.maxLength(140), SAFE_NAME]];
-            if (!c[p + 'Bic']) c[p + 'Bic'] = ['', [Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
-            if (!c[p + 'Lei']) c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
-            if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['', Validators.maxLength(4)];
+            if (!c[p + 'Bic']) c[p + 'Bic'] = ['', [Validators.maxLength(11), Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
+            if (!c[p + 'Lei']) c[p + 'Lei'] = ['', [Validators.maxLength(20), Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
+            if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['', Validators.maxLength(5)];
             if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
-            if (!c[p + 'Acct']) c[p + 'Acct'] = ['', [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
+            if (!c[p + 'Acct']) c[p + 'Acct'] = ['', [Validators.maxLength(34), Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
         });
         // Address prefixes for COV parties (Debtor / Creditor in UndrlygCstmrCdtTrf)
         this.covPartyPrefixes.forEach(p => {
@@ -465,10 +465,11 @@ export class Pacs9CovComponent implements OnInit {
                 if (!c[p + 'PrvtOthrSchmeNmPrtry']) c[p + 'PrvtOthrSchmeNmPrtry'] = ['', Validators.maxLength(35)];
                 if (!c[p + 'PrvtOthrIssr']) c[p + 'PrvtOthrIssr'] = ['', Validators.maxLength(35)];
             } else {
-                if (!c[p + 'Bic']) c[p + 'Bic'] = ['', [Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
-                if (!c[p + 'Lei']) c[p + 'Lei'] = ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
+                if (!c[p + 'Bic']) c[p + 'Bic'] = ['', [Validators.maxLength(11), Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]];
+                if (!c[p + 'Lei']) c[p + 'Lei'] = ['', [Validators.maxLength(20), Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
                 if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['', Validators.maxLength(5)];
                 if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
+                if (!c[p + 'Acct']) c[p + 'Acct'] = ['', [Validators.maxLength(34), Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
             }
         });
         // Set default names for mandatory parties
@@ -617,7 +618,7 @@ export class Pacs9CovComponent implements OnInit {
             // Still show warning on keydown if trying to type past limit
             if (target.selectionStart !== null && target.selectionStart !== target.selectionEnd) return;
             if (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey) {
-                const controlName = target.getAttribute('formControlName') || target.getAttribute('name');
+                const controlName = target.getAttribute('formControlName') || target.getAttribute('formcontrolname') || target.getAttribute('name');
                 if (controlName) {
                     this.showMaxLenWarning[controlName] = true;
                     if (this.warningTimeouts[controlName]) clearTimeout(this.warningTimeouts[controlName]);
