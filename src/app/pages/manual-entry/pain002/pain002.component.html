@@ -1,157 +1,181 @@
 <div class="container" (click)="$event.stopPropagation()">
     <header>
-        <h1>Payment Status Report (pain.002) <mat-icon class="title-icon">payments</mat-icon></h1>
-        <!-- <p style="margin-top: -1rem;">Visual CBPR+ pain.002.001.10 Message Builder (SR2025)</p> -->
+        <h1>Customer Payment Status Report (pain.002)</h1>
     </header>
 
     <div class="split-view">
+        <!-- FORM PANEL -->
         <div class="left-panel">
             <form [formGroup]="form" class="content-box">
                 <div class="grid">
-                    <!-- AppHdr -->
-                    <div class="section-title">Message Header (AppHdr)</div>
-                    <div class="form-group">
-                        <label>Sender BIC <span class="req">*</span></label>
-                        <input formControlName="fromBic" maxlength="11">
-                        <div class="validation-msg" *ngIf="err('fromBic') as e">{{e}}</div>
+                    
+                    <!-- 1. Application Header (BAH) -->
+                    <div class="section-title section-blue" (click)="toggleSection('bah')">
+                        <span>Application Header (AppHdr) <code>&lt;head.001.001.02&gt;</code></span>
+                        <mat-icon>{{sections['bah'] ? 'expand_less' : 'expand_more'}}</mat-icon>
                     </div>
-                    <div class="form-group">
-                        <label>Receiver BIC <span class="req">*</span></label>
-                        <input formControlName="toBic" maxlength="11">
-                        <div class="validation-msg" *ngIf="err('toBic') as e">{{e}}</div>
-                    </div>
-                    <div class="form-group intermediary-field">
-                        <label>Business Msg ID <span class="req">*</span></label>
-                        <input formControlName="bizMsgId" maxlength="35">
-                        <div class="validation-msg" *ngIf="err('bizMsgId') as e">{{e}}</div>
-                        <div class="field-hint at-limit" *ngIf="hint('bizMsgId', 35) as h">{{h}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Creation Date <span class="req">*</span></label>
-                        <input type="date" formControlName="creDt">
-                        <div class="validation-msg" *ngIf="err('creDt') as e">{{e}}</div>
-                    </div>
-
-                    <!-- GrpHdr -->
-                    <div class="section-title">Group Header</div>
-                    <div class="form-group">
-                        <label>Message ID <span class="req">*</span></label>
-                        <input formControlName="msgId" maxlength="35">
-                        <div class="validation-msg" *ngIf="err('msgId') as e">{{e}}</div>
-                        <div class="field-hint at-limit" *ngIf="hint('msgId', 35) as h">{{h}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Creation DateTime <span class="req">*</span></label>
-                        <input formControlName="creDtTm">
-                        <div class="validation-msg" *ngIf="err('creDtTm') as e">{{e}}</div>
-                    </div>
-                    <div class="party-group">
-                        <div class="party-group-title mandatory">Initiating Party</div>
-                        <div class="party-grid">
-                            <div class="form-group">
-                                <label>Party Name <span class="req">*</span></label>
-                                <input formControlName="initgPtyName" maxlength="140">
-                                <div class="validation-msg" *ngIf="err('initgPtyName') as e">{{e}}</div>
-                                <div class="field-hint at-limit" *ngIf="hint('initgPtyName', 140) as h">{{h}}</div>
-                            </div>
+                    <ng-container *ngIf="sections['bah']">
+                        <div class="form-group">
+                            <label>Business Msg ID <span class="req">*</span></label>
+                            <input formControlName="head_bizMsgIdr" maxlength="35">
                         </div>
-                    </div>
-
-                    <!-- Original Group Info -->
-                    <div class="party-group" style="margin-top: 1rem;">
-                        <div class="party-group-title mandatory">Original Group Info</div>
-                        <div class="party-grid">
-                            <div class="form-group">
-                                <label>Orgnl Msg ID <span class="req">*</span></label>
-                                <input formControlName="orgnlMsgId" maxlength="35">
-                                <div class="validation-msg" *ngIf="err('orgnlMsgId') as e">{{e}}</div>
-                                <div class="field-hint at-limit" *ngIf="hint('orgnlMsgId', 35) as h">{{h}}</div>
-                            </div>
-                            <div class="form-group">
-                                <label>Orgnl Msg Name ID <span class="req">*</span></label>
-                                <input formControlName="orgnlMsgNmId" maxlength="35">
-                                <div class="validation-msg" *ngIf="err('orgnlMsgNmId') as e">{{e}}</div>
-                                <div class="field-hint at-limit" *ngIf="hint('orgnlMsgNmId', 35) as h">{{h}}</div>
-                            </div>
-                            <div class="form-group">
-                                <label>Orgnl Creation DateTime <span class="req">*</span></label>
-                                <input formControlName="orgnlCreDtTm">
-                                <div class="validation-msg" *ngIf="err('orgnlCreDtTm') as e">{{e}}</div>
-                            </div>
-                            <div class="form-group">
-                                <label>Orgnl Pmt Inf ID <span class="req">*</span></label>
-                                <input formControlName="orgnlPmtInfId" maxlength="35">
-                                <div class="validation-msg" *ngIf="err('orgnlPmtInfId') as e">{{e}}</div>
-                                <div class="field-hint at-limit" *ngIf="hint('orgnlPmtInfId', 35) as h">{{h}}</div>
-                            </div>
-                            <div class="form-group">
-                                <label>Group Status <span class="req">*</span></label>
-                                <select formControlName="grpSts">
-                                    <option *ngFor="let s of groupStatuses" [value]="s">{{s}}</option>
-                                </select>
-                                <div class="validation-msg" *ngIf="err('grpSts') as e">{{e}}</div>
-                            </div>
+                        <div class="form-group">
+                            <label>Creation Date <span class="req">*</span></label>
+                            <input formControlName="head_creDt" placeholder="YYYY-MM-DDTHH:mm:ssZ">
                         </div>
-                    </div>
+                        <div class="form-group">
+                            <label>Sender BIC</label>
+                            <input formControlName="head_fromBic" maxlength="11" class="auto-uppercase">
+                        </div>
+                        <div class="form-group">
+                            <label>Receiver BIC</label>
+                            <input formControlName="head_toBic" maxlength="11" class="auto-uppercase">
+                        </div>
 
-                    <!-- Repeatable Transactions Status -->
-                    <div class="section-title">Transaction Status ({{transactions.length}}) 
-                        <button type="button" class="btn-add-tx" (click)="addTransaction()"><mat-icon>add_circle</mat-icon> ADD STATUS ENTRY</button>
-                    </div>
-
-                    <div formArrayName="transactions" class="tx-array">
-                        <div *ngFor="let tx of transactions.controls; let i = index" [formGroupName]="i" class="tx-card">
-                            <div class="tx-card-header">
-                                <span>#{{i + 1}} STATUS ENTRY DETAILS</span>
-                                <button type="button" class="btn-remove-tx" (click)="removeTransaction(i)" *ngIf="transactions.length > 1">
-                                    <mat-icon>delete</mat-icon>
-                                </button>
+                        <!-- Related Header (Rltd) -->
+                        <div class="party-group full-width" style="margin-top: 10px;">
+                            <div class="party-group-title" (click)="toggleSection('bahRltd')" style="cursor: pointer;">
+                                Related Header (Rltd) <span class="opt">Optional</span>
+                                <mat-icon style="font-size: 16px; width: 16px; height: 16px; float: right;">{{sections['bahRltd'] ? 'expand_less' : 'expand_more'}}</mat-icon>
                             </div>
-                            <div class="tx-grid">
+                            <div class="party-grid" *ngIf="sections['bahRltd']">
                                 <div class="form-group">
-                                    <label>Orgnl Instr ID <span class="req">*</span></label>
-                                    <input formControlName="orgnlInstrId" maxlength="35">
-                                    <div class="validation-msg" *ngIf="err('orgnlInstrId', tx) as e">{{e}}</div>
-                                    <div class="field-hint at-limit" *ngIf="hint('orgnlInstrId', 35, tx) as h">{{h}}</div>
+                                    <label>Related Msg ID</label>
+                                    <input formControlName="head_rltd_bizMsgIdr" maxlength="35">
                                 </div>
                                 <div class="form-group">
-                                    <label>Orgnl End To End ID <span class="req">*</span></label>
-                                    <input formControlName="orgnlEndToEndId" maxlength="35">
-                                    <div class="validation-msg" *ngIf="err('orgnlEndToEndId', tx) as e">{{e}}</div>
-                                    <div class="field-hint at-limit" *ngIf="hint('orgnlEndToEndId', 35, tx) as h">{{h}}</div>
-                                </div>
-                                <div class="form-group" style="grid-column: span 2;">
-                                    <label>Orgnl UETR</label>
-                                    <input formControlName="orgnlUetr" placeholder="e.g. 123e4567-e89b-12d3-a456-426614174000">
-                                    <div class="validation-msg" *ngIf="err('orgnlUetr', tx) as e">{{e}}</div>
-                                </div>
-                                <div class="form-group">
-                                    <label>Transaction Status <span class="req">*</span></label>
-                                    <select formControlName="txSts">
-                                        <option *ngFor="let s of transactionStatuses" [value]="s">{{s}}</option>
-                                    </select>
-                                    <div class="validation-msg" *ngIf="err('txSts', tx) as e">{{e}}</div>
-                                </div>
-                                <div class="form-group">
-                                    <label>Status Reason Code</label>
-                                    <input formControlName="stsRsnCd" maxlength="4" placeholder="e.g. AC01">
-                                    <div class="validation-msg" *ngIf="err('stsRsnCd', tx) as e">{{e}}</div>
-                                    <div class="field-hint at-limit" *ngIf="hint('stsRsnCd', 4, tx) as h">{{h}}</div>
-                                </div>
-                                <div class="form-group" style="grid-column: span 2;">
-                                    <label>Status Additional Info</label>
-                                    <input formControlName="stsAddtlInf" maxlength="105">
-                                    <div class="validation-msg" *ngIf="err('stsAddtlInf', tx) as e">{{e}}</div>
-                                    <div class="field-hint at-limit" *ngIf="hint('stsAddtlInf', 105, tx) as h">{{h}}</div>
+                                    <label>Related Sender BIC</label>
+                                    <input formControlName="head_rltd_fromBic" maxlength="11" class="auto-uppercase">
                                 </div>
                             </div>
                         </div>
+                    </ng-container>
+
+                    <!-- 2. Group Header -->
+                    <div class="section-title section-green" (click)="toggleSection('grpHdr')">
+                        <span>Group Header <code>&lt;GrpHdr&gt;</code></span>
+                        <mat-icon>{{sections['grpHdr'] ? 'expand_less' : 'expand_more'}}</mat-icon>
                     </div>
+                    <ng-container *ngIf="sections['grpHdr']">
+                        <div class="form-group">
+                            <label>Message ID <span class="req">*</span></label>
+                            <input formControlName="grpHdr_msgId" maxlength="35">
+                        </div>
+                        <div class="form-group">
+                            <label>Creation DateTime <span class="req">*</span></label>
+                            <input formControlName="grpHdr_creDtTm" placeholder="YYYY-MM-DDTHH:mm:ssZ">
+                        </div>
+                        
+                        <!-- Initiating Party -->
+                        <ng-container *ngTemplateOutlet="partyForm; context: { group: form.get('initgPty'), prefix: 'initgPty', title: 'Initiating Party (InitgPty)', required: true }"></ng-container>
+                        
+                        <!-- Forwarding Agent -->
+                        <ng-container *ngTemplateOutlet="agentForm; context: { group: form.get('fwdgAgt'), prefix: 'fwdgAgt', title: 'Forwarding Agent (FwdgAgt)', required: false }"></ng-container>
+                    </ng-container>
+
+                    <!-- 3. Original Group Info -->
+                    <div class="section-title" (click)="toggleSection('orgnlGrpInf')">
+                        <span>Original Group Info <code>&lt;OrgnlGrpInfAndSts&gt;</code></span>
+                        <mat-icon>{{sections['orgnlGrpInf'] ? 'expand_less' : 'expand_more'}}</mat-icon>
+                    </div>
+                    <ng-container *ngIf="sections['orgnlGrpInf']">
+                        <div class="form-group">
+                            <label>Orgnl Msg ID <span class="req">*</span></label>
+                            <input formControlName="orgnlMsgId" maxlength="35">
+                        </div>
+                        <div class="form-group">
+                            <label>Orgnl Msg Name ID <span class="req">*</span></label>
+                            <input formControlName="orgnlMsgNmId" maxlength="35">
+                        </div>
+                        <div class="form-group">
+                            <label>Orgnl CreDtTm</label>
+                            <input formControlName="orgnlCreDtTm">
+                        </div>
+                        <div class="form-group">
+                            <label>Group Status</label>
+                            <select formControlName="grpSts">
+                                <option value="">Select Status...</option>
+                                <option *ngFor="let s of groupStatuses" [value]="s">{{s}}</option>
+                            </select>
+                        </div>
+                    </ng-container>
+
+                    <!-- 4. Original Payment Information -->
+                    <div class="section-title" (click)="toggleSection('orgnlPmtInf')">
+                        <span>Original Payment Information <code>&lt;OrgnlPmtInfAndSts&gt;</code></span>
+                        <mat-icon>{{sections['orgnlPmtInf'] ? 'expand_less' : 'expand_more'}}</mat-icon>
+                    </div>
+                    <ng-container *ngIf="sections['orgnlPmtInf']">
+                        <div class="form-group full-width">
+                            <label>Orgnl Pmt Inf ID <span class="req">*</span></label>
+                            <input formControlName="orgnlPmtInfId" maxlength="35">
+                        </div>
+
+                        <!-- Transactions Array -->
+                        <div class="section-title" style="background: none; border: none; padding-left: 0; margin-top: 10px;">
+                            <span>Transaction Status Entries ({{transactions.length}})</span>
+                            <button type="button" class="action-btn-small" style="width: auto; padding: 0 10px;" (click)="addTransaction()"><mat-icon>add</mat-icon> ADD ENTRY</button>
+                        </div>
+                        
+                        <div formArrayName="transactions" class="full-width">
+                            <div *ngFor="let tx of transactions.controls; let i = index" [formGroupName]="i" class="tx-card" style="margin-bottom: 20px; border: 1px solid var(--border-light); padding: 5px; border-radius: 12px; background: rgba(0,0,0,0.02);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--bg-card-hover); border-radius: 10px 10px 0 0; border-bottom: 1px solid var(--border-light);">
+                                    <strong style="color: var(--accent-color); font-size: 0.75rem;">TRANSACTION STATUS #{{i+1}}</strong>
+                                    <button type="button" class="btn-remove-small" (click)="removeTransaction(i)" *ngIf="transactions.length > 1"><mat-icon>delete</mat-icon></button>
+                                </div>
+                                <div class="grid" style="padding: 15px;">
+                                    <div class="form-group">
+                                        <label>Orgnl Instr ID</label>
+                                        <input formControlName="orgnlInstrId" maxlength="35">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Orgnl End-To-End ID <span class="req">*</span></label>
+                                        <input formControlName="orgnlEndToEndId" maxlength="35">
+                                    </div>
+                                    <div class="form-group full-width">
+                                        <label>Orgnl UETR <span class="req">*</span></label>
+                                        <div class="uetr-control-row">
+                                            <input formControlName="orgnlUetr" maxlength="36" class="auto-lowercase">
+                                            <button type="button" class="uetr-refresh-btn" (click)="refreshUetr(tx)"><mat-icon>refresh</mat-icon></button>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Status <span class="req">*</span></label>
+                                        <select formControlName="txSts">
+                                            <option *ngFor="let s of transactionStatuses" [value]="s.code">{{s.code}} - {{s.label}}</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Reason Code</label>
+                                        <select formControlName="stsRsnCd">
+                                            <option value="">Select Reason...</option>
+                                            <option *ngFor="let r of statusReasonCodes" [value]="r.code">{{r.code}} - {{r.label}}</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Additional Info (Repeatable) -->
+                                    <div class="form-group full-width" style="margin-top: 10px;">
+                                        <label>Additional Information</label>
+                                        <div formArrayName="addtlInf">
+                                            <div *ngFor="let info of getAddtlInf(tx); let j = index" style="display: flex; gap: 8px; margin-bottom: 5px;">
+                                                <input [formControlName]="j" maxlength="105" style="flex: 1;" placeholder="Add details...">
+                                                <button type="button" class="btn-remove-small" (click)="removeAddtlInf(tx, j)" *ngIf="getAddtlInf(tx).length > 1"><mat-icon>close</mat-icon></button>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn-add-repeat" (click)="addAddtlInf(tx)" *ngIf="getAddtlInf(tx).length < 10">+ Add Line</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-container>
+
                 </div>
             </form>
         </div>
 
+        <!-- PREVIEW PANEL -->
         <div class="right-panel">
+            <!-- Top Actions -->
             <div class="bottom-actions" style="margin-top: 0; margin-bottom: 1rem;">
                 <div class="down">
                     <button class="action-btn copy-btn" (click)="copyToClipboard()">
@@ -160,108 +184,166 @@
                     <button class="action-btn" (click)="downloadXml()">
                         <mat-icon>download</mat-icon> Download XML
                     </button>
-                    <button class="action-btn validate-btn" (click)="validateMessage()">
+                    <button class="action-btn validate-btn" (click)="validateMessage()" [disabled]="form.invalid">
                         <mat-icon>verified</mat-icon> Validate Message
                     </button>
                 </div>
             </div>
-            
+
+            <!-- XML Preview & Actions -->
             <div class="content-box preview-box">
-                <div class="editor-header">
-                    <div class="up">
-                        <button class="action-btn-small" (click)="undoXml()" [disabled]="!canUndoXml()" matTooltip="Undo (Ctrl+Z)">
-                            <mat-icon>undo</mat-icon>
-                        </button>
-                        <button class="action-btn-small" (click)="redoXml()" [disabled]="!canRedoXml()" matTooltip="Redo (Ctrl+Y)">
-                            <mat-icon>redo</mat-icon>
-                        </button>
-                        <button class="action-btn-small" (click)="formatXml()" [disabled]="!generatedXml" matTooltip="Format XML (Ctrl+S)">
-                            <mat-icon>format_align_left</mat-icon>
-                        </button>
-                    </div>
+                <div class="up">
+                    <button class="action-btn-small" (click)="undoXml()" [disabled]="!canUndoXml()" title="Undo">
+                        <mat-icon>undo</mat-icon>
+                    </button>
+                    <button class="action-btn-small" (click)="redoXml()" [disabled]="!canRedoXml()" title="Redo">
+                        <mat-icon>redo</mat-icon>
+                    </button>
+                    <button class="action-btn-small" (click)="formatXml()" [disabled]="!generatedXml" title="Format XML">
+                        <mat-icon>format_align_left</mat-icon>
+                    </button>
                 </div>
                 <div class="editor-wrapper">
-                    <div class="line-numbers" #lineNumbers>
-                        <div *ngFor="let idx of editorLineCount; let i = index">{{ i + 1 }}</div>
-                    </div>
+                    <div class="line-numbers" #lineNumbers><div *ngFor="let idx of editorLineCount">{{idx}}</div></div>
                     <textarea class="code-editor" [(ngModel)]="generatedXml" (ngModelChange)="onEditorChange($event)" (scroll)="syncScroll(xmlEditor, lineNumbers)" #xmlEditor spellcheck="false" wrap="off"></textarea>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Validation Modal -->
-    <div class="validation-overlay" *ngIf="showValidationModal" (click)="closeValidationModal()">
-        <div class="validation-modal" (click)="$event.stopPropagation()">
-            <div class="vm-header">
-                <div class="vm-title">
-                    <mat-icon>fact_check</mat-icon>
-                    <span>PSR Validation Results</span>
-                </div>
-                <button class="vm-close" (click)="closeValidationModal()"><mat-icon>close</mat-icon></button>
+<!-- ================================= Templates ================================= -->
+
+<ng-template #partyForm let-group="group" let-prefix="prefix" let-title="title" let-required="required">
+    <div class="party-group full-width" [formGroup]="group">
+        <div class="party-group-title" [class.mandatory]="required">{{title}}</div>
+        <div class="party-grid">
+            <div class="form-group full-width">
+                <label>Name</label>
+                <input formControlName="name" placeholder="Business Name">
             </div>
-            <div class="vm-body">
-                <div class="vm-loading" *ngIf="validationStatus === 'validating'">
-                    <div class="vm-spinner"></div>
-                    <p>Scanning message for compliance...</p>
-                    <span class="vm-loading-sub">Running Layer 1-3 checks</span>
+            <div class="form-group">
+                <label>ID Type</label>
+                <select formControlName="idType">
+                    <option value="org">Organisation</option>
+                    <option value="prvt">Private Individual</option>
+                </select>
+            </div>
+            <ng-container *ngIf="group.get('idType')?.value === 'org'">
+                <div class="form-group"><label>AnyBIC</label><input formControlName="orgAnyBic" class="auto-uppercase" maxlength="11"></div>
+                <div class="form-group"><label>LEI</label><input formControlName="orgLei" class="auto-uppercase" maxlength="20"></div>
+            </ng-container>
+            <ng-container *ngIf="group.get('idType')?.value === 'prvt'">
+                <div class="form-group"><label>Birth Date</label><input type="date" formControlName="prvtBirthDt"></div>
+                <div class="form-group"><label>City of Birth</label><input formControlName="prvtCity"></div>
+            </ng-container>
+        </div>
+    </div>
+</ng-template>
+
+<ng-template #agentForm let-group="group" let-prefix="prefix" let-title="title" let-required="required">
+    <div class="party-group full-width" [formGroup]="group">
+        <div class="party-group-title" [class.mandatory]="required">{{title}}</div>
+        <div class="party-grid">
+            <div class="form-group"><label>BICFI</label><input formControlName="bic" class="auto-uppercase" maxlength="11"></div>
+            <div class="form-group"><label>Member ID</label><input formControlName="mmbId"></div>
+        </div>
+    </div>
+</ng-template>
+
+<!-- Validation Modal -->
+<div class="validation-overlay" *ngIf="showValidationModal" (click)="closeValidationModal()">
+    <div class="validation-modal" (click)="$event.stopPropagation()">
+        <div class="vm-header" [class.validating]="validationStatus === 'validating'">
+            <div class="vm-title">
+                <mat-icon>fact_check</mat-icon>
+                <span>Validation Results</span>
+                <span class="vm-msg-type" *ngIf="validationReport?.message">{{validationReport.message}}</span>
+            </div>
+            <div class="vm-header-actions" *ngIf="validationStatus === 'done'">
+                <button class="vm-action-btn" (click)="viewXmlModal()"><mat-icon>visibility</mat-icon> VIEW XML</button>
+                <button class="vm-action-btn" (click)="editXmlModal()"><mat-icon>edit</mat-icon> EDIT</button>
+                <button class="vm-action-btn run" (click)="runValidationModal()"><mat-icon>play_circle</mat-icon> RUN</button>
+            </div>
+            <button class="vm-close" (click)="closeValidationModal()"><mat-icon>close</mat-icon></button>
+        </div>
+
+        <!-- Loading State -->
+        <div class="vm-loading" *ngIf="validationStatus === 'validating'">
+            <div class="vm-spinner"></div>
+            <p>Validating your XML message...</p>
+            <span class="vm-loading-sub">Running Layer 1-3 checks</span>
+        </div>
+
+        <!-- Results -->
+        <div class="vm-body" *ngIf="validationStatus === 'done' && validationReport">
+            <div class="vm-status-banner" [class.pass]="validationReport.status === 'PASS'" [class.fail]="validationReport.status !== 'PASS'">
+                <mat-icon>{{validationReport.status === 'PASS' ? 'check_circle' : 'cancel'}}</mat-icon>
+                <div class="vm-status-text">
+                    <strong>{{validationReport.status === 'PASS' ? 'VALIDATION PASSED' : 'VALIDATION FAILED'}}</strong>
+                    <span>{{validationReport.errors || 0}} error(s), {{validationReport.warnings || 0}} warning(s) &bull; {{validationReport.total_time_ms || 0}}ms</span>
                 </div>
-                
-                <div *ngIf="validationStatus === 'done' && validationReport">
-                    <div class="vm-status-banner" [class.pass]="validationReport.status === 'PASS'" [class.fail]="validationReport.status !== 'PASS'">
-                        <mat-icon>{{validationReport.status === 'PASS' ? 'check_circle' : 'cancel'}}</mat-icon>
-                        <div class="vm-status-text">
-                            <strong>{{validationReport.status === 'PASS' ? 'VALIDATION PASSED' : 'VALIDATION FAILED'}}</strong>
-                            <span>{{validationReport.errors || 0}} error(s), {{validationReport.warnings || 0}} warning(s) &bull; {{validationReport.total_time_ms || 0}}ms</span>
-                        </div>
-                    </div>
+            </div>
 
-                    <div class="vm-layers" style="display: flex; gap: 10px; margin-top: 1rem;">
-                        <div class="vm-layer" *ngFor="let k of getValidationLayers()" [class.layer-pass]="isLayerPass(k)" [class.layer-fail]="isLayerFail(k)" [class.layer-warn]="isLayerWarn(k)">
-                            <div class="vm-layer-icon">
-                                <mat-icon *ngIf="isLayerPass(k)" style="color: #10b981; font-size: 18px;">check_circle</mat-icon>
-                                <mat-icon *ngIf="isLayerFail(k)" style="color: #ef4444; font-size: 18px;">cancel</mat-icon>
-                                <mat-icon *ngIf="isLayerWarn(k)" style="color: #f59e0b; font-size: 18px;">warning</mat-icon>
-                            </div>
-                            <div class="vm-layer-info">
-                                <strong>{{getLayerName(k)}}</strong>
-                                <span class="vm-layer-time">{{getLayerTime(k)}}ms</span>
-                            </div>
-                        </div>
+            <div class="vm-layers" *ngIf="getValidationLayers().length > 0">
+                <div class="vm-layer" *ngFor="let k of getValidationLayers()" [class.layer-pass]="isLayerPass(k)" [class.layer-fail]="isLayerFail(k)" [class.layer-warn]="isLayerWarn(k)">
+                    <div class="vm-layer-icon">
+                        <mat-icon *ngIf="isLayerPass(k)" style="color: #10b981; font-size: 20px;">check_circle</mat-icon>
+                        <mat-icon *ngIf="isLayerFail(k)" style="color: #ef4444; font-size: 20px;">cancel</mat-icon>
+                        <mat-icon *ngIf="isLayerWarn(k)" style="color: #f59e0b; font-size: 20px;">warning</mat-icon>
                     </div>
-
-                    <div class="vm-issues" *ngIf="getValidationIssues().length > 0" style="margin-top: 1.5rem;">
-                        <div class="vm-issues-header" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: var(--bg-card-hover); border-bottom: 1px solid var(--border-light);">
-                            <mat-icon style="font-size: 18px; color: #ef4444;">report</mat-icon>
-                            <span>Issues Found ({{getValidationIssues().length}})</span>
-                        </div>
-                        <div class="vm-issue-list">
-                            <div class="vm-issue" *ngFor="let issue of getValidationIssues()" (click)="toggleValidationIssue(issue)" [class.expanded]="validationExpandedIssue === issue" style="border-bottom: 1px solid var(--border-light); cursor: pointer;">
-                                <div class="vm-issue-row" style="display: flex; align-items: center; gap: 10px; padding: 10px;">
-                                    <span class="vm-issue-severity" [class.error]="issue.severity === 'ERROR'" [class.warning]="issue.severity === 'WARNING'" style="font-size: 0.6rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">{{issue.severity}}</span>
-                                    <span class="vm-issue-layer" style="font-family: monospace; font-size: 0.7rem; color: var(--text-muted);">L{{issue.layer}}</span>
-                                    <span class="vm-issue-msg" style="flex: 1; font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{issue.message}}</span>
-                                    <mat-icon style="font-size: 18px; color: var(--text-muted);">{{validationExpandedIssue === issue ? 'expand_less' : 'expand_more'}}</mat-icon>
-                                </div>
-                                <div class="vm-issue-detail" *ngIf="validationExpandedIssue === issue" style="padding: 10px 10px 15px 40px; background: var(--bg-card-hover); font-size: 0.75rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 8px;">
-                                    <div class="vm-detail-row" style="display: flex; gap: 10px;"><strong>Message:</strong> <span>{{issue.message}}</span></div>
-                                    <div class="vm-detail-row" *ngIf="issue.path" style="display: flex; gap: 10px;"><strong>Path:</strong> <code style="background: rgba(0,0,0,0.1); padding: 2px 4px; border-radius: 3px;">{{issue.path}}</code></div>
-                                    <div class="vm-detail-row fix" *ngIf="issue.fix_suggestion" style="background: rgba(16, 185, 129, 0.1); padding: 8px; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.2); display: flex; align-items: center; gap: 10px;">
-                                        <mat-icon style="color: #10b981; font-size: 18px;">lightbulb</mat-icon>
-                                        <div style="flex: 1;"><strong>Fix Suggestion:</strong> {{issue.fix_suggestion}}</div>
-                                        <button class="action-btn-small" (click)="copyFix(issue.fix_suggestion, $event)" title="Copy fix"><mat-icon>content_copy</mat-icon></button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="vm-no-issues" *ngIf="getValidationIssues().length === 0" style="text-align: center; padding: 3rem;">
-                        <mat-icon style="font-size: 48px; width: 48px; height: 48px; color: #10b981; margin-bottom: 1rem;">check_circle</mat-icon>
-                        <p style="font-weight: 600;">Message is Valid!</p>
-                        <p style="color: var(--text-muted); font-size: 0.85rem;">No compliance issues detected in layers 1, 2, or 3.</p>
+                    <div class="vm-layer-info">
+                        <strong>Layer {{k}}: {{getLayerName(k)}}</strong>
+                        <span class="vm-layer-time">{{getLayerTime(k)}}ms</span>
                     </div>
                 </div>
+            </div>
+
+            <div class="vm-issues" *ngIf="getValidationIssues().length > 0">
+                <div class="vm-issues-header">
+                    <mat-icon>report</mat-icon>
+                    <span>Issues ({{getValidationIssues().length}})</span>
+                </div>
+                <div class="vm-issue-list">
+                    <div class="vm-issue" *ngFor="let issue of getValidationIssues()" (click)="toggleValidationIssue(issue)" [class.expanded]="validationExpandedIssue === issue">
+                        <div class="vm-issue-row">
+                            <span class="vm-issue-severity" [class.error]="issue.severity === 'ERROR'" [class.warning]="issue.severity === 'WARNING'">
+                                {{issue.severity}}
+                            </span>
+                            <span class="vm-issue-layer">L{{issue.layer}}</span>
+                            <span class="vm-issue-msg">{{issue.message}}</span>
+                            <mat-icon class="vm-issue-chevron">
+                                {{validationExpandedIssue === issue ? 'expand_less' : 'expand_more'}}
+                            </mat-icon>
+                        </div>
+                        <div class="vm-issue-detail" *ngIf="validationExpandedIssue === issue">
+                            <div class="vm-detail-row" *ngIf="issue.severity === 'ERROR'">
+                                <strong>Error Details:</strong>
+                                <span>{{issue.message}}</span>
+                            </div>
+                            <div class="vm-detail-row" *ngIf="issue.path">
+                                <strong>Path:</strong>
+                                <code>{{issue.path}}</code>
+                            </div>
+                            <div class="vm-detail-row" *ngIf="issue.code">
+                                <strong>Code:</strong>
+                                <code>{{issue.code}}</code>
+                            </div>
+                            <div class="vm-detail-row fix" *ngIf="issue.fix_suggestion">
+                                <strong><mat-icon style="font-size: 16px; width: 16px; height: 16px; vertical-align: middle;">lightbulb</mat-icon> Fix:</strong>
+                                <span>{{issue.fix_suggestion}}</span>
+                                <button class="vm-copy-btn" (click)="copyFix(issue.fix_suggestion, $event)" matTooltip="Copy fix suggestion">
+                                    <mat-icon>content_copy</mat-icon>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="vm-no-issues" *ngIf="getValidationIssues().length === 0">
+                <mat-icon>celebration</mat-icon>
+                <p>No issues found! Your message is valid.</p>
             </div>
         </div>
     </div>
