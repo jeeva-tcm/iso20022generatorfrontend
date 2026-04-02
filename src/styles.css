@@ -613,13 +613,7 @@ body.light-theme .validation-msg.success {
     color: #059669; /* Emerald 600 */
 }
 
-.ng-invalid.ng-touched, .ng-invalid.ng-dirty {
-    border-color: #ef4444 !important;
-}
-
-.field-error {
-    border-color: #ef4444 !important;
-}
+/* Validation highlights removed at user request */
 
 @keyframes fadeIn {
     from {
