@@ -11,8 +11,7 @@
                     
                     <!-- 1. Application Header (BAH) -->
                     <div class="section-title section-blue" (click)="toggleSection('bah')">
-                        <span>Application Header (AppHdr) <code>&lt;head.001.001.02&gt;</code></span>
-                        <mat-icon>{{sections['bah'] ? 'expand_less' : 'expand_more'}}</mat-icon>
+                        <span>Application Header (AppHdr)</span>
                     </div>
                     <ng-container *ngIf="sections['bah']">
                         <div class="form-group">
@@ -23,29 +22,217 @@
                             <label>Creation Date <span class="req">*</span></label>
                             <input formControlName="head_creDt" placeholder="YYYY-MM-DDTHH:mm:ssZ">
                         </div>
+
+                        <!-- Header Controls -->
+                        <div class="full-width" style="margin-top: 10px; margin-bottom: 10px; background: rgba(0,0,0,0.02); padding: 15px; border-radius: 10px; border: 1px solid var(--border-light); display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+                            <div class="form-group">
+                                <label>Copy/Duplicate <span class="opt">Optional</span></label>
+                                <select formControlName="head_cpyDplct">
+                                    <option value="">None</option>
+                                    <option *ngFor="let c of copyDplctCodes" [value]="c">{{c}}</option>
+                                </select>
+                                <div class="validation-msg" *ngIf="form.errors?.['rltdHeaderMissing']" style="color: #ef4444; font-size: 0.65rem; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                                    <mat-icon style="font-size: 14px; width: 14px; height: 14px;">warning</mat-icon>
+                                    Related Header must be enabled for Copy/Duplicate.
+                                    <a (click)="form.get('head_rltd_enabled')?.setValue(true)" style="text-decoration: underline; cursor: pointer; color: var(--secondary-color);">Enable now</a>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Priority <span class="opt">Optional</span></label>
+                                <select formControlName="head_prty">
+                                    <option *ngFor="let p of priorityCodes" [value]="p">{{p}}</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="display: flex; align-items: center; justify-content: flex-start; padding-top: 12px; grid-column: 1 / -1;">
+                                <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--accent-color); font-size: 0.72rem; text-transform: uppercase;">
+                                    <input type="checkbox" formControlName="head_pssblDplct" style="width: 18px; height: 18px;">
+                                    Possible Duplicate
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Business Service (BizSvc)</label>
+                            <input formControlName="head_bizSvc" maxlength="35">
+                        </div>
+
+                        <!-- Market Practice -->
+                        <div class="party-group full-width" style="margin-top: 10px;">
+                            <div class="party-group-title">Market Practice Info</div>
+                            <div class="party-grid">
+                                <div class="form-group">
+                                    <label>Registry (Regy)</label>
+                                    <input formControlName="head_mktPrctcRegy" maxlength="35" placeholder="Registry name (simple string)">
+                                </div>
+                                <div class="form-group">
+                                    <label>Market Practice ID (Id) <span class="req" *ngIf="form.get('head_mktPrctcRegy')?.value || form.get('head_mktPrctcId')?.value">*</span></label>
+                                    <input formControlName="head_mktPrctcId" maxlength="35" placeholder="Market Practice ID">
+                                    <div class="validation-msg" *ngIf="err('head_mktPrctcId')">{{err('head_mktPrctcId')}}</div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="form-group">
                             <label>Sender BIC</label>
                             <input formControlName="head_fromBic" maxlength="11" class="auto-uppercase">
+                            <div class="validation-msg" *ngIf="err('head_fromBic')">{{err('head_fromBic')}}</div>
                         </div>
+
+                        <!-- Sender Clearing System ID -->
+                        <div class="party-group full-width" style="margin-top: 10px;">
+                            <div class="party-group-title">Clearing System Identification (From)</div>
+                            <div class="party-grid">
+                                <div class="form-group">
+                                    <label>Clearing System Code (Cd)</label>
+                                    <select formControlName="head_fromClrSysCd">
+                                        <option value="">Select Code...</option>
+                                        <option *ngFor="let c of clrSysCodes" [value]="c">{{c}}</option>
+                                    </select>
+                                    <div class="validation-msg" *ngIf="err('head_fromClrSysCd')">{{err('head_fromClrSysCd')}}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Clearing System Member ID (MmbId)</label>
+                                    <input formControlName="head_fromMmbId" maxlength="35" placeholder="Member ID">
+                                    <div class="validation-msg" *ngIf="err('head_fromMmbId')">{{err('head_fromMmbId')}}</div>
+                                </div>
+                                <div class="form-group full-width">
+                                    <label>LEI</label>
+                                    <input formControlName="head_fromLei" maxlength="20" class="auto-uppercase" placeholder="20-char LEI">
+                                    <div class="validation-msg" *ngIf="err('head_fromLei')">{{err('head_fromLei')}}</div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="form-group">
                             <label>Receiver BIC</label>
                             <input formControlName="head_toBic" maxlength="11" class="auto-uppercase">
+                            <div class="validation-msg" *ngIf="err('head_toBic')">{{err('head_toBic')}}</div>
+                        </div>
+
+                        <!-- Receiver Clearing System ID -->
+                        <div class="party-group full-width" style="margin-top: 10px;">
+                            <div class="party-group-title">Clearing System Identification (To)</div>
+                            <div class="party-grid">
+                                <div class="form-group">
+                                    <label>Clearing System Code (Cd)</label>
+                                    <select formControlName="head_toClrSysCd">
+                                        <option value="">Select Code...</option>
+                                        <option *ngFor="let c of clrSysCodes" [value]="c">{{c}}</option>
+                                    </select>
+                                    <div class="validation-msg" *ngIf="err('head_toClrSysCd')">{{err('head_toClrSysCd')}}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Clearing System Member ID (MmbId)</label>
+                                    <input formControlName="head_toMmbId" maxlength="35" placeholder="Member ID">
+                                    <div class="validation-msg" *ngIf="err('head_toMmbId')">{{err('head_toMmbId')}}</div>
+                                </div>
+                                <div class="form-group full-width">
+                                    <label>LEI</label>
+                                    <input formControlName="head_toLei" maxlength="20" class="auto-uppercase" placeholder="20-char LEI">
+                                    <div class="validation-msg" *ngIf="err('head_toLei')">{{err('head_toLei')}}</div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Related Header (Rltd) -->
-                        <div class="party-group full-width" style="margin-top: 10px;">
-                            <div class="party-group-title" (click)="toggleSection('bahRltd')" style="cursor: pointer;">
-                                Related Header (Rltd) <span class="opt">Optional</span>
-                                <mat-icon style="font-size: 16px; width: 16px; height: 16px; float: right;">{{sections['bahRltd'] ? 'expand_less' : 'expand_more'}}</mat-icon>
+                        <div class="full-width" style="margin-top: 1.5rem;">
+                            <div class="party-group-title" style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card-hover); border: 1px solid var(--border-light); border-bottom: none; border-radius: 10px 10px 0 0; padding: 0.5rem 1rem;">
+                                <span style="font-weight: bold; color: var(--accent-color); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Related Header (Rltd)</span>
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
+                                    <input type="checkbox" formControlName="head_rltd_enabled" style="width: 16px; height: 16px;">
+                                    Enable
+                                </label>
                             </div>
-                            <div class="party-grid" *ngIf="sections['bahRltd']">
-                                <div class="form-group">
+                            <div class="grid" *ngIf="form.get('head_rltd_enabled')?.value" style="padding: 1rem; border: 1px solid var(--border-light); border-radius: 0 0 10px 10px; gap: 1.5rem; margin-bottom: 1rem; background: var(--bg-card); display: grid; grid-template-columns: 1fr;">
+                                <div class="form-group full-width">
                                     <label>Related Msg ID</label>
                                     <input formControlName="head_rltd_bizMsgIdr" maxlength="35">
                                 </div>
-                                <div class="form-group">
-                                    <label>Related Sender BIC</label>
-                                    <input formControlName="head_rltd_fromBic" maxlength="11" class="auto-uppercase">
+
+                                <!-- From & To Identification -->
+                                <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+                                    <!-- Related From -->
+                                    <div class="party-group">
+                                        <div class="party-group-title">Related From (Fr)</div>
+                                        <div class="party-grid">
+                                            <div class="form-group">
+                                                <label>BICFI</label>
+                                                <input formControlName="head_rltd_fromBic" maxlength="11" class="auto-uppercase" placeholder="8 or 11 characters">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Clearing Sys Code (Cd)</label>
+                                                <input formControlName="head_rltd_fromClrSysCd" maxlength="5" class="auto-uppercase" placeholder="e.g. T2, FED">
+                                                <div class="validation-msg" *ngIf="form.errors?.['head_rltd_from_clrSysCdMissing']">Cd required if MmbId present</div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Member ID (MmbId)</label>
+                                                <input formControlName="head_rltd_fromMmbId" maxlength="35" class="auto-uppercase">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>LEI</label>
+                                                <input formControlName="head_rltd_fromLei" maxlength="20" class="auto-uppercase" placeholder="20-char LEI">
+                                                <div class="validation-msg" *ngIf="err('head_rltd_fromLei')">{{err('head_rltd_fromLei')}}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Related To -->
+                                    <div class="party-group">
+                                        <div class="party-group-title">Related To (To)</div>
+                                        <div class="party-grid">
+                                            <div class="form-group">
+                                                <label>BICFI</label>
+                                                <input formControlName="head_rltd_toBic" maxlength="11" class="auto-uppercase" placeholder="8 or 11 characters">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Clearing Sys Code (Cd)</label>
+                                                <input formControlName="head_rltd_toClrSysCd" maxlength="5" class="auto-uppercase" placeholder="e.g. T2, FED">
+                                                <div class="validation-msg" *ngIf="form.errors?.['head_rltd_to_clrSysCdMissing']">Cd required if MmbId present</div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Member ID (MmbId)</label>
+                                                <input formControlName="head_rltd_toMmbId" maxlength="35" class="auto-uppercase">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>LEI</label>
+                                                <input formControlName="head_rltd_toLei" maxlength="20" class="auto-uppercase" placeholder="20-char LEI">
+                                                <div class="validation-msg" *ngIf="err('head_rltd_toLei')">{{err('head_rltd_toLei')}}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Related Header Controls -->
+                                <div class="full-width" style="padding: 15px; border-radius: 10px; border: 1px solid var(--border-light); background: rgba(0,0,0,0.02); display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-top: 10px;">
+                                    <div class="form-group">
+                                        <label>Copy/Duplicate <span class="opt">Optional</span></label>
+                                        <select formControlName="head_rltd_cpyDplct">
+                                            <option value="">None</option>
+                                            <option *ngFor="let c of copyDplctCodes" [value]="c">{{c}}</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Priority <span class="opt">Optional</span></label>
+                                        <select formControlName="head_rltd_prty">
+                                            <option value="">Select...</option>
+                                            <option *ngFor="let p of priorityCodes" [value]="p">{{p}}</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" style="display: flex; align-items: center; justify-content: flex-start; padding-top: 12px; grid-column: 1 / -1;">
+                                        <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--accent-color); font-size: 0.72rem; text-transform: uppercase;">
+                                            <input type="checkbox" formControlName="head_rltd_pssblDplct" style="width: 18px; height: 18px;">
+                                            Possible Duplicate
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                                    <div class="form-group">
+                                        <label>Related Creation Date</label>
+                                        <input formControlName="head_rltd_creDt" placeholder="YYYY-MM-DDTHH:mm:ssZ">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Related Biz Service</label>
+                                        <input formControlName="head_rltd_bizSvc" maxlength="35">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -53,8 +240,7 @@
 
                     <!-- 2. Group Header -->
                     <div class="section-title section-green" (click)="toggleSection('grpHdr')">
-                        <span>Group Header <code>&lt;GrpHdr&gt;</code></span>
-                        <mat-icon>{{sections['grpHdr'] ? 'expand_less' : 'expand_more'}}</mat-icon>
+                        <span>Group Header</span>
                     </div>
                     <ng-container *ngIf="sections['grpHdr']">
                         <div class="form-group">
@@ -67,7 +253,7 @@
                         </div>
                         
                         <!-- Initiating Party -->
-                        <ng-container *ngTemplateOutlet="partyForm; context: { group: form.get('initgPty'), prefix: 'initgPty', title: 'Initiating Party (InitgPty)', required: true }"></ng-container>
+                        <ng-container *ngTemplateOutlet="partyForm; context: { group: form.get('initgPty'), prefix: 'initgPty', title: 'Initiating Party (InitgPty)', required: true, hideName: true, hidePostal: true, hideCtryOfRes: true }"></ng-container>
                         
                         <!-- Forwarding Agent -->
                         <ng-container *ngTemplateOutlet="agentForm; context: { group: form.get('fwdgAgt'), prefix: 'fwdgAgt', title: 'Forwarding Agent (FwdgAgt)', required: false }"></ng-container>
@@ -75,8 +261,7 @@
 
                     <!-- 3. Original Group Info -->
                     <div class="section-title" (click)="toggleSection('orgnlGrpInf')">
-                        <span>Original Group Info <code>&lt;OrgnlGrpInfAndSts&gt;</code></span>
-                        <mat-icon>{{sections['orgnlGrpInf'] ? 'expand_less' : 'expand_more'}}</mat-icon>
+                        <span>Original Group Info</span>
                     </div>
                     <ng-container *ngIf="sections['orgnlGrpInf']">
                         <div class="form-group">
@@ -91,19 +276,11 @@
                             <label>Orgnl CreDtTm</label>
                             <input formControlName="orgnlCreDtTm">
                         </div>
-                        <div class="form-group">
-                            <label>Group Status</label>
-                            <select formControlName="grpSts">
-                                <option value="">Select Status...</option>
-                                <option *ngFor="let s of groupStatuses" [value]="s">{{s}}</option>
-                            </select>
-                        </div>
                     </ng-container>
 
                     <!-- 4. Original Payment Information -->
                     <div class="section-title" (click)="toggleSection('orgnlPmtInf')">
-                        <span>Original Payment Information <code>&lt;OrgnlPmtInfAndSts&gt;</code></span>
-                        <mat-icon>{{sections['orgnlPmtInf'] ? 'expand_less' : 'expand_more'}}</mat-icon>
+                        <span>Original Payment Information</span>
                     </div>
                     <ng-container *ngIf="sections['orgnlPmtInf']">
                         <div class="form-group full-width">
@@ -162,7 +339,14 @@
                                                 <button type="button" class="btn-remove-small" (click)="removeAddtlInf(tx, j)" *ngIf="getAddtlInf(tx).length > 1"><mat-icon>close</mat-icon></button>
                                             </div>
                                         </div>
-                                        <button type="button" class="btn-add-repeat" (click)="addAddtlInf(tx)" *ngIf="getAddtlInf(tx).length < 10">+ Add Line</button>
+                                    </div>
+                                    
+                                    <!-- Status Reason Information -> Originator (Orgtr) -->
+                                        <div class="full-width" style="margin-top: 20px;">
+                                            <div class="section-title" style="background: rgba(0,0,0,0.03); font-size: 0.85rem; border: none; border-radius: 8px;">
+                                                <span>Originator (Orgtr)</span>
+                                            </div>
+                                        <ng-container *ngTemplateOutlet="partyForm; context: { group: tx.get('orgtr'), prefix: 'orgtr', title: 'Originator Identification', required: false }"></ng-container>
                                     </div>
                                 </div>
                             </div>
@@ -214,29 +398,163 @@
 
 <!-- ================================= Templates ================================= -->
 
-<ng-template #partyForm let-group="group" let-prefix="prefix" let-title="title" let-required="required">
+<ng-template #partyForm let-group="group" let-prefix="prefix" let-title="title" let-required="required" let-hideName="hideName" let-hidePostal="hidePostal" let-hideCtryOfRes="hideCtryOfRes">
     <div class="party-group full-width" [formGroup]="group">
         <div class="party-group-title" [class.mandatory]="required">{{title}}</div>
         <div class="party-grid">
-            <div class="form-group full-width">
+            <div class="form-group full-width" *ngIf="!hideName">
                 <label>Name</label>
                 <input formControlName="name" placeholder="Business Name">
             </div>
             <div class="form-group">
                 <label>ID Type</label>
-                <select formControlName="idType">
+                <select formControlName="idType" (change)="onIdTypeChange(group)">
                     <option value="org">Organisation</option>
                     <option value="prvt">Private Individual</option>
                 </select>
             </div>
+            
             <ng-container *ngIf="group.get('idType')?.value === 'org'">
                 <div class="form-group"><label>AnyBIC</label><input formControlName="orgAnyBic" class="auto-uppercase" maxlength="11"></div>
                 <div class="form-group"><label>LEI</label><input formControlName="orgLei" class="auto-uppercase" maxlength="20"></div>
+                
+                <div class="party-group full-width" style="margin-top: 10px; border: 1px dashed var(--border-light); padding: 10px; border-radius: 8px;">
+                    <div class="party-group-title" style="font-size: 0.65rem; opacity: 0.8;">Organisation Identification</div>
+                    <div class="party-grid">
+                        <div class="form-group">
+                            <label>Other ID (Othr.Id)</label>
+                            <input formControlName="orgId" maxlength="35" placeholder="Identification string">
+                            <div class="field-hint" *ngIf="getSchemeGuidance(group, 'org') as hint">
+                                <mat-icon style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle;">info</mat-icon> {{hint}}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Scheme Name Code (Cd)</label>
+                            <select formControlName="orgScheme">
+                                <option value="">Select Code...</option>
+                                <option *ngFor="let c of orgSchemeCodes" [value]="c">{{c}}</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Proprietary (Prtry)</label>
+                            <input formControlName="orgPrtry" maxlength="35" [disabled]="group.get('orgScheme')?.value">
+                        </div>
+                        <div class="form-group">
+                            <label>Issuer (Issr)</label>
+                            <input formControlName="orgIssr" maxlength="35">
+                        </div>
+                    </div>
+                </div>
             </ng-container>
+
             <ng-container *ngIf="group.get('idType')?.value === 'prvt'">
                 <div class="form-group"><label>Birth Date</label><input type="date" formControlName="prvtBirthDt"></div>
                 <div class="form-group"><label>City of Birth</label><input formControlName="prvtCity"></div>
+                <div class="form-group"><label>Province of Birth</label><input formControlName="prvtProv" maxlength="35"></div>
+                <div class="form-group"><label>Country of Birth</label>
+                    <select formControlName="prvtCtry">
+                        <option value="">Select Country...</option>
+                        <option *ngFor="let c of countries" [value]="c">{{c}}</option>
+                    </select>
+                </div>
+                
+                <div class="party-group full-width" style="margin-top: 10px; border: 1px dashed var(--border-light); padding: 10px; border-radius: 8px;">
+                    <div class="party-group-title" style="font-size: 0.65rem; opacity: 0.8;">Private Identification</div>
+                    <div class="party-grid">
+                        <div class="form-group">
+                            <label>Other ID (Othr.Id)</label>
+                            <input formControlName="prvtId" maxlength="35">
+                            <div class="field-hint" *ngIf="getSchemeGuidance(group, 'prvt') as hint">
+                                <mat-icon style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle;">info</mat-icon> {{hint}}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Scheme Name Code (Cd)</label>
+                            <select formControlName="prvtScheme">
+                                <option value="">Select Code...</option>
+                                <option *ngFor="let c of prvtSchemeCodes" [value]="c">{{c}}</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Proprietary (Prtry)</label>
+                            <input formControlName="prvtPrtry" maxlength="35" [disabled]="group.get('prvtScheme')?.value">
+                        </div>
+                        <div class="form-group">
+                            <label>Issuer (Issr)</label>
+                            <input formControlName="prvtIssr" maxlength="35">
+                        </div>
+                    </div>
+                </div>
             </ng-container>
+
+            <div class="form-group full-width" style="margin-top: 15px;" *ngIf="!hideCtryOfRes">
+                <label>Country of Residence</label>
+                <select formControlName="ctryOfRes">
+                    <option value="">Select Country...</option>
+                    <option *ngFor="let c of countries" [value]="c">{{c}}</option>
+                </select>
+            </div>
+
+            <div class="party-group full-width" style="margin-top: 15px; border: 1px solid var(--border-light); padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.01);" *ngIf="!hidePostal">
+                <div class="party-group-title" style="font-size: 0.75rem;">Postal Address</div>
+                <div [formGroup]="group.get('postal')">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Address Type</label>
+                        <select formControlName="addrType" (change)="onAddrTypeChange(group)">
+                            <option value="none">None (BIC/ID Only)</option>
+                            <option value="structured">Structured</option>
+                            <option value="unstructured">Unstructured</option>
+                            <option value="hybrid">Hybrid</option>
+                        </select>
+                    </div>
+
+                    <div class="party-grid" *ngIf="group.get('postal.addrType')?.value !== 'none'">
+                        <!-- Structured Section -->
+                        <ng-container *ngIf="['structured','hybrid'].includes(group.get('postal.addrType')?.value)">
+                            <div class="form-group"><label>Dept</label><input formControlName="dept" maxlength="70"></div>
+                            <div class="form-group"><label>SubDept</label><input formControlName="subDept" maxlength="70"></div>
+                            <div class="form-group"><label>Street</label><input formControlName="street" maxlength="70"></div>
+                            <div class="form-group"><label>BldgNb</label><input formControlName="bldgNb" maxlength="16"></div>
+                            <div class="form-group"><label>BldgNm</label><input formControlName="bldgNm" maxlength="35"></div>
+                            <div class="form-group"><label>Floor</label><input formControlName="floor" maxlength="70"></div>
+                            <div class="form-group"><label>PstBx</label><input formControlName="pstBx" maxlength="16"></div>
+                            <div class="form-group"><label>Room</label><input formControlName="room" maxlength="70"></div>
+                            <div class="form-group"><label>PstCd</label><input formControlName="pstCd" maxlength="16"></div>
+                            <div class="form-group"><label>Town</label><input formControlName="town" maxlength="35"></div>
+                            <div class="form-group"><label>TownLctn</label><input formControlName="townLctn" maxlength="35"></div>
+                            <div class="form-group"><label>District</label><input formControlName="district" maxlength="35"></div>
+                            <div class="form-group"><label>CtrySub</label><input formControlName="ctrySub" maxlength="35"></div>
+                        </ng-container>
+
+                        <!-- Always show Country if not 'none' -->
+                        <div class="form-group"><label>Country <span class="req">*</span></label>
+                            <select formControlName="ctry">
+                                <option value="">Select Country...</option>
+                                <option *ngFor="let c of countries" [value]="c">{{c}}</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Unstructured Section -->
+                        <div class="form-group full-width" *ngIf="['unstructured','hybrid'].includes(group.get('postal.addrType')?.value)">
+                            <div class="party-group-title" style="font-size: 0.7rem; margin-top: 10px;">Address Lines</div>
+                            <div formArrayName="addrLines">
+                                <div *ngFor="let l of getAddrLines(group); let k = index" class="form-group row-layout" style="margin-bottom: 5px;">
+                                    <label>Address Line {{k+1}}</label>
+                                    <div style="display: flex; gap: 8px; flex: 1;">
+                                        <input [formControlName]="k" maxlength="70" style="flex: 1;" [placeholder]="k === 0 ? 'e.g. 123 Wall Street' : 'e.g. Suite 400'">
+                                        <button type="button" class="btn-remove-small" (click)="removeAddrLine(group, k)" *ngIf="getAddrLines(group).length > 1"><mat-icon>close</mat-icon></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-add-repeat" (click)="addAddrLine(group)" 
+                                *ngIf="(group.get('postal.addrType')?.value === 'unstructured' && getAddrLines(group).length < 3) || 
+                                       (group.get('postal.addrType')?.value === 'hybrid' && getAddrLines(group).length < 2)">
+                                + Add Line
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </ng-template>
@@ -246,7 +564,28 @@
         <div class="party-group-title" [class.mandatory]="required">{{title}}</div>
         <div class="party-grid">
             <div class="form-group"><label>BICFI</label><input formControlName="bic" class="auto-uppercase" maxlength="11"></div>
-            <div class="form-group"><label>Member ID</label><input formControlName="mmbId"></div>
+            
+            <div class="party-group full-width" style="margin-top: 10px; border: 1px dashed var(--border-light); padding: 10px; border-radius: 8px;">
+                <div class="party-group-title" style="font-size: 0.65rem; opacity: 0.8;">Financial Institution Identification</div>
+                <div class="party-grid">
+                    <div class="form-group">
+                        <label>Clearing Sys Code (Cd)</label>
+                        <select formControlName="clrSys">
+                            <option value="">None</option>
+                            <option *ngFor="let c of clrSysCodes" [value]="c">{{c}}</option>
+                        </select>
+                        <div class="validation-msg" *ngIf="group.errors?.['clrSysDependency']">Member ID requires Code</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Member ID (MmbId)</label>
+                        <input formControlName="mmbId" maxlength="35" class="auto-uppercase">
+                    </div>
+                    <div class="form-group">
+                        <label>LEI</label>
+                        <input formControlName="lei" maxlength="20" class="auto-uppercase" placeholder="20-char LEI">
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </ng-template>
