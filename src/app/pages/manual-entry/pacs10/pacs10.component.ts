@@ -506,9 +506,9 @@ export class Pacs10Component implements OnInit {
             
             // Payment Type Info
             instrPrty: ['HIGH'],
-            svcLvlCd: ['G001', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{4}$/)]], 
+            svcLvlCd: ['G001', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{1,4}$/)]], 
             svcLvlPrtry: ['PRIORITY-SVC', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
-            lclInstrmCd: ['ONCL', [Validators.maxLength(4)]], 
+            lclInstrmCd: ['ONCL', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{1,4}$/)]], 
             lclInstrmPrtry: ['INSTANT-SETTLM', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
             ctgyPurpCd: ['INTC', [Validators.pattern(/^[A-Z]{4}$/)]], 
             ctgyPurpPrtry: ['CORP-CASH-POOL', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
@@ -1157,10 +1157,28 @@ ${this.rmtInf(v)}
         }
 
         if (ctrl!.errors?.['required']) return 'Required field.';
-        if (c === 'purposeCd' && ctrl!.errors?.['pattern']) return 'Invalid Purpose Code. Please select from the list or enter a valid ISO 20022 Purpose Code.';
-        if (c === 'clrSysRef' && ctrl!.errors?.['pattern']) return 'Invalid Pattern (Alphanumeric and standard special characters only, max 35 chars).';
-        if (ctrl!.errors?.['pattern']) return 'Invalid format.';
+
+        if (c === 'svcLvlCd') return 'Invalid Service Level Code. Must be 1-4 alphanumeric characters.';
+        if (c === 'svcLvlPrtry') return 'Invalid Proprietary Service Level. Up to 35 characters allowed.';
+        if (c === 'lclInstrmCd') return 'Invalid Local Instrument Code. Must be 1-4 alphanumeric characters.';
+        if (c === 'lclInstrmPrtry') return 'Invalid Proprietary Local Instrument. Up to 35 characters allowed.';
+        if (c === 'ctgyPurpPrtry') return 'Invalid Proprietary Category Purpose. Up to 35 characters allowed.';
+        if (c === 'purposePrtry') return 'Invalid Proprietary Purpose. Up to 35 characters allowed.';
+        if (c === 'purposeCd') return 'Invalid Purpose Code. Please select from the list or enter a valid ISO 20022 Purpose Code.';
+        if (c === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Please select from the list or enter a valid ISO 20022 Purpose Code.';
+        if (c === 'clrSysRef') return 'Invalid Pattern (Alphanumeric and standard special characters only, max 35 chars).';
+
         if (ctrl!.errors?.['maxlength']) return `Max ${ctrl!.errors!['maxlength'].requiredLength} chars.`;
+
+        if (ctrl!.errors?.['pattern']) {
+            if (cl.includes('bic')) return 'Valid 8 or 11-char BIC required.';
+            if (cl.includes('iban')) return 'Valid 34-char IBAN required.';
+            if (cl.includes('lei')) return 'Must be 20-char LEI.';
+            if (cl.includes('ctry') || cl.includes('country')) return '2-letter ISO code required.';
+            
+            return 'Invalid format.';
+        }
+
         if (ctrl!.errors?.['target2']) return 'T2 requires EUR.';
         if (ctrl!.errors?.['chaps']) return 'CHAPS requires GBP.';
         if (ctrl!.errors?.['chips']) return 'CHIPS requires USD.';
@@ -1283,7 +1301,7 @@ ${this.rmtInf(v)}
         }
 
         // Enforce casing
-        if (n.includes('bic') || n.includes('iban') || n.includes('ctry') || n === 'purposecd' || n === 'ctgypurpcd') {
+        if (n.includes('bic') || n.includes('iban') || n.includes('ctry') || n === 'purposecd' || n === 'ctgypurpcd' || n === 'svclvlcd' || n === 'lclinstrmcd') {
             val = val.toUpperCase();
         }
 

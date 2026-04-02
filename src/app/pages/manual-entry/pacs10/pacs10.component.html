@@ -161,22 +161,22 @@
                     </div>
                     <div class="form-group intermediary-field">
                         <label>Service Level Code <span class="opt">Optional</span></label>
-                        <input formControlName="svcLvlCd" placeholder="e.g. SEPA" maxlength="4">
+                        <input formControlName="svcLvlCd" name="svcLvlCd" placeholder="e.g. SEPA" maxlength="4">
                         <div class="validation-msg" *ngIf="err('svcLvlCd') as e">{{e}}</div>
                     </div>
                     <div class="form-group intermediary-field">
                         <label>Service Level Proprietary <span class="opt">Optional</span></label>
-                        <input formControlName="svcLvlPrtry" placeholder="Max 35 chars" maxlength="35">
+                        <input formControlName="svcLvlPrtry" name="svcLvlPrtry" placeholder="Max 35 chars" maxlength="35">
                         <div class="validation-msg" *ngIf="err('svcLvlPrtry') as e">{{e}}</div>
                     </div>
                     <div class="form-group intermediary-field">
                         <label>Local Instrument Code <span class="opt">Optional</span></label>
-                        <input formControlName="lclInstrmCd" placeholder="e.g. ONCL" maxlength="35">
+                        <input formControlName="lclInstrmCd" name="lclInstrmCd" placeholder="e.g. ONCL" maxlength="4">
                         <div class="validation-msg" *ngIf="err('lclInstrmCd') as e">{{e}}</div>
                     </div>
                     <div class="form-group intermediary-field">
                         <label>Local Instrument Proprietary <span class="opt">Optional</span></label>
-                        <input formControlName="lclInstrmPrtry" placeholder="Max 35 chars" maxlength="35">
+                        <input formControlName="lclInstrmPrtry" name="lclInstrmPrtry" placeholder="Max 35 chars" maxlength="35">
                         <div class="validation-msg" *ngIf="err('lclInstrmPrtry') as e">{{e}}</div>
                     </div>
                     <div class="form-group intermediary-field">
@@ -189,7 +189,7 @@
                     </div>
                     <div class="form-group intermediary-field">
                         <label>Category Purpose Proprietary <span class="opt">Optional</span></label>
-                        <input formControlName="ctgyPurpPrtry" placeholder="Max 35 chars" maxlength="35">
+                        <input formControlName="ctgyPurpPrtry" name="ctgyPurpPrtry" placeholder="Max 35 chars" maxlength="35">
                         <div class="validation-msg" *ngIf="err('ctgyPurpPrtry') as e">{{e}}</div>
                     </div>
                     <div class="form-group intermediary-field">
@@ -197,7 +197,7 @@
                             Purpose Code <span class="opt">Optional</span>
                             <mat-icon style="font-size: 14px; width: 14px; height: 14px; margin-left: 4px; color: var(--accent-color);">info</mat-icon>
                         </label>
-                        <select formControlName="purposeCd">
+                        <select formControlName="purposeCd" name="purposeCd">
                             <option value="">None</option>
                             <option *ngFor="let p of purposes" [value]="p">{{p}}</option>
                         </select>
@@ -205,7 +205,7 @@
                     </div>
                     <div class="form-group intermediary-field">
                         <label>Purpose Proprietary <span class="opt">Optional</span></label>
-                        <input formControlName="purposePrtry" placeholder="Max 35 chars" maxlength="35">
+                        <input formControlName="purposePrtry" name="purposePrtry" placeholder="Max 35 chars" maxlength="35">
                         <div class="validation-msg" *ngIf="err('purposePrtry') as e">{{e}}</div>
                     </div>
 
@@ -325,7 +325,7 @@
         <!-- BIC -->
         <div class="form-group">
             <label>{{title}} BIC <span class="req" *ngIf="required">*</span></label>
-            <input [formControlName]="isAgent ? prefix+'Bic' : prefix+'OrgAnyBIC'" maxlength="11" placeholder="e.g. NDEAFIHH">
+            <input [formControlName]="isAgent ? prefix+'Bic' : prefix+'OrgAnyBIC'" name="{{isAgent ? prefix+'Bic' : prefix+'OrgAnyBIC'}}" maxlength="11" placeholder="e.g. NDEAFIHH">
             <div class="validation-msg" *ngIf="err(isAgent ? prefix+'Bic' : prefix+'OrgAnyBIC') as e">{{e}}</div>
             <div class="field-hint at-limit" *ngIf="hint(isAgent ? prefix+'Bic' : prefix+'OrgAnyBIC', 11) as h">{{h}}</div>
         </div>
@@ -349,42 +349,62 @@
                     <div class="form-group">
                         <label>Department</label>
                         <input [formControlName]="prefix+'Dept'" maxlength="70">
+                        <div class="validation-msg" *ngIf="err(prefix+'Dept') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint(prefix+'Dept', 70) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
                         <label>Sub Department</label>
                         <input [formControlName]="prefix+'SubDept'" maxlength="70">
+                        <div class="validation-msg" *ngIf="err(prefix+'SubDept') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint(prefix+'SubDept', 70) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
                         <label>Street Name</label>
                         <input [formControlName]="prefix+'StrtNm'" maxlength="70">
+                        <div class="validation-msg" *ngIf="err(prefix+'StrtNm') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint(prefix+'StrtNm', 70) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
                         <label>Building Number</label>
                         <input [formControlName]="prefix+'BldgNb'" maxlength="16">
+                        <div class="validation-msg" *ngIf="err(prefix+'BldgNb') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint(prefix+'BldgNb', 16) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
                         <label>Building Name</label>
                         <input [formControlName]="prefix+'BldgNm'" maxlength="35">
+                        <div class="validation-msg" *ngIf="err(prefix+'BldgNm') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint(prefix+'BldgNm', 35) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
                         <label>Floor</label>
                         <input [formControlName]="prefix+'Flr'" maxlength="70">
+                        <div class="validation-msg" *ngIf="err(prefix+'Flr') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint(prefix+'Flr', 70) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
                         <label>Post Box</label>
                         <input [formControlName]="prefix+'PstBx'" maxlength="16">
+                        <div class="validation-msg" *ngIf="err(prefix+'PstBx') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint(prefix+'PstBx', 16) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
                         <label>Room</label>
                         <input [formControlName]="prefix+'Room'" maxlength="70">
+                        <div class="validation-msg" *ngIf="err(prefix+'Room') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint(prefix+'Room', 70) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
                         <label>Post Code</label>
                         <input [formControlName]="prefix+'PstCd'" maxlength="16">
+                        <div class="validation-msg" *ngIf="err(prefix+'PstCd') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint(prefix+'PstCd', 16) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
                         <label>Town Name <span class="req">*</span></label>
                         <input [formControlName]="prefix+'TwnNm'" maxlength="35">
+                        <div class="validation-msg" *ngIf="err(prefix+'TwnNm') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint(prefix+'TwnNm', 35) as h">{{h}}</div>
                     </div>
 
                     <!-- Country -->
@@ -402,7 +422,7 @@
                 <ng-container *ngIf="['unstructured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                     <div class="form-group" *ngFor="let i of (form.get(prefix+'AddrType')?.value === 'hybrid' ? [1,2] : [1,2,3])">
                         <label>Address Line {{i}}</label>
-                        <input [formControlName]="prefix+'AdrLine'+i" maxlength="70">
+                        <input [formControlName]="prefix+'AdrLine'+i" name="{{prefix+'AdrLine'+i}}" maxlength="70">
                         <div class="validation-msg" *ngIf="err(prefix+'AdrLine'+i) as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint(prefix+'AdrLine'+i, 70) as h">{{h}}</div>
                     </div>
