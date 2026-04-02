@@ -157,8 +157,15 @@ textarea.ng-invalid.ng-dirty {
 
 input.ng-invalid.ng-touched:focus,
 select.ng-invalid.ng-touched:focus,
-textarea.ng-invalid.ng-touched:focus {
+textarea.ng-invalid.ng-touched:focus,
+input.linked-error:focus,
+select.linked-error:focus {
     box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1) !important;
+}
+
+.linked-error {
+    border: 2px solid #ef4444 !important;
+    background-color: #fff5f5 !important;
 }
 
 .validation-msg {
