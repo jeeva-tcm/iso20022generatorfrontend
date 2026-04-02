@@ -72,7 +72,10 @@
                         </div>
                         <div class="form-group">
                             <label>Sender BIC</label>
-                            <input formControlName="head_fromBic" maxlength="11" class="auto-uppercase">
+                            <div class="uetr-control-row" style="display: flex; gap: 8px;">
+<input formControlName="head_fromBic" maxlength="11" class="auto-uppercase">
+<button type="button" class="uetr-refresh-btn" (click)="openBicSearch('head_fromBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
+</div>
                             <div class="validation-msg" *ngIf="err('head_fromBic')">{{err('head_fromBic')}}</div>
                         </div>
 
@@ -103,7 +106,10 @@
 
                         <div class="form-group">
                             <label>Receiver BIC</label>
-                            <input formControlName="head_toBic" maxlength="11" class="auto-uppercase">
+                            <div class="uetr-control-row" style="display: flex; gap: 8px;">
+<input formControlName="head_toBic" maxlength="11" class="auto-uppercase">
+<button type="button" class="uetr-refresh-btn" (click)="openBicSearch('head_toBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
+</div>
                             <div class="validation-msg" *ngIf="err('head_toBic')">{{err('head_toBic')}}</div>
                         </div>
 
@@ -155,7 +161,10 @@
                                         <div class="party-grid">
                                             <div class="form-group">
                                                 <label>BICFI</label>
-                                                <input formControlName="head_rltd_fromBic" maxlength="11" class="auto-uppercase" placeholder="8 or 11 characters">
+                                                <div class="uetr-control-row" style="display: flex; gap: 8px;">
+<input formControlName="head_rltd_fromBic" maxlength="11" class="auto-uppercase" placeholder="8 or 11 characters">
+<button type="button" class="uetr-refresh-btn" (click)="openBicSearch('head_rltd_fromBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
+</div>
                                             </div>
                                             <div class="form-group">
                                                 <label>Clearing Sys Code (Cd)</label>
@@ -180,7 +189,10 @@
                                         <div class="party-grid">
                                             <div class="form-group">
                                                 <label>BICFI</label>
-                                                <input formControlName="head_rltd_toBic" maxlength="11" class="auto-uppercase" placeholder="8 or 11 characters">
+                                                <div class="uetr-control-row" style="display: flex; gap: 8px;">
+<input formControlName="head_rltd_toBic" maxlength="11" class="auto-uppercase" placeholder="8 or 11 characters">
+<button type="button" class="uetr-refresh-btn" (click)="openBicSearch('head_rltd_toBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
+</div>
                                             </div>
                                             <div class="form-group">
                                                 <label>Clearing Sys Code (Cd)</label>
@@ -415,7 +427,10 @@
             </div>
             
             <ng-container *ngIf="group.get('idType')?.value === 'org'">
-                <div class="form-group"><label>AnyBIC</label><input formControlName="orgAnyBic" class="auto-uppercase" maxlength="11"></div>
+                <div class="form-group"><label>AnyBIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
+<input formControlName="orgAnyBic" class="auto-uppercase" maxlength="11">
+<button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('orgAnyBic', group)" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
+</div></div>
                 <div class="form-group"><label>LEI</label><input formControlName="orgLei" class="auto-uppercase" maxlength="20"></div>
                 
                 <div class="party-group full-width" style="margin-top: 10px; border: 1px dashed var(--border-light); padding: 10px; border-radius: 8px;">
@@ -563,7 +578,10 @@
     <div class="party-group full-width" [formGroup]="group">
         <div class="party-group-title" [class.mandatory]="required">{{title}}</div>
         <div class="party-grid">
-            <div class="form-group"><label>BICFI</label><input formControlName="bic" class="auto-uppercase" maxlength="11"></div>
+            <div class="form-group"><label>BICFI</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
+<input formControlName="bic" class="auto-uppercase" maxlength="11">
+<button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('bic', group)" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
+</div></div>
             
             <div class="party-group full-width" style="margin-top: 10px; border: 1px dashed var(--border-light); padding: 10px; border-radius: 8px;">
                 <div class="party-group-title" style="font-size: 0.65rem; opacity: 0.8;">Financial Institution Identification</div>

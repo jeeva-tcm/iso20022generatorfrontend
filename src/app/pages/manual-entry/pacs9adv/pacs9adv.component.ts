@@ -8,6 +8,8 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
 import { UetrService } from '../../../services/uetr.service';
+import { MatDialog } from '@angular/material/dialog';
+import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
 
 @Component({
     selector: 'app-pacs9adv',
@@ -52,7 +54,8 @@ export class Pacs9AdvComponent implements OnInit {
         private config: ConfigService,
         private snackBar: MatSnackBar,
         private router: Router,
-        private uetrService: UetrService
+        private uetrService: UetrService,
+        private dialog: MatDialog
     ) { }
 
     ngOnInit() {
@@ -691,6 +694,34 @@ ${tx}\t\t\t</CdtTrfTxInf>
 \t</Document>
 </BusMsgEnvlp>`;
         this.onEditorChange(this.generatedXml, true);
+    }
+
+    openBicSearch(controlName: string) {
+        const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+            width: '800px',
+            disableClose: true
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+             if (result && result.bic) {
+                this.form.patchValue({ [controlName]: result.bic });
+                this.form.markAsDirty();
+            }
+        });
+    }
+
+    openBicSearchGroup(controlName: string, group: any) {
+        const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+            width: '800px',
+            disableClose: true
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result && result.bic) {
+                group.get(controlName)?.patchValue(result.bic);
+                group.get(controlName)?.markAsDirty();
+            }
+        });
     }
 
     // XML helpers

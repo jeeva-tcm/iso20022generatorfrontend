@@ -823,3 +823,42 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     background: #1e1e2e;
     color: white;
 }
+
+.input-with-action {
+    display: flex;
+    align-items: center;
+    position: relative;
+    width: 100%;
+}
+
+.input-with-action .form-input {
+    padding-right: 48px;
+}
+
+.btn-input-action {
+    position: absolute;
+    right: 42px; /* Adjusted to be inside the input but before the tag */
+    background: transparent;
+    border: none;
+    color: #4f46e5;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    z-index: 2;
+}
+
+.btn-input-action:hover {
+    background: rgba(79, 70, 229, 0.1);
+    color: #4338ca;
+}
+
+.btn-input-action mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}

@@ -7,11 +7,13 @@ import { ConfigService } from '../../../services/config.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { UetrService } from '../../../services/uetr.service';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
 
 @Component({
   selector: 'app-camt055',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatDialogModule],
   templateUrl: './camt055.component.html',
   styleUrls: ['./camt055.component.css']
 })
@@ -89,7 +91,8 @@ export class Camt055Component implements OnInit {
     private config: ConfigService,
     private snackBar: MatSnackBar,
     private router: Router,
-    private uetrService: UetrService
+    private uetrService: UetrService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit() {
@@ -1265,5 +1268,41 @@ ${txInf.trimEnd()}
   viewXmlModal() { this.closeValidationModal(); }
   editXmlModal() { this.closeValidationModal(); }
   runValidationModal() { this.validateMessage(); }
+
+  openBicSearch(controlName: string, index?: number) {
+    const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+      width: '800px',
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.bic) {
+        if (index !== undefined) {
+          const formArray = this.form.get(controlName) as any;
+          if (formArray && formArray.at) {
+            formArray.at(index).patchValue(result.bic);
+            formArray.at(index).markAsDirty();
+          }
+        } else {
+          this.form.get(controlName)?.patchValue(result.bic);
+          this.form.get(controlName)?.markAsDirty();
+        }
+      }
+    });
+  }
+
+  openBicSearchGroup(controlName: string, group: any) {
+    const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+      width: '800px',
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.bic) {
+        group.get(controlName)?.patchValue(result.bic);
+        group.get(controlName)?.markAsDirty();
+      }
+    });
+  }
 }
 

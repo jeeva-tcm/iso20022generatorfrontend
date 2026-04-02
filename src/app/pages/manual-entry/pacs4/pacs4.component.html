@@ -9,8 +9,30 @@
             <form [formGroup]="form" class="content-box">
                 <div class="grid">
                     <div class="section-title">Message Header</div>
-                    <div class="form-group"><label>Sender BIC <span class="req">*</span></label><input formControlName="fromBic" maxlength="11" required><div class="validation-msg" *ngIf="err('fromBic') as e">{{e}}</div><div class="field-hint at-limit" *ngIf="hint('fromBic', 11) as h">{{h}}</div></div>
-                    <div class="form-group"><label>Receiver BIC <span class="req">*</span></label><input formControlName="toBic" maxlength="11" required><div class="validation-msg" *ngIf="err('toBic') as e">{{e}}</div><div class="field-hint at-limit" *ngIf="hint('toBic', 11) as h">{{h}}</div></div>
+                    <div class="form-group">
+                        <label>Sender BIC <span class="req">*</span></label>
+                        <div class="uetr-control-row">
+                            <input formControlName="fromBic" maxlength="11" class="auto-uppercase">
+                            <button type="button" class="uetr-refresh-btn"
+                                (click)="openBicSearchGroup('fromBic', form)"
+                                matTooltip="Search BIC">
+                                <mat-icon>search</mat-icon>
+                            </button>
+                        </div>
+                        <div class="validation-msg" *ngIf="err('fromBic') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Receiver BIC <span class="req">*</span></label>
+                        <div class="uetr-control-row">
+                            <input formControlName="toBic" maxlength="11" class="auto-uppercase">
+                            <button type="button" class="uetr-refresh-btn"
+                                (click)="openBicSearchGroup('toBic', form)"
+                                matTooltip="Search BIC">
+                                <mat-icon>search</mat-icon>
+                            </button>
+                        </div>
+                        <div class="validation-msg" *ngIf="err('toBic') as e">{{e}}</div>
+                    </div>
                     <div class="form-group"><label>Business Msg ID <span class="req">*</span></label><input formControlName="bizMsgId" maxlength="35" required><div class="validation-msg" *ngIf="err('bizMsgId') as e">{{e}}</div><div class="field-hint at-limit" *ngIf="hint('bizMsgId', 35) as h">{{h}}</div></div>
                     <div class="form-group"><label>Message ID <span class="req">*</span></label><input formControlName="msgId" maxlength="35" required><div class="validation-msg" *ngIf="err('msgId') as e">{{e}}</div><div class="field-hint at-limit" *ngIf="hint('msgId', 35) as h">{{h}}</div></div>
                     <div class="form-group"><label>Creation DateTime <span class="req">*</span></label><input formControlName="creDtTm" required><div class="validation-msg" *ngIf="err('creDtTm') as e">{{e}}</div></div>
@@ -40,43 +62,43 @@
                     <div class="section-title">Transaction Agents <span class="opt">Optional</span></div>
                     <div class="party-group">
                         <div class="party-group-title">Instructing Agent</div>
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'instgAgt', isAgent:true, title:'Instructing Agent'}"></ng-container>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'instgAgt', isAgent:true, title:'Instructing Agent', group: form}"></ng-container>
                     </div>
                     <div class="party-group">
                         <div class="party-group-title">Instructed Agent</div>
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'instdAgt', isAgent:true, title:'Instructed Agent'}"></ng-container>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'instdAgt', isAgent:true, title:'Instructed Agent', group: form}"></ng-container>
                     </div>
 
                     <div class="section-title">Return Chain (Parties & Agents)</div>
                     <div class="party-group">
                         <div class="party-group-title mandatory">Original Debtor</div>
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtr', isAgent:false, title:'Original Debtor', required:true}"></ng-container>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtr', isAgent:false, title:'Original Debtor', required:true, group: form}"></ng-container>
                     </div>
                     <div class="party-group">
                         <div class="party-group-title">Debtor Agent</div>
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtrAgt', isAgent:true, title:'Debtor Agent'}"></ng-container>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtrAgt', isAgent:true, title:'Debtor Agent', group: form}"></ng-container>
                     </div>
                     <div class="party-group">
                         <div class="party-group-title">Creditor Agent</div>
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'cdtrAgt', isAgent:true, title:'Creditor Agent'}"></ng-container>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'cdtrAgt', isAgent:true, title:'Creditor Agent', group: form}"></ng-container>
                     </div>
                     <div class="party-group">
                         <div class="party-group-title mandatory">Original Creditor</div>
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'cdtr', isAgent:false, title:'Original Creditor', required:true}"></ng-container>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'cdtr', isAgent:false, title:'Original Creditor', required:true, group: form}"></ng-container>
                     </div>
 
                     <div class="section-title">Supplementary Parties <span class="opt">Optional</span></div>
                     <div class="party-group">
                         <div class="party-group-title">Initiating Party</div>
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'initgPty', isAgent:false, title:'Initiating Party'}"></ng-container>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'initgPty', isAgent:false, title:'Initiating Party', group: form}"></ng-container>
                     </div>
                     <div class="party-group">
                         <div class="party-group-title">Ultimate Debtor</div>
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'ultmtDbtr', isAgent:false, title:'Ultimate Debtor'}"></ng-container>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'ultmtDbtr', isAgent:false, title:'Ultimate Debtor', group: form}"></ng-container>
                     </div>
                     <div class="party-group">
                         <div class="party-group-title">Ultimate Creditor</div>
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'ultmtCdtr', isAgent:false, title:'Ultimate Creditor'}"></ng-container>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'ultmtCdtr', isAgent:false, title:'Ultimate Creditor', group: form}"></ng-container>
                     </div>
                 </div>
             </form>
@@ -124,11 +146,18 @@
     </div>
 </div>
 
-<ng-template #partyForm let-prefix="prefix" let-title="title" let-required="required" let-isAgent="isAgent">
-    <div [formGroup]="form" class="party-grid">
+<ng-template #partyForm let-prefix="prefix" let-title="title" let-required="required" let-isAgent="isAgent" let-group="group">
+    <div [formGroup]="group" class="party-grid">
         <div class="form-group">
             <label>{{title}} BIC <span class="req" *ngIf="required">*</span></label>
-            <input [formControlName]="prefix+'Bic'" maxlength="11" placeholder="e.g. BBBBUSD1XXX">
+            <div class="uetr-control-row">
+                <input [formControlName]="prefix+'Bic'" maxlength="11" placeholder="e.g. BBBBUSD1XXX" class="auto-uppercase">
+                <button type="button" class="uetr-refresh-btn"
+                    (click)="openBicSearchGroup(prefix+'Bic', group)"
+                    matTooltip="Search BIC">
+                    <mat-icon>search</mat-icon>
+                </button>
+            </div>
             <div class="validation-msg" *ngIf="err(prefix+'Bic') as e">{{e}}</div>
         </div>
 

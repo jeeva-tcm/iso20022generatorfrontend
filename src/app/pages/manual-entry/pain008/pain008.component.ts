@@ -1,3 +1,5 @@
+import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
+import { MatDialog } from '@angular/material/dialog';
 import { Component, OnInit, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -53,6 +55,7 @@ export class Pain008Component implements OnInit {
   showMaxLenWarning: { [key: string]: boolean } = {};
 
   constructor(
+    private dialog: MatDialog,
     private fb: FormBuilder,
     private http: HttpClient,
     private config: ConfigService,
@@ -1020,5 +1023,36 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
       this.refreshLineCount();
       this.snackBar.open('XML Formatted', '', { duration: 1500 });
     } catch (e) { this.snackBar.open('Unable to format XML', '', { duration: 3000 }); }
+  }
+
+  openBicSearch(controlName: string, index?: number) {
+    const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+      width: '800px',
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.bic) {
+        const group = index !== undefined
+          ? this.transactions.controls[index] as FormGroup
+          : this.form;
+        group.get(controlName)?.patchValue(result.bic);
+        group.get(controlName)?.markAsDirty();
+      }
+    });
+  }
+
+  openBicSearchGroup(controlName: string, group: FormGroup) {
+    const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+      width: '800px',
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.bic) {
+        group.get(controlName)?.patchValue(result.bic);
+        group.get(controlName)?.markAsDirty();
+      }
+    });
   }
 }

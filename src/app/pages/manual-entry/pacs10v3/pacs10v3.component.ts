@@ -9,11 +9,13 @@ import { Router, RouterModule } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
 import { UetrService } from '../../../services/uetr.service';
 import { ISO_PURPOSE_CODES } from '../../../constants/purpose-codes';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
 
 @Component({
     selector: 'app-pacs10v3',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, RouterModule],
+    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, RouterModule, MatDialogModule],
     templateUrl: './pacs10v3.component.html',
     styleUrl: './pacs10v3.component.css'
 })
@@ -65,7 +67,8 @@ export class Pacs10v3Component implements OnInit {
         private config: ConfigService,
         private snackBar: MatSnackBar,
         private router: Router,
-        private uetrService: UetrService
+        private uetrService: UetrService,
+        private dialog: MatDialog
     ) { }
 
     ngOnInit() {
@@ -282,7 +285,6 @@ export class Pacs10v3Component implements OnInit {
                     twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
                 }
             }
-
             if (addrType === 'hybrid') {
                 if (!ctryCtrl?.hasValidator(Validators.required)) { ctryCtrl?.addValidators(Validators.required); ctryCtrl?.updateValueAndValidity({ emitEvent: false }); }
                 if (!twnNmCtrl?.hasValidator(Validators.required)) { twnNmCtrl?.addValidators(Validators.required); twnNmCtrl?.updateValueAndValidity({ emitEvent: false }); }
@@ -910,5 +912,82 @@ ${this.rmtInf(v)}
     hasSectionError(prefixes: string[]): boolean { return prefixes.some(p => Object.keys(this.form.controls).some(key => key.startsWith(p) && this.form.get(key)?.invalid && (this.form.get(key)?.touched || this.form.get(key)?.dirty))); }
 
     private formatAmount(val: any): string { if (!val) return '0.00'; let numStr = val.toString().trim().replace(/,/g, ''); const num = parseFloat(numStr); return isNaN(num) ? '0.00' : num.toFixed(2); }
+
+    validateManualUetr() {
+        const uetrCtrl = this.form.get('uetr');
+        if (!uetrCtrl || !uetrCtrl.value) return;
+        
+        let val = uetrCtrl.value.trim().toLowerCase();
+        
+        const isStandardGuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(val);
+        const isIsoCompliant = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(val);
+
+        if (isIsoCompliant) {
+            this.showUetrFeedback('compliant', 'Valid ISO 20022 UETR.');
+            uetrCtrl.setErrors(null);
+        } else if (isStandardGuid) {
+            // Auto-format standard UUIDv4 to ISO UETR format (variant 1, version 4)
+            const chars = val.split('');
+            chars[14] = '4'; // version 4
+            chars[19] = ['8', '9', 'a', 'b'].includes(chars[19]) ? chars[19] : '8'; // variant 1
+            const formatted = chars.join('');
+            
+            uetrCtrl.setValue(formatted);
+            this.showUetrFeedback('fixed', 'Standard GUID auto-formatted to ISO specification.');
+            uetrCtrl.setErrors(null);
+        } else {
+            this.showUetrFeedback('error', 'Invalid UETR. Must be a 36-character UUID string.');
+            uetrCtrl.setErrors({ pattern: true });
+        }
+    }
+
+    onUetrPaste(event: ClipboardEvent) {
+        event.preventDefault();
+        let paste = (event.clipboardData || (window as any).clipboardData).getData('text');
+        if (!paste) return;
+        paste = paste.trim().toLowerCase();
+
+        const uetrCtrl = this.form.get('uetr');
+        if (uetrCtrl) {
+            uetrCtrl.setValue(paste);
+            uetrCtrl.markAsDirty();
+            setTimeout(() => this.validateManualUetr(), 0);
+        }
+    }
+
+    refreshUetr() {
+        const uetrCtrl = this.form.get('uetr');
+        if (uetrCtrl) {
+            uetrCtrl.setValue(this.uetrService.generate());
+            uetrCtrl.markAsDirty();
+            this.showUetrFeedback('compliant', 'Generated new valid ISO 20022 UETR.');
+        }
+    }
+
+    private showUetrFeedback(type: 'error' | 'compliant' | 'fixed', message: string) {
+        this.uetrError = null;
+        this.uetrSuccess = null;
+        if (this.uetrSuccessTimer) clearTimeout(this.uetrSuccessTimer);
+        if (type === 'error') {
+            this.uetrError = message;
+        } else {
+            this.uetrSuccess = message;
+            this.uetrSuccessTimer = setTimeout(() => this.uetrSuccess = null, 5000);
+        }
+    }
+
+    openBicSearch(controlName: string) {
+        const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+            width: '800px',
+            disableClose: true
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result && result.bic) {
+                this.form.patchValue({ [controlName]: result.bic });
+                this.form.get(controlName)?.markAsDirty();
+            }
+        });
+    }
 
 }

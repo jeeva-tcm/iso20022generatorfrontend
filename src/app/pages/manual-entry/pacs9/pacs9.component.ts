@@ -10,11 +10,13 @@ import { ConfigService } from '../../../services/config.service';
 import { FormattingService } from '../../../services/formatting.service';
 import { UetrService } from '../../../services/uetr.service';
 import { ISO_PURPOSE_CODES } from '../../../constants/purpose-codes';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
 
 @Component({
     selector: 'app-pacs9',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule],
+    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, MatDialogModule],
     templateUrl: './pacs9.component.html',
     styleUrl: './pacs9.component.css'
 })
@@ -56,7 +58,8 @@ export class Pacs9Component implements OnInit {
         private snackBar: MatSnackBar,
         private router: Router,
         private uetrService: UetrService,
-        private formatting: FormattingService
+        private formatting: FormattingService,
+        private dialog: MatDialog
     ) { }
 
     ngOnInit() {
@@ -1386,5 +1389,19 @@ ${tx}\t\t\t</CdtTrfTxInf>
 
     runValidationModal() {
         this.validateMessage();
+    }
+
+    openBicSearchGroup(controlName: string, group: FormGroup) {
+        const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+            width: '800px',
+            disableClose: true
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+             if (result && result.bic) {
+                group.get(controlName)?.patchValue(result.bic);
+                group.markAsDirty();
+            }
+        });
     }
 }

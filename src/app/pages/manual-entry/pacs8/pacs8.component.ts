@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { Component, OnInit, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -11,11 +11,13 @@ import { FormattingService } from '../../../services/formatting.service';
 import { AddressValidatorService, AddressValidationResult } from '../../../services/address-validator.service';
 import { UetrService } from '../../../services/uetr.service';
 import { ISO_PURPOSE_CODES } from '../../../constants/purpose-codes';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
 
 @Component({
   selector: 'app-pacs8',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, MatDialogModule],
   templateUrl: './pacs8.component.html',
   styleUrl: './pacs8.component.css'
 })
@@ -62,7 +64,8 @@ export class Pacs8Component implements OnInit {
     private router: Router,
     private addressValidator: AddressValidatorService,
     private uetrService: UetrService,
-    private formatting: FormattingService
+    private formatting: FormattingService,
+    private dialog: MatDialog
   ) { }
 
   ngOnInit() {
@@ -1926,6 +1929,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
     this.switchToPreview();
   }
 
+
   editXmlModal() {
     this.closeValidationModal();
     this.currentTab = 'form';
@@ -1933,5 +1937,41 @@ ${tx}\t\t\t</CdtTrfTxInf>
 
   runValidationModal() {
     this.validateMessage();
+  }
+
+  openBicSearch(controlName: string, index?: number) {
+    const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+      width: '800px',
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.bic) {
+        if (index !== undefined) {
+          const formArray = this.form.get(controlName) as any;
+          if (formArray && formArray.at) {
+            formArray.at(index).patchValue(result.bic);
+            formArray.at(index).markAsDirty();
+          }
+        } else {
+          this.form.get(controlName)?.patchValue(result.bic);
+          this.form.get(controlName)?.markAsDirty();
+        }
+      }
+    });
+  }
+
+  openBicSearchGroup(controlName: string, group: any) {
+    const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+      width: '800px',
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.bic) {
+        group.get(controlName)?.patchValue(result.bic);
+        group.get(controlName)?.markAsDirty();
+      }
+    });
   }
 }

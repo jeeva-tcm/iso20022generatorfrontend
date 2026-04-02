@@ -6,7 +6,9 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfigService } from '../../services/config.service';
+import { BicSearchDialogComponent } from './bic-search-dialog/bic-search-dialog.component';
 
 interface SchemaNode {
     name: string;
@@ -21,7 +23,7 @@ interface SchemaNode {
 @Component({
     selector: 'app-manual-entry',
     standalone: true,
-    imports: [CommonModule, FormsModule, MatIconModule, MatSnackBarModule],
+    imports: [CommonModule, FormsModule, MatIconModule, MatSnackBarModule, MatDialogModule],
     templateUrl: './manual-entry.component.html',
     styleUrl: './manual-entry.component.css'
 })
@@ -61,7 +63,6 @@ export class ManualEntryComponent implements OnInit {
         { id: 'pain.001.001.09', name: 'Credit Transfer Init', type: 'pain', route: 'pain001' },
         { id: 'pain.002.001.10', name: 'Pmt Status Report', type: 'pain', route: 'pain002' },
         { id: 'pain.008.001.08', name: 'Direct Debit Initiation', type: 'pain', route: 'pain008' },
-        { id: 'pain.002.001.10', name: 'Pmt Status Report', type: 'pain', route: 'pain002' },
         { id: 'pacs.010.001.10', name: 'Interbank Direct Debit', type: 'pacs', route: 'pacs10' },
         { id: 'pacs.010.001.03', name: 'Margin Collection', type: 'pacs', route: 'pacs10v3' }
     ];
@@ -71,7 +72,8 @@ export class ManualEntryComponent implements OnInit {
         private config: ConfigService,
         private snackBar: MatSnackBar,
         private route: ActivatedRoute,
-        private router: Router
+        private router: Router,
+        private dialog: MatDialog
     ) { }
 
     ngOnInit() {
@@ -118,7 +120,7 @@ export class ManualEntryComponent implements OnInit {
         const q = this.searchQuery.toLowerCase();
         this.filteredTypes = this.allTypes
             .filter(t => t.toLowerCase().includes(q))
-            .slice(0, 100); // Increased limit significantly
+            .slice(0, 100); 
         this.showSuggestions = true;
     }
 
@@ -150,7 +152,6 @@ export class ManualEntryComponent implements OnInit {
                 }
                 this.schema = schema;
                 this.loading = false;
-                // Expand everything by default to show all fields as requested
                 if (schema) {
                     const autoExpandAll = (node: SchemaNode, path: string) => {
                         this.expandedPaths[path] = true;
@@ -176,7 +177,6 @@ export class ManualEntryComponent implements OnInit {
     enforceISOOrder(node: SchemaNode) {
         if (!node.children || node.children.length === 0) return;
 
-        // Sequence rule: Conf must be before Cd in Sts container (e.g. camt.029 InvestigationStatus6Choice)
         if (node.name === 'Sts') {
             node.children.sort((a, b) => {
                 const priorityOrder = ['Conf', 'Cd'];
@@ -189,7 +189,6 @@ export class ManualEntryComponent implements OnInit {
             });
         }
         
-        // Sequence rule: Cancellation Reason Info (camt.029, camt.056)
         if (node.name === 'CxlStsRsnInf' || node.name === 'CxlRsnInf') {
             const rOrder = ['Orgtr', 'Rsn', 'AddtlInf'];
             node.children.sort((a, b) => {
@@ -202,7 +201,6 @@ export class ManualEntryComponent implements OnInit {
             });
         }
         
-        // Sequence rule: AppHdr order (head.001.001.01/02)
         if (node.name === 'AppHdr') {
             const hOrder = ['Fr', 'To', 'BizMsgIdr', 'MsgDefIdr', 'BizSvc', 'CreDt', 'Prty', 'Rltd'];
             node.children.sort((a, b) => {
@@ -215,7 +213,6 @@ export class ManualEntryComponent implements OnInit {
             });
         }
 
-        // Recursively apply to children
         for (const child of node.children) {
             this.enforceISOOrder(child);
         }
@@ -223,21 +220,13 @@ export class ManualEntryComponent implements OnInit {
 
     applyMandatoryOverrides(node: SchemaNode, type: string) {
         const t = type.toLowerCase();
-        // Skip CAMT by default as requested by user earlier, but we need it for camt.029 logic now
-        // if (t.startsWith('camt.')) return; 
-
-        // Explicitly skip MT 192 (camt.056) as it should not have forced party blocks
         if (t.includes('camt.056')) return;
 
         if (t.startsWith('pacs.') || t.startsWith('pain.')) {
-            // Base mandatory parties for all payment messages
             let mandatoryNames = ['Dbtr', 'Cdtr'];
-            
-            // Specific requirements for customer/direct debit transfers
             if (t.includes('pacs.008') || t.includes('pacs.003') || t.includes('pain.001') || t.includes('pain.008')) {
                 mandatoryNames.push('DbtrAgt', 'CdtrAgt');
             }
-            
             if (mandatoryNames.includes(node.name)) {
                 node.mandatory = true;
             }
@@ -253,11 +242,7 @@ export class ManualEntryComponent implements OnInit {
         const n = node.name;
         const isLeaf = !node.children || node.children.length === 0;
 
-        // RULE: Only fill values for mandatory fields to keep the XML concise.
-        // Exception: Always process the root/Document and recurse to find mandatory children.
         if (node.mandatory || depth === 0) {
-
-            // 1. Specific ISO 20022 logic for mandatory common fields
             if (n === 'CreDtTm' || n === 'CreDt' || n === 'Dt' || n === 'TradDt' || n === 'SttlmDt' || n.includes('DtTm')) {
                 const now = new Date();
                 this.formData[path] = n.includes('Tm') ? now.toISOString().split('.')[0] + 'Z' : now.toISOString().split('T')[0];
@@ -306,31 +291,23 @@ export class ManualEntryComponent implements OnInit {
                 if (path.includes('SvcLvl')) this.formData[path] = 'URGP';
                 else if (isLeaf) {
                     if (n === 'Cd') {
-                        // For resolution messages (camt.029), Sts is a choice. 
-                        // If we have Conf, we MUST NOT have Cd.
                         if (path.includes('.Sts.Cd') && !path.includes('RjctdMod')) return; 
-                        
-                        // For cancellation results (camt.029), Cd is often in RjctdMod which we want to avoid by default
-                        // if Conf is available.
                         if (path.includes('RjctdMod')) return; 
                         this.formData[path] = 'OTHR';
                     }
                     else if (n === 'Prtry') this.formData[path] = 'CUSTOM';
                     else if (n === 'Conf') {
-                        // Resolution of Investigation (camt.029) defaults
-                        this.formData[path] = 'ACCR'; // Accepted Cancellation
+                        this.formData[path] = 'ACCR'; 
                     }
                     else this.formData[path] = 'ADDR';
                 }
             }
-            // 2. Generic leaf fallback (ONLY for mandatory leaves)
             else if (isLeaf && !this.formData[path]) {
                 if (node.type === 'number' || node.type === 'decimal') {
                     this.formData[path] = '100.00';
                 } else if (node.type === 'boolean') {
                     this.formData[path] = 'true';
                 } else {
-                    // Context-aware realistic placeholders
                     if (n === 'ChanlTp') this.formData[path] = 'SWIFT';
                     else if (n === 'MmbId') this.formData[path] = 'CLR00123';
                     else if (n === 'OrgnlMsgId') this.formData[path] = 'ORIG-998877';
@@ -340,16 +317,10 @@ export class ManualEntryComponent implements OnInit {
             }
         }
 
-        // ALWAYS recurse to find mandatory sub-fields
         if (node.children) {
-            // If the current node is mandatory and all children are now optional (likely due to a choice),
-            // we should pick at least the first mandatory child of that branch to ensure the structure
-            // isn't empty.
             let hasMandatoryChild = node.children.some(c => c.mandatory);
-
             for (let i = 0; i < node.children.length; i++) {
                 const child = node.children[i];
-                // Force fill the first child of a mandatory choice/group if none other are mandatory
                 if (node.mandatory && !hasMandatoryChild && i === 0 && !child.children?.length) {
                     (child as any).mandatory = true;
                 }
@@ -372,7 +343,7 @@ export class ManualEntryComponent implements OnInit {
             return;
         }
         const xml = this.generateXml(this.schema, this.schema.name, 0);
-        this.previewXml = `<?xml version="1.0" encoding="UTF-8"?>\n${xml}`;
+        this.previewXml = xml;
     }
 
     generateXml(node: SchemaNode, path: string, depth: number): string {
@@ -432,7 +403,6 @@ export class ManualEntryComponent implements OnInit {
     }
 
     onBlur() {
-        // Delay to allow selectType mousedown to fire
         setTimeout(() => this.showSuggestions = false, 200);
     }
 
@@ -454,8 +424,17 @@ export class ManualEntryComponent implements OnInit {
         window.URL.revokeObjectURL(url);
     }
 
-    generateFinalXml() {
-        // This is the same as copy/download but could be expanded to validate
-        this.copyToClipboard();
+    openBicSearch(path: string) {
+        const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+            width: '800px',
+            disableClose: true
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result && result.bic) {
+                this.formData[path] = result.bic;
+                this.updatePreview();
+            }
+        });
     }
 }

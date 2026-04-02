@@ -10,14 +10,28 @@
                     <!-- ═══ AppHdr ═══ -->
                     <div class="section-title">Message Header (AppHdr)</div>
                     <div class="form-group"><label>CharSet</label><input formControlName="charSet" maxlength="20" placeholder="Optional"></div>
-                    <div class="form-group"><label>Sender BIC <span class="req">*</span></label><input formControlName="fromBic" maxlength="11">
+                    <div class="form-group">
+                        <label>Sender BIC</label>
+                        <div class="uetr-control-row">
+                            <input formControlName="fromBic" maxlength="11">
+                            <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('fromBic', form)" matTooltip="Search BIC">
+                                <mat-icon>search</mat-icon>
+                            </button>
+                        </div>
                         <div class="validation-msg" *ngIf="err('fromBic') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('fromBic', 11) as h">{{h}}</div>
                     </div>
                     <div class="form-group"><label>Sender ClrSys Code</label><input formControlName="fromClrSysCd" maxlength="5" placeholder="Optional"></div>
                     <div class="form-group"><label>Sender Member ID</label><input formControlName="fromMmbId" maxlength="35" placeholder="Optional"></div>
                     <div class="form-group"><label>Sender LEI</label><input formControlName="fromLei" maxlength="20" placeholder="Optional"></div>
-                    <div class="form-group"><label>Receiver BIC <span class="req">*</span></label><input formControlName="toBic" maxlength="11">
+                    <div class="form-group">
+                        <label>Receiver BIC</label>
+                        <div class="uetr-control-row">
+                            <input formControlName="toBic" maxlength="11">
+                            <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('toBic', form)" matTooltip="Search BIC">
+                                <mat-icon>search</mat-icon>
+                            </button>
+                        </div>
                         <div class="validation-msg" *ngIf="err('toBic') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('toBic', 11) as h">{{h}}</div>
                     </div>
@@ -50,11 +64,17 @@
                         <div class="party-group-title">Related Message (Rltd)</div>
                         <div class="party-grid">
                             <div class="form-group"><label>Charset</label><input formControlName="rltdCharSet" maxlength="20" placeholder="Optional"></div>
-                            <div class="form-group"><label>Fr BIC</label><input formControlName="rltdFrBic" maxlength="11" placeholder="Optional"></div>
+                            <div class="form-group"><label>Fr BIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
+<input formControlName="rltdFrBic" maxlength="11" placeholder="Optional">
+<button type="button" class="uetr-refresh-btn" (click)="openBicSearch('rltdFrBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
+</div></div>
                             <div class="form-group"><label>Fr ClrSys Code</label><input formControlName="rltdFrClrSysCd" maxlength="5" placeholder="Optional"></div>
                             <div class="form-group"><label>Fr Member ID</label><input formControlName="rltdFrMmbId" maxlength="35" placeholder="Optional"></div>
                             <div class="form-group"><label>Fr LEI</label><input formControlName="rltdFrLei" maxlength="20" placeholder="Optional"></div>
-                            <div class="form-group"><label>To BIC</label><input formControlName="rltdToBic" maxlength="11" placeholder="Optional"></div>
+                            <div class="form-group"><label>To BIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
+<input formControlName="rltdToBic" maxlength="11" placeholder="Optional">
+<button type="button" class="uetr-refresh-btn" (click)="openBicSearch('rltdToBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
+</div></div>
                             <div class="form-group"><label>To ClrSys Code</label><input formControlName="rltdToClrSysCd" maxlength="5" placeholder="Optional"></div>
                             <div class="form-group"><label>To Member ID</label><input formControlName="rltdToMmbId" maxlength="35" placeholder="Optional"></div>
                             <div class="form-group"><label>To LEI</label><input formControlName="rltdToLei" maxlength="20" placeholder="Optional"></div>
@@ -129,7 +149,10 @@
                     <div class="party-group">
                         <div class="party-group-title">Forwarding Agent</div>
                         <div class="party-grid">
-                            <div class="form-group"><label>BIC</label><input formControlName="fwdgAgtBic" maxlength="11" placeholder="Optional"></div>
+                            <div class="form-group"><label>BIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
+<input formControlName="fwdgAgtBic" maxlength="11" placeholder="Optional">
+<button type="button" class="uetr-refresh-btn" (click)="openBicSearch('fwdgAgtBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
+</div></div>
                             <div class="form-group"><label>ClrSys Code</label><input formControlName="fwdgAgtClrSysCd" maxlength="5" placeholder="Optional"></div>
                             <div class="form-group"><label>Member ID</label><input formControlName="fwdgAgtMmbId" maxlength="35" placeholder="Optional"></div>
                             <div class="form-group"><label>LEI</label><input formControlName="fwdgAgtLei" maxlength="20" placeholder="Optional"></div>
@@ -209,7 +232,10 @@
                     <div class="party-group">
                         <div class="party-group-title mandatory">Creditor Agent</div>
                         <div class="party-grid">
-                            <div class="form-group"><label>BIC <span class="req">*</span></label><input formControlName="cdtrAgtBic" maxlength="11">
+                            <div class="form-group"><label>BIC <span class="req">*</span></label><div class="uetr-control-row" style="display: flex; gap: 8px;">
+<input formControlName="cdtrAgtBic" maxlength="11">
+<button type="button" class="uetr-refresh-btn" (click)="openBicSearch('cdtrAgtBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
+</div>
                                 <div class="validation-msg" *ngIf="err('cdtrAgtBic') as e">{{e}}</div>
                             </div>
                             <div class="form-group"><label>ClrSys Code</label><input formControlName="cdtrAgtClrSysCd" maxlength="5" placeholder="Optional"></div>
@@ -240,7 +266,10 @@
                     <div class="party-group">
                         <div class="party-group-title">Charges Account Agent</div>
                         <div class="party-grid">
-                            <div class="form-group"><label>BIC</label><input formControlName="chrgsAcctAgtBic" maxlength="11" placeholder="Optional"></div>
+                            <div class="form-group"><label>BIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
+<input formControlName="chrgsAcctAgtBic" maxlength="11" placeholder="Optional">
+<button type="button" class="uetr-refresh-btn" (click)="openBicSearch('chrgsAcctAgtBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
+</div></div>
                             <div class="form-group"><label>Member ID</label><input formControlName="chrgsAcctAgtMmbId" maxlength="35" placeholder="Optional"></div>
                             <div class="form-group"><label>LEI</label><input formControlName="chrgsAcctAgtLei" maxlength="20" placeholder="Optional"></div>
                         </div>
@@ -306,11 +335,20 @@
                                             <select formControlName="amdmntInd"><option value="false">false</option><option value="true">true</option></select></div>
                                         <div class="form-group"><label>Original Mandate ID</label><input formControlName="orgnlMndtId" maxlength="35" placeholder="If amended"></div>
                                         <div class="form-group"><label>Orgnl Cdtr Scheme Name</label><input formControlName="orgnlCdtrSchmeIdNm" maxlength="140" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Orgnl Cdtr Scheme BIC</label><input formControlName="orgnlCdtrSchmeIdBic" maxlength="11" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Orgnl Creditor Agent BIC</label><input formControlName="orgnlCdtrAgtBic" maxlength="11" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Orgnl Cdtr Scheme BIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
+<input formControlName="orgnlCdtrSchmeIdBic" maxlength="11" placeholder="Optional">
+<button type="button" class="uetr-refresh-btn" (click)="openBicSearch('orgnlCdtrSchmeIdBic', i)" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
+</div></div>
+                                        <div class="form-group"><label>Orgnl Creditor Agent BIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
+<input formControlName="orgnlCdtrAgtBic" maxlength="11" placeholder="Optional">
+<button type="button" class="uetr-refresh-btn" (click)="openBicSearch('orgnlCdtrAgtBic', i)" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
+</div></div>
                                         <div class="form-group"><label>Orgnl Debtor Name</label><input formControlName="orgnlDbtrNm" maxlength="140" placeholder="Optional"></div>
                                         <div class="form-group"><label>Orgnl Debtor Acct IBAN</label><input formControlName="orgnlDbtrAcctIban" maxlength="34" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Orgnl Debtor Agent BIC</label><input formControlName="orgnlDbtrAgtBic" maxlength="11" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Orgnl Debtor Agent BIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
+<input formControlName="orgnlDbtrAgtBic" maxlength="11" placeholder="Optional">
+<button type="button" class="uetr-refresh-btn" (click)="openBicSearch('orgnlDbtrAgtBic', i)" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
+</div></div>
                                         <div class="form-group"><label>Orgnl Final Colltn Date</label><input type="date" formControlName="orgnlFnlColltnDt"></div>
                                         <div class="form-group"><label>Orgnl Frequency Type</label>
                                             <select formControlName="orgnlFrqcyTp"><option value="">None</option><option *ngFor="let f of frequencyTypes" [value]="f">{{f}}</option></select></div>
@@ -352,7 +390,10 @@
 
                                 <!-- Debtor Agent -->
                                 <div class="party-group-title mandatory" style="grid-column: 1 / -1; margin-top: 0.5rem; font-size: 0.7rem;">Debtor Agent</div>
-                                <div class="form-group"><label>BIC <span class="req">*</span></label><input formControlName="dbtrAgtBic" maxlength="11">
+                                <div class="form-group"><label>BIC <span class="req">*</span></label><div class="uetr-control-row" style="display: flex; gap: 8px;">
+<input formControlName="dbtrAgtBic" maxlength="11">
+<button type="button" class="uetr-refresh-btn" (click)="openBicSearch('dbtrAgtBic', i)" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
+</div>
                                     <div class="validation-msg" *ngIf="err('dbtrAgtBic', tx) as e">{{e}}</div></div>
                                 <div class="form-group"><label>ClrSys Code</label><input formControlName="dbtrAgtClrSysCd" maxlength="5" placeholder="Optional"></div>
                                 <div class="form-group"><label>Member ID</label><input formControlName="dbtrAgtMmbId" maxlength="35" placeholder="Optional"></div>
@@ -396,7 +437,10 @@
                                     <div class="form-group"><label>Address Line 1</label><input formControlName="dbtrAdrLine1" maxlength="70"></div>
                                     <div class="form-group"><label>Address Line 2</label><input formControlName="dbtrAdrLine2" maxlength="70"></div>
                                 </ng-container>
-                                <div class="form-group"><label>OrgId AnyBIC</label><input formControlName="dbtrOrgIdAnyBic" maxlength="11" placeholder="Optional"></div>
+                                <div class="form-group"><label>OrgId AnyBIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
+<input formControlName="dbtrOrgIdAnyBic" maxlength="11" placeholder="Optional">
+<button type="button" class="uetr-refresh-btn" (click)="openBicSearch('dbtrOrgIdAnyBic', i)" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
+</div></div>
                                 <div class="form-group"><label>OrgId LEI</label><input formControlName="dbtrOrgIdLei" maxlength="20" placeholder="Optional"></div>
                                 <div class="form-group"><label>OrgId Other ID</label><input formControlName="dbtrOrgIdOthrId" maxlength="35" placeholder="Optional"></div>
                                 <div class="form-group"><label>OrgId SchmeNm Code</label><input formControlName="dbtrOrgIdOthrSchmeNmCd" maxlength="4" placeholder="Optional"></div>

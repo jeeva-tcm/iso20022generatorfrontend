@@ -1,4 +1,4 @@
-﻿<div class="container" (click)="$event.stopPropagation()">
+<div class="container" (click)="$event.stopPropagation()">
     <header>
         <h1>Notification To Receive (camt.057) <mat-icon class="title-icon">account_balance</mat-icon></h1>
         <!-- <p style="margin-top: -1rem;">Visual camt.057 Message Builder</p> -->
@@ -11,13 +11,27 @@
                     <div class="section-title">Message Header</div>
                     <div class="form-group">
                         <label>Sender BIC <span class="req">*</span></label>
-                        <input formControlName="fromBic" maxlength="11">
+                        <div class="uetr-control-row">
+                            <input formControlName="fromBic" maxlength="11" class="auto-uppercase">
+                            <button type="button" class="uetr-refresh-btn"
+                                (click)="openBicSearch('fromBic')"
+                                matTooltip="Search BIC">
+                                <mat-icon>search</mat-icon>
+                            </button>
+                        </div>
                         <div class="validation-msg" *ngIf="err('fromBic') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('fromBic', 11) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
                         <label>Receiver BIC <span class="req">*</span></label>
-                        <input formControlName="toBic" maxlength="11">
+                        <div class="uetr-control-row">
+                            <input formControlName="toBic" maxlength="11" class="auto-uppercase">
+                            <button type="button" class="uetr-refresh-btn"
+                                (click)="openBicSearch('toBic')"
+                                matTooltip="Search BIC">
+                                <mat-icon>search</mat-icon>
+                            </button>
+                        </div>
                         <div class="validation-msg" *ngIf="err('toBic') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('toBic', 11) as h">{{h}}</div>
                     </div>
@@ -105,7 +119,7 @@
                     <div class="party-group">
                         <div class="party-group-title mandatory">Expected Debtor Information</div>
                         <ng-container
-                            *ngTemplateOutlet="partyForm; context:{prefix:'dbtr',isAgent:false, title:'Debtor'}"></ng-container>
+                            *ngTemplateOutlet="partyForm; context:{prefix:'dbtr',isAgent:false, title:'Debtor', group: form}"></ng-container>
                     </div>
 
                     <div class="party-group">
@@ -122,7 +136,7 @@
                     <div class="party-group">
                         <div class="party-group-title mandatory">Debtor Agent</div>
                         <ng-container
-                            *ngTemplateOutlet="partyForm; context:{prefix:'dbtrAgt',isAgent:true, title:'Debtor Agent'}"></ng-container>
+                            *ngTemplateOutlet="partyForm; context:{prefix:'dbtrAgt',isAgent:true, title:'Debtor Agent', group: form}"></ng-container>
                     </div>
 
                     <div class="party-group">
@@ -138,7 +152,7 @@
                     <div class="party-group">
                         <div class="party-group-title mandatory">Intermediary Agent</div>
                         <ng-container
-                            *ngTemplateOutlet="partyForm; context:{prefix:'intrmyAgt',isAgent:true, title:'Intermediary Agent'}"></ng-container>
+                            *ngTemplateOutlet="partyForm; context:{prefix:'intrmyAgt',isAgent:true, title:'Intermediary Agent', group: form}"></ng-container>
                     </div>
 
                     <div class="party-group">
@@ -149,6 +163,16 @@
                                 <input formControlName="intrmyAgtAcct" maxlength="34" placeholder="Account">
                             </div>
                         </div>
+                    </div>
+
+                    <div class="party-group">
+                        <div class="party-group-title mandatory">Instructing Agent</div>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'instgAgt',isAgent:true, title:'Instructing Agent', group: form}"></ng-container>
+                    </div>
+
+                    <div class="party-group">
+                        <div class="party-group-title mandatory">Instructed Agent</div>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'instdAgt',isAgent:true, title:'Instructed Agent', group: form}"></ng-container>
                     </div>
                 </div>
 
@@ -303,18 +327,26 @@
 </div>
 
 
-<ng-template #partyForm let-prefix="prefix" let-isAgent="isAgent" let-title="title">
+<ng-template #partyForm let-prefix="prefix" let-isAgent="isAgent" let-title="title" let-required="required" let-group="group">
     <div [formGroup]="form" class="party-grid">
         <!-- BIC -->
         <div class="form-group" *ngIf="isAgent">
-            <label>{{title}} BIC</label>
-            <input [formControlName]="prefix+'Bic'" maxlength="11" placeholder="e.g. NDEAFIHH">
+            <label>{{title}} BIC <span class="req" *ngIf="required">*</span></label>
+            <div class="uetr-control-row">
+                <input [formControlName]="prefix+'Bic'" maxlength="11" placeholder="e.g. NDEAFIHH" class="auto-uppercase">
+                <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup(prefix+'Bic', group)" title="Search BIC"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
+                </button>
+            </div>
             <div class="validation-msg" *ngIf="err(prefix+'Bic') as e">{{e}}</div>
             <div class="field-hint at-limit" *ngIf="hint(prefix+'Bic', 11) as h">{{h}}</div>
         </div>
         <div class="form-group" *ngIf="!isAgent">
-            <label>{{title}} BIC</label>
-            <input [formControlName]="prefix+'OrgAnyBIC'" maxlength="11" placeholder="e.g. NDEAFIHH">
+            <label>{{title}} BIC <span class="req" *ngIf="required">*</span></label>
+            <div class="uetr-control-row">
+                <input [formControlName]="prefix+'OrgAnyBIC'" maxlength="11" placeholder="e.g. NDEAFIHH" class="auto-uppercase">
+                <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup(prefix+'OrgAnyBIC', group)" title="Search BIC"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
+                </button>
+            </div>
             <div class="validation-msg" *ngIf="err(prefix+'OrgAnyBIC') as e">{{e}}</div>
             <div class="field-hint at-limit" *ngIf="hint(prefix+'OrgAnyBIC', 11) as h">{{h}}</div>
         </div>

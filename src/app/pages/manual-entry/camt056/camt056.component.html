@@ -20,7 +20,11 @@
                         <div class="party-grid">
                             <div class="form-group">
                                 <label>From BIC <span class="req">*</span></label>
-                                <input type="text" formControlName="fromBIC" maxlength="11">
+                                <div class="uetr-control-row">
+                                    <input type="text" formControlName="fromBIC" maxlength="11">
+                                    <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('fromBIC')" title="Search BIC"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
+                                    </button>
+                                </div>
                                 <span class="validation-msg" *ngIf="err('fromBIC')">{{err('fromBIC')}}</span>
                             </div>
                             <div class="form-group">
@@ -38,7 +42,11 @@
 
                             <div class="form-group">
                                 <label>To BIC <span class="req">*</span></label>
-                                <input type="text" formControlName="toBIC" maxlength="11">
+                                <div class="uetr-control-row">
+                                    <input type="text" formControlName="toBIC" maxlength="11">
+                                    <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('toBIC')" title="Search BIC"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
+                                    </button>
+                                </div>
                                 <span class="validation-msg" *ngIf="err('toBIC')">{{err('toBIC')}}</span>
                             </div>
                             <div class="form-group">
@@ -109,7 +117,11 @@
                             <div class="field-divider">Related Header (Rltd)</div>
                             <div class="form-group">
                                 <label>Related From BIC</label>
-                                <input type="text" formControlName="rltdFromBIC" maxlength="11">
+                                <div class="uetr-control-row">
+                                    <input type="text" formControlName="rltdFromBIC" maxlength="11">
+                                    <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('rltdFromBIC')" title="Search BIC"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
+                                    </button>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>Related From Clr Sys ID</label>
@@ -126,7 +138,11 @@
 
                             <div class="form-group">
                                 <label>Related To BIC</label>
-                                <input type="text" formControlName="rltdToBIC" maxlength="11">
+                                <div class="uetr-control-row">
+                                    <input type="text" formControlName="rltdToBIC" maxlength="11">
+                                    <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('rltdToBIC')" title="Search BIC"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
+                                    </button>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>Related To Clr Sys ID</label>
@@ -199,7 +215,11 @@
                             <div class="field-divider" style="grid-column: 1 / -1">Assigner Identification</div>
                             <div class="form-group">
                                 <label>Assigner BIC <span class="req">*</span></label>
-                                <input type="text" formControlName="assgnrBic" maxlength="11">
+                                <div class="uetr-control-row">
+                                    <input type="text" formControlName="assgnrBic" maxlength="11">
+                                    <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('assgnrBic')" title="Search BIC"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
+                                    </button>
+                                </div>
                                 <span class="validation-msg" *ngIf="err('assgnrBic')">{{err('assgnrBic')}}</span>
                             </div>
                             <div class="form-group">
@@ -218,7 +238,11 @@
                             <div class="field-divider" style="grid-column: 1 / -1">Assignee Identification</div>
                             <div class="form-group">
                                 <label>Assignee BIC <span class="req">*</span></label>
-                                <input type="text" formControlName="assgneBic" maxlength="11">
+                                <div class="uetr-control-row">
+                                    <input type="text" formControlName="assgneBic" maxlength="11">
+                                    <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('assgneBic')" title="Search BIC"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
+                                    </button>
+                                </div>
                                 <span class="validation-msg" *ngIf="err('assgneBic')">{{err('assgneBic')}}</span>
                             </div>
                             <div class="form-group">
@@ -258,7 +282,11 @@
                             <ng-container *ngIf="form.get('txInf.caseCretrType')?.value === 'AGENT'">
                                 <div class="form-group">
                                     <label>Case Creator Agent BIC</label>
-                                    <input type="text" formControlName="caseCretrAgtBic" maxlength="11">
+                                    <div class="uetr-control-row">
+                                        <input type="text" formControlName="caseCretrAgtBic" maxlength="11">
+                                        <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('txInf.caseCretrAgtBic')" title="Search BIC"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="form-group">
                                     <label>Case Creator Agent LEI</label>
@@ -345,7 +373,11 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Case Creator Party BIC</label>
-                                    <input type="text" formControlName="caseCretrPtyBic" maxlength="11">
+                                    <div class="uetr-control-row">
+                                        <input type="text" formControlName="caseCretrPtyBic" maxlength="11">
+                                        <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('txInf.caseCretrPtyBic')" title="Search BIC"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="form-group">
                                     <label>Case Creator Party LEI</label>
@@ -491,7 +523,11 @@
                             <ng-container *ngIf="form.get('txInf.cxlOrgtrIdType')?.value === 'ORG'">
                                 <div class="form-group">
                                     <label>Originator BIC (AnyBIC)</label>
-                                    <input type="text" formControlName="cxlOrgtrBic" maxlength="11">
+                                    <div class="uetr-control-row">
+                                        <input type="text" formControlName="cxlOrgtrBic" maxlength="11">
+                                        <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('txInf.cxlOrgtrBic')" title="Search BIC"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="form-group">
                                     <label>Originator LEI</label>
