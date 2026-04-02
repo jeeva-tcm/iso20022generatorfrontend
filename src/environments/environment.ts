@@ -2,7 +2,7 @@
 // Local development settings
 export const environment = {
     production: false,
-    apiBaseUrl: 'http://127.0.0.1:8001',
+    apiBaseUrl: 'http://localhost:8001',
     firebaseConfig: {
         
         apiKey: "AIzaSyAdEupd1RQVI8y2SNot4IB8BBubzGT5QU8",

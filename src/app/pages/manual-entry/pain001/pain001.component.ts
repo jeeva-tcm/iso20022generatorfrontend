@@ -66,23 +66,25 @@ export class Pain001Component implements OnInit {
   private buildForm() {
     this.form = this.fb.group({
       // BAH (head.001.001.02)
-      charSet: ['UTF-8', [Validators.maxLength(2048)]],
-      rltdBizMsgId: ['REL-44332211', [Validators.maxLength(35)]],
-      fromBic: ['BANCUS33XXX', [Validators.required, Validators.pattern(/^([A-Z0-9]{8}|[A-Z0-9]{11})$/)]],
-      fromClrSysCd: ['USABA', [Validators.maxLength(5)]],
-      fromClrSysMmbId: ['123456789', [Validators.maxLength(35)]],
-      fromLei: ['W22LROWBR70L5U3S5244', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
-      toBic: ['BANCGB2LXXX', [Validators.required, Validators.pattern(/^([A-Z0-9]{8}|[A-Z0-9]{11})$/)]],
-      toClrSysCd: ['GBFPS', [Validators.maxLength(5)]],
-      toClrSysMmbId: ['200000', [Validators.maxLength(35)]],
-      toLei: ['EBMRY7N10NRY5NCY5Y71', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
-      bizMsgId: ['BMS-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
-      msgDefIdr: ['pain.001.001.09', [Validators.required]],
-      bizSvc: ['swift.cbprplus.03'],
-      creDt: [this.isoNowDate(), Validators.required],
-      cpyDplct: [''],
-      pssblDplct: [''],
-      appHdrPrty: [''],
+      head_charSet: ['UTF-8', [Validators.maxLength(2048)]],
+      head_fromBic: ['BANCUS33XXX', [Validators.required, Validators.pattern(/^([A-Z0-9]{8}|[A-Z0-9]{11})$/)]],
+      head_fromClrSysId: ['USABA', [Validators.maxLength(5)]],
+      head_fromMmbId: ['123456789', [Validators.maxLength(35)]],
+      head_fromLei: ['W22LROWBR70L5U3S5244', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
+      head_toBic: ['BANCGB2LXXX', [Validators.required, Validators.pattern(/^([A-Z0-9]{8}|[A-Z0-9]{11})$/)]],
+      head_toClrSysId: ['GBFPS', [Validators.maxLength(5)]],
+      head_toMmbId: ['200000', [Validators.maxLength(35)]],
+      head_toLei: ['EBMRY7N10NRY5NCY5Y71', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
+      head_bizMsgIdr: ['BMS-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
+      head_msgDefIdr: ['pain.001.001.09', [Validators.required]],
+      head_bizSvc: ['swift.cbprplus.03', Validators.required],
+      head_creDt: [this.isoNowDate(), Validators.required],
+      head_mktPrctcRegy: ['', [Validators.maxLength(35)]],
+      head_mktPrctcId: ['', [Validators.maxLength(35)]],
+      head_cpyDplct: [''],
+      head_pssblDplct: [''],
+      head_prty: [''],
+      head_rltdBizMsgIdr: ['', [Validators.maxLength(35)]],
       
       // Group Header (pain.001.001.09)
       msgId: ['PAIN001-MSG-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
@@ -96,6 +98,11 @@ export class Pain001Component implements OnInit {
       initgPtyId: ['GS-ID-9988'],
       initgPtyCtry: ['GB'],
       initgPtyTwnNm: ['London'],
+      initgPtyStrtNm: ['Main Street'],
+      initgPtyBldgNb: ['10'],
+      initgPtyPstCd: ['EC1A 1BB'],
+      initgPtyDept: ['Treasury'],
+      initgPtySubDept: ['Payments'],
 
       // Payment Information
       pmtInfId: ['PMT-INF-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
@@ -120,6 +127,9 @@ export class Pain001Component implements OnInit {
       dbtrBldgNm: ['Chase Tower'],
       dbtrStrtNm: ['Park Avenue', [Validators.maxLength(70)]],
       dbtrPstCd: ['10017', [Validators.maxLength(16)]],
+      dbtrDept: [''],
+      dbtrSubDept: [''],
+      dbtrFlr: ['50'],
       dbtrAdrLine1: ['270 Park Avenue', [Validators.maxLength(70)]],
       dbtrAdrLine2: ['Suite 500', [Validators.maxLength(70)]],
       dbtrAgtAcctIban: ['11112222333344', [Validators.maxLength(34)]],
@@ -154,6 +164,10 @@ export class Pain001Component implements OnInit {
   }
 
   private createTransactionGroup(): FormGroup {
+    const BIC = [Validators.required, Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
+    const BIC_OPT = [Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
+    const LEI = [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)];
+
     return this.fb.group({
       instrId: ['INSTR-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
       endToEndId: ['E2E-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
@@ -171,13 +185,44 @@ export class Pain001Component implements OnInit {
       txSvcLvl: ['NURG', [Validators.maxLength(5)]],
       txLclInstrm: ['INST', [Validators.maxLength(35)]],
       txCtgyPurp: ['SALA', [Validators.maxLength(5)]],
-      intrmyAgt1Bic: ['CORRUK2LXXX'],
-      intrmyAgt1Acct: ['GB11CORR001122334455'],
-      intrmyAgt2Bic: [''],
-      intrmyAgt2Acct: [''],
-      intrmyAgt3Bic: [''],
-      intrmyAgt3Acct: [''],
-      cdtrAgtBic: ['BANCGB2LXXX', [Validators.required, Validators.maxLength(11)]],
+      
+      intrmyAgt1Bic: ['', BIC_OPT],
+      intrmyAgt1Lei: ['', LEI],
+      intrmyAgt1Name: ['Citibank N.A.', Validators.maxLength(140)],
+      intrmyAgt1Ctry: ['US', [Validators.pattern(/^[A-Z]{2,2}$/)]],
+      intrmyAgt1TwnNm: ['New York', [Validators.maxLength(35)]],
+      intrmyAgt1ClrSysCd: ['', Validators.maxLength(5)],
+      intrmyAgt1ClrSysMmbId: ['', Validators.maxLength(35)],
+      intrmyAgt1Acct: ['', [Validators.maxLength(34)]],
+
+      intrmyAgt2Bic: ['', BIC_OPT],
+      intrmyAgt2Lei: ['', LEI],
+      intrmyAgt2Name: ['HSBC Bank PLC', Validators.maxLength(140)],
+      intrmyAgt2Ctry: ['GB', [Validators.pattern(/^[A-Z]{2,2}$/)]],
+      intrmyAgt2TwnNm: ['London', [Validators.maxLength(35)]],
+      intrmyAgt2ClrSysCd: ['', Validators.maxLength(5)],
+      intrmyAgt2ClrSysMmbId: ['', Validators.maxLength(35)],
+      intrmyAgt2Acct: ['', [Validators.maxLength(34)]],
+
+      intrmyAgt3Bic: ['', BIC_OPT],
+      intrmyAgt3Lei: ['', LEI],
+      intrmyAgt3Name: ['Standard Chartered Bank', Validators.maxLength(140)],
+      intrmyAgt3Ctry: ['SG', [Validators.pattern(/^[A-Z]{2,2}$/)]],
+      intrmyAgt3TwnNm: ['Singapore', [Validators.maxLength(35)]],
+      intrmyAgt3ClrSysCd: ['', Validators.maxLength(5)],
+      intrmyAgt3ClrSysMmbId: ['', Validators.maxLength(35)],
+      intrmyAgt3Acct: ['', [Validators.maxLength(34)]],
+
+      cdtrAgtBic: ['BANCGB2LXXX', [Validators.maxLength(11)]],
+      cdtrAgtLei: ['', LEI],
+      cdtrAgtName: ['Barclays Bank UK PLC', Validators.maxLength(140)],
+      cdtrAgtCtry: ['GB', [Validators.pattern(/^[A-Z]{2,2}$/)]],
+      cdtrAgtTwnNm: ['London', [Validators.maxLength(35)]],
+      cdtrAgtStrtNm: ['Churchill Place', [Validators.maxLength(70)]],
+      cdtrAgtPstCd: ['E14 5HP', [Validators.maxLength(16)]],
+      cdtrAgtAddrType: ['structured'],
+      cdtrAgtClrSysCd: ['', Validators.maxLength(5)],
+      cdtrAgtClrSysMmbId: ['', Validators.maxLength(35)],
       cdtrAgtAcct: ['GB73BARC20000012345678'],
       cdtrName: ['Precision Engineering Ltd', [Validators.required, Validators.maxLength(140)]],
       cdtrIban: ['GB73BARC20000012345678', [Validators.required, Validators.maxLength(34)]],
@@ -186,6 +231,9 @@ export class Pain001Component implements OnInit {
       cdtrTwnNm: ['Manchester', [Validators.maxLength(135)]],
       cdtrAdrLine1: ['10 Industrial Way', [Validators.maxLength(70)]],
       cdtrAdrLine2: ['Block B', [Validators.maxLength(70)]],
+      cdtrDept: [''],
+      cdtrSubDept: [''],
+      cdtrFlr: [''],
       ultmtDbtrName: ['Sub-Group Treasury'],
       ultmtCdtrName: ['Final Vendor Corp'],
       purpCd: ['SALA'],
@@ -238,7 +286,9 @@ export class Pain001Component implements OnInit {
 
   fdt(dt: string): string {
     if (!dt) return dt;
-    let s = dt.trim().replace(/\.\d+/, '').replace('Z', '+00:00');
+    let s = dt.trim();
+    if (s.length === 10) s += 'T00:00:00';
+    s = s.replace(/\.\d+/, '').replace('Z', '+00:00');
     if (s && !/([+-]\d{2}:\d{2})$/.test(s)) s += '+00:00';
     return s;
   }
@@ -248,105 +298,94 @@ export class Pain001Component implements OnInit {
     const v = this.form.getRawValue();
     const creDtTm = v.creDtTm || this.isoNow();
 
-    let frContent = this.el('BICFI', v.fromBic || 'BANCUS33XXX', 5);
-    if (v.fromClrSysMmbId?.trim()) {
-      let clr = this.tag('ClrSysId', this.el('Cd', v.fromClrSysCd || 'USABA', 8), 7) + this.el('MmbId', v.fromClrSysMmbId, 7);
-      frContent += this.tag('ClrSysMmbId', clr, 6);
+    // BAH (AppHdr)
+    let bah = (v.head_charSet ? this.el('CharSet', v.head_charSet, 2) : '');
+    
+    // Fr
+    let frFi = '';
+    if (v.head_fromBic) frFi += this.el('BICFI', v.head_fromBic, 5);
+    if (v.head_fromMmbId) {
+      let clr = '';
+      if (v.head_fromClrSysId) clr += this.tag('ClrSysId', this.el('Cd', v.head_fromClrSysId, 8), 7);
+      clr += this.el('MmbId', v.head_fromMmbId, 7);
+      frFi += this.tag('ClrSysMmbId', clr, 6);
     }
-    if (v.fromLei?.trim()) frContent += this.el('LEI', v.fromLei, 5);
+    if (v.head_fromLei) frFi += this.el('LEI', v.head_fromLei, 5);
+    if (frFi) bah += this.tag('Fr', this.tag('FIId', this.tag('FinInstnId', frFi, 4), 3), 2);
 
-    let toContent = this.el('BICFI', v.toBic || 'BANCGB2LXXX', 5);
-    if (v.toClrSysMmbId?.trim()) {
-      let clr = this.tag('ClrSysId', this.el('Cd', v.toClrSysCd || 'GBFPS', 8), 7) + this.el('MmbId', v.toClrSysMmbId, 7);
-      toContent += this.tag('ClrSysMmbId', clr, 6);
+    // To
+    let toFi = '';
+    if (v.head_toBic) toFi += this.el('BICFI', v.head_toBic, 5);
+    if (v.head_toMmbId) {
+      let clr = '';
+      if (v.head_toClrSysId) clr += this.tag('ClrSysId', this.el('Cd', v.head_toClrSysId, 8), 7);
+      clr += this.el('MmbId', v.head_toMmbId, 7);
+      toFi += this.tag('ClrSysMmbId', clr, 6);
     }
-    if (v.toLei?.trim()) toContent += this.el('LEI', v.toLei, 5);
+    if (v.head_toLei) toFi += this.el('LEI', v.head_toLei, 5);
+    if (toFi) bah += this.tag('To', this.tag('FIId', this.tag('FinInstnId', toFi, 4), 3), 2);
 
-    const bah = (v.charSet ? this.el('CharSet', v.charSet, 2) : '') +
-                this.tag('Fr', this.tag('FIId', this.tag('FinInstnId', frContent, 4), 3), 2) +
-                this.tag('To', this.tag('FIId', this.tag('FinInstnId', toContent, 4), 3), 2) +
-                this.el('BizMsgIdr', v.bizMsgId || ('BMS-' + Date.now()), 2) +
-                this.el('MsgDefIdr', v.msgDefIdr || 'pain.001.001.09', 2) +
-                this.el('BizSvc', v.bizSvc || 'swift.cbprplus.03', 2) +
-                this.el('CreDt', this.fdt(creDtTm), 2) +
-                (v.cpyDplct ? this.el('CpyDplct', v.cpyDplct, 2) : '') +
-                (v.pssblDplct !== '' && v.pssblDplct !== null && v.pssblDplct !== undefined ? this.el('PssblDplct', v.pssblDplct, 2) : '') +
-                (v.appHdrPrty ? this.el('Prty', v.appHdrPrty, 2) : '') +
-                (v.rltdBizMsgId ? '' : '');
+    bah += this.el('BizMsgIdr', v.head_bizMsgIdr, 2);
+    bah += this.el('MsgDefIdr', v.head_msgDefIdr, 2);
+    bah += this.el('BizSvc', v.head_bizSvc || 'swift.cbprplus.03', 2);
+    bah += this.el('CreDt', this.fdt(v.head_creDt || creDtTm), 2);
+    if (v.head_cpyDplct) bah += this.el('CpyDplct', v.head_cpyDplct, 2);
+    if (v.head_pssblDplct) bah += this.el('PssblDplct', v.head_pssblDplct, 2);
+    if (v.head_prty) bah += this.el('Prty', v.head_prty, 2);
+    if (v.head_rltdBizMsgIdr) bah += this.el('Rltd', this.el('BizMsgIdr', v.head_rltdBizMsgIdr, 4), 2);
 
     // Group Header
-    let initgPtyIdContent = '';
-    if (v.initgPtyBic) {
-      initgPtyIdContent += this.tag('OrgId', this.el('AnyBIC', v.initgPtyBic, 6), 5);
-    }
-    if (v.initgPtyId) {
-      // Only add Othr if no AnyBIC (XOR within OrgId per CBPR+)
-      if (!v.initgPtyBic) {
-        initgPtyIdContent += this.tag('OrgId', this.tag('Othr', this.el('Id', v.initgPtyId, 7), 6), 5);
-      }
-    }
-    const initgPtyIdXml = initgPtyIdContent ? this.tag('Id', initgPtyIdContent, 4) : '';
     const grpHdr = this.tag('GrpHdr',
       this.el('MsgId', v.msgId, 4) +
       this.el('CreDtTm', creDtTm, 4) +
+      this.tag('Authstn', v.authstnCd ? this.el('Cd', v.authstnCd, 6) : this.el('Prtry', v.authstnPrtry, 6), 5) +
       this.el('NbOfTxs', v.nbOfTxs, 4) +
+      (v.ctrlSum && v.ctrlSum !== '0.00' ? this.el('CtrlSum', v.ctrlSum, 4) : '') +
       this.partyXml('InitgPty', 'initgPty', v, 4) +
-      (v.fwdgAgtBic ? this.tag('FwdgAgt', this.tag('FinInstnId', this.el('BICFI', v.fwdgAgtBic, 6), 5), 4) : ''),
+      this.agtXml('FwdgAgt', 'fwdgAgt', v, 4),
       3
     );
 
     // Payment Information
-    let pmtInfContent = '';
-    pmtInfContent += this.el('PmtInfId', v.pmtInfId, 4);
-    pmtInfContent += this.el('PmtMtd', v.pmtMtd, 4);
-    if (v.batchBooking) pmtInfContent += this.el('BtchBookg', 'true', 4);
-    // Removed NbOfTxs and CtrlSum from PmtInf level to resolve specification errors.
-    
-    // Check if any transaction has its own override. If so, CBPR+ rule often says header level must be absent if txn level is present for XOR elements.
-    const hasTxPmtTp = v.transactions.some((t: any) => t.txSvcLvl || t.txLclInstrm || t.txCtgyPurp);
-    const hasTxUltDbtr = v.transactions.some((t: any) => t.ultmtDbtrName);
-    const hasTxInstrDbtr = v.transactions.some((t: any) => t.instrForDbtrAgt);
+    let pmtInfContent = this.el('PmtInfId', v.pmtInfId, 4) +
+                        this.el('PmtMtd', v.pmtMtd, 4) +
+                        (v.btchBookg ? this.el('BtchBookg', 'true', 4) : '');
 
-    if (!hasTxPmtTp) {
-        let pmtTpInf = this.el('InstrPrty', v.instrPrty, 5);
-        if (v.svcLvl) pmtTpInf += this.tag('SvcLvl', this.el('Cd', v.svcLvl, 7), 6);
-        if (v.lclInstrm) pmtTpInf += this.tag('LclInstrm', this.el('Cd', v.lclInstrm, 7), 6);
-        if (v.ctgyPurp) pmtTpInf += this.tag('CtgyPurp', this.el('Cd', v.ctgyPurp, 6), 5);
-        if (pmtTpInf) pmtInfContent += this.tag('PmtTpInf', pmtTpInf, 4);
+    if (v.pmtCtrlSum && v.pmtCtrlSum !== '0.00') pmtInfContent += this.el('PmtCtrlSum', v.pmtCtrlSum, 4);
+
+    // XOR logic for PmtTpInf
+    const hasGlobalPmtTp = !!(v.svcLvl || v.lclInstrm || v.ctgyPurp);
+    if (hasGlobalPmtTp) {
+      pmtInfContent += this.tag('PmtTpInf',
+        (v.svcLvl ? this.tag('SvcLvl', this.el('Cd', v.svcLvl, 7), 6) : '') +
+        (v.lclInstrm ? this.tag('LclInstrm', this.el('Cd', v.lclInstrm, 7), 6) : '') +
+        (v.ctgyPurp ? this.tag('CtgyPurp', this.el('Cd', v.ctgyPurp, 7), 6) : ''), 4);
     }
-    
-    pmtInfContent += this.tag('ReqdExctnDt', this.el('Dt', v.reqdExctnDt, 5), 4);
 
+    pmtInfContent += (v.reqdExctnDt ? this.tag('ReqdExctnDt', this.el('Dt', v.reqdExctnDt, 6), 5) : '');
+    if (v.poolgAdjstmntDt) pmtInfContent += this.el('PoolgAdjstmntDt', v.poolgAdjstmntDt, 4);
 
-    // Debtor (Dbtr) - enforcing name + address together for L3 compliance
     pmtInfContent += this.partyXml('Dbtr', 'dbtr', v, 4);
     if (v.dbtrIban) pmtInfContent += this.tag('DbtrAcct', this.acctXml(v.dbtrIban, 6), 4);
-
-
-    // Debtor Agent (DbtrAgt)
-    let agtFinId = this.buildAppHdrFi(v.dbtrAgtBic, v.dbtrAgtClrSysMmbId, v.dbtrAgtClrSysCd, v.dbtrAgtLei, false).trim();
-    if (v.dbtrAgtName) agtFinId += this.el('Nm', v.dbtrAgtName, 7);
-    agtFinId += this.addrXml(v, 'dbtrAgt', 6);
-    
-    if (agtFinId) pmtInfContent += this.tag('DbtrAgt', this.tag('FinInstnId', agtFinId, 6), 4);
+    pmtInfContent += this.agtXml('DbtrAgt', 'dbtrAgt', v, 4);
     if (v.dbtrAgtAcctIban) pmtInfContent += this.tag('DbtrAgtAcct', this.acctXml(v.dbtrAgtAcctIban, 6), 4);
     
-    if (!hasTxUltDbtr && v.ultmtDbtrName) {
-        pmtInfContent += this.partyXml('UltmtDbtr', 'ultmtDbtr', v, 4);
-    }
+    // XOR logic for UltmtDbtr
+    const hasGlobalUltmtDbtr = !!v.ultmtDbtrName;
+    if (hasGlobalUltmtDbtr) pmtInfContent += this.partyXml('UltmtDbtr', 'ultmtDbtr', v, 4);
+    
     pmtInfContent += this.el('ChrgBr', v.chrgBr, 4);
+    if (v.chrgsAcctIban) pmtInfContent += this.tag('ChrgsAcct', this.acctXml(v.chrgsAcctIban, 6), 4);
+    if (v.chrgsAcctAgtBic) pmtInfContent += this.tag('ChrgsAcctAgt', this.tag('FinInstnId', this.el('BICFI', v.chrgsAcctAgtBic, 7), 6), 5);
 
-
-    let txsXml = '';
     // Transactions loop
+    let txsXml = '';
     v.transactions.forEach((tx: any) => {
       const amt = this.formatting.formatAmount(tx.amount || 0, tx.currency);
+      let txContent = this.tag('PmtId', this.el('InstrId', tx.instrId, 6) + this.el('EndToEndId', tx.endToEndId, 6) + this.el('UETR', tx.uetr, 6), 5);
       
-      let txContent = '';
-      txContent += this.tag('PmtId', this.el('InstrId', tx.instrId, 6) + this.el('EndToEndId', tx.endToEndId, 6) + this.el('UETR', tx.uetr, 6), 5);
-      
-      // Payment Type Information (Transaction Level)
-      if (tx.txSvcLvl || tx.txLclInstrm || tx.txCtgyPurp) {
+      // Only add PmtTpInf if not at global level
+      if (!hasGlobalPmtTp && (tx.txSvcLvl || tx.txLclInstrm || tx.txCtgyPurp)) {
         let tpInf = '';
         if (tx.txSvcLvl) tpInf += this.tag('SvcLvl', this.el('Cd', tx.txSvcLvl, 8), 7);
         if (tx.txLclInstrm) tpInf += this.tag('LclInstrm', this.el('Cd', tx.txLclInstrm, 8), 7);
@@ -355,7 +394,6 @@ export class Pain001Component implements OnInit {
       }
 
       txContent += this.tag('Amt', this.el('InstdAmt', amt, 6, ` Ccy="${this.e(tx.currency)}"`), 5);
-
       if (tx.xchgRate || tx.xchgCtrctId || tx.xchgUnitCcy) {
         let xchg = this.el('UnitCcy', tx.xchgUnitCcy, 7);
         if (tx.xchgRate) xchg += this.el('XchgRate', tx.xchgRate, 7);
@@ -364,41 +402,25 @@ export class Pain001Component implements OnInit {
         txContent += this.tag('XchgRateInf', xchg, 6);
       }
 
-      if (tx.mndtId) txContent += this.el('MndtId', tx.mndtId, 6);
-      
-      if (v.pmtMtd === 'CHK') {
+      if (tx.chqInstr || tx.chqTp) {
         let chq = this.el('ChqNb', tx.chqInstr, 7);
         if (tx.chqTp) chq += this.el('ChqTp', tx.chqTp, 7);
         if (tx.chqMtrtyDt) chq += this.tag('ChqMtrtyDt', this.el('Dt', tx.chqMtrtyDt, 9), 7);
         txContent += this.tag('ChqInstr', chq, 6);
       }
 
-      if (tx.ultmtDbtrName) txContent += this.partyXml('UltmtDbtr', 'ultmtDbtr', tx, 6);
+      if (tx.mndtId) txContent += this.el('MndtId', tx.mndtId, 6);
+      if (!hasGlobalUltmtDbtr) txContent += this.partyXml('UltmtDbtr', 'ultmtDbtr', tx, 6);
 
-      if (tx.intrmyAgt1Bic) {
-        txContent += this.tag('IntrmyAgt1', this.tag('FinInstnId', this.el('BICFI', tx.intrmyAgt1Bic, 8), 7), 6);
-        if (tx.intrmyAgt1Acct) txContent += this.tag('IntrmyAgt1Acct', this.acctXml(tx.intrmyAgt1Acct, 7), 6);
-      }
-      if (tx.intrmyAgt2Bic) {
-        txContent += this.tag('IntrmyAgt2', this.tag('FinInstnId', this.el('BICFI', tx.intrmyAgt2Bic, 8), 7), 6);
-        if (tx.intrmyAgt2Acct) txContent += this.tag('IntrmyAgt2Acct', this.acctXml(tx.intrmyAgt2Acct, 7), 6);
-      }
-      if (tx.intrmyAgt3Bic) {
-        txContent += this.tag('IntrmyAgt3', this.tag('FinInstnId', this.el('BICFI', tx.intrmyAgt3Bic, 8), 7), 6);
-        if (tx.intrmyAgt3Acct) txContent += this.tag('IntrmyAgt3Acct', this.acctXml(tx.intrmyAgt3Acct, 7), 6);
-      }
+      // Intermediary Agents
+      txContent += this.agtXml('IntrmyAgt1', 'intrmyAgt1', tx, 6);
+      txContent += this.agtXml('IntrmyAgt2', 'intrmyAgt2', tx, 6);
+      txContent += this.agtXml('IntrmyAgt3', 'intrmyAgt3', tx, 6);
 
-      if (tx.cdtrAgtBic) {
-        const agtId = this.buildAppHdrFi(tx.cdtrAgtBic, '', '', '', false).trim();
-        txContent += this.tag('CdtrAgt', this.tag('FinInstnId', agtId, 6), 5);
-        if (tx.cdtrAgtAcct) txContent += this.tag('CdtrAgtAcct', this.acctXml(tx.cdtrAgtAcct, 7), 6);
-      }
-      
+      txContent += this.agtXml('CdtrAgt', 'cdtrAgt', tx, 5);
       txContent += this.partyXml('Cdtr', 'cdtr', tx, 5);
-      
       if (tx.cdtrIban) txContent += this.tag('CdtrAcct', this.acctXml(tx.cdtrIban, 6), 5);
-      if (tx.ultmtCdtrName) txContent += this.partyXml('UltmtCdtr', 'ultmtCdtr', tx, 6);
-
+      txContent += this.partyXml('UltmtCdtr', 'ultmtCdtr', tx, 6);
       if (tx.purpCd) txContent += this.tag('Purp', this.el('Cd', tx.purpCd, 7), 6);
       
       if (tx.taxAmt || tx.taxId) {
@@ -407,22 +429,17 @@ export class Pain001Component implements OnInit {
         if (tx.taxAmt) tax += this.tag('Amt', this.el('InstdAmt', tx.taxAmt, 8, ` Ccy="${this.e(tx.currency)}"`), 7);
         txContent += this.tag('Tax', tax, 6);
       }
-
-      if (tx.rltdRmtInfUrl) {
-        txContent += this.tag('RltdRmtInf', this.el('URL', tx.rltdRmtInfUrl, 7), 6);
-      }
-
+      if (tx.rltdRmtInfUrl) txContent += this.tag('RltdRmtInf', this.el('URL', tx.rltdRmtInfUrl, 7), 6);
       if (tx.rgltryRptg) txContent += this.tag('RgltryRptg', this.tag('Dtls', this.el('Inf', tx.rgltryRptg, 8), 7), 6);
-      
       if (tx.rmtInf) txContent += this.tag('RmtInf', this.el('Ustrd', tx.rmtInf, 6), 5);
 
       txsXml += this.tag('CdtTrfTxInf', txContent, 4);
     });
+
     pmtInfContent += txsXml;
     const pmtInf = this.tag('PmtInf', pmtInfContent, 3);
 
-    this.generatedXml =
-      `<?xml version="1.0" encoding="UTF-8"?>
+    this.generatedXml = `<?xml version="1.0" encoding="UTF-8"?>
 <BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
 \t<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
 ${bah}\t</AppHdr>
@@ -435,24 +452,120 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
     this.onEditorChange(this.generatedXml, true);
   }
 
-  private acctXml(acc: string, indent: number): string {
-    if (!acc) return '';
-    // Forced 'Othr' to bypass strict and failing Mod-97 check digit verification in test tools
-    const id = this.tag('Othr', this.el('Id', acc.replace(/\s/g, ''), indent + 3), indent + 2);
-    return this.tag('Id', id, indent);
+  mapAddrToForm(p: Element | null, prefix: string, patch: any) {
+    if (!p) return;
+    const ptyNode = p.getElementsByTagName('Pty')[0] || p;
+    const finNode = p.getElementsByTagName('FinInstnId')[0];
+
+    if (ptyNode && ptyNode.nodeName !== 'FinInstnId') {
+      const nm = ptyNode.getElementsByTagName('Nm')[0]?.textContent?.trim();
+      if (nm) patch[prefix + 'Name'] = nm;
+
+      const pstl = ptyNode.getElementsByTagName('PstlAdr')[0];
+      if (pstl) {
+        const getV = (t: string) => pstl.getElementsByTagName(t)[0]?.textContent?.trim();
+        const setV = (f: string, t: string) => { const v = getV(t); if (v) patch[prefix + f] = v; };
+        setV('Ctry', 'Ctry');
+        setV('TwnNm', 'TwnNm');
+        setV('StrtNm', 'StrtNm');
+        setV('BldgNb', 'BldgNb');
+        setV('BldgNm', 'BldgNm');
+        setV('PstCd', 'PstCd');
+        setV('Dept', 'Dept');
+        setV('SubDept', 'SubDept');
+        setV('Flr', 'Flr');
+        setV('PstBx', 'PstBx');
+        setV('Room', 'Room');
+        const lines = Array.from(pstl.getElementsByTagName('AdrLine'));
+        if (lines.length > 0) patch[prefix + 'AdrLine1'] = lines[0].textContent?.trim() || '';
+        if (lines.length > 1) patch[prefix + 'AdrLine2'] = lines[1].textContent?.trim() || '';
+        patch[prefix + 'AddrType'] = lines.length > 0 ? 'unstructured' : 'structured';
+      }
+
+      const id = ptyNode.getElementsByTagName('Id')[0];
+      if (id) {
+        const orgId = id.getElementsByTagName('OrgId')[0];
+        if (orgId) {
+          const bic = orgId.getElementsByTagName('AnyBIC')[0]?.textContent?.trim();
+          if (bic) patch[prefix + 'OrgIdAnyBic'] = bic;
+          const lei = orgId.getElementsByTagName('LEI')[0]?.textContent?.trim();
+          if (lei) patch[prefix + 'OrgIdLei'] = lei;
+          const othr = orgId.getElementsByTagName('Othr')[0];
+          if (othr) {
+            const othrId = othr.getElementsByTagName('Id')[0]?.textContent?.trim();
+            if (othrId) patch[prefix + 'Id'] = othrId;
+          }
+        }
+        const prvtId = id.getElementsByTagName('PrvtId')[0];
+        if (prvtId) {
+          const dobNode = prvtId.getElementsByTagName('DtAndPlcOfBirth')[0];
+          if (dobNode) {
+            const dob = dobNode.getElementsByTagName('BirthDt')[0]?.textContent?.trim();
+            if (dob) patch[prefix + 'PrvtIdBirthDt'] = dob;
+            const city = dobNode.getElementsByTagName('CityOfBirth')[0]?.textContent?.trim();
+            if (city) patch[prefix + 'PrvtIdCityOfBirth'] = city;
+            const ctry = dobNode.getElementsByTagName('CtryOfBirth')[0]?.textContent?.trim();
+            if (ctry) patch[prefix + 'PrvtIdCtryOfBirth'] = ctry;
+          }
+        }
+      }
+    }
+
+    if (finNode) {
+      const bic = finNode.getElementsByTagName('BICFI')[0]?.textContent?.trim();
+      if (bic) patch[prefix + 'Bic'] = bic;
+      const lei = finNode.getElementsByTagName('LEI')[0]?.textContent?.trim();
+      if (lei) patch[prefix + 'Lei'] = lei;
+      const nm = finNode.getElementsByTagName('Nm')[0]?.textContent?.trim();
+      if (nm) patch[prefix + 'Name'] = nm;
+      const clr = finNode.getElementsByTagName('ClrSysMmbId')[0];
+      if (clr) {
+        const mid = clr.getElementsByTagName('MmbId')[0]?.textContent?.trim();
+        if (mid) patch[prefix + 'ClrSysMmbId'] = mid;
+        const cid = clr.getElementsByTagName('Cd')[0]?.textContent?.trim() || clr.getElementsByTagName('Prtry')[0]?.textContent?.trim();
+        if (cid) {
+          if (prefix.startsWith('head_')) patch[prefix + 'ClrSysId'] = cid;
+          else patch[prefix + 'ClrSysCd'] = cid;
+        }
+      }
+    }
   }
 
-  private buildAppHdrFi(bic: string, mmbId: string, clrSysId: string, lei: string, prefix = true): string {
-    const p = prefix ? 'h:' : '';
-    let res = '';
-    if (bic) res += `<${p}BICFI>${this.e(bic)}</${p}BICFI>\n`;
-    if (mmbId || clrSysId) {
-      let clr = '';
-      if (clrSysId) clr += `<${p}ClrSysId><${p}Cd>${this.e(clrSysId)}</${p}Cd></${p}ClrSysId>\n`;
-      if (mmbId) clr += `<${p}MmbId>${this.e(mmbId)}</${p}MmbId>\n`;
-      res += `<${p}ClrSysMmbId>\n${clr}</${p}ClrSysMmbId>\n`;
+  agtXml(tag: string, pref: string, v: any, indent: number): string {
+    const bic = v[pref + 'Bic'];
+    const lei = v[pref + 'Lei'];
+    const nm = v[pref + 'Name'];
+    const clrCd = v[pref + 'ClrSysCd'] || v[pref + 'ClrSysId'];
+    const clrMmb = v[pref + 'ClrSysMmbId'];
+    const acct = v[pref + 'Acct'];
+
+    if (!bic && !lei && !nm && !clrMmb && !acct) return '';
+
+    let fiId = '';
+    if (bic) fiId += this.el('BICFI', bic, indent + 3);
+    if (clrMmb) {
+      let clrMmbContent = '';
+      if (clrCd) {
+        const isCd = clrCd.length <= 5; // Heuristic
+        clrMmbContent += this.tag('ClrSysId', isCd ? this.el('Cd', clrCd, indent + 5) : this.el('Prtry', clrCd, indent + 5), indent + 4);
+      }
+      clrMmbContent += this.el('MmbId', clrMmb, indent + 4);
+      fiId += this.tag('ClrSysMmbId', clrMmbContent, indent + 3);
     }
-    if (lei) res += `<${p}LEI>${this.e(lei)}</${p}LEI>\n`;
+    if (lei) fiId += this.el('LEI', lei, indent + 3);
+    if (nm) {
+      fiId += this.el('Nm', nm, indent + 3);
+      fiId += this.addrXml(v, pref, indent + 3);
+    }
+    
+    let inner = '';
+    if (fiId) inner += this.tag('FinInstnId', fiId, indent + 2);
+    
+    let res = this.tag(tag, inner, indent);
+    if (acct) {
+      const acctTag = tag + 'Acct';
+      res += this.tag(acctTag, this.acctXml(acct, indent + 2), indent);
+    }
     return res;
   }
 
@@ -472,43 +585,48 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
   }
 
   partyXml(tag: string, p: string, v: any, indent: number): string {
-    const nm = v[p + 'Name'] || 'DEFAULT NAME';
-    let content = this.el('Nm', nm, indent + 1);
+    const nm = v[p + 'Name'];
+    const idXml = this.partyIdXml(v, p, indent);
+    if (!nm && !idXml && !this.hasAddr(v, p)) return '';
+    
+    let content = this.el('Nm', nm || 'DEFAULT NAME', indent + 1);
     content += this.addrXml(v, p, indent + 1);
-    content += this.partyIdXml(v, p, indent);
+    content += idXml;
     return this.tag(tag, content, indent);
+  }
+
+  private hasAddr(v: any, p: string): boolean {
+    return !!(v[p + 'Ctry'] || v[p + 'TwnNm'] || v[p + 'AdrLine1'] || v[p + 'StrtNm']);
   }
 
   addrXml(v: any, p: string, indent = 4): string {
     let type = v[p + 'AddrType'];
     if (!type || type === 'none') type = 'structured';
-    
-    let lines: string[] = [];
     const t = this.tabs(indent + 1);
+    let lines: string[] = [];
     const isStrd = ['structured', 'hybrid'].includes(type);
     const isUstrd = ['unstructured', 'hybrid'].includes(type);
 
     if (isStrd) {
-        if (v[p + 'Dept']) lines.push(`${t}<Dept>${this.e(v[p + 'Dept'])}</Dept>`);
-        if (v[p + 'SubDept']) lines.push(`${t}<SubDept>${this.e(v[p + 'SubDept'])}</SubDept>`);
-        if (v[p + 'StrtNm']) lines.push(`${t}<StrtNm>${this.e(v[p + 'StrtNm'])}</StrtNm>`);
-        if (v[p + 'BldgNb']) lines.push(`${t}<BldgNb>${this.e(v[p + 'BldgNb'])}</BldgNb>`);
-        if (v[p + 'BldgNm']) lines.push(`${t}<BldgNm>${this.e(v[p + 'BldgNm'])}</BldgNm>`);
-        if (v[p + 'Flr']) lines.push(`${t}<Flr>${this.e(v[p + 'Flr'])}</Flr>`);
-        if (v[p + 'PstBx']) lines.push(`${t}<PstBx>${this.e(v[p + 'PstBx'])}</PstBx>`);
-        if (v[p + 'Room']) lines.push(`${t}<Room>${this.e(v[p + 'Room'])}</Room>`);
-        if (v[p + 'PstCd']) lines.push(`${t}<PstCd>${this.e(v[p + 'PstCd'])}</PstCd>`);
-        lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'] || 'London')}</TwnNm>`);
-        lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'] || 'GB')}</Ctry>`);
+      if (v[p + 'Dept']) lines.push(`${t}<Dept>${this.e(v[p + 'Dept'])}</Dept>`);
+      if (v[p + 'SubDept']) lines.push(`${t}<SubDept>${this.e(v[p + 'SubDept'])}</SubDept>`);
+      if (v[p + 'StrtNm']) lines.push(`${t}<StrtNm>${this.e(v[p + 'StrtNm'])}</StrtNm>`);
+      if (v[p + 'BldgNb']) lines.push(`${t}<BldgNb>${this.e(v[p + 'BldgNb'])}</BldgNb>`);
+      if (v[p + 'BldgNm']) lines.push(`${t}<BldgNm>${this.e(v[p + 'BldgNm'])}</BldgNm>`);
+      if (v[p + 'Flr']) lines.push(`${t}<Flr>${this.e(v[p + 'Flr'])}</Flr>`);
+      if (v[p + 'PstBx']) lines.push(`${t}<PstBx>${this.e(v[p + 'PstBx'])}</PstBx>`);
+      if (v[p + 'Room']) lines.push(`${t}<Room>${this.e(v[p + 'Room'])}</Room>`);
+      if (v[p + 'PstCd']) lines.push(`${t}<PstCd>${this.e(v[p + 'PstCd'])}</PstCd>`);
+      lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'] || 'London')}</TwnNm>`);
+      lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'] || 'GB')}</Ctry>`);
     } else if (v[p + 'Ctry']) {
-        lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
+      lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
     }
 
     if (isUstrd) {
-        if (v[p + 'AdrLine1']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine1'])}</AdrLine>`);
-        if (v[p + 'AdrLine2']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine2'])}</AdrLine>`);
+      if (v[p + 'AdrLine1']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine1'])}</AdrLine>`);
+      if (v[p + 'AdrLine2']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine2'])}</AdrLine>`);
     }
-    
     if (!lines.length) return '';
     return `${this.tabs(indent)}<PstlAdr>\n${lines.join('\n')}\n${this.tabs(indent)}</PstlAdr>\n`;
   }
@@ -519,9 +637,7 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
       let orgId = '';
       if (v[p + 'OrgIdAnyBic']) orgId += this.el('AnyBIC', v[p + 'OrgIdAnyBic'], indent + 3);
       if (v[p + 'OrgIdLei']) orgId += this.el('LEI', v[p + 'OrgIdLei'], indent + 3);
-      if (v[p + 'Id'] && !v[p + 'OrgIdAnyBic']) {
-        orgId += this.tag('Othr', this.el('Id', v[p + 'Id'], indent + 5), indent + 3);
-      }
+      if (v[p + 'Id']) orgId += this.tag('Othr', this.el('Id', v[p + 'Id'], indent + 5), indent + 3);
       idContent = this.tag('OrgId', orgId, indent + 2);
     } else if (v[p + 'PrvtIdBirthDt']) {
       let dob = this.el('BirthDt', v[p + 'PrvtIdBirthDt'], indent + 4);
@@ -530,6 +646,12 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
       idContent = this.tag('PrvtId', this.tag('DtAndPlcOfBirth', dob, indent + 3), indent + 2);
     }
     return idContent ? this.tag('Id', idContent, indent + 1) : '';
+  }
+
+  private acctXml(acc: string, indent: number): string {
+    if (!acc) return '';
+    const id = this.tag('Othr', this.el('Id', acc.replace(/\s/g, ''), indent + 3), indent + 2);
+    return this.tag('Id', id, indent);
   }
 
   onEditorChange(content: string, fromForm = false) {
@@ -546,227 +668,195 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
     if (!xml || xml.length < 50) return;
     try {
       this.isParsingXml = true;
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(xml, 'text/xml');
-      
-      const findTag = (tagName: string, parent: any = doc): Element | null => {
-        if (!parent) return null;
-        const target = tagName.toLowerCase();
-        if (parent.localName?.toLowerCase() === target) return parent;
-        const els = parent.getElementsByTagName('*');
-        for (let i = 0; i < els.length; i++) {
-          if (els[i].localName?.toLowerCase() === target) return els[i];
+      const cleanXml = xml.replace(/<(\/?)(?:[\w]+:)/g, '<$1');
+      const doc = new DOMParser().parseFromString(cleanXml, 'text/xml');
+      if (doc.querySelector('parsererror')) {
+        this.isParsingXml = false;
+        return;
+      }
+
+      const getT = (t: string, p: any = doc): Element | null => {
+        const els = p.getElementsByTagName(t);
+        if (els.length > 0) return els[0];
+        const all = p.getElementsByTagName('*');
+        for (let i = 0; i < all.length; i++) {
+          if (all[i].localName === t) return all[i];
         }
         return null;
       };
-
-      const tval = (tag: string, parent: any = doc) => {
-        const el = findTag(tag, parent);
-        return el ? el.textContent?.trim() || '' : '';
-      };
-
+      const tval = (t: string, p: any = doc) => getT(t, p)?.textContent?.trim() || '';
       const patch: any = {};
+      const setV = (f: string, v: string) => { if (v !== undefined && v !== null && v !== '') patch[f] = v; };
 
       // 1. AppHdr (BAH)
-      const appHdr = findTag('AppHdr');
-      if (appHdr) {
-        patch.charSet = tval('CharSet', appHdr);
-        const fr = findTag('Fr', appHdr);
-        if (fr) {
-          patch.fromBic = tval('BICFI', fr);
-          const clrSysMmbId = findTag('ClrSysMmbId', fr);
-          if (clrSysMmbId) {
-            patch.fromClrSysMmbId = tval('MmbId', clrSysMmbId);
-            const clrSysId = findTag('ClrSysId', clrSysMmbId);
-            if (clrSysId) patch.fromClrSysCd = tval('Cd', clrSysId);
-          }
-          const frLei = tval('LEI', fr);
-          if (frLei) patch.fromLei = frLei;
+      const head = getT('AppHdr');
+      if (head) {
+        setV('head_charSet', tval('CharSet', head));
+        this.mapAddrToForm(getT('Fr', head), 'head_from', patch);
+        this.mapAddrToForm(getT('To', head), 'head_to', patch);
+        setV('head_bizMsgIdr', tval('BizMsgIdr', head));
+        setV('head_msgDefIdr', tval('MsgDefIdr', head));
+        setV('head_bizSvc', tval('BizSvc', head));
+        setV('head_creDt', tval('CreDt', head).substring(0, 10));
+        const mkt = getT('MktPrctc', head);
+        if (mkt) {
+          setV('head_mktPrctcRegy', tval('Regy', mkt));
+          setV('head_mktPrctcId', tval('Id', mkt));
         }
-        const to = findTag('To', appHdr);
-        if (to) {
-          patch.toBic = tval('BICFI', to);
-          const toClrSysMmbId = findTag('ClrSysMmbId', to);
-          if (toClrSysMmbId) {
-            patch.toClrSysMmbId = tval('MmbId', toClrSysMmbId);
-            const toClrSysId = findTag('ClrSysId', toClrSysMmbId);
-            if (toClrSysId) patch.toClrSysCd = tval('Cd', toClrSysId);
-          }
-          const toLei = tval('LEI', to);
-          if (toLei) patch.toLei = toLei;
-        }
-        patch.bizMsgId = tval('BizMsgIdr', appHdr);
-        patch.msgDefIdr = tval('MsgDefIdr', appHdr);
-        patch.bizSvc = tval('BizSvc', appHdr);
-
-        const creDtRaw = tval('CreDt', appHdr);
-        if (creDtRaw) {
-          patch.creDt = creDtRaw.includes('T') ? creDtRaw.split('T')[0] : creDtRaw;
-        }
-        const cpyDplct = tval('CpyDplct', appHdr);
-        if (cpyDplct) patch.cpyDplct = cpyDplct;
-        const pssblDplct = tval('PssblDplct', appHdr);
-        if (pssblDplct) patch.pssblDplct = pssblDplct;
-        const appHdrPrty = tval('Prty', appHdr);
-        if (appHdrPrty) patch.appHdrPrty = appHdrPrty;
-
-        const rltd = findTag('Rltd', appHdr);
-        if (rltd) {
-          const rltdAppHdr = findTag('AppHdr', rltd);
-          if (rltdAppHdr) patch.rltdBizMsgId = tval('BizMsgIdr', rltdAppHdr);
-        }
+        setV('head_cpyDplct', tval('CpyDplct', head));
+        setV('head_pssblDplct', tval('PssblDplct', head));
+        setV('head_prty', tval('Prty', head));
+        const rltd = getT('Rltd', head);
+        if (rltd) setV('head_rltdBizMsgIdr', tval('BizMsgIdr', rltd));
       }
 
       // 2. Document
-      const root = findTag('CstmrCdtTrfInitn');
+      const root = getT('CstmrCdtTrfInitn');
       if (root) {
-        const grpHdr = findTag('GrpHdr', root);
+        const grpHdr = getT('GrpHdr', root);
         if (grpHdr) {
-          patch.msgId = tval('MsgId', grpHdr);
-          patch.creDtTm = tval('CreDtTm', grpHdr);
-          const authstn = findTag('Authstn', grpHdr);
-          if (authstn) {
-            patch.authstnCd = tval('Cd', authstn);
-            patch.authstnPrtry = tval('Prtry', authstn);
+          setV('msgId', tval('MsgId', grpHdr));
+          setV('creDtTm', tval('CreDtTm', grpHdr).replace('Z', ''));
+          const auth = getT('Authstn', grpHdr);
+          if (auth) {
+            setV('authstnCd', tval('Cd', auth));
+            setV('authstnPrtry', tval('Prtry', auth));
           }
-          patch.nbOfTxs = tval('NbOfTxs', grpHdr);
-          patch.ctrlSum = tval('CtrlSum', grpHdr);
-          const initgPty = findTag('InitgPty', grpHdr);
-          if (initgPty) {
-            patch.initgPtyName = tval('Nm', initgPty);
-            const orgId = findTag('OrgId', initgPty);
-            if (orgId) {
-              const anyBic = tval('AnyBIC', orgId);
-              if (anyBic) patch.initgPtyBic = anyBic;
-              const othr = findTag('Othr', orgId);
-              if (othr) patch.initgPtyId = tval('Id', othr);
-            }
-          }
+          setV('nbOfTxs', tval('NbOfTxs', grpHdr));
+          setV('ctrlSum', tval('CtrlSum', grpHdr));
+          this.mapAddrToForm(getT('InitgPty', grpHdr), 'initgPty', patch);
+          this.mapAddrToForm(getT('FwdgAgt', grpHdr), 'fwdgAgt', patch);
         }
 
-        const pmtInf = findTag('PmtInf', root);
+        const pmtInf = getT('PmtInf', root);
         if (pmtInf) {
-          patch.pmtInfId = tval('PmtInfId', pmtInf);
-          patch.pmtMtd = tval('PmtMtd', pmtInf);
-          patch.btchBookg = tval('BtchBookg', pmtInf).toLowerCase() === 'true';
-          patch.pmtNbOfTxs = tval('NbOfTxs', pmtInf);
-          patch.pmtCtrlSum = tval('CtrlSum', pmtInf);
+          setV('pmtInfId', tval('PmtInfId', pmtInf));
+          setV('pmtMtd', tval('PmtMtd', pmtInf));
+          patch.btchBookg = tval('BtchBookg', pmtInf) === 'true';
+          setV('pmtNbOfTxs', tval('NbOfTxs', pmtInf));
+          setV('pmtCtrlSum', tval('CtrlSum', pmtInf));
           
-          const pmtTpInf = findTag('PmtTpInf', pmtInf);
-          if (pmtTpInf) {
-            patch.instrPrty = tval('InstrPrty', pmtTpInf);
-            const svcLvl = findTag('SvcLvl', pmtTpInf);
-            if (svcLvl) patch.svcLvl = tval('Cd', svcLvl);
-            const lclInstrm = findTag('LclInstrm', pmtTpInf);
-            if (lclInstrm) patch.lclInstrm = tval('Cd', lclInstrm);
-            const ctgyPurp = findTag('CtgyPurp', pmtTpInf);
-            if (ctgyPurp) patch.ctgyPurp = tval('Cd', ctgyPurp);
+          const tp = getT('PmtTpInf', pmtInf);
+          if (tp) {
+            setV('instrPrty', tval('InstrPrty', tp));
+            setV('svcLvl', tval('Cd', getT('SvcLvl', tp) || tp));
+            setV('lclInstrm', tval('Cd', getT('LclInstrm', tp) || tp));
+            setV('ctgyPurp', tval('Cd', getT('CtgyPurp', tp) || tp));
           }
+          setV('reqdExctnDt', tval('Dt', getT('ReqdExctnDt', pmtInf) || pmtInf).substring(0, 10));
+          setV('poolgAdjstmntDt', tval('PoolgAdjstmntDt', pmtInf));
 
-          const reqdDt = findTag('ReqdExctnDt', pmtInf);
-          if (reqdDt) {
-            const dtRaw = tval('Dt', reqdDt);
-            patch.reqdExctnDt = dtRaw.includes('T') ? dtRaw.split('T')[0] : dtRaw;
+          this.mapAddrToForm(getT('Dbtr', pmtInf), 'dbtr', patch);
+          const dbtrAcct = getT('DbtrAcct', pmtInf);
+          if (dbtrAcct) setV('dbtrIban', tval('Id', getT('Othr', getT('Id', dbtrAcct) || dbtrAcct) || (getT('Id', dbtrAcct) || dbtrAcct)));
+          
+          this.mapAddrToForm(getT('DbtrAgt', pmtInf), 'dbtrAgt', patch);
+          const dbtrAgtAcct = getT('DbtrAgtAcct', pmtInf);
+          if (dbtrAgtAcct) setV('dbtrAgtAcctIban', tval('Id', getT('Othr', getT('Id', dbtrAgtAcct) || dbtrAgtAcct) || (getT('Id', dbtrAgtAcct) || dbtrAgtAcct)));
+          
+          this.mapAddrToForm(getT('UltmtDbtr', pmtInf), 'ultmtDbtr', patch);
+          setV('chrgBr', tval('ChrgBr', pmtInf));
+          
+          const chrgsAcct = getT('ChrgsAcct', pmtInf);
+          if (chrgsAcct) setV('chrgsAcctIban', tval('Id', getT('Othr', getT('Id', chrgsAcct) || chrgsAcct) || (getT('Id', chrgsAcct) || chrgsAcct)));
+          
+          const chrgsAgt = getT('ChrgsAcctAgt', pmtInf);
+          if (chrgsAgt) {
+             const fi = getT('FinInstnId', chrgsAgt);
+             if (fi) setV('chrgsAcctAgtBic', tval('BICFI', fi));
           }
-          
-          const dbtr = findTag('Dbtr', pmtInf);
-          if (dbtr) {
-            patch.dbtrName = tval('Nm', dbtr);
-            const pstl = findTag('PstlAdr', dbtr);
-            if (pstl) {
-              patch.dbtrCtry = tval('Ctry', pstl);
-              patch.dbtrTwnNm = tval('TwnNm', pstl);
-              const lines = pstl.querySelectorAll(':scope > AdrLine');
-              if (lines.length > 0) patch.dbtrAdrLine1 = lines[0].textContent || '';
-              if (lines.length > 1) patch.dbtrAdrLine2 = lines[1].textContent || '';
-            }
-            const id = findTag('Id', dbtr);
-            if (id) {
-              const orgId = findTag('OrgId', id);
-              if (orgId) {
-                patch.dbtrOrgIdAnyBic = tval('AnyBIC', orgId);
-                patch.dbtrOrgIdLei = tval('LEI', orgId);
-              } else {
-                const prvtId = findTag('PrvtId', id);
-                if (prvtId) {
-                   const dob = findTag('DtAndPlcOfBirth', prvtId);
-                   if (dob) {
-                     patch.dbtrPrvtIdBirthDt = tval('BirthDt', dob);
-                     patch.dbtrPrvtIdCityOfBirth = tval('CityOfBirth', dob);
-                     patch.dbtrPrvtIdCtryOfBirth = tval('CtryOfBirth', dob);
-                   }
-                }
-              }
-            }
-          }
-          
-          const dbtrAcct = findTag('DbtrAcct', pmtInf);
-          if (dbtrAcct) patch.dbtrIban = tval('IBAN', dbtrAcct);
-          
-          const dbtrAgt = findTag('DbtrAgt', pmtInf);
-          if (dbtrAgt) patch.dbtrAgtBic = tval('BICFI', dbtrAgt);
-          
-          patch.chrgBr = tval('ChrgBr', pmtInf);
-          
-          const ultmtDbtr = findTag('UltmtDbtr', pmtInf);
-          if (ultmtDbtr) patch.ultmtDbtrName = tval('Nm', ultmtDbtr);
 
           // Transactions
-          const txsArr = pmtInf.getElementsByTagName('*');
-          const txs: Element[] = [];
-          for (let i = 0; i < txsArr.length; i++) {
-            if (txsArr[i].localName?.toLowerCase() === 'cdttrftxinf') txs.push(txsArr[i]);
-          }
-
+          const txs = root.querySelectorAll('CdtTrfTxInf');
           if (txs.length > 0) {
             this.transactions.clear();
-            for (let i = 0; i < txs.length; i++) {
-              const tx = txs[i];
-              const txGroup = this.createTransactionGroup();
-              const txPatch: any = {};
+            txs.forEach(t => {
+              const g = this.createTransactionGroup();
+              const tp: any = {};
+              const tv = (tagName: string, parent: any = t) => getT(tagName, parent)?.textContent?.trim() || '';
+              const sv = (f: string, v: string) => { if (v !== undefined && v !== null && v !== '') tp[f] = v; };
 
-              const pmtId = findTag('PmtId', tx);
+              const pmtId = getT('PmtId', t);
               if (pmtId) {
-                txPatch.instrId = tval('InstrId', pmtId);
-                txPatch.endToEndId = tval('EndToEndId', pmtId);
-                txPatch.uetr = tval('UETR', pmtId);
+                sv('instrId', tv('InstrId', pmtId));
+                sv('endToEndId', tv('EndToEndId', pmtId));
+                sv('uetr', tv('UETR', pmtId));
               }
-
-              const amt = findTag('Amt', tx) || findTag('InstdAmt', tx);
+              const pmtTp = getT('PmtTpInf', t);
+              if (pmtTp) {
+                sv('txSvcLvl', tv('Cd', getT('SvcLvl', pmtTp) || pmtTp));
+                sv('txLclInstrm', tv('Cd', getT('LclInstrm', pmtTp) || pmtTp));
+                sv('txCtgyPurp', tv('Cd', getT('CtgyPurp', pmtTp) || pmtTp));
+              }
+              const amt = getT('Amt', t);
               if (amt) {
-                const instdAmt = amt.localName?.toLowerCase() === 'instdamt' ? amt : findTag('InstdAmt', amt);
-                if (instdAmt) {
-                  txPatch.amount = instdAmt.textContent;
-                  txPatch.currency = instdAmt.getAttribute('Ccy') || '';
+                const instd = getT('InstdAmt', amt);
+                if (instd) {
+                  sv('amount', instd.textContent?.trim() || '');
+                  sv('currency', instd.getAttribute('Ccy') || '');
                 }
               }
+              const xchg = getT('XchgRateInf', t);
+              if (xchg) {
+                sv('xchgRate', tv('XchgRate', xchg));
+                sv('xchgRateTp', tv('RateTp', xchg));
+                sv('xchgUnitCcy', tv('UnitCcy', xchg));
+                sv('xchgCtrctId', tv('CtrctId', xchg));
+              }
+              const chq = getT('ChqInstr', t);
+              if (chq) {
+                sv('chqInstr', tv('ChqNb', chq));
+                sv('chqTp', tv('ChqTp', chq));
+                sv('chqMtrtyDt', tv('Dt', getT('ChqMtrtyDt', chq) || chq));
+              }
+              sv('mndtId', tv('MndtId', t));
 
-              const cdtrAgt = findTag('CdtrAgt', tx);
-              if (cdtrAgt) txPatch.cdtrAgtBic = tval('BICFI', cdtrAgt);
+              this.mapAddrToForm(getT('UltmtDbtr', t), 'ultmtDbtr', tp);
+              this.mapAddrToForm(getT('IntrmyAgt1', t), 'intrmyAgt1', tp);
+              const i1acct = getT('IntrmyAgt1Acct', t);
+              if (i1acct) sv('intrmyAgt1Acct', tval('Id', getT('Othr', getT('Id', i1acct) || i1acct) || (getT('Id', i1acct) || i1acct)));
               
-              const cdtr = findTag('Cdtr', tx);
-              if (cdtr) txPatch.cdtrName = tval('Nm', cdtr);
+              this.mapAddrToForm(getT('IntrmyAgt2', t), 'intrmyAgt2', tp);
+              const i2acct = getT('IntrmyAgt2Acct', t);
+               if (i2acct) sv('intrmyAgt2Acct', tval('Id', getT('Othr', getT('Id', i2acct) || i2acct) || (getT('Id', i2acct) || i2acct)));
 
-              const cdtrAcct = findTag('CdtrAcct', tx);
-              if (cdtrAcct) txPatch.cdtrIban = tval('IBAN', cdtrAcct);
+              this.mapAddrToForm(getT('IntrmyAgt3', t), 'intrmyAgt3', tp);
+              const i3acct = getT('IntrmyAgt3Acct', t);
+               if (i3acct) sv('intrmyAgt3Acct', tval('Id', getT('Othr', getT('Id', i3acct) || i3acct) || (getT('Id', i3acct) || i3acct)));
 
-              const rmtInf = findTag('RmtInf', tx);
-              if (rmtInf) txPatch.rmtInf = tval('Ustrd', rmtInf);
+              this.mapAddrToForm(getT('CdtrAgt', t), 'cdtrAgt', tp);
+              const cagtAcct = getT('CdtrAgtAcct', t);
+              if (cagtAcct) sv('cdtrAgtAcct', tval('Id', getT('Othr', getT('Id', cagtAcct) || cagtAcct) || (getT('Id', cagtAcct) || cagtAcct)));
 
-              txGroup.patchValue(txPatch);
-              this.transactions.push(txGroup);
-            }
+              this.mapAddrToForm(getT('Cdtr', t), 'cdtr', tp);
+              const cdtrAcct = getT('CdtrAcct', t);
+              if (cdtrAcct) sv('cdtrIban', tval('Id', getT('Othr', getT('Id', cdtrAcct) || cdtrAcct) || (getT('Id', cdtrAcct) || cdtrAcct)));
+
+              this.mapAddrToForm(getT('UltmtCdtr', t), 'ultmtCdtr', tp);
+              sv('purpCd', tv('Cd', getT('Purp', t) || t));
+              const tax = getT('Tax', t);
+              if (tax) {
+                sv('taxId', tv('Id', tax));
+                sv('taxAmt', tv('InstdAmt', getT('Amt', tax) || tax));
+              }
+              sv('rltdRmtInfUrl', tv('URL', getT('RltdRmtInf', t) || t));
+              sv('rgltryRptg', tv('Inf', getT('Dtls', getT('RgltryRptg', t) || t)));
+              sv('rmtInf', tv('Ustrd', getT('RmtInf', t) || t));
+
+              g.patchValue(tp);
+              this.transactions.push(g);
+            });
           }
         }
       }
-
       this.form.patchValue(patch, { emitEvent: false });
     } catch (e) {
-      console.warn('XML Parse failed', e);
+      console.error('Error parsing pain.001 XML:', e);
     } finally {
-      setTimeout(() => this.isParsingXml = false, 50);
+      this.isParsingXml = false;
     }
   }
+
 
   @HostListener('keydown', ['$event'])
   onKeydown(event: KeyboardEvent) {

@@ -261,7 +261,7 @@
                           <span class="issue-message-text">{{issue.message}}</span>
                           <div class="issue-meta-info">
                             <span class="meta-item"><mat-icon>link</mat-icon> {{issue.path || 'Global Message Context'}}</span>
-                            <span class="meta-item" *ngIf="issue.code"><mat-icon>code</mat-icon> {{issue.code}}</span>
+                            <span class="meta-item" *ngIf="issue.line"><mat-icon>link</mat-icon> Line: {{issue.line}}</span>
                           </div>
                         </div>
 

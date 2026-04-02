@@ -1,615 +1,689 @@
-import { Component, OnInit, HostListener } from '@angular/core';
-import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { HttpClient } from '@angular/common/http';
 import { ConfigService } from '../../../services/config.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
+import { UetrService } from '../../../services/uetr.service';
 
 @Component({
   selector: 'app-pain002',
-  templateUrl: './pain002.component.html',
-  styleUrls: ['./pain002.component.css'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule]
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule],
+  templateUrl: './pain002.component.html',
+  styleUrls: ['./pain002.component.css']
 })
 export class Pain002Component implements OnInit {
+  @ViewChild('xmlEditor') xmlEditor!: ElementRef<HTMLTextAreaElement>;
+  @ViewChild('lineNumbers') lineNumbersRef!: ElementRef<HTMLDivElement>;
+
   form!: FormGroup;
   generatedXml = '';
-  currentTab: 'form' | 'preview' = 'form';
   isParsingXml = false;
-  editorLineCount: number[] = [];
+  isInternalChange = false;
+  validating = false;
 
-  // History for Undo/Redo
-  private xmlHistory: string[] = [];
-  private xmlHistoryIdx = -1;
-  private maxHistory = 50;
-  private isInternalChange = false;
-
-  // Codelists
-  groupStatuses = ['ACCP', 'RJCT', 'PART'];
-  transactionStatuses = ['ACCP', 'RJCT', 'PDNG'];
-  reasonCodes = ['AC01', 'AM04', 'MS03', 'DN01', 'DUPL', 'AG02'];
-
-  // Validation state
+  // Validation reporting
   showValidationModal = false;
   validationStatus: 'idle' | 'validating' | 'done' = 'idle';
   validationReport: any = null;
   validationExpandedIssue: any = null;
+
+  editorLineCount: number[] = [1];
+  xmlHistory: string[] = [];
+  xmlHistoryIdx = -1;
+  maxHistory = 50;
+
+  // Form submission validation
+  formSubmissionErrors: string[] = [];
+  showSubmissionErrors = false;
+
+  // Collapsible sections
+  sections: Record<string, boolean> = {
+    'bah': true,
+    'bahFrom': false,
+    'bahTo': false,
+    'bahMktPrctc': false,
+    'bahRltd': false,
+    'grpHdr': true,
+    'orgnlGrpInf': true,
+    'orgnlPmtInf': true,
+    'txInf': true
+  };
+
+  countries: string[] = [];
+
+  // Codelists
+  charSetOptions = ['UTF-8', 'US-ASCII', 'ISO-8859-1'];
+  groupStatuses = ['ACCP', 'ACSP', 'ACTC', 'PART', 'RCVD', 'RJCT'];
+  transactionStatuses = [
+    { code: 'ACCP', label: 'Accepted Customer Profile' },
+    { code: 'ACSC', label: 'Accepted Settlement Completed' },
+    { code: 'ACSP', label: 'Accepted Settlement In Process' },
+    { code: 'ACTC', label: 'Accepted Technical Validation' },
+    { code: 'ACWC', label: 'Accepted With Change' },
+    { code: 'ACWP', label: 'Accepted Without Posting' },
+    { code: 'BLCK', label: 'Blocked' },
+    { code: 'CANC', label: 'Cancelled' },
+    { code: 'PATC', label: 'Partially Accepted' },
+    { code: 'PDNG', label: 'Pending' },
+    { code: 'RCVD', label: 'Received' },
+    { code: 'RJCT', label: 'Rejected' }
+  ];
+  statusReasonCodes = [
+    { code: 'AC01', label: 'Incorrect Account Number' },
+    { code: 'AC04', label: 'Closed Account Number' },
+    { code: 'AC06', label: 'Blocked Account' },
+    { code: 'AG01', label: 'Transaction Forbidden' },
+    { code: 'AM04', label: 'Insufficient Funds' },
+    { code: 'AM05', label: 'Duplication' },
+    { code: 'BE05', label: 'Unrecognised Initiating Party' },
+    { code: 'CUST', label: 'Requested By Customer' },
+    { code: 'DUPL', label: 'Duplicate Payment' },
+    { code: 'MS03', label: 'Not Specified Reason Agent' },
+    { code: 'NARR', label: 'Narrative' },
+    { code: 'TECH', label: 'Technical Problem' }
+  ];
+
+  clrSysCodes = ['CHIPS', 'T2', 'FED', 'CHAPS'];
+  copyDplctCodes = ['COPY', 'CODU', 'DUPL'];
+  priorityCodes = ['HIGH', 'NORM'];
   
-  warningTimeouts: { [key: string]: any } = {};
-  showMaxLenWarning: { [key: string]: boolean } = {};
+  orgSchemeCodes = ['LEI', 'DUNS', 'VAT', 'TXID', 'GIIN', 'CRN'];
+  prvtSchemeCodes = ['CCPT', 'DRLC', 'NIDN', 'SSSN', 'PASSPORT', 'NATIONALID'];
+
+  orgSchemeGuidance: Record<string, string> = {
+    'LEI': 'Enter valid Legal Entity Identifier (20 characters)',
+    'DUNS': 'Enter valid DUNS number (9 digits)',
+    'VAT': 'Enter valid VAT number',
+    'TXID': 'Enter valid Tax Identification Number',
+    'GIIN': 'Enter valid Global Intermediary Identification Number',
+    'CRN': 'Enter valid Company Registration Number'
+  };
+
+  prvtSchemeGuidance: Record<string, string> = {
+    'CCPT': 'Enter valid passport number',
+    'DRLC': 'Enter valid driving license number',
+    'NIDN': 'Enter valid national ID number',
+    'SSSN': 'Enter valid social security number',
+    'PASSPORT': 'Enter valid passport number',
+    'NATIONALID': 'Enter valid national identity number'
+  };
 
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
     private config: ConfigService,
-    private snackBar: MatSnackBar
-  ) { }
+    private snackBar: MatSnackBar,
+    private router: Router,
+    public uetrService: UetrService
+  ) {}
 
   ngOnInit() {
+    this.fetchCountries();
     this.buildForm();
     this.generateXml();
     this.pushHistory();
+  }
+
+  fetchCountries() {
+    this.http.get<any>(this.config.getApiUrl('/codelists/country')).subscribe({
+      next: (res) => { if (res && res.codes) this.countries = res.codes; },
+      error: (err) => console.error('Failed to load countries', err)
+    });
+  }
+
+  toggleSection(key: string) {
+    this.sections[key] = !this.sections[key];
+  }
+
+  getSchemeGuidance(group: any, type: 'org' | 'prvt'): string {
+    const code = group.get(type === 'org' ? 'orgScheme' : 'prvtScheme')?.value;
+    if (!code) return '';
+    return type === 'org' ? this.orgSchemeGuidance[code] : this.prvtSchemeGuidance[code];
+  }
+
+  futureDateValidator(control: any) {
+    if (!control.value) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDate = new Date(control.value);
+    selectedDate.setHours(0, 0, 0, 0);
+    return selectedDate > today ? { future_date: true } : null;
+  }
+
+  bahValidator = (g: any): any => {
+    const checkClrSys = (prefix: string) => {
+      const cd = g.get(`${prefix}ClrSysCd`)?.value;
+      const mmb = g.get(`${prefix}MmbId`)?.value;
+      if (mmb && !cd) return { [`${prefix}_clrSysCdMissing`]: true };
+      return null;
+    };
+
+    const prefixes = ['head_from', 'head_to'];
+    const rltdEnabled = g.get('head_rltd_enabled')?.value;
+    if (rltdEnabled) {
+      prefixes.push('head_rltd_from', 'head_rltd_to');
+    }
+
+    let errors: any = null;
+    for (const p of prefixes) {
+      const err = checkClrSys(p);
+      if (err) errors = { ...(errors || {}), ...err };
+    }
+
+    const cpy = g.get('head_cpyDplct')?.value;
+    const rltd = g.get('head_rltd_enabled')?.value;
+    if (cpy && !rltd) errors = { ...(errors || {}), rltdHeaderMissing: true };
+
+    const mktRegy = g.get('head_mktPrctcRegy')?.value;
+    const mktId = g.get('head_mktPrctcId')?.value;
+    if (mktRegy && !mktId) errors = { ...(errors || {}), mktPrctcIdMissing: true };
+
+    const initPty = g.get('initgPty');
+    if (initPty) {
+      const type = initPty.get('idType')?.value;
+      if (type === 'org') {
+        const bic = initPty.get('orgAnyBic')?.value;
+        const lei = initPty.get('orgLei')?.value;
+        const othr = initPty.get('orgId')?.value;
+        if (!bic && !lei && !othr) errors = { ...(errors || {}), initgPtyIdRequired: true };
+      }
+    }
+
+    const fwd = g.get('fwdgAgt');
+    if (fwd) {
+      const bic = fwd.get('bic')?.value;
+      const mmb = fwd.get('mmbId')?.value;
+      const lei = fwd.get('lei')?.value;
+      if (!bic && !mmb && !lei) errors = { ...(errors || {}), fwdgAgtIdRequired: true };
+    }
+
+    const txArr = g.get('transactions') as FormArray;
+    if (txArr) {
+      txArr.controls.forEach((tx, i) => {
+        const sts = tx.get('txSts')?.value;
+        const rsn = tx.get('stsRsnCd')?.value;
+        if (sts === 'RJCT' && !rsn) errors = { ...(errors || {}), [`tx_${i}_rsnRequired`]: true };
+      });
+    }
+
+    return errors;
+  };
+
+  buildForm() {
+    const BIC_OPT = [Validators.pattern(/^[A-Z]{6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3})?$/)];
+    const LEI_PATTERN = [Validators.pattern(/^[A-Z0-9]{20}$/)];
+    const CLEARING_CODE_PATTERN = [Validators.maxLength(5)];
+    const MMB_ID_PATTERN = [Validators.pattern(/^[A-Z0-9]{1,35}$/)];
+
+    this.form = this.fb.group({
+      head_charSet: ['UTF-8'],
+      head_fromBic: ['HDFCINBBXXX', BIC_OPT],
+      head_fromClrSysCd: ['', CLEARING_CODE_PATTERN],
+      head_fromMmbId: ['', MMB_ID_PATTERN],
+      head_fromLei: ['', LEI_PATTERN],
+      head_toBic: ['CHASUS33XXX', BIC_OPT],
+      head_toClrSysCd: ['', CLEARING_CODE_PATTERN],
+      head_toMmbId: ['', MMB_ID_PATTERN],
+      head_toLei: ['', LEI_PATTERN],
+      head_bizMsgIdr: ['MSGID-' + this.dateStamp() + '-' + this.randomId(), [Validators.required, Validators.maxLength(35)]],
+      head_msgDefIdr: [{ value: 'pain.002.001.10', disabled: true }],
+      head_bizSvc: ['swift.cbprplus.02', [Validators.required, Validators.maxLength(35)]],
+      head_mktPrctcRegy: ['', [Validators.maxLength(35)]],
+      head_mktPrctcId: ['', [Validators.maxLength(35)]],
+      head_creDt: [this.isoNow(), Validators.required],
+      head_cpyDplct: [''],
+      head_pssblDplct: [false],
+      head_prty: ['NORM'],
+
+      head_rltd_enabled: [false],
+      head_rltd_charSet: ['UTF-8'],
+      head_rltd_fromBic: ['', BIC_OPT],
+      head_rltd_fromClrSysCd: [''],
+      head_rltd_fromMmbId: ['', [Validators.maxLength(35)]],
+      head_rltd_fromLei: ['', LEI_PATTERN],
+      head_rltd_toBic: ['', BIC_OPT],
+      head_rltd_toClrSysCd: [''],
+      head_rltd_toMmbId: ['', [Validators.maxLength(35)]],
+      head_rltd_toLei: ['', LEI_PATTERN],
+      head_rltd_bizMsgIdr: ['', [Validators.maxLength(35)]],
+      head_rltd_msgDefIdr: [''],
+      head_rltd_bizSvc: [''],
+      head_rltd_creDt: [''],
+      head_rltd_cpyDplct: [''],
+      head_rltd_pssblDplct: [false],
+      head_rltd_prty: [''],
+
+      grpHdr_msgId: ['PAIN002-' + this.dateStamp() + '-' + this.randomId(), [Validators.required, Validators.maxLength(35)]],
+      grpHdr_creDtTm: [this.isoNow(), Validators.required],
+      initgPty: this.initPartyGroup(),
+      fwdgAgt: this.initAgentGroup(),
+
+      orgnlMsgId: ['MSGID-' + this.dateStamp() + '-' + this.randomId(), [Validators.required, Validators.maxLength(35)]],
+      orgnlMsgNmId: ['pain.001.001.09', [Validators.required, Validators.maxLength(35)]],
+      orgnlCreDtTm: ['', [Validators.pattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/)]],
+
+      orgnlPmtInfId: ['PMTINF-' + this.dateStamp() + '-001', [Validators.required, Validators.maxLength(35)]],
+      transactions: this.fb.array([this.initTransaction()])
+    }, { validators: [this.bahValidator] });
 
     this.form.valueChanges.subscribe(() => {
-      this.generateXml();
+      if (!this.isParsingXml && !this.isInternalChange) {
+        this.generateXml();
+        this.pushHistory();
+      }
+    });
+
+    // Auto-uppercase all BIC, LEI, and ID fields across the entire form (main, parties, transactions)
+    this.form.valueChanges.subscribe(() => {
+        this.applyAutoUppercase(this.form);
+    });
+
+    // Auto-enable Related Header when Copy/Duplicate is selected
+    this.form.get('head_cpyDplct')?.valueChanges.subscribe(v => {
+      if (v) {
+        this.form.get('head_rltd_enabled')?.setValue(true);
+        this.sections['bahRltd'] = true;
+      }
+    });
+
+    // Clear Copy/Duplicate if Related Header is manually unchecked to maintain validity
+    this.form.get('head_rltd_enabled')?.valueChanges.subscribe(v => {
+      if (!v) {
+        this.form.get('head_cpyDplct')?.setValue('');
+      }
     });
   }
 
-  private buildForm() {
-    this.form = this.fb.group({
-      // BAH
-      fromBic: ['BANCGB2LXXX', [Validators.required, Validators.pattern(/^[A-Z0-9]{8,11}$/)]],
-      toBic: ['BANCUS33XXX', [Validators.required, Validators.pattern(/^[A-Z0-9]{8,11}$/)]],
-      bizMsgId: ['BMS-PSR-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
-      creDt: [this.isoNowDate(), [Validators.required]],
-
-      // Group Header
-      msgId: ['PAIN002-MSG-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
-      creDtTm: [this.isoNow(), Validators.required],
-      initgPtyName: ['Initiating Party Name', [Validators.required, Validators.maxLength(140)]],
-
-      // Original Group Info
-      orgnlMsgId: ['PAIN001-MSG-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
-      orgnlMsgNmId: ['pain.001.001.09', [Validators.required, Validators.maxLength(35)]],
-      orgnlCreDtTm: [this.isoNow(), [Validators.required]],
-      orgnlPmtInfId: ['PMT-INF-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
-      grpSts: ['ACCP', Validators.required],
-
-      // Transaction Status List
-      transactions: this.fb.array([this.createTransactionStatusGroup()])
+  private applyAutoUppercase(group: FormGroup | FormArray) {
+    Object.keys(group.controls).forEach(key => {
+      const control = (group.controls as any)[key];
+      if (control instanceof FormGroup || control instanceof FormArray) {
+        this.applyAutoUppercase(control);
+      } else {
+        const val = control.value;
+        if (typeof val === 'string' && (key.toLowerCase().includes('bic') || key.toLowerCase().includes('lei') || key.toLowerCase().includes('mmbid'))) {
+          if (val !== val.toUpperCase()) {
+            control.setValue(val.toUpperCase(), { emitEvent: false });
+          }
+        }
+      }
     });
   }
 
-  private createTransactionStatusGroup(): FormGroup {
+  initPartyGroup() {
     return this.fb.group({
-      orgnlInstrId: ['INSTR-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
-      orgnlEndToEndId: ['E2E-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
-      orgnlUetr: [this.uuidv4(), [Validators.required, Validators.pattern(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)]],
-      txSts: ['ACCP', Validators.required],
-      stsRsnCd: ['', [Validators.maxLength(4)]],
-      stsAddtlInf: ['Payment received and processed normally.', [Validators.maxLength(105)]]
+      name: ['ABC CORPORATION', [Validators.maxLength(140)]],
+      postal: this.initPostalGroup(),
+      idType: ['org'],
+      orgAnyBic: ['ABCCUS33XXX', [Validators.pattern(/^[A-Z]{6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3})?$/)]],
+      orgLei: ['', [Validators.pattern(/^[A-Z0-9]{20}$/)]],
+      orgId: ['', [Validators.maxLength(35)]],
+      orgScheme: [''],
+      orgPrtry: ['', [Validators.maxLength(35)]],
+      orgIssr: ['', [Validators.maxLength(35)]],
+      prvtBirthDt: ['', [this.futureDateValidator]],
+      prvtProv: ['', [Validators.maxLength(35)]],
+      prvtCity: ['', [Validators.maxLength(35)]],
+      prvtCtry: [''],
+      prvtId: ['', [Validators.maxLength(35)]],
+      prvtScheme: [''],
+      prvtPrtry: ['', [Validators.maxLength(35)]],
+      prvtIssr: ['', [Validators.maxLength(35)]],
+      ctryOfRes: ['']
+    }, { validators: [this.partyIdValidator] });
+  }
+
+  partyIdValidator = (g: any): any => {
+    const type = g.get('idType')?.value;
+    if (type === 'org') {
+        const id = g.get('orgId')?.value;
+        const sch = g.get('orgScheme')?.value;
+        const prp = g.get('orgPrtry')?.value;
+        if (id && !sch && !prp) return { orgSchemeMissing: true };
+    } else if (type === 'prvt') {
+        const id = g.get('prvtId')?.value;
+        const sch = g.get('prvtScheme')?.value;
+        const prp = g.get('prvtPrtry')?.value;
+        if (id && !sch && !prp) return { prvtSchemeMissing: true };
+    }
+    return null;
+  };
+
+  initAgentGroup() {
+    return this.fb.group({
+      bic: ['CHASUS33XXX', [Validators.pattern(/^[A-Z]{6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3})?$/)]],
+      clrSys: ['', [Validators.maxLength(5)]],
+      mmbId: ['', [Validators.maxLength(35)]],
+      lei: ['', [Validators.pattern(/^[A-Z0-9]{20}$/)]]
+    }, {
+      validators: [(g: any) => {
+        const cd = g.get('clrSys')?.value;
+        const mmb = g.get('mmbId')?.value;
+        if (mmb && !cd) return { clrSysDependency: true };
+        return null;
+      }]
     });
   }
 
-  get transactions(): FormArray {
-    return this.form.get('transactions') as FormArray;
-  }
-
-  addTransaction() {
-    this.transactions.push(this.createTransactionStatusGroup());
-  }
-
-  removeTransaction(index: number) {
-    if (this.transactions.length > 1) {
-      this.transactions.removeAt(index);
-    }
-  }
-
-  uuidv4(): string {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-      const r = (Math.random() * 16) | 0;
-      const v = c === 'x' ? r : (r & 0x3) | 0x8;
-      return v.toString(16);
+  initPostalGroup() {
+    return this.fb.group({
+      addrType: ['none'],
+      dept: ['', [Validators.maxLength(70)]],
+      subDept: ['', [Validators.maxLength(70)]],
+      street: ['', [Validators.maxLength(70)]],
+      bldgNb: ['', [Validators.maxLength(16)]],
+      bldgNm: ['', [Validators.maxLength(35)]],
+      floor: ['', [Validators.maxLength(70)]],
+      pstBx: ['', [Validators.maxLength(16)]],
+      room: ['', [Validators.maxLength(70)]],
+      pstCd: ['', [Validators.maxLength(16)]],
+      town: ['', [Validators.maxLength(35)]],
+      townLctn: ['', [Validators.maxLength(35)]],
+      district: ['', [Validators.maxLength(35)]],
+      ctrySub: ['', [Validators.maxLength(35)]],
+      ctry: [''],
+      addrLines: this.fb.array([])
     });
   }
 
-  isoNow(): string { return new Date().toISOString().split('.')[0] + 'Z'; }
-  isoNowDate(): string { return new Date().toISOString().split('T')[0]; }
-
-  private dtm(v: string): string {
-    if (!v) return '';
-    if (v.includes('T')) {
-      if (!v.includes('+') && !v.endsWith('Z')) return v + '+00:00';
-      return v;
-    }
-    return v + 'T00:00:00+00:00';
+  initTransaction() {
+    return this.fb.group({
+      orgnlInstrId: ['', [Validators.maxLength(35)]],
+      orgnlEndToEndId: ['E2E-' + this.dateStamp() + '-' + this.randomId(), [Validators.required, Validators.maxLength(35)]],
+      orgnlUetr: [this.uetrService.generate(), [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
+      txSts: ['ACSC', Validators.required],
+      orgtr: this.initPartyGroup(),
+      stsRsnCd: [''],
+      addtlInf: this.fb.array([this.fb.control('', [Validators.maxLength(105)])])
+    });
   }
+
+  get transactions() { return this.form.get('transactions') as FormArray; }
+  addTransaction() { this.transactions.push(this.initTransaction()); this.generateXml(); }
+  removeTransaction(i: number) { if (this.transactions.length > 1) { this.transactions.removeAt(i); this.generateXml(); } }
+
+  addAddrLine(group: any) { (group.get('postal.addrLines') as FormArray).push(this.fb.control('', [Validators.maxLength(70)])); }
+  removeAddrLine(group: any, i: number) { const arr = group.get('postal.addrLines') as FormArray; if (arr.length > 1) arr.removeAt(i); }
+  getAddrLines(group: any) { return (group.get('postal.addrLines') as FormArray).controls; }
+
+  onAddrTypeChange(group: any) {
+    const type = group.get('postal.addrType')?.value;
+    const lines = group.get('postal.addrLines') as FormArray;
+    while (lines.length) lines.removeAt(0);
+    let count = 0;
+    if (type === 'unstructured') count = 3;
+    else if (type === 'hybrid') count = 2;
+    for (let i = 0; i < count; i++) {
+        lines.push(this.fb.control('', [Validators.maxLength(70)]));
+    }
+    this.generateXml();
+  }
+
+  onIdTypeChange(group: any) {
+    const type = group.get('idType')?.value;
+    if (type === 'prvt') {
+      group.patchValue({
+        orgAnyBic: '', orgLei: '', orgId: '', orgScheme: '', orgPrtry: '', orgIssr: ''
+      }, { emitEvent: false });
+    } else {
+      group.patchValue({
+        prvtId: '', prvtScheme: '', prvtPrtry: '', prvtIssr: '', prvtBirthDt: '', prvtCity: '', prvtProv: '', prvtCtry: ''
+      }, { emitEvent: false });
+    }
+    this.generateXml();
+  }
+
+  addAddtlInf(tx: any) { (tx.get('addtlInf') as FormArray).push(this.fb.control('', [Validators.maxLength(105)])); }
+  removeAddtlInf(tx: any, i: number) { const arr = tx.get('addtlInf') as FormArray; if (arr.length > 1) arr.removeAt(i); }
+  getAddtlInf(tx: any) { return (tx.get('addtlInf') as FormArray).controls; }
+
+  refreshUetr(tx: any) { tx.patchValue({ orgnlUetr: this.uetrService.generate() }); }
+
+  dateStamp() { return new Date().toISOString().slice(0, 10).replace(/-/g, ''); }
+  randomId() { return Math.random().toString(36).substring(2, 8).toUpperCase(); }
+  isoNow() { return new Date().toISOString().split('.')[0] + 'Z'; }
+  fdt(d: string) { return d ? d.replace('Z', '+00:00') : d; }
 
   generateXml() {
-    if (this.isParsingXml) return;
-    const v = this.form.value;
-    const txLen = v.transactions?.length || 0;
-    const ctrlSum = v.transactions?.reduce((acc: number, tx: any) => acc + (parseFloat(tx.amount) || 0), 0).toFixed(2);
-    
-    // Header (BAH)
-    const fr = this.tag('Fr', this.tag('FIId', this.tag('FinInstnId', this.el('BICFI', v.fromBic, 5), 4), 3), 2);
-    const to = this.tag('To', this.tag('FIId', this.tag('FinInstnId', this.el('BICFI', v.toBic, 5), 4), 3), 2);
-    const bah = fr + to + this.el('BizMsgIdr', v.bizMsgId, 2) + this.el('MsgDefIdr', 'pain.002.001.10', 2) + this.el('BizSvc', 'swift.cbprplus.03', 2) + this.el('CreDt', this.dtm(v.creDt), 2);
-
-    // Group Header
-    const grpHdr = this.tag('GrpHdr',
-      this.el('MsgId', v.msgId, 4) +
-      this.el('CreDtTm', this.dtm(v.creDtTm), 4) +
-      this.tag('InitgPty', this.tag('Id', this.tag('OrgId', this.el('AnyBIC', v.fromBic, 7), 6), 5), 4),
-      3
-    );
-
-    // Original Information Group (Mandatory Header Only)
-    const orgnlGrpInf = this.tag('OrgnlGrpInfAndSts',
-       this.el('OrgnlMsgId', v.orgnlMsgId, 4) +
-       this.el('OrgnlMsgNmId', v.orgnlMsgNmId, 4) +
-       this.el('OrgnlCreDtTm', this.dtm(v.orgnlCreDtTm), 4),
-       3
-    );
-
-    // Transaction Status List
-    let txsXml = '';
+    const v = this.form.getRawValue();
+    let bah = '';
+    bah += this.leaf('CharSet', v.head_charSet, 2);
+    bah += this.renderFIId('Fr', v.head_fromBic, v.head_fromClrSysCd, v.head_fromMmbId, v.head_fromLei, 2);
+    bah += this.renderFIId('To', v.head_toBic, v.head_toClrSysCd, v.head_toMmbId, v.head_toLei, 2);
+    bah += this.leaf('BizMsgIdr', v.head_bizMsgIdr, 2);
+    bah += this.leaf('MsgDefIdr', 'pain.002.001.10', 2);
+    bah += this.leaf('BizSvc', v.head_bizSvc, 2);
+    if (v.head_mktPrctcId || v.head_mktPrctcRegy) {
+      let mkt = '';
+      if (v.head_mktPrctcRegy) mkt += this.leaf('Regy', v.head_mktPrctcRegy, 3);
+      if (v.head_mktPrctcId) mkt += this.leaf('Id', v.head_mktPrctcId, 3);
+      bah += this.branch('MktPrctc', mkt, 2);
+    }
+    bah += this.leaf('CreDt', this.fdt(v.head_creDt), 2);
+    if (v.head_cpyDplct) bah += this.leaf('CpyDplct', v.head_cpyDplct, 2);
+    if (v.head_pssblDplct) bah += this.leaf('PssblDplct', 'true', 2);
+    bah += this.leaf('Prty', v.head_prty, 2);
+    if (v.head_rltd_enabled) {
+      let r = '';
+      if (v.head_rltd_charSet) r += this.leaf('CharSet', v.head_rltd_charSet, 3);
+      r += this.renderFIId('Fr', v.head_rltd_fromBic, v.head_rltd_fromClrSysCd, v.head_rltd_fromMmbId, v.head_rltd_fromLei, 3);
+      r += this.renderFIId('To', v.head_rltd_toBic, v.head_rltd_toClrSysCd, v.head_rltd_toMmbId, v.head_rltd_toLei, 3);
+      if (v.head_rltd_bizMsgIdr) r += this.leaf('BizMsgIdr', v.head_rltd_bizMsgIdr, 3);
+      if (v.head_rltd_msgDefIdr) r += this.leaf('MsgDefIdr', v.head_rltd_msgDefIdr, 3);
+      if (v.head_rltd_bizSvc) r += this.leaf('BizSvc', v.head_rltd_bizSvc, 3);
+      if (v.head_rltd_creDt) r += this.leaf('CreDt', this.fdt(v.head_rltd_creDt), 3);
+      if (v.head_rltd_cpyDplct) r += this.leaf('CpyDplct', v.head_rltd_cpyDplct, 3);
+      if (v.head_rltd_pssblDplct) r += this.leaf('PssblDplct', 'true', 3);
+      if (v.head_rltd_prty) r += this.leaf('Prty', v.head_rltd_prty, 3);
+      bah += this.branch('Rltd', r, 2);
+    }
+    let doc = '';
+    doc += this.branch('GrpHdr', this.leaf('MsgId', v.grpHdr_msgId, 4) + this.leaf('CreDtTm', this.fdt(v.grpHdr_creDtTm), 4) + this.renderParty('InitgPty', v.initgPty, 4) + this.renderAgent('FwdgAgt', v.fwdgAgt, 4), 3);
+    let orgnlGrp = '';
+    orgnlGrp += this.leaf('OrgnlMsgId', v.orgnlMsgId, 4);
+    orgnlGrp += this.leaf('OrgnlMsgNmId', v.orgnlMsgNmId, 4);
+    if (v.orgnlCreDtTm) orgnlGrp += this.leaf('OrgnlCreDtTm', this.fdt(v.orgnlCreDtTm), 4);
+    doc += this.branch('OrgnlGrpInfAndSts', orgnlGrp, 3);
+    let orgnlPmt = '';
+    orgnlPmt += this.leaf('OrgnlPmtInfId', v.orgnlPmtInfId, 4);
     v.transactions.forEach((tx: any) => {
-      let rsnInf = '';
-      if (tx.stsRsnCd || tx.stsAddtlInf) {
-        let rsn = (tx.stsRsnCd ? this.tag('Rsn', this.el('Cd', tx.stsRsnCd, 7), 6) : '');
-        let addtl = (tx.stsAddtlInf ? this.el('AddtlInf', tx.stsAddtlInf, 6) : '');
-        rsnInf = this.tag('StsRsnInf', rsn + addtl, 5);
-      }
-
-
-      txsXml += this.tag('TxInfAndSts',
-        this.el('OrgnlInstrId', tx.orgnlInstrId, 5) +
-        this.el('OrgnlEndToEndId', tx.orgnlEndToEndId, 5) +
-        this.el('OrgnlUETR', tx.orgnlUetr, 5) +
-        this.el('TxSts', tx.txSts, 5) +
-        rsnInf,
-        4
-      );
+      let txInf = '';
+      if (tx.orgnlInstrId) txInf += this.leaf('OrgnlInstrId', tx.orgnlInstrId, 5);
+      txInf += this.leaf('OrgnlEndToEndId', tx.orgnlEndToEndId, 5);
+      txInf += this.leaf('OrgnlUETR', tx.orgnlUetr, 5);
+      if (tx.txSts) txInf += this.leaf('TxSts', tx.txSts, 5);
+      let rsn = '';
+      if (tx.orgtr) rsn += this.renderParty('Orgtr', tx.orgtr, 6);
+      if (tx.stsRsnCd) rsn += this.branch('Rsn', this.leaf('Cd', tx.stsRsnCd, 7), 6);
+      tx.addtlInf.forEach((info: string) => { if (info) rsn += this.leaf('AddtlInf', info, 6); });
+      if (rsn) txInf += this.branch('StsRsnInf', rsn, 5);
+      orgnlPmt += this.branch('TxInfAndSts', txInf, 4);
     });
-
-    const orgnlPmtInf = this.tag('OrgnlPmtInfAndSts',
-       this.el('OrgnlPmtInfId', v.orgnlPmtInfId, 4) +
-       txsXml,
-       3
-    );
-
+    doc += this.branch('OrgnlPmtInfAndSts', orgnlPmt, 3);
     this.generatedXml = `<?xml version="1.0" encoding="UTF-8"?>
 <BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
-\t<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
-${bah}\t</AppHdr>
-\t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.002.001.10">
-\t\t<CstmrPmtStsRpt>
-${grpHdr}${orgnlGrpInf}${orgnlPmtInf}\t\t</CstmrPmtStsRpt>
-\t</Document>
+	<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
+${bah.trimEnd()}
+	</AppHdr>
+	<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.002.001.10">
+		<CstmrPmtStsRpt>
+${doc.trimEnd()}
+		</CstmrPmtStsRpt>
+	</Document>
 </BusMsgEnvlp>`;
-
-    this.onEditorChange(this.generatedXml, true);
-  }
-
-  // XML Helpers
-  private e(v: any): string { return (v || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-  private tabs(n: number): string { return '\t'.repeat(n); }
-  private el(tag: string, val: any, indent: number): string {
-    if (val === undefined || val === null || val === '') return '';
-    return `${this.tabs(indent)}<${tag}>${this.e(val)}</${tag}>\n`;
-  }
-  private tag(tag: string, content: string, indent: number): string {
-    if (!content || !content.trim()) return '';
-    return `${this.tabs(indent)}<${tag}>\n${content}${this.tabs(indent)}</${tag}>\n`;
-  }
-
-  onEditorChange(content: string, fromForm = false) {
-    if (!this.isInternalChange && !fromForm) {
-      this.pushHistory();
-      this.parseXmlToForm(content);
-    }
-
-    this.generatedXml = content;
     this.refreshLineCount();
   }
 
-  private parseXmlToForm(xml: string) {
-    if (!xml || xml.length < 50) return;
-    try {
-      this.isParsingXml = true;
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(xml, 'text/xml');
+  renderFIId(tag: string, bic: string, clr: string, mmb: string, lei: string, ind: number) {
+    let fi = '';
+    if (bic) fi += this.leaf('BICFI', bic, ind + 3);
+    if (clr || mmb) {
+      let cid = '';
+      if (clr) cid += this.branch('ClrSysId', this.leaf('Cd', clr, ind + 5), ind + 4);
+      if (mmb) cid += this.leaf('MmbId', mmb, ind + 4);
+      fi += this.branch('ClrSysMmbId', cid, ind + 3);
+    }
+    if (lei) fi += this.leaf('LEI', lei, ind + 3);
+    if (!fi) return '';
+    return this.branch(tag, this.branch('FIId', this.branch('FinInstnId', fi, ind + 2), ind + 1), ind);
+  }
 
-      const findTag = (tagName: string, parent: any = doc): Element | null => {
-        if (!parent) return null;
-        const target = tagName.toLowerCase();
-        if (parent.localName?.toLowerCase() === target) return parent;
-        const els = parent.getElementsByTagName('*');
-        for (let i = 0; i < els.length; i++) {
-          if (els[i].localName?.toLowerCase() === target) return els[i];
-        }
-        return null;
-      };
+  renderAgent(tag: string, a: any, ind: number) {
+    let fi = '';
+    if (a.bic) fi += this.leaf('BICFI', a.bic, ind + 2);
+    if (a.clrSys || a.mmbId) {
+      let cid = '';
+      if (a.clrSys) cid += this.branch('ClrSysId', this.leaf('Cd', a.clrSys, ind + 4), ind + 3);
+      if (a.mmbId) cid += this.leaf('MmbId', a.mmbId, ind + 3);
+      fi += this.branch('ClrSysMmbId', cid, ind + 2);
+    }
+    if (a.lei) fi += this.leaf('LEI', a.lei, ind + 2);
+    if (!fi) return '';
+    return this.branch(tag, this.branch('FinInstnId', fi, ind + 1), ind);
+  }
 
-      const tval = (tag: string, parent: any = doc) => {
-        const el = findTag(tag, parent);
-        return el ? el.textContent?.trim() || '' : '';
-      };
-
-      const patch: any = {};
-
-      // 1. AppHdr (BAH)
-      const appHdr = findTag('AppHdr');
-      if (appHdr) {
-        const fr = findTag('Fr', appHdr);
-        if (fr) patch.fromBic = tval('BICFI', fr);
-        const to = findTag('To', appHdr);
-        if (to) patch.toBic = tval('BICFI', to);
-        patch.bizMsgId = tval('BizMsgIdr', appHdr);
-        
-        const creDtRaw = tval('CreDt', appHdr);
-        if (creDtRaw) {
-          patch.creDt = creDtRaw.includes('T') ? creDtRaw.split('T')[0] : creDtRaw;
-        }
+  renderParty(tag: string, p: any, ind: number) {
+    let inner = '';
+    if (tag !== 'InitgPty' && p.name) inner += this.leaf('Nm', p.name, ind + 1);
+    if (tag !== 'InitgPty' && p.postal) inner += this.renderPostal(p.postal, ind + 1);
+    let org = '';
+    if (p.orgAnyBic) org += this.leaf('AnyBIC', p.orgAnyBic, ind + 4);
+    if (p.orgLei) org += this.leaf('LEI', p.orgLei, ind + 4);
+    if (p.orgId) {
+      let o = this.leaf('Id', p.orgId, ind + 5);
+      if (p.orgScheme || p.orgPrtry) {
+        let sn = '';
+        if (p.orgScheme) sn += this.leaf('Cd', p.orgScheme, ind + 7);
+        else if (p.orgPrtry) sn += this.leaf('Prtry', p.orgPrtry, ind + 7);
+        o += this.branch('SchmeNm', sn, ind + 6);
       }
-
-      // 2. Document
-      const root = findTag('CstmrPmtStsRpt');
-      if (root) {
-        const grpHdr = findTag('GrpHdr', root);
-        if (grpHdr) {
-          patch.msgId = tval('MsgId', grpHdr) || 'PAIN002-MSG-' + Date.now();
-          patch.creDtTm = tval('CreDtTm', grpHdr) || this.isoNow();
-          const initgPty = findTag('InitgPty', grpHdr);
-          if (initgPty) {
-              patch.initgPtyName = tval('Nm', initgPty) || 'Initiating Party Name';
-          }
-        }
-
-        const orgnlGrp = findTag('OrgnlGrpInfAndSts', root);
-        if (orgnlGrp) {
-          patch.orgnlMsgId = tval('OrgnlMsgId', orgnlGrp) || 'PAIN001-MSG-' + Date.now();
-          patch.orgnlMsgNmId = tval('OrgnlMsgNmId', orgnlGrp) || 'pain.001.001.09';
-          patch.orgnlCreDtTm = tval('OrgnlCreDtTm', orgnlGrp) || this.isoNow();
-          patch.grpSts = tval('GrpSts', orgnlGrp) || 'ACCP';
-        }
-
-        const orgnlPmtInf = findTag('OrgnlPmtInfAndSts', root);
-        if (orgnlPmtInf) {
-          patch.orgnlPmtInfId = tval('OrgnlPmtInfId', orgnlPmtInf);
-          
-          const txsArr = orgnlPmtInf.getElementsByTagName('*');
-          const txs: Element[] = [];
-          for (let i = 0; i < txsArr.length; i++) {
-            if (txsArr[i].localName?.toLowerCase() === 'txinfandsts') txs.push(txsArr[i]);
-          }
-
-          if (txs.length > 0) {
-            this.transactions.clear();
-            for (let i = 0; i < txs.length; i++) {
-              const tx = txs[i];
-              const txGroup = this.createTransactionStatusGroup();
-              const txPatch: any = {
-                orgnlInstrId: tval('OrgnlInstrId', tx),
-                orgnlEndToEndId: tval('OrgnlEndToEndId', tx),
-                orgnlUetr: tval('OrgnlUETR', tx),
-                txSts: tval('TxSts', tx)
-              };
-
-              const rsnInf = findTag('StsRsnInf', tx);
-              if (rsnInf) {
-                const rsn = findTag('Rsn', rsnInf);
-                if (rsn) txPatch.stsRsnCd = tval('Cd', rsn);
-                txPatch.stsAddtlInf = tval('AddtlInf', rsnInf);
-              }
-
-              txGroup.patchValue(txPatch);
-              this.transactions.push(txGroup);
-            }
-          }
-        }
+      if (p.orgIssr) o += this.leaf('Issr', p.orgIssr, ind + 5);
+      org += this.branch('Othr', o, ind + 4);
+    }
+    let prvt = '';
+    if (p.prvtBirthDt || p.prvtCity || p.prvtCtry || p.prvtProv) {
+      let dt = '';
+      if (p.prvtBirthDt) dt += this.leaf('BirthDt', p.prvtBirthDt.split('T')[0], ind + 5);
+      if (p.prvtProv) dt += this.leaf('PrvcOfBirth', p.prvtProv, ind + 5);
+      if (p.prvtCity) dt += this.leaf('CityOfBirth', p.prvtCity, ind + 5);
+      if (p.prvtCtry) dt += this.leaf('CtryOfBirth', p.prvtCtry, ind + 5);
+      prvt += this.branch('DtAndPlcOfBirth', dt, ind + 4);
+    }
+    if (p.prvtId) {
+      let o = this.leaf('Id', p.prvtId, ind + 5);
+      if (p.prvtScheme || p.prvtPrtry) {
+        let sn = '';
+        if (p.prvtScheme) sn += this.leaf('Cd', p.prvtScheme, ind + 7);
+        else if (p.prvtPrtry) sn += this.leaf('Prtry', p.prvtPrtry, ind + 7);
+        o += this.branch('SchmeNm', sn, ind + 6);
       }
-
-      this.form.patchValue(patch, { emitEvent: false });
-    } catch (e) {
-      console.warn('XML Parse failed', e);
-    } finally {
-      setTimeout(() => this.isParsingXml = false, 50);
+      if (p.prvtIssr) o += this.leaf('Issr', p.prvtIssr, ind + 5);
+      prvt += this.branch('Othr', o, ind + 4);
     }
+    let id = '';
+    if (p.idType === 'org' && org) {
+      id = this.branch('OrgId', org, ind + 3);
+    } else if (p.idType === 'prvt' && prvt) {
+      id = this.branch('PrvtId', prvt, ind + 3);
+    }
+    if (id) inner += this.branch('Id', id, ind + 2);
+    if (tag !== 'InitgPty' && p.ctryOfRes) inner += this.leaf('CtryOfRes', p.ctryOfRes, ind + 1);
+    if (!inner) return '';
+    return this.branch(tag, inner, ind);
   }
 
-  @HostListener('keydown', ['$event'])
-  onKeydown(event: KeyboardEvent) {
-    // History & Formatting Shortcuts (Ctrl+Z, Ctrl+Y, Ctrl+S)
-    if (event.ctrlKey || event.metaKey) {
-      if (document.activeElement?.classList.contains('code-editor')) {
-        switch (event.key.toLowerCase()) {
-          case 'z':
-            event.preventDefault();
-            this.undoXml();
-            return;
-          case 'y':
-            event.preventDefault();
-            this.redoXml();
-            return;
-          case 's':
-            event.preventDefault();
-            this.formatXml();
-            return;
-          case '/':
-            event.preventDefault();
-            this.toggleCommentXml();
-            return;
-        }
-      }
+  renderPostal(pa: any, ind: number) {
+    if (!pa || pa.addrType === 'none') return '';
+    let a = '';
+    const t = ind + 1;
+    if (['structured', 'hybrid'].includes(pa.addrType)) {
+      if (pa.dept) a += this.leaf('Dept', pa.dept, t);
+      if (pa.subDept) a += this.leaf('SubDept', pa.subDept, t);
+      if (pa.street) a += this.leaf('StrtNm', pa.street, t);
+      if (pa.bldgNb) a += this.leaf('BldgNb', pa.bldgNb, t);
+      if (pa.bldgNm) a += this.leaf('BldgNm', pa.bldgNm, t);
+      if (pa.floor) a += this.leaf('Flr', pa.floor, t);
+      if (pa.pstBx) a += this.leaf('PstBx', pa.pstBx, t);
+      if (pa.room) a += this.leaf('Room', pa.room, t);
+      if (pa.pstCd) a += this.leaf('PstCd', pa.pstCd, t);
     }
+    if (pa.town) a += this.leaf('TwnNm', pa.town, t);
+    if (pa.townLctn) a += this.leaf('TwnLctnNm', pa.townLctn, t);
+    if (pa.district) a += this.leaf('DstrctNm', pa.district, t);
+    if (pa.ctrySub) a += this.leaf('CtrySubDvsn', pa.ctrySub, t);
+    if (pa.ctry) a += this.leaf('Ctry', pa.ctry, t);
+    if (['unstructured', 'hybrid'].includes(pa.addrType)) {
+      if (pa.addrLines) pa.addrLines.forEach((l: string) => { if (l) a += this.leaf('AdrLine', l, t); });
+    }
+    return this.branch('PstlAdr', a, ind);
   }
 
-  @HostListener('input', ['$event'])
-  onInput(event: any) {
-    const target = event.target as HTMLInputElement;
-    if (!target) return;
-    const name = target.getAttribute('formControlName');
-    if (!name) return;
+  leaf(t: string, v: any, i: number) { return v ? `${'\t'.repeat(i)}<${t}>${v}</${t}>\n` : ''; }
+  branch(t: string, c: string, i: number) { return c.trim() ? `${'\t'.repeat(i)}<${t}>\n${c.trimEnd()}\n${'\t'.repeat(i)}</${t}>\n` : ''; }
 
-    if (name.toLowerCase().includes('bic') || name.toLowerCase().includes('iban')) {
-        const start = target.selectionStart;
-        const end = target.selectionEnd;
-        const up = target.value.toUpperCase();
-        if (target.value !== up) {
-          target.value = up;
-          if (start !== null) target.setSelectionRange(start, end);
-          this.form.get(name)?.patchValue(up, { emitEvent: false });
-        }
-    }
-    
-    const max = target.maxLength;
-    if (max > 0 && target.value.length >= max) {
-      this.showMaxLenWarning[name] = true;
-      if (this.warningTimeouts[name]) clearTimeout(this.warningTimeouts[name]);
-      this.warningTimeouts[name] = setTimeout(() => this.showMaxLenWarning[name] = false, 3000);
-    } else {
-      this.showMaxLenWarning[name] = false;
-    }
-  }
-
-  hint(f: string, max: number, group?: any): string | null {
-    if (!this.showMaxLenWarning[f]) return null;
-    const c = group ? group.get(f) : this.form.get(f);
-    const len = c?.value?.length || 0;
-    return `Maximum ${max} characters reached (${len}/${max})`;
-  }
-
-  copyToClipboard() { navigator.clipboard.writeText(this.generatedXml); this.snackBar.open('Copied!', 'Close', { duration: 3000 }); }
-  downloadXml() { const b = new Blob([this.generatedXml], { type: 'application/xml' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `pain002-${Date.now()}.xml`; a.click(); }
+  refreshLineCount() { this.editorLineCount = Array.from({ length: (this.generatedXml || '').split('\n').length }, (_, i) => i + 1); }
+  syncScroll(e: any, g: any) { g.scrollTop = e.scrollTop; }
+  pushHistory() { this.xmlHistoryIdx++; this.xmlHistory[this.xmlHistoryIdx] = this.generatedXml; }
+  undoXml() { if (this.xmlHistoryIdx > 0) { this.xmlHistoryIdx--; this.generatedXml = this.xmlHistory[this.xmlHistoryIdx]; this.refreshLineCount(); } }
+  redoXml() { if (this.xmlHistoryIdx < this.xmlHistory.length - 1) { this.xmlHistoryIdx++; this.generatedXml = this.xmlHistory[this.xmlHistoryIdx]; this.refreshLineCount(); } }
+  canUndoXml() { return this.xmlHistoryIdx > 0; }
+  canRedoXml() { return this.xmlHistoryIdx < this.xmlHistory.length - 1; }
+  copyToClipboard() { navigator.clipboard.writeText(this.generatedXml); this.snackBar.open('XML Copied!', 'Close', { duration: 2000 }); }
+  downloadXml() { const blob = new Blob([this.generatedXml], { type: 'application/xml' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `pain002-${Date.now()}.xml`; a.click(); }
+  onEditorChange(e: string) { this.generatedXml = e; this.refreshLineCount(); }
 
   validateMessage() {
+    this.generateXml();
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
+      return;
+    }
     this.showValidationModal = true;
     this.validationStatus = 'validating';
-    this.validationReport = null;
-    this.validationExpandedIssue = null;
-
     this.http.post(this.config.getApiUrl('/validate'), {
       xml_content: this.generatedXml,
+      mode: 'Full 1-3',
       message_type: 'pain.002.001.10',
-      mode: 'Full 1-3'
+      store_in_history: true
     }).subscribe({
-      next: (res: any) => { 
-        this.validationReport = res; 
-        this.validationStatus = 'done'; 
-      },
-      error: (err) => { 
-        this.validationReport = {
-          status: 'FAIL', errors: 1, warnings: 0,
-          message: 'pain.002.001.10', total_time_ms: 0,
-          layer_status: {},
-          details: [{
-            severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
-            path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'),
-            fix_suggestion: 'Ensure the validation server is running.'
-          }]
-        };
-        this.validationStatus = 'done'; 
+      next: (data: any) => { this.validationReport = data; this.validationStatus = 'done'; },
+      error: (err) => {
+        this.validationReport = { status: 'FAIL', errors: 1, warnings: 0, details: [{ severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR', path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'), fix_suggestion: 'Ensure the validation server is running.' }] };
+        this.validationStatus = 'done';
       }
     });
   }
 
-  closeValidationModal() { 
-    this.showValidationModal = false; 
-    this.validationReport = null;
-    this.validationStatus = 'idle';
-    this.validationExpandedIssue = null;
+  err(path: string) {
+    const c = this.form.get(path);
+    if (!c || (c.pristine && !c.touched)) return null;
+    if (c.errors?.['required']) return 'Required';
+    if (c.errors?.['pattern']) return 'Invalid Format';
+    if (c.errors?.['maxlength']) return 'Too long';
+    if (c.errors?.['future_date']) return 'Date cannot be in future';
+    return null;
   }
 
-  getValidationLayers(): string[] {
-    if (!this.validationReport?.layer_status) return [];
-    return Object.keys(this.validationReport.layer_status).sort();
-  }
-
-  getLayerName(k: string): string {
-    const names: Record<string, string> = { '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' };
-    return names[k] ?? `Layer ${k}`;
-  }
-
-  getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
-  getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
+  charCount(path: string, max: number) { const v = this.form.get(path)?.value || ''; return `${v.length}/${max}`; }
+  isNearLimit(path: string, max: number) { return (this.form.get(path)?.value || '').length > max * 0.8; }
+  getValidationLayers() { return Object.keys(this.validationReport?.layer_status || {}).sort(); }
+  getLayerName(k: string) { const names: Record<string, string> = { '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' }; return names[k] ?? `Layer ${k}`; }
+  getLayerStatus(k: string) { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
+  getLayerTime(k: string) { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
   isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
   isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
-  isLayerWarn(k: string) {
-    const s = this.getLayerStatus(k);
-    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
-  }
-
-  getValidationIssues(): any[] { return this.validationReport?.details ?? []; }
-  toggleValidationIssue(issue: any) {
-    this.validationExpandedIssue = this.validationExpandedIssue === issue ? null : issue;
-  }
-  copyFix(text: string, e: MouseEvent) {
-    e.stopPropagation();
-    navigator.clipboard.writeText(text).then(() => {
-      this.snackBar.open('Copied!', '', { duration: 1500 });
-    });
-  }
-
-  viewXmlModal() { this.showValidationModal = false; }
+  isLayerWarn(k: string) { const s = this.getLayerStatus(k); return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN'); }
+  getValidationIssues() { return this.validationReport?.details ?? []; }
+  toggleValidationIssue(issue: any) { this.validationExpandedIssue = this.validationExpandedIssue === issue ? null : issue; }
+  closeValidationModal() { this.showValidationModal = false; this.validationReport = null; this.validationStatus = 'idle'; this.validationExpandedIssue = null; }
+  copyFix(text: string, e: MouseEvent) { e.stopPropagation(); navigator.clipboard.writeText(text).then(() => this.snackBar.open('Copied!', '', { duration: 1500 })); }
+  formatXml() { this.generateXml(); }
+  viewXmlModal() { this.closeValidationModal(); }
+  editXmlModal() { this.closeValidationModal(); }
   runValidationModal() { this.validateMessage(); }
-
-  private pushHistory() {
-    const val = this.generatedXml;
-    if (this.xmlHistoryIdx >= 0 && this.xmlHistory[this.xmlHistoryIdx] === val) return;
-
-    if (this.xmlHistoryIdx < this.xmlHistory.length - 1) {
-      this.xmlHistory.splice(this.xmlHistoryIdx + 1);
-    }
-
-    this.xmlHistory.push(val);
-    if (this.xmlHistory.length > this.maxHistory) {
-      this.xmlHistory.shift();
-    } else {
-      this.xmlHistoryIdx++;
-    }
-  }
-
-  undoXml() {
-    if (this.xmlHistoryIdx > 0) {
-      this.xmlHistoryIdx--;
-      this.isInternalChange = true;
-      this.generatedXml = this.xmlHistory[this.xmlHistoryIdx];
-      this.parseXmlToForm(this.generatedXml);
-      this.refreshLineCount();
-      setTimeout(() => this.isInternalChange = false, 10);
-    }
-  }
-
-  redoXml() {
-    if (this.xmlHistoryIdx < this.xmlHistory.length - 1) {
-      this.xmlHistoryIdx++;
-      this.isInternalChange = true;
-      this.generatedXml = this.xmlHistory[this.xmlHistoryIdx];
-      this.parseXmlToForm(this.generatedXml);
-      this.refreshLineCount();
-      setTimeout(() => this.isInternalChange = false, 10);
-    }
-  }
-
-  canUndoXml(): boolean { return this.xmlHistoryIdx > 0; }
-  canRedoXml(): boolean { return this.xmlHistoryIdx < this.xmlHistory.length - 1; }
-
-  private refreshLineCount() {
-    const lines = (this.generatedXml || '').split('\n').length;
-    this.editorLineCount = Array.from({ length: lines }, (_, i) => i + 1);
-  }
-
-  formatXml() {
-    if (!this.generatedXml?.trim()) return;
-    this.pushHistory();
-
-    try {
-      const tab = '    ';
-      let formatted = '';
-      let indent = '';
-      // Normalize XML
-      let xml = this.generatedXml.replace(/>\s+</g, '><').trim();
-      
-      // Intelligent regex to split Tags and Comments
-      const reg = /(<[^/!?][^>]*>[^<]*<\/[^>]+>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
-      const nodes = xml.match(reg) || [];
-
-      nodes.forEach(node => {
-        const trimmed = node.trim();
-        if (!trimmed) return;
-
-        if (trimmed.startsWith('</')) {
-          if (indent.length >= tab.length) indent = indent.substring(tab.length);
-          formatted += indent + trimmed + '\r\n';
-        } else if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
-          formatted += indent + trimmed + '\r\n';
-        } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
-          formatted += indent + trimmed + '\r\n';
-          indent += tab;
-        } else {
-          formatted += indent + trimmed + '\r\n';
-        }
-      });
-      
-      this.generatedXml = formatted.trim();
-      this.refreshLineCount();
-      this.snackBar.open('XML Formatted', '', { duration: 1500 });
-    } catch (e) {
-      this.snackBar.open('Unable to format XML', '', { duration: 3000 });
-    }
-  }
-
-  toggleCommentXml() {
-    if (!this.generatedXml) return;
-    const textarea = document.querySelector('.code-editor') as HTMLTextAreaElement;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const value = textarea.value;
-
-    this.isInternalChange = true;
-    this.pushHistory();
-
-    let lineStart = value.lastIndexOf('\n', start - 1) + 1;
-    let lineEnd = value.indexOf('\n', end);
-    if (lineEnd === -1) lineEnd = value.length;
-
-    const selection = value.substring(lineStart, lineEnd);
-    const before = value.substring(0, lineStart);
-    const after = value.substring(lineEnd);
-
-    let newResult = '';
-    const trimmed = selection.trim();
-
-    if (trimmed.startsWith('<!--') && trimmed.endsWith('-->')) {
-      newResult = selection.replace('<!--', '').replace('-->', '');
-    } else {
-      newResult = `<!-- ${selection} -->`;
-    }
-
-    this.generatedXml = before + newResult + after;
-    this.parseXmlToForm(this.generatedXml);
-    this.refreshLineCount();
-
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(lineStart, lineStart + newResult.length);
-      this.isInternalChange = false;
-    }, 0);
-  }
-
-  syncScroll(editor: HTMLTextAreaElement, gutter: HTMLDivElement) {
-    gutter.scrollTop = editor.scrollTop;
-  }
-
-  err(f: string, group?: any): string | null {
-    const c = group ? group.get(f) : this.form.get(f);
-    if (!c || c.valid) return null;
-
-    if (c.errors?.['required']) return 'Required field.';
-    if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
-    if (c.errors?.['pattern']) {
-      if (this.showMaxLenWarning[f]) {
-        const val = c.value?.toString() || '';
-        const limitError = c.errors?.['maxlength']?.requiredLength;
-        if (limitError && val.length >= limitError) return null;
-        if (f.toLowerCase().includes('bic') && val.length >= 11) return null;
-      }
-
-      const fl = f.toLowerCase();
-      if (fl.includes('bic')) return 'Valid 8 or 11-char BIC required.';
-      if (fl.includes('iban')) return 'Valid MOD-97 IBAN required.';
-      if (fl.includes('id')) return 'Invalid format (Alpha-numeric, max 35 chars).';
-      if (fl.includes('name') || fl.includes('nm')) return "Invalid characters. Only letters, numbers, spaces and . , ( ) ' - are allowed.";
-      
-      return 'Invalid format.';
-    }
-    return 'Invalid value.';
-  }
 }

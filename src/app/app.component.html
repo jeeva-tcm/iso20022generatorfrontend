@@ -143,6 +143,13 @@
                                 <span class="msg-desc">Customer Payment Cancellation</span>
                             </div>
                         </a>
+                         <a routerLink="/generate/camt056" routerLinkActive="active-link" (click)="isMenuForcedClosed = true">
+                            <span class="msg-dot camt-dot"></span>
+                            <div class="msg-info">
+                                <span class="msg-id">camt.056.001.11</span>
+                                <span class="msg-desc">FI To FI Payment Cancellation</span>
+                            </div>
+                        </a>
                     </div>
                 </div>
 
@@ -230,3 +237,5 @@
 <div class="main-content" [class.dark-page]="isValidatePage" [class.me-full-page]="isFullWidthPage">
     <router-outlet></router-outlet>
 </div>
+
+<!-- <app-chatbot></app-chatbot> -->
