@@ -1,0 +1,303 @@
+<div class="bulk-root">
+
+  <!-- ══════════════════════ PAGE HEADER ══════════════════════ -->
+  <div class="page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <mat-icon>auto_awesome</mat-icon>
+      </div>
+      <div>
+        <h1 class="page-title">Bulk Message Generation</h1>
+        <p class="page-subtitle">Generate multiple valid ISO 20022 messages with randomized data in one click</p>
+      </div>
+    </div>
+    <div class="header-badges">
+      <span class="badge badge-iso">ISO 20022</span>
+      <span class="badge badge-cbpr">CBPR+</span>
+      <span class="badge badge-sr">SR 2025</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════ STEP PROGRESS BAR ══════════════════ -->
+  <div class="steps-bar">
+    <div class="step" [class.active]="!selectedConfig" [class.done]="!!selectedConfig">
+      <div class="step-num">1</div>
+      <span>Select Message Type</span>
+    </div>
+    <div class="step-sep"></div>
+    <div class="step" [class.active]="!!selectedConfig && view === 'config'" [class.done]="view === 'results'">
+      <div class="step-num">2</div>
+      <span>Configure &amp; Select Blocks</span>
+    </div>
+    <div class="step-sep"></div>
+    <div class="step" [class.active]="view === 'results'">
+      <div class="step-num">3</div>
+      <span>Download Results</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════ MESSAGE TYPE SELECTOR ══════════════════ -->
+  <div class="section" *ngIf="view === 'config'">
+    <div class="section-header">
+      <mat-icon class="section-icon">grid_view</mat-icon>
+      <span>Select Message Type</span>
+    </div>
+    <div class="msg-type-grid">
+      <div
+        *ngFor="let cfg of messageConfigs"
+        class="msg-card"
+        [class.selected]="selectedConfig?.id === cfg.id"
+        (click)="selectMessageType(cfg)"
+      >
+        <div class="msg-card-top">
+          <span class="msg-tag" [class]="'msg-tag ' + cfg.badge">{{ cfg.family }}</span>
+          <mat-icon class="msg-card-check" *ngIf="selectedConfig?.id === cfg.id">check_circle</mat-icon>
+        </div>
+        <div class="msg-card-label">{{ cfg.label }}</div>
+        <div class="msg-card-desc">{{ cfg.description }}</div>
+        <div class="msg-card-blocks">{{ cfg.blocks.length }} blocks available</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ CONFIGURATION PANEL ══════════════════ -->
+  <ng-container *ngIf="selectedConfig && view === 'config'">
+
+    <!-- Message Count -->
+    <div class="section">
+      <div class="section-header">
+        <mat-icon class="section-icon">tag</mat-icon>
+        <span>Number of Messages to Generate</span>
+      </div>
+      <div class="count-row">
+        <div class="count-input-wrap" [class.invalid]="!!messageCountError">
+          <mat-icon class="count-icon">confirmation_number</mat-icon>
+          <input
+            type="number"
+            class="count-input"
+            [(ngModel)]="messageCount"
+            (ngModelChange)="onCountChange()"
+            min="1"
+            max="500"
+            placeholder="e.g. 30"
+          />
+        </div>
+        <div class="count-presets">
+          <button class="preset-btn" *ngFor="let n of [10, 25, 50, 100]" (click)="messageCount = n; onCountChange()">{{ n }}</button>
+        </div>
+        <div class="count-error" *ngIf="messageCountError">
+          <mat-icon>error_outline</mat-icon>{{ messageCountError }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Block Selection -->
+    <div class="section">
+      <div class="section-header">
+        <mat-icon class="section-icon">checklist</mat-icon>
+        <span>Select Message Blocks — <span class="msg-label-inline">{{ selectedConfig.label }}</span></span>
+        <span class="block-summary">{{ selectedBlocks.length }} / {{ selectedConfig.blocks.length }} selected</span>
+      </div>
+
+      <!-- Dependency Warnings -->
+      <div class="dep-warnings" *ngIf="dependencyWarnings.length > 0">
+        <div class="dep-warn-header">
+          <mat-icon>warning</mat-icon>
+          Dependency Requirements
+        </div>
+        <div class="dep-warn-item" *ngFor="let w of dependencyWarnings">
+          <mat-icon>subdirectory_arrow_right</mat-icon>
+          <strong>{{ w.blockLabel }}</strong> requires <strong>{{ w.requiredLabel }}</strong> — please include it.
+        </div>
+      </div>
+
+      <div class="blocks-layout">
+
+        <!-- MANDATORY BLOCKS -->
+        <div class="block-group">
+          <div class="block-group-label">
+            <mat-icon>lock</mat-icon> Mandatory Blocks
+            <span class="block-group-count">{{ mandatoryBlocks.length }}</span>
+          </div>
+          <div class="block-list">
+            <label
+              *ngFor="let block of mandatoryBlocks"
+              class="block-item mandatory"
+            >
+              <div class="block-checkbox checked disabled">
+                <mat-icon>check</mat-icon>
+              </div>
+              <div class="block-info">
+                <span class="block-label">{{ block.label }}</span>
+                <span class="block-badge mandatory-badge">Mandatory</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- OPTIONAL BLOCKS -->
+        <div class="block-group">
+          <div class="block-group-label">
+            <mat-icon>tune</mat-icon> Optional Blocks
+            <span class="block-group-count">{{ optionalBlocks.length }}</span>
+          </div>
+          <div class="block-list">
+            <label
+              *ngFor="let block of optionalBlocks"
+              class="block-item"
+              [class.checked]="blockChecked[block.id]"
+              [class.has-dep]="block.requires && block.requires.length > 0"
+            >
+              <div
+                class="block-checkbox"
+                [class.checked]="blockChecked[block.id]"
+                (click)="onBlockChange(block.id, !blockChecked[block.id])"
+              >
+                <mat-icon *ngIf="blockChecked[block.id]">check</mat-icon>
+              </div>
+              <div class="block-info" (click)="onBlockChange(block.id, !blockChecked[block.id])">
+                <span class="block-label">{{ block.label }}</span>
+                <span
+                  class="block-dep-hint"
+                  *ngIf="block.requires && block.requires.length > 0"
+                  [matTooltip]="'Requires: ' + block.requires!.join(', ')"
+                >
+                  <mat-icon>link</mat-icon>
+                  has dependency
+                </span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+      </div><!-- /blocks-layout -->
+    </div><!-- /section -->
+
+    <!-- Generate Button -->
+    <div class="generate-bar">
+      <div class="gen-summary" *ngIf="selectedConfig">
+        Generating <strong>{{ messageCount || 0 }}</strong> &times;
+        <strong>{{ selectedConfig.label }}</strong>
+        with <strong>{{ selectedBlocks.length }}</strong> blocks
+      </div>
+      <button
+        class="btn-generate"
+        [disabled]="!canGenerate || isGenerating"
+        (click)="generate()"
+      >
+        <mat-icon>{{ isGenerating ? 'hourglass_top' : 'auto_awesome' }}</mat-icon>
+        <span>{{ isGenerating ? 'Generating…' : 'Generate Messages' }}</span>
+      </button>
+    </div>
+
+  </ng-container>
+
+  <!-- ══════════════════════ LOADING OVERLAY ══════════════════════ -->
+  <div class="generating-overlay" *ngIf="isGenerating">
+    <div class="generating-card">
+      <div class="generating-spinner">
+        <div class="spinner-ring"></div>
+        <mat-icon class="spinner-icon">auto_awesome</mat-icon>
+      </div>
+      <div class="generating-title">Generating Messages…</div>
+      <div class="generating-subtitle">
+        Creating <strong>{{ messageCount }}</strong> {{ selectedConfig?.label }} messages with random valid data.
+        Please wait.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ RESULTS VIEW ══════════════════════ -->
+  <ng-container *ngIf="view === 'results'">
+
+    <!-- Results Toolbar -->
+    <div class="results-toolbar">
+      <div class="results-info">
+        <mat-icon>check_circle</mat-icon>
+        <span>
+          <strong>{{ generatedMessages.length }}</strong> messages generated
+          <span class="results-type">— {{ selectedConfig?.label }}</span>
+        </span>
+      </div>
+      <div class="results-actions">
+        <button class="btn-secondary" (click)="backToConfig()">
+          <mat-icon>arrow_back</mat-icon> Back
+        </button>
+        <button class="btn-secondary" (click)="regenerate()" [disabled]="isGenerating">
+          <mat-icon>refresh</mat-icon> Regenerate
+        </button>
+        <button class="btn-download" (click)="downloadAll()">
+          <mat-icon>download</mat-icon> Download All (Combined)
+        </button>
+        <button class="btn-download-zip" (click)="downloadZip()">
+          <mat-icon>folder_zip</mat-icon> Download Individually
+        </button>
+      </div>
+    </div>
+
+    <!-- Results Table -->
+    <div class="results-table">
+      <div class="results-header-row">
+        <span class="col-idx">#</span>
+        <span class="col-type">Message Type</span>
+        <span class="col-lines">Lines</span>
+        <span class="col-status">Status</span>
+        <span class="col-actions">Actions</span>
+      </div>
+
+      <div
+        *ngFor="let msg of generatedMessages; trackBy: trackByIndex"
+        class="result-row"
+        [class.expanded]="expandedIndex === msg.index"
+        [class.error-row]="msg.status === 'error'"
+      >
+        <div class="result-row-main" (click)="toggleExpand(msg.index)">
+          <span class="col-idx">{{ msg.index }}</span>
+          <span class="col-type">
+            <span class="msg-tag" [class]="'msg-tag ' + (selectedConfig?.badge || 'pacs')">
+              {{ selectedConfig?.family }}
+            </span>
+            {{ selectedConfig?.label }}
+          </span>
+          <span class="col-lines">{{ getLineCount(msg.xml) }}</span>
+          <span class="col-status">
+            <span class="status-badge" [class]="msg.status === 'error' ? 'status-error' : 'status-ok'">
+              <mat-icon>{{ msg.status === 'error' ? 'error' : 'check_circle' }}</mat-icon>
+              {{ msg.status === 'error' ? 'Error' : 'Valid' }}
+            </span>
+          </span>
+          <span class="col-actions" (click)="$event.stopPropagation()">
+            <button class="icon-btn" (click)="copyXml(msg)" matTooltip="Copy XML">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+            <button class="icon-btn" (click)="downloadXml(msg)" matTooltip="Download XML">
+              <mat-icon>download</mat-icon>
+            </button>
+            <button class="icon-btn expand-btn" (click)="toggleExpand(msg.index)" [matTooltip]="expandedIndex === msg.index ? 'Collapse' : 'Preview'">
+              <mat-icon>{{ expandedIndex === msg.index ? 'expand_less' : 'expand_more' }}</mat-icon>
+            </button>
+          </span>
+        </div>
+
+        <!-- Expanded XML Preview -->
+        <div class="result-xml" *ngIf="expandedIndex === msg.index">
+          <div class="xml-toolbar">
+            <span class="xml-label">XML Preview — Message {{ msg.index }}</span>
+            <div class="xml-actions">
+              <button class="icon-btn" (click)="copyXml(msg)" matTooltip="Copy">
+                <mat-icon>content_copy</mat-icon>
+              </button>
+              <button class="icon-btn" (click)="downloadXml(msg)" matTooltip="Download">
+                <mat-icon>download</mat-icon>
+              </button>
+            </div>
+          </div>
+          <pre class="xml-content">{{ msg.xml }}</pre>
+        </div>
+      </div>
+
+    </div><!-- /results-table -->
+
+  </ng-container>
+
+</div>

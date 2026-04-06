@@ -22,6 +22,7 @@
     "@vercel/analytics": "^1.6.1",
     "firebase": "^12.10.0",
     "glob": "^13.0.6",
+    "jszip": "^3.10.1",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.0"

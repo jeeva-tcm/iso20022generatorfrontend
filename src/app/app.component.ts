@@ -34,6 +34,7 @@ export class AppComponent implements OnInit {
     isValidatePage = false;
     isManualEntryActive = false;
     isMtToMxActive = false;
+    isBulkGenerateActive = false;
     isFullWidthPage = false;
     isMenuForcedClosed = false;
 
@@ -64,6 +65,7 @@ export class AppComponent implements OnInit {
         this.isValidatePage = url.includes('/validate');
         this.isManualEntryActive = url.includes('/generate');
         this.isMtToMxActive = url.includes('/mt-to-mx');
+        this.isBulkGenerateActive = url.includes('/bulk-generate');
         this.isFullWidthPage = this.isManualEntryActive || this.isMtToMxActive;
     }
 }
