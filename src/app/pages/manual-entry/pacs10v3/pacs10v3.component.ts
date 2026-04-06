@@ -584,17 +584,25 @@ ${this.rmtInf(v)}
     private prettyPrintXml(xml: string): string {
         if (!xml) return '';
         let formatted = '', indent = '';
-        const tab = '    ';
+        const tab = '  ';
         xml = xml.replace(/>\s+</g, '><').trim();
-        const reg = /(<[^>]+>[^<]*<\/([^>]+)>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
+        // Improved regex from pacs8 - ensures proper splitting of nested tags
+        const reg = /(<[^/!?][^>]*>[^<]*<\/[^>]+>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
         const nodes = xml.match(reg) || [];
         nodes.forEach(node => {
             const trimmed = node.trim();
             if (!trimmed) return;
-            if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) formatted += indent + trimmed + '\r\n';
-            else if (trimmed.startsWith('</')) { if (indent.length >= tab.length) indent = indent.substring(tab.length); formatted += indent + trimmed + '\r\n'; }
-            else if (trimmed.startsWith('<') && !trimmed.startsWith('<?') && !trimmed.startsWith('<!')) { formatted += indent + trimmed + '\r\n'; indent += tab; }
-            else formatted += indent + trimmed + '\r\n';
+            if (trimmed.startsWith('</')) { 
+                if (indent.length >= tab.length) indent = indent.substring(tab.length); 
+                formatted += indent + trimmed + '\r\n'; 
+            } else if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
+                formatted += indent + trimmed + '\r\n';
+            } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?') && !trimmed.startsWith('<!')) { 
+                formatted += indent + trimmed + '\r\n'; 
+                indent += tab; 
+            } else {
+                formatted += indent + trimmed + '\r\n';
+            }
         });
         return formatted.trim();
     }
@@ -848,14 +856,47 @@ ${this.rmtInf(v)}
     err(c: string): string | null {
         const ctrl = this.form.get(c);
         if (!ctrl || ctrl.valid || (!ctrl.touched && !ctrl.dirty)) return null;
-        if (this.showMaxLenWarning[c]) { const val = ctrl.value?.toString() || '', limit = ctrl.errors?.['maxlength']?.requiredLength; if (limit && val.length >= limit) return null; if (c.toLowerCase().includes('bic') && val.length >= 11) return null; }
+        
+        // Hide pattern/format errors if we are showing a maxlen "at limit" hint
+        if (this.showMaxLenWarning[c]) {
+            const val = ctrl.value?.toString() || '';
+            const limit = ctrl.errors?.['maxlength']?.requiredLength;
+            if (limit && val.length >= limit) return null;
+            if (c.toLowerCase().includes('bic') && val.length >= 11) return null;
+        }
+
         const tFields = ['clstTm', 'tillTm', 'frTm', 'rjctTm'];
-        if (tFields.includes(c) && ctrl!.errors?.['pattern']) return 'Invalid time format. Must include timezone offset (e.g., 09:00:00+05:30).';
+        if (tFields.includes(c) && ctrl!.errors?.['pattern'])
+            return 'Invalid time format. Must include timezone offset (e.g., 09:00:00+05:30).';
+
+        // ISO 20022 MX address field validation
         const cl = c.toLowerCase();
-        if (cl.includes('bldgnb') || cl.includes('pstcd') || cl.includes('pstbx') || cl.includes('bldgnm') || cl.includes('twnnm') || cl.includes('twnlctn') || cl.includes('ctrysubdvsn') || cl.includes('strtnm') || cl.includes('dept') || cl.includes('subdept') || cl.includes('flr') || cl.includes('room') || cl.includes('adrline')) { if (ctrl!.errors?.['pattern']) return 'Invalid character. Only ISO 20022 MX allowed characters permitted.'; }
+        if (cl.includes('bldgnb') || cl.includes('pstcd') || cl.includes('pstbx') || cl.includes('bldgnm') || cl.includes('twnnm') || cl.includes('twnlctn') || cl.includes('ctrysubdvsn') || cl.includes('strtnm') || cl.includes('dept') || cl.includes('subdept') || cl.includes('flr') || cl.includes('room') || cl.includes('adrline')) {
+            if (ctrl!.errors?.['pattern']) return 'Invalid character. Only ISO 20022 MX allowed characters permitted.';
+        }
+
         if (ctrl!.errors?.['required']) return 'Required field.';
+
+        if (c === 'svcLvlCd') return 'Invalid Service Level Code. Must be 1-4 alphanumeric characters.';
+        if (c === 'svcLvlPrtry') return 'Invalid Proprietary Service Level. Up to 35 characters allowed.';
+        if (c === 'lclInstrmCd') return 'Invalid Local Instrument Code. Must be 1-4 alphanumeric characters.';
+        if (c === 'lclInstrmPrtry') return 'Invalid Proprietary Local Instrument. Up to 35 characters allowed.';
+        if (c === 'ctgyPurpPrtry') return 'Invalid Proprietary Category Purpose. Up to 35 characters allowed.';
+        if (c === 'purposePrtry') return 'Invalid Proprietary Purpose. Up to 35 characters allowed.';
+        if (c === 'purposeCd') return 'Invalid Purpose Code. Please select from the list or enter a valid ISO 20022 Purpose Code.';
+        if (c === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Please select from the list or enter a valid ISO 20022 Purpose Code.';
+        
         if (ctrl!.errors?.['maxlength']) return `Max ${ctrl!.errors!['maxlength'].requiredLength} chars.`;
-        if (ctrl!.errors?.['pattern']) { if (cl.includes('bic')) return 'Valid 8 or 11-char BIC required.'; if (cl.includes('iban')) return 'Valid 34-char IBAN required.'; if (cl.includes('lei')) return 'Must be 20-char LEI.'; if (cl.includes('ctry') || cl.includes('country')) return '2-letter ISO code required.'; return 'Invalid format.'; }
+
+        if (ctrl!.errors?.['pattern']) {
+            if (cl.includes('bic')) return 'Valid 8 or 11-char BIC required.';
+            if (cl.includes('iban')) return 'Valid 34-char IBAN required.';
+            if (cl.includes('lei')) return 'Must be 20-char LEI.';
+            if (cl.includes('ctry') || cl.includes('country')) return '2-letter ISO code required.';
+            
+            return 'Invalid format.';
+        }
+
         if (ctrl!.errors?.['target2']) return 'T2 requires EUR.';
         if (ctrl!.errors?.['chaps']) return 'CHAPS requires GBP.';
         if (ctrl!.errors?.['chips']) return 'CHIPS requires USD.';

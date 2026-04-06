@@ -938,32 +938,32 @@ ${this.rmtInf(v)}
         this.pushHistory();
 
         try {
-            const tab = '    ';
+            const tab = '  ';
             let formatted = '';
             let indent = '';
 
             // Normalize XML
             let xml = this.generatedXml.replace(/>\s+</g, '><').trim();
 
-            // Intelligent regex to split Tags, Comments, and Content
-            const reg = /(<[^>]+>[^<]*<\/([^>]+)>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
+            // Improved regex from pacs8 - ensures proper splitting of nested tags
+            const reg = /(<[^/!?][^>]*>[^<]*<\/([^>]+)>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
             const nodes = xml.match(reg) || [];
 
             nodes.forEach(node => {
                 const trimmed = node.trim();
                 if (!trimmed) return;
 
-                if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
-                    // One-liner element <tag>val</tag> or self-closing <tag/>
-                    formatted += indent + trimmed + '\r\n';
-                } else if (trimmed.startsWith('</')) {
-                    // Closing tag
+                if (trimmed.startsWith('</')) {
+                    // Closing tag - decrease indent before adding
                     if (indent.length >= tab.length) indent = indent.substring(tab.length);
                     formatted += indent + trimmed + '\r\n';
-                } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
-                    // Opening tag
+                } else if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
+                    // One-liner element <tag>val</tag> or self-closing <tag/>
                     formatted += indent + trimmed + '\r\n';
-                    if (!trimmed.endsWith('/>')) indent += tab;
+                } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?') && !trimmed.startsWith('<!')) {
+                    // Opening tag - add then increase indent
+                    formatted += indent + trimmed + '\r\n';
+                    indent += tab;
                 } else {
                     // Plain text content or XML declaration
                     formatted += indent + trimmed + '\r\n';

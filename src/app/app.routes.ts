@@ -1,4 +1,5 @@
 import { Pacs3Component } from './pages/manual-entry/pacs3/pacs3.component';
+import { BulkGenerateComponent } from './pages/bulk-generate/bulk-generate.component';
 import { Routes } from '@angular/router';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ValidateComponent } from './pages/validate/validate.component';
@@ -55,5 +56,6 @@ export const routes: Routes = [
     { path: 'generate/pain008', component: Pain008Component },
     { path: 'generate/:type', component: ManualEntryComponent },
     { path: 'mt-to-mx', component: MtToMxComponent },
+    { path: 'bulk-generate', component: BulkGenerateComponent },
     { path: '**', redirectTo: '' }
 ];
