@@ -679,6 +679,7 @@ export class Pacs3Component implements OnInit {
 
   err(f: string): string | null {
     const c = this.form.get(f);
+    if (this.leiError[f]) return this.leiError[f];
     // Remove touched/dirty requirement to show errors immediately
     if (!c || c.valid) return null;
 
@@ -735,8 +736,58 @@ export class Pacs3Component implements OnInit {
     if (c.errors?.['forbidden']) return 'Clearing System Reference must NOT be sent if no active clearing system is used.';
     return 'Invalid value.';
   }
+
+  leiError: { [key: string]: string } = {};
   warningTimeouts: { [key: string]: any } = {};
   showMaxLenWarning: { [key: string]: boolean } = {};
+
+  getFieldLimit(field: string): number {
+    const f = field.toLowerCase();
+    if (f === 'bizmsgid') return 35;
+    if (f === 'msgid') return 35;
+    if (f === 'instrid') return 35;
+    if (f === 'endtoendid') return 35;
+    if (f === 'txid') return 35;
+    if (f === 'uetr') return 36;
+    if (f.includes('bic')) return 11;
+    if (f.includes('lei')) return 20;
+    if (f.includes('name') || f.endsWith('nm')) return 140;
+    if (f.includes('adrline')) return 70;
+    if (f.includes('mmbid')) return 35;
+    if (f.includes('acct')) return 34; // IBAN
+    if (f.includes('othrid')) return 35;
+    if (f.includes('addtlinf')) return 105;
+    return 0;
+  }
+
+  handleInput(field: string, value: string): string {
+    const max = this.getFieldLimit(field);
+    if (!max) return value;
+
+    if (value.length >= max) {
+      this.showLimitMessage(field, max);
+      return value.slice(0, max); // restrict input
+    }
+    return value;
+  }
+
+  showLimitMessage(field: string, max: number) {
+    this.showMaxLenWarning[field] = true;
+    if (this.warningTimeouts[field]) clearTimeout(this.warningTimeouts[field]);
+    this.warningTimeouts[field] = setTimeout(() => {
+      this.showMaxLenWarning[field] = false;
+    }, 3000);
+  }
+
+  validateLei(field: string) {
+    const ctrl = this.form.get(field);
+    const val = (ctrl?.value || '').trim();
+    if (val && val.length < 20) {
+      this.leiError[field] = 'LEI must be exactly 20 characters.';
+    } else {
+      delete this.leiError[field];
+    }
+  }
 
   @HostListener('input', ['$event'])
   onInput(event: any) {
@@ -745,29 +796,27 @@ export class Pacs3Component implements OnInit {
     const name = target.getAttribute('formControlName');
     if (!name) return;
 
-    // Character limit warning logic (Immediate on-hit detection)
-    const maxLen = target.maxLength;
-    const val = target.value || '';
-    if (maxLen > 0 && val.length >= maxLen) {
-      this.showMaxLenWarning[name] = true;
-      if (this.warningTimeouts[name]) clearTimeout(this.warningTimeouts[name]);
-      this.warningTimeouts[name] = setTimeout(() => this.showMaxLenWarning[name] = false, 3000);
-    } else {
-      this.showMaxLenWarning[name] = false;
+    let val = target.value || '';
+    const fl = name.toLowerCase();
+
+    // 1. Enforce Field-Specific Rules (Before limit check)
+    if (fl.includes('bic') || fl.includes('lei') || fl.includes('iban')) {
+      // Uppercase Alphanumeric only
+      val = val.toUpperCase().replace(/[^A-Z0-9]/g, '');
     }
 
-    // BIC/IBAN Uppercasing
-    if (name.toLowerCase().includes('bic') || name.toLowerCase().includes('iban')) {
+    // 2. Generic Input Handler (Limit Check & Message)
+    val = this.handleInput(name, val);
+
+    // 3. Update DOM & Form if changed
+    if (target.value !== val) {
       const start = target.selectionStart;
       const end = target.selectionEnd;
-      const upperValue = val.toUpperCase();
-      if (val !== upperValue) {
-        target.value = upperValue;
-        if (start !== null && end !== null) {
-          target.setSelectionRange(start, end);
-        }
-        this.form.get(name)?.patchValue(upperValue, { emitEvent: false });
+      target.value = val;
+      if (start !== null && end !== null) {
+        target.setSelectionRange(start, end);
       }
+      this.form.get(name)?.patchValue(val, { emitEvent: false });
     }
   }
 
@@ -822,12 +871,9 @@ export class Pacs3Component implements OnInit {
   hint(f: string, maxLen: number): string | null {
     if (!this.showMaxLenWarning[f]) return null;
     const c = this.form.get(f);
-    if (!c || !c.value) return null;
-    const len = c.value.toString().length;
-    if (len >= maxLen) {
-      return `Maximum ${maxLen} characters reached (${len}/${maxLen})`;
-    }
-    return null;
+    if (!c) return null;
+    const len = (c.value || '').toString().length;
+    return `Maximum ${maxLen} characters reached (${len}/${maxLen})`;
   }
 
 

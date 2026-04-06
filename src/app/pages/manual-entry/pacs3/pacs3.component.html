@@ -1,4 +1,4 @@
-﻿<div class="container">
+<div class="container">
         <header>
                 <h1>Direct Debit Transfer (pacs.003) <mat-icon class="title-icon">payments</mat-icon></h1>
                 <!-- <p style="margin-top: -1rem;">Visual PACS.003 Message Builder</p> -->
@@ -10,9 +10,18 @@
                                 <div class="grid">
 
                                         <div class="section-title">Message Header</div>
-                                         <div class="form-group"><label>Sender Member ID</label><input formControlName="fromMmbId" maxlength="35"></div>
-                                         <div class="form-group"><label>Sender Clr Sys Code</label><input formControlName="fromClrSysId" maxlength="4"></div>
-                                         <div class="form-group"><label>Sender LEI</label><input formControlName="fromLei" maxlength="20"></div>
+                                         <div class="form-group"><label>Sender Member ID</label><input formControlName="fromMmbId" maxlength="35">
+                                                 <div class="validation-msg" *ngIf="err('fromMmbId') as e">{{e}}</div>
+                                                 <div class="field-hint at-limit" *ngIf="hint('fromMmbId', 35) as h">{{h}}</div>
+                                          </div>
+                                          <div class="form-group"><label>Sender Clr Sys Code</label><input formControlName="fromClrSysId" maxlength="4">
+                                                 <div class="validation-msg" *ngIf="err('fromClrSysId') as e">{{e}}</div>
+                                                 <div class="field-hint at-limit" *ngIf="hint('fromClrSysId', 4) as h">{{h}}</div>
+                                          </div>
+                                          <div class="form-group"><label>Sender LEI</label><input formControlName="fromLei" maxlength="20" (blur)="validateLei('fromLei')">
+                                                 <div class="validation-msg" *ngIf="err('fromLei') as e">{{e}}</div>
+                                                 <div class="field-hint at-limit" *ngIf="hint('fromLei', 20) as h">{{h}}</div>
+                                          </div>
                                         <div class="form-group"><label>Sender BIC <span
                                                                 class="req">*</span></label><input
                                                         formControlName="fromBic" maxlength="11"
@@ -35,9 +44,18 @@
                                         <div class="form-group"><label>Business Msg ID <span
                                                                 class="req">*</span></label><input
                                                         formControlName="bizMsgId" maxlength="35" required>
-                                         <div class="form-group"><label>Receiver Member ID</label><input formControlName="toMmbId" maxlength="35"></div>
-                                         <div class="form-group"><label>Receiver Clr Sys Code</label><input formControlName="toClrSysId" maxlength="4"></div>
-                                         <div class="form-group"><label>Receiver LEI</label><input formControlName="toLei" maxlength="20"></div>
+                                         <div class="form-group"><label>Receiver Member ID</label><input formControlName="toMmbId" maxlength="35">
+                                                 <div class="validation-msg" *ngIf="err('toMmbId') as e">{{e}}</div>
+                                                 <div class="field-hint at-limit" *ngIf="hint('toMmbId', 35) as h">{{h}}</div>
+                                         </div>
+                                         <div class="form-group"><label>Receiver Clr Sys Code</label><input formControlName="toClrSysId" maxlength="4">
+                                                 <div class="validation-msg" *ngIf="err('toClrSysId') as e">{{e}}</div>
+                                                 <div class="field-hint at-limit" *ngIf="hint('toClrSysId', 4) as h">{{h}}</div>
+                                         </div>
+                                         <div class="form-group"><label>Receiver LEI</label><input formControlName="toLei" maxlength="20" (blur)="validateLei('toLei')">
+                                                 <div class="validation-msg" *ngIf="err('toLei') as e">{{e}}</div>
+                                                 <div class="field-hint at-limit" *ngIf="hint('toLei', 20) as h">{{h}}</div>
+                                         </div>
                                                 <div class="validation-msg" *ngIf="err('bizMsgId') as e">{{e}}</div>
                                                 <div class="field-hint at-limit" *ngIf="hint('bizMsgId', 35) as h">{{h}}
                                                 </div>
@@ -74,8 +92,16 @@
                                         <div class="form-group"><label>AppHdr Registry</label><input formControlName="regyId" placeholder="e.g. SWIFT"></div>
                                         <div class="form-group"><label>Copy/Duplicate</label><select formControlName="cpyDplct"><option value="">None</option><option value="COPY">COPY</option><option value="DUPL">DUPL</option></select></div>
                                          <div class="form-group"><label>AppHdr Priority</label><input formControlName="appHdrPrty" placeholder="e.g. HIGH"></div>
-                                                                                 <div class="form-group"><label>Sttlm Account IBAN</label><input formControlName="sttlmAcctId" placeholder="IBAN"></div>
-                                         <div class="form-group"><label>Sttlm Account Other ID</label><input formControlName="sttlmAcctOthrId"></div>
+                                                                                 <div class="form-group"><label>Sttlm Account IBAN</label>
+                                                  <input formControlName="sttlmAcctId" placeholder="IBAN" maxlength="34">
+                                                  <div class="validation-msg" *ngIf="err('sttlmAcctId') as e">{{e}}</div>
+                                                  <div class="field-hint at-limit" *ngIf="hint('sttlmAcctId', 34) as h">{{h}}</div>
+                                          </div>
+                                          <div class="form-group"><label>Sttlm Account Other ID</label>
+                                                  <input formControlName="sttlmAcctOthrId" maxlength="35">
+                                                  <div class="validation-msg" *ngIf="err('sttlmAcctOthrId') as e">{{e}}</div>
+                                                  <div class="field-hint at-limit" *ngIf="hint('sttlmAcctOthrId', 35) as h">{{h}}</div>
+                                          </div>
                                          <div class="form-group"><label>Sttlm Account Type Code</label><input formControlName="sttlmAcctTpCd"></div>
                                          <div class="form-group"><label>Sttlm Account Currency</label>
                                                 <select formControlName="sttlmAcctCcy">
@@ -295,6 +321,8 @@
                                         </div>
                                         <div class="form-group intermediary-field"><label>Mandate ID</label>
                                                 <input formControlName="mndtId" maxlength="35">
+                                                <div class="validation-msg" *ngIf="err('mndtId') as e">{{e}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('mndtId', 35) as h">{{h}}</div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>Date Of Signature</label>
                                                 <input formControlName="dtOfSgntr" type="date" min="0001-01-01" max="9999-12-31">
@@ -307,9 +335,13 @@
                                         </div>
                                         <div class="form-group intermediary-field"><label>Original Mandate ID</label>
                                                 <input formControlName="orgnlMndtId" maxlength="35">
+                                                <div class="validation-msg" *ngIf="err('orgnlMndtId') as e">{{e}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('orgnlMndtId', 35) as h">{{h}}</div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>Original Creditor Scheme ID Name</label>
                                                 <input formControlName="orgnlCdtrSchmeIdNm" maxlength="140">
+                                                <div class="validation-msg" *ngIf="err('orgnlCdtrSchmeIdNm') as e">{{e}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('orgnlCdtrSchmeIdNm', 140) as h">{{h}}</div>
                                         </div>
                                          <div class="party-group"><div class="party-group-title">Original Creditor Scheme ID</div><ng-container *ngTemplateOutlet="partyForm; context:{prefix:'orgnlCdtrSchme',isAgent:false, title:'Original Creditor Scheme ID'}"></ng-container></div>
                                          <div class="form-group intermediary-field"><label>Original Creditor Agent Account</label><input formControlName="orgnlCdtrAgtAcct" maxlength="34"></div>
@@ -660,15 +692,33 @@
                                                         <option *ngFor="let p of purposes" [value]="p">{{p}}</option>
                                                 </select>
                                         </div>
-                                         <div class="form-group intermediary-field"><label>Regulatory Reporting Code 1</label><input formControlName="rgltryRptg1Code" maxlength="10"></div>
-                                         <div class="form-group intermediary-field"><label>Regulatory Reporting Inf 1</label><input formControlName="rgltryRptg1Inf" maxlength="35"></div>
-                                         <div class="form-group intermediary-field"><label>Related Remittance Ref 1</label><input formControlName="rltdRmtInf1Ref" maxlength="35"></div>
-                                         <div class="form-group intermediary-field"><label>Regulatory Reporting Code 2</label><input formControlName="rgltryRptg2Code" maxlength="10"></div>
-                                         <div class="form-group intermediary-field"><label>Regulatory Reporting Inf 2</label><input formControlName="rgltryRptg2Inf" maxlength="35"></div>
-                                         <div class="form-group intermediary-field"><label>Regulatory Reporting Code 3</label><input formControlName="rgltryRptg3Code" maxlength="10"></div>
-                                         <div class="form-group intermediary-field"><label>Regulatory Reporting Inf 3</label><input formControlName="rgltryRptg3Inf" maxlength="35"></div>
-                                         <div class="form-group intermediary-field"><label>Related Remittance Ref 2</label><input formControlName="rltdRmtInf2Ref" maxlength="35"></div>
-                                         <div class="form-group intermediary-field"><label>Related Remittance Ref 3</label><input formControlName="rltdRmtInf3Ref" maxlength="35"></div>
+                                        <div class="form-group intermediary-field"><label>Regulatory Reporting Code 1</label><input formControlName="rgltryRptg1Code" maxlength="10"></div>
+                                        <div class="form-group intermediary-field"><label>Regulatory Reporting Inf 1</label><input formControlName="rgltryRptg1Inf" maxlength="35">
+                                                <div class="validation-msg" *ngIf="err('rgltryRptg1Inf') as e">{{e}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('rgltryRptg1Inf', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group intermediary-field"><label>Regulatory Reporting Code 2</label><input formControlName="rgltryRptg2Code" maxlength="10"></div>
+                                        <div class="form-group intermediary-field"><label>Regulatory Reporting Inf 2</label><input formControlName="rgltryRptg2Inf" maxlength="35">
+                                                <div class="validation-msg" *ngIf="err('rgltryRptg2Inf') as e">{{e}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('rgltryRptg2Inf', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group intermediary-field"><label>Regulatory Reporting Code 3</label><input formControlName="rgltryRptg3Code" maxlength="10"></div>
+                                        <div class="form-group intermediary-field"><label>Regulatory Reporting Inf 3</label><input formControlName="rgltryRptg3Inf" maxlength="35">
+                                                <div class="validation-msg" *ngIf="err('rgltryRptg3Inf') as e">{{e}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('rgltryRptg3Inf', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group intermediary-field"><label>Related Remittance Ref 1</label><input formControlName="rltdRmtInf1Ref" maxlength="35">
+                                                <div class="validation-msg" *ngIf="err('rltdRmtInf1Ref') as e">{{e}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('rltdRmtInf1Ref', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group intermediary-field"><label>Related Remittance Ref 2</label><input formControlName="rltdRmtInf2Ref" maxlength="35">
+                                                <div class="validation-msg" *ngIf="err('rltdRmtInf2Ref') as e">{{e}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('rltdRmtInf2Ref', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group intermediary-field"><label>Related Remittance Ref 3</label><input formControlName="rltdRmtInf3Ref" maxlength="35">
+                                                <div class="validation-msg" *ngIf="err('rltdRmtInf3Ref') as e">{{e}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('rltdRmtInf3Ref', 35) as h">{{h}}</div>
+                                        </div>
 
                                 </div>
 
@@ -758,6 +808,7 @@
                                                                 <div class="validation-msg"
                                                                         *ngIf="err('rmtInfStrdRfrdDocNb') as e">{{e}}
                                                                 </div>
+                                                                <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdRfrdDocNb', 35) as h">{{h}}</div>
                                                         </div>
                                                         <div class="form-group">
                                                                 <label>Referred Document Amount</label>
@@ -776,6 +827,7 @@
                                                                 <div class="validation-msg"
                                                                         *ngIf="err('rmtInfStrdInvcrNm') as e">{{e}}
                                                                 </div>
+                                                                <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdInvcrNm', 140) as h">{{h}}</div>
                                                         </div>
                                                         <div class="form-group">
                                                                 <label>Invoicee Name</label>
@@ -784,6 +836,7 @@
                                                                 <div class="validation-msg"
                                                                         *ngIf="err('rmtInfStrdInvceeNm') as e">{{e}}
                                                                 </div>
+                                                                <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdInvceeNm', 140) as h">{{h}}</div>
                                                         </div>
                                                 </div>
                                                 <div class="form-row">
@@ -794,6 +847,7 @@
                                                                 <div class="validation-msg"
                                                                         *ngIf="err('rmtInfStrdTaxRmtId') as e">{{e}}
                                                                 </div>
+                                                                <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdTaxRmtId', 35) as h">{{h}}</div>
                                                         </div>
                                                         <div class="form-group">
                                                                 <label>Garnishment ID</label>
@@ -802,6 +856,7 @@
                                                                 <div class="validation-msg"
                                                                         *ngIf="err('rmtInfStrdGrnshmtId') as e">{{e}}
                                                                 </div>
+                                                                <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdGrnshmtId', 35) as h">{{h}}</div>
                                                         </div>
                                                 </div>
                                         </ng-container>
@@ -1005,7 +1060,7 @@
                 <div class="form-group">
                         <label>{{title}} LEI</label>
                         <input [formControlName]="isAgent ? prefix+'Lei' : prefix+'OrgLEI'" maxlength="20"
-                                placeholder="20-char LEI">
+                                placeholder="20-char LEI" (blur)="validateLei(isAgent ? prefix+'Lei' : prefix+'OrgLEI')">
                         <div class="validation-msg" *ngIf="err(isAgent ? prefix+'Lei' : prefix+'OrgLEI') as e">{{e}}
                         </div>
                         <div class="field-hint at-limit"
