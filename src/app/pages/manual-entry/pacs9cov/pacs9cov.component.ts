@@ -10,6 +10,8 @@ import { ConfigService } from '../../../services/config.service';
 import { FormattingService } from '../../../services/formatting.service';
 import { UetrService } from '../../../services/uetr.service';
 import { ISO_PURPOSE_CODES } from '../../../constants/purpose-codes';
+import { MatDialog } from '@angular/material/dialog';
+import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
 
 @Component({
     selector: 'app-pacs9cov',
@@ -59,7 +61,8 @@ export class Pacs9CovComponent implements OnInit {
         private snackBar: MatSnackBar,
         private router: Router,
         private uetrService: UetrService,
-        private formatting: FormattingService
+        private formatting: FormattingService,
+        private dialog: MatDialog
     ) { }
 
     ngOnInit() {
@@ -819,6 +822,34 @@ ${tx}\t\t\t</CdtTrfTxInf>
     // Prefix all XML element tags with pacs: namespace (Deprecated - using default namespaces now)
     private prefixLines(xml: string, ns: string): string {
         return xml.replace(/<(\/?)([\w]+)([ >])/g, `<$1${ns}$2$3`);
+    }
+
+    openBicSearch(controlName: string) {
+        const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+            width: '800px',
+            disableClose: true
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+             if (result && result.bic) {
+                this.form.patchValue({ [controlName]: result.bic });
+                this.form.markAsDirty();
+            }
+        });
+    }
+
+    openBicSearchGroup(controlName: string, group: any) {
+        const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+            width: '800px',
+            disableClose: true
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result && result.bic) {
+                group.get(controlName)?.patchValue(result.bic);
+                group.get(controlName)?.markAsDirty();
+            }
+        });
     }
 
     // XML helpers

@@ -9,11 +9,13 @@ import { Router } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
 import { FormattingService } from '../../../services/formatting.service';
 import { UetrService } from '../../../services/uetr.service';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
 
 @Component({
     selector: 'app-pacs4',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule],
+    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, MatDialogModule],
     templateUrl: './pacs4.component.html',
     styleUrl: './pacs4.component.css'
 })
@@ -63,7 +65,8 @@ export class Pacs4Component implements OnInit {
         private snackBar: MatSnackBar,
         private router: Router,
         private uetrService: UetrService,
-        private formatting: FormattingService
+        private formatting: FormattingService,
+        private dialog: MatDialog
     ) { }
 
     ngOnInit() {
@@ -91,7 +94,35 @@ export class Pacs4Component implements OnInit {
         this.updateAmountValidator('orgnlAmount', 'orgnlCurrency');
     }
 
-    @HostListener('input', ['$event'])
+    openBicSearch(f: string): void {
+        const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+            width: '800px',
+            disableClose: true
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result && result.bic) {
+                this.form.patchValue({ [f]: result.bic });
+                this.form.get(f)?.markAsDirty();
+            }
+        });
+    }
+
+    openBicSearchGroup(controlName: string, group: any): void {
+        const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+            width: '800px',
+            disableClose: true
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result && result.bic) {
+                group.get(controlName)?.patchValue(result.bic);
+                group.get(controlName)?.markAsDirty();
+            }
+        });
+    }
+
+    @HostListener('keydown', ['$event'])
     onInput(event: any) {
         const target = event.target as HTMLInputElement;
         if (!target) return;

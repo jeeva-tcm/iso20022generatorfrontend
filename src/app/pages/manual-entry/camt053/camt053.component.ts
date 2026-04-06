@@ -6,6 +6,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
 import { ConfigService } from '../../../services/config.service';
 import { FormattingService } from '../../../services/formatting.service';
 import { UetrService } from '../../../services/uetr.service';
@@ -13,7 +15,7 @@ import { UetrService } from '../../../services/uetr.service';
 @Component({
     selector: 'app-camt053',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule],
+    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, MatDialogModule],
     templateUrl: './camt053.component.html',
     styleUrl: './camt053.component.css'
 })
@@ -47,7 +49,8 @@ export class Camt053Component implements OnInit {
         private snackBar: MatSnackBar,
         private router: Router,
         private formatting: FormattingService,
-        private uetr: UetrService
+        private uetr: UetrService,
+        private dialog: MatDialog
     ) { }
 
 
@@ -1369,5 +1372,19 @@ export class Camt053Component implements OnInit {
       this.isParsingXml = false;
     }
   }
+
+  openBicSearch(controlName: string) {
+        const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+            width: '800px',
+            disableClose: true
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result && result.bic) {
+                this.form.patchValue({ [controlName]: result.bic });
+                this.form.get(controlName)?.markAsDirty();
+            }
+        });
+    }
 }
 

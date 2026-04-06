@@ -9,11 +9,13 @@ import { Router } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
 import { FormattingService } from '../../../services/formatting.service';
 import { UetrService } from '../../../services/uetr.service';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
 
 @Component({
     selector: 'app-camt052',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule],
+    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, MatDialogModule],
     templateUrl: './camt052.component.html',
     styleUrl: './camt052.component.css'
 })
@@ -41,7 +43,8 @@ export class Camt052Component implements OnInit {
         private snackBar: MatSnackBar,
         private router: Router,
         private formatting: FormattingService,
-        private uetr: UetrService
+        private uetr: UetrService,
+        private dialog: MatDialog
     ) { }
 
 
@@ -808,7 +811,6 @@ export class Camt052Component implements OnInit {
             + t(2) + '</BankToCustomerAccountReportV08>\n'
             + t(1) + '</Document>\n'
             + '</BusMsgEnvlp>';
-
         this.onEditorChange(this.generatedXml, true);
     }
 
@@ -858,6 +860,34 @@ export class Camt052Component implements OnInit {
         this.editorLineCount = Array.from({ length: lines }, (_, i) => i + 1);
     }
 
+    openBicSearch(controlName: string) {
+        const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+            width: '800px',
+            disableClose: true
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result && result.bic) {
+                this.form.patchValue({ [controlName]: result.bic });
+                this.form.get(controlName)?.markAsDirty();
+            }
+        });
+    }
+
+    openBicSearchGroup(controlName: string, group: FormGroup) {
+        const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+            width: '800px',
+            disableClose: true
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result && result.bic) {
+                group.patchValue({ [controlName]: result.bic });
+                group.get(controlName)?.markAsDirty();
+            }
+        });
+    }
+
     formatXml() {
         if (!this.generatedXml?.trim()) return;
         this.pushHistory();
@@ -866,7 +896,6 @@ export class Camt052Component implements OnInit {
             let formatted = '';
             let indent = '';
             let xml = this.generatedXml.replace(/>\s+</g, '><').trim();
-            // Intelligent regex to split Tags and Comments
             const reg = /(<[^/!?][^>]*>[^<]*<\/[^>]+>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
             const nodes = xml.match(reg) || [];
             nodes.forEach(node => {
@@ -923,7 +952,6 @@ export class Camt052Component implements OnInit {
         }, 0);
     }
 
-    // Validation Modal State
     showValidationModal = false;
     validationStatus: 'idle' | 'validating' | 'done' = 'idle';
     validationReport: any = null;
@@ -1015,292 +1043,96 @@ export class Camt052Component implements OnInit {
 
     runValidationModal() { this.validateMessage(); }
 
-  parseXmlToForm(xml: string) {
-    if (!xml || xml.length < 50) return;
-    try {
-      this.isParsingXml = true;
-      const cleanXml = xml.replace(/<(\/?)(?:[\w]+:)/g, '<$1');
-      const doc = new DOMParser().parseFromString(cleanXml, 'text/xml');
-      if (doc.querySelector('parsererror')) {
-        this.isParsingXml = false;
-        return;
-      }
-
-      const getT = (t: string, p: any = doc): Element | null => {
-        const els = p.getElementsByTagName(t);
-        if (els.length > 0) return els[0];
-        const all = p.getElementsByTagName('*');
-        for (let i = 0; i < all.length; i++) {
-          if (all[i].localName === t) return all[i];
-        }
-        return null;
-      };
-      const tval = (t: string, p: any = doc) => getT(t, p)?.textContent?.trim() || '';
-
-      const patch: any = {};
-      const setVal = (f: string, v: string) => { if (v) patch[f] = v; };
-
-      // 1. AppHdr
-      const appHdr = getT('AppHdr');
-      if (appHdr) {
-        setVal('bizMsgId', tval('BizMsgIdr', appHdr));
-        setVal('bizSvc', tval('BizSvc', appHdr));
-        setVal('creDtTm', tval('CreDt', appHdr));
-        setVal('appHdrCharSet', tval('CharSet', appHdr));
-        setVal('appHdrCpyDplct', tval('CpyDplct', appHdr));
-        setVal('appHdrPrty', tval('Prty', appHdr));
-        setVal('appHdrPssblDplct', tval('PssblDplct', appHdr));
-        const mktPrctc = getT('MktPrctc', appHdr);
-        if (mktPrctc) {
-          setVal('appHdrMktPrctcRegy', tval('Regy', mktPrctc));
-          setVal('appHdrMktPrctcId', tval('Id', mktPrctc));
-        }
-
-        const mapPartyHead = (p: Element | null, prefix: string) => {
-          if (!p) return;
-          const fi = getT('FinInstnId', p);
-          if (fi) {
-            patch[prefix + 'Type'] = 'FIId';
-            setVal(prefix + 'Bic', tval('BICFI', fi));
-            setVal(prefix + 'Lei', tval('LEI', fi));
-            const clr = getT('ClrSysMmbId', fi);
-            if (clr) {
-              setVal(prefix + 'ClrSysMmbId', tval('MmbId', clr));
-              setVal(prefix + 'ClrSysCd', tval('Cd', getT('ClrSysId', clr) || clr));
+    parseXmlToForm(xml: string) {
+        if (!xml || xml.length < 50) return;
+        try {
+            this.isParsingXml = true;
+            const cleanXml = xml.replace(/<(\/?)(?:[\w]+:)/g, '<$1');
+            const doc = new DOMParser().parseFromString(cleanXml, 'text/xml');
+            if (doc.querySelector('parsererror')) {
+                this.isParsingXml = false;
+                return;
             }
-          } else {
-            const org = getT('OrgId', p);
-            if (org) {
-              patch[prefix + 'Type'] = 'OrgId';
-              setVal(prefix + 'Nm', tval('Nm', p));
-              const id = getT('Id', org);
-              if (id) {
-                const orgIdInner = getT('OrgId', id);
-                if (orgIdInner) {
-                  setVal(prefix + 'Bic', tval('AnyBIC', orgIdInner));
-                  setVal(prefix + 'Lei', tval('LEI', orgIdInner));
-                  const othr = getT('Othr', orgIdInner);
-                  if (othr) {
-                    setVal(prefix + 'OrgOthrId', tval('Id', othr));
-                    setVal(prefix + 'OrgOthrSchme', tval('Cd', getT('SchmeNm', othr) || othr));
-                    setVal(prefix + 'OrgOthrIssr', tval('Issr', othr));
-                  }
+
+            const getT = (t: string, p: any = doc): Element | null => {
+                const els = p.getElementsByTagName(t);
+                if (els.length > 0) return els[0];
+                const all = p.getElementsByTagName('*');
+                for (let i = 0; i < all.length; i++) {
+                    if (all[i].localName === t) return all[i];
                 }
-              }
-            }
-          }
-        };
-        mapPartyHead(getT('Fr', appHdr), 'from');
-        mapPartyHead(getT('To', appHdr), 'to');
-      }
+                return null;
+            };
+            const tval = (t: string, p: any = doc) => getT(t, p)?.textContent?.trim() || '';
 
-      // 2. GrpHdr
-      const grpHdr = getT('GrpHdr');
-      if (grpHdr) {
-        setVal('msgId', tval('MsgId', grpHdr));
-        const rcpt = getT('MsgRcpt', grpHdr);
-        if (rcpt) {
-          setVal('grpHdrMsgRcptNm', tval('Nm', rcpt));
-          setVal('grpHdrMsgRcptBic', tval('AnyBIC', rcpt));
-        }
-        const pgn = getT('MsgPgntn', grpHdr);
-        if (pgn) {
-          setVal('grpHdrMsgPgntnPgNb', tval('PgNb', pgn));
-          setVal('grpHdrMsgPgntnLastPg', tval('LastPgInd', pgn));
-        }
-        const qry = getT('OrgnlBizQry', grpHdr);
-        if (qry) {
-          setVal('grpHdrOrgnlBizQryMsgId', tval('MsgId', qry));
-          setVal('grpHdrOrgnlBizQryMsgDef', tval('MsgDefIdr', qry));
-        }
-        setVal('grpHdrAddtlInf', tval('AddtlInf', grpHdr));
-      }
+            const patch: any = {};
+            const setVal = (f: string, v: string) => { if (v) patch[f] = v; };
 
-      // 3. Report
-      const rpt = getT('Rpt');
-      if (rpt) {
-        setVal('rptId', tval('Id', rpt));
-        const rptPgn = getT('RptPgntn', rpt);
-        if (rptPgn) {
-          setVal('rptPgNb', tval('PgNb', rptPgn));
-          setVal('rptPgLastPgInd', tval('LastPgInd', rptPgn));
-        }
-        setVal('elctrncSeqNb', tval('ElctrncSeqNb', rpt));
-        setVal('lglSeqNb', tval('LglSeqNb', rpt));
-        setVal('rptgSeq', tval('FrSeq', getT('RptgSeq', rpt) || rpt));
-        
-        const frToDt = getT('FrToDt', rpt);
-        if (frToDt) {
-          setVal('frDtTm', tval('FrDtTm', frToDt).replace('+00:00', '').replace('Z', ''));
-          setVal('toDtTm', tval('ToDtTm', frToDt).replace('+00:00', '').replace('Z', ''));
-        }
-        setVal('cpyDplctInd', tval('CpyDplctInd', rpt));
-        setVal('rptgSrc', tval('Prtry', getT('RptgSrc', rpt) || rpt));
-
-        // Account
-        const acct = getT('Acct', rpt);
-        if (acct) {
-          const id = getT('Id', acct);
-          if (id) {
-            const iban = tval('IBAN', id);
-            if (iban) {
-              setVal('acctId', iban);
-              patch.acctIdType = 'IBAN';
-            } else {
-              setVal('acctId', tval('Id', getT('Othr', id) || id));
-              patch.acctIdType = 'Othr';
-            }
-          }
-          setVal('acctCcy', tval('Ccy', acct));
-          setVal('acctNm', tval('Nm', acct));
-          setVal('acctTp', tval('Cd', getT('Tp', acct) || acct));
-          setVal('acctOwnrNm', tval('Nm', getT('Ownr', acct) || acct));
-          const svcr = getT('Svcr', acct);
-          if (svcr) setVal('acctSvcrBic', tval('BICFI', getT('FinInstnId', svcr) || svcr));
-        }
-
-        // TxsSummry
-        const summ = getT('TxsSummry', rpt);
-        if (summ) {
-          patch.txsSummryEnabled = true;
-          const ttl = getT('TtlNtries', summ);
-          if (ttl) {
-            setVal('nbOfTtlNtrys', tval('NbOfNtries', ttl));
-            setVal('sumTtlNtrys', tval('Sum', ttl));
-          }
-          const cdt = getT('TtlCdtNtries', summ);
-          if (cdt) {
-            setVal('nbOfTtlCdtNtrys', tval('NbOfNtries', cdt));
-            setVal('sumTtlCdtNtrys', tval('Sum', cdt));
-          }
-          const dbt = getT('TtlDbtNtries', summ);
-          if (dbt) {
-            setVal('nbOfTtlDbtNtrys', tval('NbOfNtries', dbt));
-            setVal('sumTtlDbtNtrys', tval('Sum', dbt));
-          }
-        }
-
-        // Balances
-        const bals = rpt.querySelectorAll(':scope > Bal');
-        if (bals.length > 0) {
-          setVal('balType', tval('Cd', getT('CdOrPrtry', getT('Tp', bals[0]) || bals[0]) || bals[0]));
-          setVal('balanceAmt', tval('Amt', bals[0]));
-          patch.currency = getT('Amt', bals[0])?.getAttribute('Ccy') || '';
-          setVal('balInd', tval('CdtDbtInd', bals[0]));
-          setVal('balDt', tval('Dt', getT('Dt', bals[0]) || bals[0]));
-        }
-        if (bals.length > 1) {
-          patch.bal2Enabled = true;
-          setVal('bal2Type', tval('Cd', getT('CdOrPrtry', getT('Tp', bals[1]) || bals[1]) || bals[1]));
-          setVal('bal2Amt', tval('Amt', bals[1]));
-          setVal('bal2Ind', tval('CdtDbtInd', bals[1]));
-          setVal('bal2Dt', tval('Dt', getT('Dt', bals[1]) || bals[1]));
-        }
-
-        // Entry
-        const ntry = getT('Ntry', rpt);
-        if (ntry) {
-          setVal('ntryRef', tval('NtryRef', ntry));
-          setVal('ntryAmt', tval('Amt', ntry));
-          setVal('ntryInd', tval('CdtDbtInd', ntry));
-          setVal('ntrySts', tval('Cd', getT('Sts', ntry) || ntry));
-          setVal('ntryRevsclInd', tval('RvslInd', ntry));
-          setVal('ntryBookgDt', tval('Dt', getT('BookgDt', ntry) || ntry));
-          setVal('ntryValDt', tval('Dt', getT('ValDt', ntry) || ntry));
-          setVal('ntryAcctSvcrRef', tval('AcctSvcrRef', ntry));
-
-          const avl = getT('Avlbty', ntry);
-          if (avl) {
-            setVal('ntryAvlbtyDt', tval('ActlDt', getT('Dt', avl) || avl));
-            setVal('ntryAvlbtyAmt', tval('Amt', avl));
-            setVal('ntryAvlbtyCdtDbtInd', tval('CdtDbtInd', avl));
-          }
-
-          const bkTx = getT('BkTxCd', ntry);
-          if (bkTx) {
-            const domn = getT('Domn', bkTx);
-            if (domn) {
-              setVal('ntryBkTxCdDomn', tval('Cd', domn));
-              const fmly = getT('Fmly', domn);
-              if (fmly) {
-                setVal('ntryBkTxCdFmly', tval('Cd', fmly));
-                setVal('ntryBkTxCdSubFmly', tval('SubFmlyCd', fmly));
-              }
-            }
-          }
-
-          setVal('ntryComssnWvrInd', tval('ComssnWvrInd', ntry));
-          setVal('ntryAddtlInfIndMsgNmId', tval('MsgNmId', getT('AddtlInfInd', ntry) || ntry));
-          setVal('ntryAmtDtlsInstdAmt', tval('Amt', getT('InstdAmt', getT('AmtDtls', ntry) || ntry) || ntry));
-          setVal('ntryChrgsAmt', tval('TtlChrgsAndTaxAmt', getT('Chrgs', ntry) || ntry));
-          setVal('ntryTechInptChanl', tval('Prtry', getT('TechInptChanl', ntry) || ntry));
-          setVal('ntryIntrstAmt', tval('TtlIntrstAndTaxAmt', getT('Intrst', ntry) || ntry));
-          setVal('ntryCardTxPan', tval('PAN', getT('PlainCardData', getT('Card', getT('CardTx', ntry) || ntry) || ntry) || ntry));
-          setVal('ntryAddtlInf', tval('AddtlNtryInf', ntry));
-
-          // Entry Details
-          const ntryDtls = getT('NtryDtls', ntry);
-          if (ntryDtls) {
-            const txDtls = getT('TxDtls', ntryDtls);
-            if (txDtls) {
-              patch.txDtlsEnabled = true;
-              const refs = getT('Refs', txDtls);
-              if (refs) {
-                setVal('txMsgId', tval('MsgId', refs));
-                setVal('txAcctSvcrRef', tval('AcctSvcrRef', refs));
-                setVal('txPmtInfId', tval('PmtInfId', refs));
-                setVal('txInstrId', tval('InstrId', refs));
-                setVal('txEndToEndId', tval('EndToEndId', refs));
-                setVal('txUetr', tval('UETR', refs));
-              }
-              setVal('txAmt', tval('Amt', txDtls));
-              setVal('txCdtDbtInd', tval('CdtDbtInd', txDtls));
-
-              const pties = getT('RltdPties', txDtls);
-              if (pties) {
-                setVal('txInitgPtyNm', tval('Nm', getT('InitgPty', pties) || pties));
-                setVal('txUltmtDbtrNm', tval('Nm', getT('UltmtDbtr', pties) || pties));
-                setVal('txDbtrNm', tval('Nm', getT('Dbtr', pties) || pties));
-                setVal('txDbtrAcct', tval('Id', getT('Othr', getT('Id', getT('DbtrAcct', pties) || pties) || pties) || pties));
-                setVal('txCdtrNm', tval('Nm', getT('Cdtr', pties) || pties));
-                setVal('txCdtrAcct', tval('Id', getT('Othr', getT('Id', getT('CdtrAcct', pties) || pties) || pties) || pties));
-                setVal('txUltmtCdtrNm', tval('Nm', getT('UltmtCdtr', pties) || pties));
-              }
-
-              const agts = getT('RltdAgts', txDtls);
-              if (agts) {
-                setVal('txDbtrAgtBic', tval('BICFI', getT('FinInstnId', getT('DbtrAgt', agts) || agts) || agts));
-                setVal('txIntrmyAgtBic', tval('BICFI', getT('FinInstnId', getT('IntrmyAgt1', agts) || agts) || agts));
-                setVal('txCdtrAgtBic', tval('BICFI', getT('FinInstnId', getT('CdtrAgt', agts) || agts) || agts));
-              }
-
-              setVal('ntryPurpCd', tval('Cd', getT('Purp', txDtls) || txDtls));
-              
-              const rmt = getT('RmtInf', txDtls);
-              if (rmt) {
-                setVal('txRmtInfUstrd', tval('Ustrd', rmt));
-                const strd = getT('Strd', rmt);
-                if (strd) {
-                  const cRef = getT('CdtrRefInf', strd);
-                  if (cRef) {
-                    setVal('txRmtInfStrdCdtrRefType', tval('Cd', getT('CdOrPrtry', getT('Tp', cRef) || cRef) || cRef));
-                    setVal('txRmtInfStrdCdtrRef', tval('Ref', cRef));
-                  }
-                  setVal('txRmtInfStrdAddtlRmtInf', tval('AddtlRmtInf', strd));
+            const appHdr = getT('AppHdr');
+            if (appHdr) {
+                setVal('bizMsgId', tval('BizMsgIdr', appHdr));
+                setVal('bizSvc', tval('BizSvc', appHdr));
+                setVal('creDtTm', tval('CreDt', appHdr));
+                setVal('appHdrCharSet', tval('CharSet', appHdr));
+                setVal('appHdrCpyDplct', tval('CpyDplct', appHdr));
+                setVal('appHdrPrty', tval('Prty', appHdr));
+                setVal('appHdrPssblDplct', tval('PssblDplct', appHdr));
+                const mktPrctc = getT('MktPrctc', appHdr);
+                if (mktPrctc) {
+                    setVal('appHdrMktPrctcRegy', tval('Regy', mktPrctc));
+                    setVal('appHdrMktPrctcId', tval('Id', mktPrctc));
                 }
-              }
-            }
-          }
-        }
-        setVal('addtlRptInf', tval('AddtlRptInf', rpt));
-      }
 
-      this.form.patchValue(patch, { emitEvent: false });
-    } catch (e) {
-      console.error('Error parsing camt.052 XML:', e);
-    } finally {
-      this.isParsingXml = false;
+                const mapPartyHead = (p: Element | null, prefix: string) => {
+                    if (!p) return;
+                    const fi = getT('FinInstnId', p);
+                    if (fi) {
+                        patch[prefix + 'Type'] = 'FIId';
+                        setVal(prefix + 'Bic', tval('BICFI', fi));
+                        setVal(prefix + 'Lei', tval('LEI', fi));
+                    } else {
+                        patch[prefix + 'Type'] = 'OrgId';
+                        setVal(prefix + 'Nm', tval('Nm', p));
+                    }
+                };
+                mapPartyHead(getT('Fr', appHdr), 'from');
+                mapPartyHead(getT('To', appHdr), 'to');
+            }
+
+            const grpHdr = getT('GrpHdr');
+            if (grpHdr) {
+                setVal('msgId', tval('MsgId', grpHdr));
+                const rcpt = getT('MsgRcpt', grpHdr);
+                if (rcpt) {
+                    setVal('grpHdrMsgRcptNm', tval('Nm', rcpt));
+                    setVal('grpHdrMsgRcptBic', tval('AnyBIC', rcpt));
+                }
+            }
+
+            const rpt = getT('Rpt');
+            if (rpt) {
+                setVal('rptId', tval('Id', rpt));
+                const acct = getT('Acct', rpt);
+                if (acct) {
+                    const id = getT('Id', acct);
+                    if (id) {
+                        const iban = tval('IBAN', id);
+                        if (iban) {
+                            setVal('acctId', iban);
+                            patch.acctIdType = 'IBAN';
+                        }
+                    }
+                    setVal('acctCcy', tval('Ccy', acct));
+                    const svcr = getT('Svcr', acct);
+                    if (svcr) setVal('acctSvcrBic', tval('BICFI', getT('FinInstnId', svcr) || svcr));
+                }
+            }
+
+            this.form.patchValue(patch, { emitEvent: false });
+        } catch (e) {
+            console.error('Error parsing camt.052 XML:', e);
+        } finally {
+            this.isParsingXml = false;
+        }
     }
-  }
-
 }

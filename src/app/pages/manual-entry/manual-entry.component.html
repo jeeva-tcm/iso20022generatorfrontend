@@ -143,8 +143,13 @@
                                     </select>
                                 </ng-container>
                                 <ng-template #textInput>
-                                    <input type="text" class="form-input" [placeholder]="child.type || 'Enter value'"
-                                        [(ngModel)]="formData[path + '.' + child.name]" (ngModelChange)="updatePreview()">
+                                    <div class="input-with-action">
+                                        <input type="text" class="form-input" [placeholder]="child.type || 'Enter value'"
+                                            [(ngModel)]="formData[path + '.' + child.name]" (ngModelChange)="updatePreview()">
+                                        <button *ngIf="child.name.toUpperCase().includes('BIC')" class="btn-input-action" (click)="openBicSearch(path + '.' + child.name)" title="Search Global BIC Directory">
+                                            <mat-icon>search</mat-icon>
+                                        </button>
+                                    </div>
                                 </ng-template>
                                 <span class="input-tag">&lt;{{child.name}}&gt;</span>
                             </div>

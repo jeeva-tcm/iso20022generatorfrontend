@@ -29,7 +29,14 @@
                             </div>
                             <div class="form-group">
                                 <label>BIC / AnyBIC</label>
-                                <input formControlName="fromBic" maxlength="11" placeholder="e.g. NDEAFIHH">
+                                <div class="uetr-control-row">
+                                    <input formControlName="fromBic" maxlength="11" placeholder="e.g. NDEAFIHH">
+                                    <button type="button" class="uetr-refresh-btn"
+                                        (click)="openBicSearchGroup('fromBic', form)"
+                                        matTooltip="Search BIC">
+                                        <mat-icon>search</mat-icon>
+                                    </button>
+                                </div>
                                 <div class="validation-msg" *ngIf="err('fromBic') as e">{{e}}</div>
                                 <div class="field-hint at-limit" *ngIf="hint('fromBic', 11) as h">{{h}}</div>
                             </div>
@@ -155,7 +162,14 @@
                             </div>
                             <div class="form-group">
                                 <label>BIC / AnyBIC</label>
-                                <input formControlName="toBic" maxlength="11" placeholder="e.g. NDEAFIHH">
+                                <div class="uetr-control-row">
+                                    <input formControlName="toBic" maxlength="11" placeholder="e.g. NDEAFIHH">
+                                    <button type="button" class="uetr-refresh-btn"
+                                        (click)="openBicSearchGroup('toBic', form)"
+                                        matTooltip="Search BIC">
+                                        <mat-icon>search</mat-icon>
+                                    </button>
+                                </div>
                                 <div class="validation-msg" *ngIf="err('toBic') as e">{{e}}</div>
                                 <div class="field-hint at-limit" *ngIf="hint('toBic', 11) as h">{{h}}</div>
                             </div>
@@ -308,7 +322,14 @@
                     </div>
                     <div class="form-group">
                         <label>Recipient BIC</label>
-                        <input formControlName="grpHdrMsgRcptBic" maxlength="11">
+                        <div class="uetr-control-row">
+                            <input formControlName="grpHdrMsgRcptBic" maxlength="11">
+                            <button type="button" class="uetr-refresh-btn"
+                                (click)="openBicSearchGroup('grpHdrMsgRcptBic', form)"
+                                matTooltip="Search BIC">
+                                <mat-icon>search</mat-icon>
+                            </button>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>Pagination (Page Number)</label>
@@ -440,7 +461,14 @@
                     </div>
                     <div class="form-group">
                         <label>Account Servicer BIC</label>
-                        <input formControlName="acctSvcrBic" maxlength="11" placeholder="e.g. BOABORBBXXX">
+                        <div class="uetr-control-row">
+                            <input formControlName="acctSvcrBic" maxlength="11" placeholder="e.g. BOABORBBXXX">
+                            <button type="button" class="uetr-refresh-btn"
+                                (click)="openBicSearchGroup('acctSvcrBic', form)"
+                                matTooltip="Search BIC">
+                                <mat-icon>search</mat-icon>
+                            </button>
+                        </div>
                         <div class="validation-msg" *ngIf="err('acctSvcrBic') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('acctSvcrBic', 11) as h">{{h}}</div>
                     </div>
@@ -840,19 +868,40 @@
                         <div class="section-title">Related Agents</div>
                         <div class="form-group">
                             <label>Debtor Agent BIC</label>
-                            <input formControlName="txDbtrAgtBic" maxlength="11" placeholder="e.g. NDEAFIHH">
+                            <div class="uetr-control-row">
+                                <input formControlName="txDbtrAgtBic" maxlength="11" placeholder="e.g. NDEAFIHH">
+                                <button type="button" class="uetr-refresh-btn"
+                                    (click)="openBicSearchGroup('txDbtrAgtBic', form)"
+                                    matTooltip="Search BIC">
+                                    <mat-icon>search</mat-icon>
+                                </button>
+                            </div>
                             <div class="validation-msg" *ngIf="err('txDbtrAgtBic') as e">{{e}}</div>
                             <div class="field-hint at-limit" *ngIf="hint('txDbtrAgtBic', 11) as h">{{h}}</div>
                         </div>
                         <div class="form-group">
                             <label>Intermediary Agent 1 BIC</label>
-                            <input formControlName="txIntrmyAgtBic" maxlength="11" placeholder="e.g. CITIUS33">
+                            <div class="uetr-control-row">
+                                <input formControlName="txIntrmyAgtBic" maxlength="11" placeholder="e.g. CITIUS33">
+                                <button type="button" class="uetr-refresh-btn"
+                                    (click)="openBicSearchGroup('txIntrmyAgtBic', form)"
+                                    matTooltip="Search BIC">
+                                    <mat-icon>search</mat-icon>
+                                </button>
+                            </div>
                             <div class="validation-msg" *ngIf="err('txIntrmyAgtBic') as e">{{e}}</div>
                             <div class="field-hint at-limit" *ngIf="hint('txIntrmyAgtBic', 11) as h">{{h}}</div>
                         </div>
                         <div class="form-group">
                             <label>Creditor Agent BIC</label>
-                            <input formControlName="txCdtrAgtBic" maxlength="11" placeholder="e.g. BOFAGB22">
+                            <div class="uetr-control-row">
+                                <input formControlName="txCdtrAgtBic" maxlength="11" placeholder="e.g. BOFAGB22">
+                                <button type="button" class="uetr-refresh-btn"
+                                    (click)="openBicSearchGroup('txCdtrAgtBic', form)"
+                                    matTooltip="Search BIC">
+                                    <mat-icon>search</mat-icon>
+                                </button>
+                            </div>
                             <div class="validation-msg" *ngIf="err('txCdtrAgtBic') as e">{{e}}</div>
                             <div class="field-hint at-limit" *ngIf="hint('txCdtrAgtBic', 11) as h">{{h}}</div>
                         </div>

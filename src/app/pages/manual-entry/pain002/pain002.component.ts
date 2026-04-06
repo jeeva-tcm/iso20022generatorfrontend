@@ -1,3 +1,5 @@
+import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
+import { MatDialog } from '@angular/material/dialog';
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
@@ -127,6 +129,7 @@ export class Pain002Component implements OnInit {
   };
 
   constructor(
+    private dialog: MatDialog,
     private fb: FormBuilder,
     private http: HttpClient,
     private config: ConfigService,
@@ -721,4 +724,30 @@ ${doc.trimEnd()}
   viewXmlModal() { this.closeValidationModal(); }
   editXmlModal() { this.closeValidationModal(); }
   runValidationModal() { this.validateMessage(); }
+
+  openBicSearch(controlName: string, index?: number) {
+    const dialogRef = this.dialog.open(BicSearchDialogComponent, { width: '800px', disableClose: true });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.bic) {
+        if (index !== undefined) {
+           const grp = this.transactions.at(index) as FormGroup;
+           grp.patchValue({ [controlName]: result.bic });
+           grp.get(controlName)?.markAsDirty();
+        } else {
+           this.form.patchValue({ [controlName]: result.bic });
+           this.form.get(controlName)?.markAsDirty();
+        }
+      }
+    });
+  }
+
+  openBicSearchGroup(controlName: string, group: FormGroup) {
+    const dialogRef = this.dialog.open(BicSearchDialogComponent, { width: '800px', disableClose: true });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.bic) {
+        group.patchValue({ [controlName]: result.bic });
+        group.get(controlName)?.markAsDirty();
+      }
+    });
+  }
 }

@@ -9,11 +9,21 @@
             <form [formGroup]="form" class="content-box">
                 <div class="grid">
                     <div class="section-title">Message Header</div>
-                    <div class="form-group intermediary-field"><label>Sender BIC <span class="req">*</span></label><input formControlName="fromBic" [attr.formControlName]="'fromBic'" maxlength="11">
+                    <div class="form-group intermediary-field"><label>Sender BIC <span class="req">*</span></label>
+                        <div class="uetr-control-row">
+                            <input formControlName="fromBic" maxlength="11" class="auto-uppercase">
+                            <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('fromBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
+                            </button>
+                        </div>
                         <div class="validation-msg" *ngIf="err('fromBic') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('fromBic', 11) as h">{{h}}</div>
                     </div>
-                    <div class="form-group intermediary-field"><label>Receiver BIC <span class="req">*</span></label><input formControlName="toBic" [attr.formControlName]="'toBic'" maxlength="11">
+                    <div class="form-group intermediary-field"><label>Receiver BIC <span class="req">*</span></label>
+                        <div class="uetr-control-row">
+                            <input formControlName="toBic" maxlength="11" class="auto-uppercase">
+                            <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('toBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
+                            </button>
+                        </div>
                         <div class="validation-msg" *ngIf="err('toBic') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('toBic', 11) as h">{{h}}</div>
                     </div>
@@ -515,13 +525,21 @@
         <!-- BIC -->
         <div class="form-group" *ngIf="isAgent">
             <label>{{title}} BIC <span class="req" *ngIf="required">*</span></label>
-            <input [formControlName]="prefix+'Bic'" [attr.formControlName]="prefix+'Bic'" maxlength="11" placeholder="e.g. NDEAFIHH">
+            <div class="uetr-control-row">
+                <input [formControlName]="prefix+'Bic'" maxlength="11" placeholder="e.g. NDEAFIHH" class="auto-uppercase">
+                <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup(prefix+'Bic', form)" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
+                </button>
+            </div>
             <div class="validation-msg" *ngIf="err(prefix+'Bic') as e">{{e}}</div>
             <div class="field-hint at-limit" *ngIf="hint(prefix+'Bic', 11) as h">{{h}}</div>
         </div>
         <div class="form-group" *ngIf="!isAgent">
             <label>{{title}} BIC <span class="req" *ngIf="required">*</span></label>
-            <input [formControlName]="prefix+'OrgAnyBIC'" [attr.formControlName]="prefix+'OrgAnyBIC'" maxlength="11" placeholder="e.g. NDEAFIHH">
+            <div class="uetr-control-row">
+                <input [formControlName]="prefix+'OrgAnyBIC'" maxlength="11" placeholder="e.g. NDEAFIHH" class="auto-uppercase">
+                <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup(prefix+'OrgAnyBIC', form)" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
+                </button>
+            </div>
             <div class="validation-msg" *ngIf="err(prefix+'OrgAnyBIC') as e">{{e}}</div>
             <div class="field-hint at-limit" *ngIf="hint(prefix+'OrgAnyBIC', 11) as h">{{h}}</div>
         </div>
