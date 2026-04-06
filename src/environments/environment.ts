@@ -5,12 +5,12 @@ export const environment = {
     apiBaseUrl: 'http://localhost:8001',
     firebaseConfig: {
         
-        apiKey: "AIzaSyAdEupd1RQVI8y2SNot4IB8BBubzGT5QU8",
-        authDomain: "iso-validator.firebaseapp.com",
-        projectId: "iso-validator",
-        storageBucket: "iso-validator.firebasestorage.app",
-        messagingSenderId: "246882613767",
-        appId: "1:246882613767:web:9f9f4343a851eb01f888a2",
-        measurementId: "G-WG5ZDJM0DT"
+        apiKey: "AIzaSyCWkQ7izNkRPM4gE1HISRPnwFOgm1WrHg4",
+  authDomain: "isovalidator2.firebaseapp.com",
+  projectId: "isovalidator2",
+  storageBucket: "isovalidator2.firebasestorage.app",
+  messagingSenderId: "653661877429",
+  appId: "1:653661877429:web:60861122e04af3b13c7afc",
+  measurementId: "G-6HWFM21RJD"
     }
 };
