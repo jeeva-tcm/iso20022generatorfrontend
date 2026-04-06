@@ -10,11 +10,13 @@ import { ConfigService } from '../../../services/config.service';
 import { FormattingService } from '../../../services/formatting.service';
 import { UetrService } from '../../../services/uetr.service';
 import { ISO_PURPOSE_CODES } from '../../../constants/purpose-codes';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
 
 @Component({
     selector: 'app-camt057',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule],
+    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, MatDialogModule],
     templateUrl: './camt057.component.html',
     styleUrl: './camt057.component.css'
 })
@@ -51,7 +53,8 @@ export class Camt057Component implements OnInit {
         private snackBar: MatSnackBar,
         private router: Router,
         private uetrService: UetrService,
-        private formatting: FormattingService
+        private formatting: FormattingService,
+        private dialog: MatDialog
     ) { }
 
     public syncScroll(editor: any, gutter: any) {
@@ -1281,5 +1284,41 @@ ${ntfctnPartiesXml}${itmXml}
 
     runValidationModal() {
         this.validateMessage();
+    }
+
+    openBicSearch(controlName: string, index?: number): void {
+        const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+            width: '800px',
+            disableClose: true
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result && result.bic) {
+                if (index !== undefined) {
+                    const formArray = this.form.get(controlName) as any;
+                    if (formArray && formArray.at) {
+                        formArray.at(index).patchValue(result.bic);
+                        formArray.at(index).markAsDirty();
+                    }
+                } else {
+                    this.form.get(controlName)?.patchValue(result.bic);
+                    this.form.get(controlName)?.markAsDirty();
+                }
+            }
+        });
+    }
+
+    openBicSearchGroup(controlName: string, group: any): void {
+        const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+            width: '800px',
+            disableClose: true
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result && result.bic) {
+                group.get(controlName)?.patchValue(result.bic);
+                group.get(controlName)?.markAsDirty();
+            }
+        });
     }
 }

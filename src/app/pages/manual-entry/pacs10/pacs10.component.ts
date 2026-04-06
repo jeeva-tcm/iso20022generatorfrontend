@@ -9,11 +9,13 @@ import { Router, RouterModule } from '@angular/router';
 import { ConfigService } from '../../../services/config.service';
 import { UetrService } from '../../../services/uetr.service';
 import { ISO_PURPOSE_CODES } from '../../../constants/purpose-codes';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
 
 @Component({
     selector: 'app-pacs10',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, RouterModule],
+    imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, RouterModule, MatDialogModule],
     templateUrl: './pacs10.component.html',
     styleUrl: './pacs10.component.css'
 })
@@ -65,7 +67,8 @@ export class Pacs10Component implements OnInit {
         private config: ConfigService,
         private snackBar: MatSnackBar,
         private router: Router,
-        private uetrService: UetrService
+        private uetrService: UetrService,
+        private dialog: MatDialog
     ) { }
 
     ngOnInit() {
@@ -879,11 +882,28 @@ ${this.rmtInf(v)}
         this.uetrError = UetrService.UUID_V4_PATTERN.test(val) ? null : 'Invalid UETR format';
     }
 
-    onUetrPaste(_event: ClipboardEvent): void {
+    onUetrPaste(_event: ClipboardEvent) {
         setTimeout(() => {
             const ctrl = this.form.get('uetr');
-            if (ctrl) { ctrl.setValue(ctrl.value.toLowerCase()); this.validateManualUetr(); }
+            if (ctrl) {
+                ctrl.setValue((ctrl.value || '').toLowerCase());
+                this.validateManualUetr();
+            }
         }, 0);
+    }
+
+    openBicSearch(f: string): void {
+        const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+            width: '800px',
+            disableClose: true
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result && result.bic) {
+                this.form.patchValue({ [f]: result.bic });
+                this.form.get(f)?.markAsDirty();
+            }
+        });
     }
 
     syncScroll(editor: HTMLTextAreaElement, gutter: HTMLDivElement) {

@@ -1,19 +1,21 @@
 import { Component, OnInit, HostListener } from '@angular/core';
-import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfigService } from '../../../services/config.service';
 import { FormattingService } from '../../../services/formatting.service';
+import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
 
 @Component({
   selector: 'app-pain001',
   templateUrl: './pain001.component.html',
   styleUrls: ['./pain001.component.css'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule]
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, MatDialogModule]
 })
 export class Pain001Component implements OnInit {
   form!: FormGroup;
@@ -50,7 +52,8 @@ export class Pain001Component implements OnInit {
     private http: HttpClient,
     private config: ConfigService,
     private snackBar: MatSnackBar,
-    private formatting: FormattingService
+    private formatting: FormattingService,
+    private dialog: MatDialog
   ) { }
 
   ngOnInit() {
@@ -857,6 +860,20 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
     }
   }
 
+
+  openBicSearchGroup(controlName: string, group: AbstractControl) {
+    const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+      width: '800px',
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.bic) {
+        group.get(controlName)?.patchValue(result.bic);
+        group.get(controlName)?.markAsDirty();
+      }
+    });
+  }
 
   @HostListener('keydown', ['$event'])
   onKeydown(event: KeyboardEvent) {

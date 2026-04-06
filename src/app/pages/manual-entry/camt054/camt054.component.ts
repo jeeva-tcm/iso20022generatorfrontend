@@ -5,6 +5,8 @@ import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
 import { ConfigService } from '../../../services/config.service';
 import { FormattingService } from '../../../services/formatting.service';
 import { UetrService } from '../../../services/uetr.service';
@@ -14,7 +16,7 @@ import { UetrService } from '../../../services/uetr.service';
   templateUrl: './camt054.component.html',
   styleUrls: ['./camt054.component.css'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule]
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, MatDialogModule]
 })
 export class Camt054Component implements OnInit {
   form!: FormGroup;
@@ -60,7 +62,8 @@ export class Camt054Component implements OnInit {
     private config: ConfigService,
     private snackBar: MatSnackBar,
     private formatting: FormattingService,
-    private uetr: UetrService
+    private uetr: UetrService,
+    private dialog: MatDialog
   ) { }
 
   ngOnInit() {
@@ -959,5 +962,41 @@ export class Camt054Component implements OnInit {
     } finally {
       this.isParsingXml = false;
     }
+  }
+
+  openBicSearch(controlName: string, index?: number) {
+    const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+      width: '800px',
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.bic) {
+        if (index !== undefined) {
+          const formArray = this.form.get(controlName) as any;
+          if (formArray && formArray.at) {
+            formArray.at(index).patchValue(result.bic);
+            formArray.at(index).markAsDirty();
+          }
+        } else {
+          this.form.get(controlName)?.patchValue(result.bic);
+          this.form.get(controlName)?.markAsDirty();
+        }
+      }
+    });
+  }
+
+  openBicSearchGroup(controlName: string, group: any) {
+    const dialogRef = this.dialog.open(BicSearchDialogComponent, {
+      width: '800px',
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.bic) {
+        group.get(controlName)?.patchValue(result.bic);
+        group.get(controlName)?.markAsDirty();
+      }
+    });
   }
 }

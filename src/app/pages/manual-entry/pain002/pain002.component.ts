@@ -1,3 +1,5 @@
+import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
+import { MatDialog } from '@angular/material/dialog';
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
@@ -39,6 +41,20 @@ export class Pain002Component implements OnInit {
   // Form submission validation
   formSubmissionErrors: string[] = [];
   showSubmissionErrors = false;
+
+  // Real-time character limit validation
+  fieldLimits: Record<string, number> = {
+    'BizMsgIdr': 35, 'MsgId': 35, 'Nm': 140, 'AddtlInf': 105,
+    'BICFI': 11, 'LEI': 20, 'MmbId': 35, 'AdrLine': 70,
+    'BizSvc': 35, 'Regy': 35, 'Id': 35, 'ClrSys': 5,
+    'InstrId': 35, 'EndToEndId': 35, 'PmtInfId': 35,
+    'Prov': 35, 'City': 35, 'Prtry': 35, 'Issr': 35,
+    'Dept': 70, 'SubDept': 70, 'Street': 70, 'Floor': 70, 'Room': 70,
+    'BldgNm': 35, 'Town': 35, 'TownLctn': 35, 'District': 35, 'CtrySub': 35,
+    'BldgNb': 16, 'PstBx': 16, 'PstCd': 16
+  };
+  limitMessages: Record<string, string> = {};
+  leiValidationMessages: Record<string, string> = {};
 
   // Collapsible sections
   sections: Record<string, boolean> = {
@@ -113,6 +129,7 @@ export class Pain002Component implements OnInit {
   };
 
   constructor(
+    private dialog: MatDialog,
     private fb: FormBuilder,
     private http: HttpClient,
     private config: ConfigService,
@@ -441,6 +458,25 @@ export class Pain002Component implements OnInit {
   removeAddtlInf(tx: any, i: number) { const arr = tx.get('addtlInf') as FormArray; if (arr.length > 1) arr.removeAt(i); }
   getAddtlInf(tx: any) { return (tx.get('addtlInf') as FormArray).controls; }
 
+  handleInput(event: any, controlPath: string, limitKey: string) {
+    const max = this.fieldLimits[limitKey];
+    if (!max) return;
+    const val = event.target.value || '';
+    if (val.length >= max) {
+      this.limitMessages[controlPath] = `Maximum ${max} characters reached (${max}/${max})`;
+      setTimeout(() => { delete this.limitMessages[controlPath]; }, 3000);
+    }
+  }
+
+  checkLei(event: any, controlPath: string) {
+    const val = event.target.value || '';
+    if (val && val.length < 20) {
+      this.leiValidationMessages[controlPath] = 'LEI must be exactly 20 characters';
+    } else {
+      delete this.leiValidationMessages[controlPath];
+    }
+  }
+
   refreshUetr(tx: any) { tx.patchValue({ orgnlUetr: this.uetrService.generate() }); }
 
   dateStamp() { return new Date().toISOString().slice(0, 10).replace(/-/g, ''); }
@@ -660,6 +696,8 @@ ${doc.trimEnd()}
   }
 
   err(path: string) {
+    if (this.limitMessages[path]) return this.limitMessages[path];
+    if (this.leiValidationMessages[path]) return this.leiValidationMessages[path];
     const c = this.form.get(path);
     if (!c || (c.pristine && !c.touched)) return null;
     if (c.errors?.['required']) return 'Required';
@@ -686,4 +724,30 @@ ${doc.trimEnd()}
   viewXmlModal() { this.closeValidationModal(); }
   editXmlModal() { this.closeValidationModal(); }
   runValidationModal() { this.validateMessage(); }
+
+  openBicSearch(controlName: string, index?: number) {
+    const dialogRef = this.dialog.open(BicSearchDialogComponent, { width: '800px', disableClose: true });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.bic) {
+        if (index !== undefined) {
+           const grp = this.transactions.at(index) as FormGroup;
+           grp.patchValue({ [controlName]: result.bic });
+           grp.get(controlName)?.markAsDirty();
+        } else {
+           this.form.patchValue({ [controlName]: result.bic });
+           this.form.get(controlName)?.markAsDirty();
+        }
+      }
+    });
+  }
+
+  openBicSearchGroup(controlName: string, group: FormGroup) {
+    const dialogRef = this.dialog.open(BicSearchDialogComponent, { width: '800px', disableClose: true });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.bic) {
+        group.patchValue({ [controlName]: result.bic });
+        group.get(controlName)?.markAsDirty();
+      }
+    });
+  }
 }

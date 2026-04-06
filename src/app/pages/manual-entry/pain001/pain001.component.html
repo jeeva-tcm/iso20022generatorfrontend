@@ -47,7 +47,12 @@
                     </div>
                     <div class="form-group">
                         <label>Sender BIC <span class="req">*</span></label>
-                        <input formControlName="head_fromBic" maxlength="11">
+                        <div class="uetr-control-row">
+                            <input formControlName="head_fromBic" maxlength="11" class="auto-uppercase">
+                            <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('head_fromBic', form)" matTooltip="Search BIC">
+                                <mat-icon>search</mat-icon>
+                            </button>
+                        </div>
                         <div class="validation-msg" *ngIf="err('head_fromBic') as e">{{e}}</div>
                     </div>
 
@@ -78,7 +83,12 @@
 
                     <div class="form-group">
                         <label>Receiver BIC <span class="req">*</span></label>
-                        <input formControlName="head_toBic" maxlength="11">
+                        <div class="uetr-control-row">
+                            <input formControlName="head_toBic" maxlength="11" class="auto-uppercase">
+                            <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('head_toBic', form)" matTooltip="Search BIC">
+                                <mat-icon>search</mat-icon>
+                            </button>
+                        </div>
                         <div class="validation-msg" *ngIf="err('head_toBic') as e">{{e}}</div>
                     </div>
 
@@ -194,7 +204,12 @@
                             </div>
                             <div class="form-group">
                                 <label>Initiating Party BIC</label>
-                                <input formControlName="initgPtyBic" maxlength="11" placeholder="8 or 11 chars (optional)">
+                                <div class="uetr-control-row">
+                                    <input formControlName="initgPtyBic" maxlength="11" placeholder="8 or 11 chars (optional)" class="auto-uppercase">
+                                    <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('initgPtyBic', form)" matTooltip="Search BIC">
+                                        <mat-icon>search</mat-icon>
+                                    </button>
+                                </div>
                                 <div class="validation-msg" *ngIf="err('initgPtyBic') as e">{{e}}</div>
                                 <div class="field-hint at-limit" *ngIf="hint('initgPtyBic', 11) as h">{{h}}</div>
                             </div>
@@ -212,7 +227,12 @@
                         <div class="party-grid">
                             <div class="form-group">
                                 <label>Forwarding Agent BIC</label>
-                                <input formControlName="fwdgAgtBic" maxlength="11" placeholder="8 or 11 chars (optional)">
+                                <div class="uetr-control-row">
+                                    <input formControlName="fwdgAgtBic" maxlength="11" placeholder="8 or 11 chars (optional)" class="auto-uppercase">
+                                    <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('fwdgAgtBic', form)" matTooltip="Search BIC">
+                                        <mat-icon>search</mat-icon>
+                                    </button>
+                                </div>
                                 <div class="validation-msg" *ngIf="err('fwdgAgtBic') as e">{{e}}</div>
                             </div>
                             <div class="form-group">
@@ -331,7 +351,12 @@
                         <div class="party-grid">
                             <div class="form-group">
                                 <label>Org BIC (AnyBIC)</label>
-                                <input formControlName="dbtrOrgIdAnyBic" maxlength="11">
+                                <div class="uetr-control-row">
+                                    <input formControlName="dbtrOrgIdAnyBic" maxlength="11" class="auto-uppercase">
+                                    <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('dbtrOrgIdAnyBic', form)" matTooltip="Search BIC">
+                                        <mat-icon>search</mat-icon>
+                                    </button>
+                                </div>
                                 <div class="validation-msg" *ngIf="err('dbtrOrgIdAnyBic') as e">{{e}}</div>
                             </div>
                             <div class="form-group">
@@ -370,7 +395,12 @@
                             </div>
                             <div class="form-group">
                                 <label>Debtor Agent BIC</label>
-                                <input formControlName="dbtrAgtBic" maxlength="11" placeholder="8 or 11 chars">
+                                <div class="uetr-control-row">
+                                    <input formControlName="dbtrAgtBic" maxlength="11" placeholder="8 or 11 chars" class="auto-uppercase">
+                                    <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('dbtrAgtBic', form)" matTooltip="Search BIC">
+                                        <mat-icon>search</mat-icon>
+                                    </button>
+                                </div>
                                 <div class="field-hint at-limit" *ngIf="hint('dbtrAgtBic', 11) as h">{{h}}</div>
                             </div>
                             <div class="form-group">
@@ -461,7 +491,12 @@
                             </div>
                             <div class="form-group">
                                 <label>Charges Agent BIC</label>
-                                <input formControlName="chrgsAcctAgtBic" maxlength="11">
+                                <div class="uetr-control-row">
+                                    <input formControlName="chrgsAcctAgtBic" maxlength="11" class="auto-uppercase">
+                                    <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('chrgsAcctAgtBic', form)" matTooltip="Search BIC">
+                                        <mat-icon>search</mat-icon>
+                                    </button>
+                                </div>
                                 <div class="validation-msg" *ngIf="err('chrgsAcctAgtBic') as e">{{e}}</div>
                             </div>
                         </div>
@@ -619,7 +654,15 @@
 
                                 <div class="party-group-title" style="grid-column: 1 / -1; margin-top: 0.5rem; font-size: 0.7rem; background: rgba(255,255,255,0.02);">Intermediary Agent 1</div>
                                 <div class="party-grid" style="grid-column: 1 / -1;">
-                                    <div class="form-group"><label>BIC</label><input formControlName="intrmyAgt1Bic" maxlength="11"></div>
+                                    <div class="form-group">
+                                        <label>BIC</label>
+                                        <div class="uetr-control-row">
+                                            <input formControlName="intrmyAgt1Bic" maxlength="11" class="auto-uppercase">
+                                            <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('intrmyAgt1Bic', tx)" matTooltip="Search BIC">
+                                                <mat-icon>search</mat-icon>
+                                            </button>
+                                        </div>
+                                    </div>
                                     <div class="form-group"><label>LEI</label><input formControlName="intrmyAgt1Lei" maxlength="20"></div>
                                     <div class="form-group"><label>Name</label><input formControlName="intrmyAgt1Name" maxlength="140"></div>
                                     <div class="form-group"><label>Ctry</label><input formControlName="intrmyAgt1Ctry" maxlength="2"></div>
@@ -631,7 +674,15 @@
 
                                 <div class="party-group-title" style="grid-column: 1 / -1; margin-top: 0.5rem; font-size: 0.7rem; background: rgba(255,255,255,0.02);">Intermediary Agent 2</div>
                                 <div class="party-grid" style="grid-column: 1 / -1;">
-                                    <div class="form-group"><label>BIC</label><input formControlName="intrmyAgt2Bic" maxlength="11"></div>
+                                    <div class="form-group">
+                                        <label>BIC</label>
+                                        <div class="uetr-control-row">
+                                            <input formControlName="intrmyAgt2Bic" maxlength="11" class="auto-uppercase">
+                                            <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('intrmyAgt2Bic', tx)" matTooltip="Search BIC">
+                                                <mat-icon>search</mat-icon>
+                                            </button>
+                                        </div>
+                                    </div>
                                     <div class="form-group"><label>LEI</label><input formControlName="intrmyAgt2Lei" maxlength="20"></div>
                                     <div class="form-group"><label>Name</label><input formControlName="intrmyAgt2Name" maxlength="140"></div>
                                     <div class="form-group"><label>Ctry</label><input formControlName="intrmyAgt2Ctry" maxlength="2"></div>
@@ -643,7 +694,15 @@
 
                                 <div class="party-group-title" style="grid-column: 1 / -1; margin-top: 0.5rem; font-size: 0.7rem; background: rgba(255,255,255,0.02);">Intermediary Agent 3</div>
                                 <div class="party-grid" style="grid-column: 1 / -1;">
-                                    <div class="form-group"><label>BIC</label><input formControlName="intrmyAgt3Bic" maxlength="11"></div>
+                                    <div class="form-group">
+                                        <label>BIC</label>
+                                        <div class="uetr-control-row">
+                                            <input formControlName="intrmyAgt3Bic" maxlength="11" class="auto-uppercase">
+                                            <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('intrmyAgt3Bic', tx)" matTooltip="Search BIC">
+                                                <mat-icon>search</mat-icon>
+                                            </button>
+                                        </div>
+                                    </div>
                                     <div class="form-group"><label>LEI</label><input formControlName="intrmyAgt3Lei" maxlength="20"></div>
                                     <div class="form-group"><label>Name</label><input formControlName="intrmyAgt3Name" maxlength="140"></div>
                                     <div class="form-group"><label>Ctry</label><input formControlName="intrmyAgt3Ctry" maxlength="2"></div>
@@ -655,7 +714,15 @@
 
                                 <div class="party-group-title" style="grid-column: 1 / -1; margin-top: 0.5rem; font-size: 0.7rem; background: rgba(255,255,255,0.02);">Creditor Agent</div>
                                 <div class="party-grid" style="grid-column: 1 / -1;">
-                                    <div class="form-group"><label>BIC</label><input formControlName="cdtrAgtBic" maxlength="11"></div>
+                                    <div class="form-group">
+                                        <label>BIC</label>
+                                        <div class="uetr-control-row">
+                                            <input formControlName="cdtrAgtBic" maxlength="11" class="auto-uppercase">
+                                            <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('cdtrAgtBic', tx)" matTooltip="Search BIC">
+                                                <mat-icon>search</mat-icon>
+                                            </button>
+                                        </div>
+                                    </div>
                                     <div class="form-group"><label>LEI</label><input formControlName="cdtrAgtLei" maxlength="20"></div>
                                     <div class="form-group"><label>Name</label><input formControlName="cdtrAgtName" maxlength="140"></div>
                                     <div class="form-group"><label>Ctry</label><input formControlName="cdtrAgtCtry" maxlength="2"></div>

@@ -16,7 +16,11 @@
                         <div class="party-grid">
                             <div class="form-group">
                                 <label>From BIC <span class="req">*</span></label>
-                                <input type="text" formControlName="fromBIC" placeholder="SNDRBEBBXXX" maxlength="11">
+                                <div class="uetr-control-row">
+                                    <input type="text" formControlName="fromBIC" placeholder="SNDRBEBBXXX" maxlength="11">
+                                    <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('fromBIC')" matTooltip="Search BIC"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
+                                    </button>
+                                </div>
                                 <span class="validation-msg" *ngIf="err('fromBIC')">{{err('fromBIC')}}</span>
                                 <span class="field-hint at-limit" *ngIf="hint('fromBIC', 11)">{{hint('fromBIC', 11)}}</span>
                             </div>
@@ -34,7 +38,11 @@
                             </div>
                             <div class="form-group">
                                 <label>To BIC <span class="req">*</span></label>
-                                <input type="text" formControlName="toBIC" placeholder="RCVRBEBBXXX" maxlength="11">
+                                <div class="uetr-control-row">
+                                    <input type="text" formControlName="toBIC" placeholder="RCVRBEBBXXX" maxlength="11">
+                                    <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('toBIC')" matTooltip="Search BIC"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
+                                    </button>
+                                </div>
                                 <span class="validation-msg" *ngIf="err('toBIC')">{{err('toBIC')}}</span>
                                 <span class="field-hint at-limit" *ngIf="hint('toBIC', 11)">{{hint('toBIC', 11)}}</span>
                             </div>
@@ -150,7 +158,11 @@
                         <div class="party-grid">
                             <div class="form-group">
                                 <label>Org ID (Any BIC)</label>
-                                <input type="text" formControlName="rcptOrgIdAnyBIC" maxlength="11">
+                                <div class="uetr-control-row">
+                                    <input type="text" formControlName="rcptOrgIdAnyBIC" maxlength="11">
+                                    <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('rcptOrgIdAnyBIC')" matTooltip="Search BIC"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
+                                    </button>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>Birth Date</label>
@@ -246,7 +258,11 @@
                             </div>
                             <div class="form-group">
                                 <label>Account Servicer BIC</label>
-                                <input type="text" formControlName="accountServicerBic" maxlength="11" placeholder="SERVBEBBXXX">
+                                <div class="uetr-control-row">
+                                    <input type="text" formControlName="accountServicerBic" maxlength="11" placeholder="SERVBEBBXXX">
+                                    <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('accountServicerBic')" matTooltip="Search BIC"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
+                                    </button>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>Related Account IBAN</label>
@@ -397,7 +413,11 @@
                                     </div>
                                     <div class="form-group">
                                         <label>Debtor Agent BIC</label>
-                                        <input type="text" formControlName="dbtrAgtBic" maxlength="11">
+                                        <div class="uetr-control-row">
+                                            <input type="text" formControlName="dbtrAgtBic" maxlength="11">
+                                            <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('dbtrAgtBic', i)" matTooltip="Search BIC"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
+                                            </button>
+                                        </div>
                                     </div>
                                     <div class="form-group">
                                         <label>Ultimate Debtor Name</label>
@@ -409,7 +429,11 @@
                                     </div>
                                     <div class="form-group">
                                         <label>Creditor Agent BIC</label>
-                                        <input type="text" formControlName="cdtrAgtBic" maxlength="11">
+                                        <div class="uetr-control-row">
+                                            <input type="text" formControlName="cdtrAgtBic" maxlength="11">
+                                            <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('cdtrAgtBic', i)" matTooltip="Search BIC"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
+                                            </button>
+                                        </div>
                                     </div>
                                     <div class="form-group">
                                         <label>Ultimate Creditor Name</label>

@@ -16,7 +16,8 @@
                     <ng-container *ngIf="sections['bah']">
                         <div class="form-group">
                             <label>Business Msg ID <span class="req">*</span></label>
-                            <input formControlName="head_bizMsgIdr" maxlength="35">
+                            <input formControlName="head_bizMsgIdr" maxlength="35" (input)="handleInput($event, 'head_bizMsgIdr', 'BizMsgIdr')">
+                            <div class="validation-msg" *ngIf="err('head_bizMsgIdr')">{{err('head_bizMsgIdr')}}</div>
                         </div>
                         <div class="form-group">
                             <label>Creation Date <span class="req">*</span></label>
@@ -52,7 +53,8 @@
                         </div>
                         <div class="form-group">
                             <label>Business Service (BizSvc)</label>
-                            <input formControlName="head_bizSvc" maxlength="35">
+                            <input formControlName="head_bizSvc" maxlength="35" (input)="handleInput($event, 'head_bizSvc', 'BizSvc')">
+                            <div class="validation-msg" *ngIf="err('head_bizSvc')">{{err('head_bizSvc')}}</div>
                         </div>
 
                         <!-- Market Practice -->
@@ -61,18 +63,23 @@
                             <div class="party-grid">
                                 <div class="form-group">
                                     <label>Registry (Regy)</label>
-                                    <input formControlName="head_mktPrctcRegy" maxlength="35" placeholder="Registry name (simple string)">
+                                    <input formControlName="head_mktPrctcRegy" maxlength="35" placeholder="Registry name (simple string)" (input)="handleInput($event, 'head_mktPrctcRegy', 'Regy')">
+                                    <div class="validation-msg" *ngIf="err('head_mktPrctcRegy')">{{err('head_mktPrctcRegy')}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Market Practice ID (Id) <span class="req" *ngIf="form.get('head_mktPrctcRegy')?.value || form.get('head_mktPrctcId')?.value">*</span></label>
-                                    <input formControlName="head_mktPrctcId" maxlength="35" placeholder="Market Practice ID">
+                                    <input formControlName="head_mktPrctcId" maxlength="35" placeholder="Market Practice ID" (input)="handleInput($event, 'head_mktPrctcId', 'Id')">
                                     <div class="validation-msg" *ngIf="err('head_mktPrctcId')">{{err('head_mktPrctcId')}}</div>
                                 </div>
                             </div>
                         </div>
                         <div class="form-group">
                             <label>Sender BIC</label>
-                            <input formControlName="head_fromBic" maxlength="11" class="auto-uppercase">
+                            <input formControlName="head_fromBic" maxlength="11" class="auto-uppercase" (input)="handleInput($event, 'head_fromBic', 'BICFI')">
+                            <div class="uetr-control-row" style="display: flex; gap: 8px;">
+<input formControlName="head_fromBic" maxlength="11" class="auto-uppercase">
+<button type="button" class="uetr-refresh-btn" (click)="openBicSearch('head_fromBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
+</div>
                             <div class="validation-msg" *ngIf="err('head_fromBic')">{{err('head_fromBic')}}</div>
                         </div>
 
@@ -90,12 +97,12 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Clearing System Member ID (MmbId)</label>
-                                    <input formControlName="head_fromMmbId" maxlength="35" placeholder="Member ID">
+                                    <input formControlName="head_fromMmbId" maxlength="35" placeholder="Member ID" (input)="handleInput($event, 'head_fromMmbId', 'MmbId')">
                                     <div class="validation-msg" *ngIf="err('head_fromMmbId')">{{err('head_fromMmbId')}}</div>
                                 </div>
                                 <div class="form-group full-width">
                                     <label>LEI</label>
-                                    <input formControlName="head_fromLei" maxlength="20" class="auto-uppercase" placeholder="20-char LEI">
+                                    <input formControlName="head_fromLei" maxlength="20" class="auto-uppercase" placeholder="20-char LEI" (input)="handleInput($event, 'head_fromLei', 'LEI')" (blur)="checkLei($event, 'head_fromLei')">
                                     <div class="validation-msg" *ngIf="err('head_fromLei')">{{err('head_fromLei')}}</div>
                                 </div>
                             </div>
@@ -103,7 +110,11 @@
 
                         <div class="form-group">
                             <label>Receiver BIC</label>
-                            <input formControlName="head_toBic" maxlength="11" class="auto-uppercase">
+                            <input formControlName="head_toBic" maxlength="11" class="auto-uppercase" (input)="handleInput($event, 'head_toBic', 'BICFI')">
+                            <div class="uetr-control-row" style="display: flex; gap: 8px;">
+<input formControlName="head_toBic" maxlength="11" class="auto-uppercase">
+<button type="button" class="uetr-refresh-btn" (click)="openBicSearch('head_toBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
+</div>
                             <div class="validation-msg" *ngIf="err('head_toBic')">{{err('head_toBic')}}</div>
                         </div>
 
@@ -121,12 +132,12 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Clearing System Member ID (MmbId)</label>
-                                    <input formControlName="head_toMmbId" maxlength="35" placeholder="Member ID">
+                                    <input formControlName="head_toMmbId" maxlength="35" placeholder="Member ID" (input)="handleInput($event, 'head_toMmbId', 'MmbId')">
                                     <div class="validation-msg" *ngIf="err('head_toMmbId')">{{err('head_toMmbId')}}</div>
                                 </div>
                                 <div class="form-group full-width">
                                     <label>LEI</label>
-                                    <input formControlName="head_toLei" maxlength="20" class="auto-uppercase" placeholder="20-char LEI">
+                                    <input formControlName="head_toLei" maxlength="20" class="auto-uppercase" placeholder="20-char LEI" (input)="handleInput($event, 'head_toLei', 'LEI')" (blur)="checkLei($event, 'head_toLei')">
                                     <div class="validation-msg" *ngIf="err('head_toLei')">{{err('head_toLei')}}</div>
                                 </div>
                             </div>
@@ -144,7 +155,8 @@
                             <div class="grid" *ngIf="form.get('head_rltd_enabled')?.value" style="padding: 1rem; border: 1px solid var(--border-light); border-radius: 0 0 10px 10px; gap: 1.5rem; margin-bottom: 1rem; background: var(--bg-card); display: grid; grid-template-columns: 1fr;">
                                 <div class="form-group full-width">
                                     <label>Related Msg ID</label>
-                                    <input formControlName="head_rltd_bizMsgIdr" maxlength="35">
+                                    <input formControlName="head_rltd_bizMsgIdr" maxlength="35" (input)="handleInput($event, 'head_rltd_bizMsgIdr', 'BizMsgIdr')">
+                                    <div class="validation-msg" *ngIf="err('head_rltd_bizMsgIdr')">{{err('head_rltd_bizMsgIdr')}}</div>
                                 </div>
 
                                 <!-- From & To Identification -->
@@ -155,20 +167,26 @@
                                         <div class="party-grid">
                                             <div class="form-group">
                                                 <label>BICFI</label>
-                                                <input formControlName="head_rltd_fromBic" maxlength="11" class="auto-uppercase" placeholder="8 or 11 characters">
+                                                <input formControlName="head_rltd_fromBic" maxlength="11" class="auto-uppercase" placeholder="8 or 11 characters" (input)="handleInput($event, 'head_rltd_fromBic', 'BICFI')">
+                                                <div class="validation-msg" *ngIf="err('head_rltd_fromBic')">{{err('head_rltd_fromBic')}}</div>
+                                                <div class="uetr-control-row" style="display: flex; gap: 8px;">
+<input formControlName="head_rltd_fromBic" maxlength="11" class="auto-uppercase" placeholder="8 or 11 characters">
+<button type="button" class="uetr-refresh-btn" (click)="openBicSearch('head_rltd_fromBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
+</div>
                                             </div>
                                             <div class="form-group">
                                                 <label>Clearing Sys Code (Cd)</label>
-                                                <input formControlName="head_rltd_fromClrSysCd" maxlength="5" class="auto-uppercase" placeholder="e.g. T2, FED">
+                                                <input formControlName="head_rltd_fromClrSysCd" maxlength="5" class="auto-uppercase" placeholder="e.g. T2, FED" (input)="handleInput($event, 'head_rltd_fromClrSysCd', 'ClrSys')">
                                                 <div class="validation-msg" *ngIf="form.errors?.['head_rltd_from_clrSysCdMissing']">Cd required if MmbId present</div>
                                             </div>
                                             <div class="form-group">
                                                 <label>Member ID (MmbId)</label>
-                                                <input formControlName="head_rltd_fromMmbId" maxlength="35" class="auto-uppercase">
+                                                <input formControlName="head_rltd_fromMmbId" maxlength="35" class="auto-uppercase" (input)="handleInput($event, 'head_rltd_fromMmbId', 'MmbId')">
+                                                <div class="validation-msg" *ngIf="err('head_rltd_fromMmbId')">{{err('head_rltd_fromMmbId')}}</div>
                                             </div>
                                             <div class="form-group">
                                                 <label>LEI</label>
-                                                <input formControlName="head_rltd_fromLei" maxlength="20" class="auto-uppercase" placeholder="20-char LEI">
+                                                <input formControlName="head_rltd_fromLei" maxlength="20" class="auto-uppercase" placeholder="20-char LEI" (input)="handleInput($event, 'head_rltd_fromLei', 'LEI')" (blur)="checkLei($event, 'head_rltd_fromLei')">
                                                 <div class="validation-msg" *ngIf="err('head_rltd_fromLei')">{{err('head_rltd_fromLei')}}</div>
                                             </div>
                                         </div>
@@ -180,20 +198,26 @@
                                         <div class="party-grid">
                                             <div class="form-group">
                                                 <label>BICFI</label>
-                                                <input formControlName="head_rltd_toBic" maxlength="11" class="auto-uppercase" placeholder="8 or 11 characters">
+                                                <input formControlName="head_rltd_toBic" maxlength="11" class="auto-uppercase" placeholder="8 or 11 characters" (input)="handleInput($event, 'head_rltd_toBic', 'BICFI')">
+                                                <div class="validation-msg" *ngIf="err('head_rltd_toBic')">{{err('head_rltd_toBic')}}</div>
+                                                <div class="uetr-control-row" style="display: flex; gap: 8px;">
+<input formControlName="head_rltd_toBic" maxlength="11" class="auto-uppercase" placeholder="8 or 11 characters">
+<button type="button" class="uetr-refresh-btn" (click)="openBicSearch('head_rltd_toBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
+</div>
                                             </div>
                                             <div class="form-group">
                                                 <label>Clearing Sys Code (Cd)</label>
-                                                <input formControlName="head_rltd_toClrSysCd" maxlength="5" class="auto-uppercase" placeholder="e.g. T2, FED">
+                                                <input formControlName="head_rltd_toClrSysCd" maxlength="5" class="auto-uppercase" placeholder="e.g. T2, FED" (input)="handleInput($event, 'head_rltd_toClrSysCd', 'ClrSys')">
                                                 <div class="validation-msg" *ngIf="form.errors?.['head_rltd_to_clrSysCdMissing']">Cd required if MmbId present</div>
                                             </div>
                                             <div class="form-group">
                                                 <label>Member ID (MmbId)</label>
-                                                <input formControlName="head_rltd_toMmbId" maxlength="35" class="auto-uppercase">
+                                                <input formControlName="head_rltd_toMmbId" maxlength="35" class="auto-uppercase" (input)="handleInput($event, 'head_rltd_toMmbId', 'MmbId')">
+                                                <div class="validation-msg" *ngIf="err('head_rltd_toMmbId')">{{err('head_rltd_toMmbId')}}</div>
                                             </div>
                                             <div class="form-group">
                                                 <label>LEI</label>
-                                                <input formControlName="head_rltd_toLei" maxlength="20" class="auto-uppercase" placeholder="20-char LEI">
+                                                <input formControlName="head_rltd_toLei" maxlength="20" class="auto-uppercase" placeholder="20-char LEI" (input)="handleInput($event, 'head_rltd_toLei', 'LEI')" (blur)="checkLei($event, 'head_rltd_toLei')">
                                                 <div class="validation-msg" *ngIf="err('head_rltd_toLei')">{{err('head_rltd_toLei')}}</div>
                                             </div>
                                         </div>
@@ -231,7 +255,8 @@
                                     </div>
                                     <div class="form-group">
                                         <label>Related Biz Service</label>
-                                        <input formControlName="head_rltd_bizSvc" maxlength="35">
+                                        <input formControlName="head_rltd_bizSvc" maxlength="35" (input)="handleInput($event, 'head_rltd_bizSvc', 'BizSvc')">
+                                        <div class="validation-msg" *ngIf="err('head_rltd_bizSvc')">{{err('head_rltd_bizSvc')}}</div>
                                     </div>
                                 </div>
                             </div>
@@ -245,7 +270,8 @@
                     <ng-container *ngIf="sections['grpHdr']">
                         <div class="form-group">
                             <label>Message ID <span class="req">*</span></label>
-                            <input formControlName="grpHdr_msgId" maxlength="35">
+                            <input formControlName="grpHdr_msgId" maxlength="35" (input)="handleInput($event, 'grpHdr_msgId', 'MsgId')">
+                            <div class="validation-msg" *ngIf="err('grpHdr_msgId')">{{err('grpHdr_msgId')}}</div>
                         </div>
                         <div class="form-group">
                             <label>Creation DateTime <span class="req">*</span></label>
@@ -266,11 +292,13 @@
                     <ng-container *ngIf="sections['orgnlGrpInf']">
                         <div class="form-group">
                             <label>Orgnl Msg ID <span class="req">*</span></label>
-                            <input formControlName="orgnlMsgId" maxlength="35">
+                            <input formControlName="orgnlMsgId" maxlength="35" (input)="handleInput($event, 'orgnlMsgId', 'MsgId')">
+                            <div class="validation-msg" *ngIf="err('orgnlMsgId')">{{err('orgnlMsgId')}}</div>
                         </div>
                         <div class="form-group">
                             <label>Orgnl Msg Name ID <span class="req">*</span></label>
-                            <input formControlName="orgnlMsgNmId" maxlength="35">
+                            <input formControlName="orgnlMsgNmId" maxlength="35" (input)="handleInput($event, 'orgnlMsgNmId', 'MsgId')">
+                            <div class="validation-msg" *ngIf="err('orgnlMsgNmId')">{{err('orgnlMsgNmId')}}</div>
                         </div>
                         <div class="form-group">
                             <label>Orgnl CreDtTm</label>
@@ -285,7 +313,8 @@
                     <ng-container *ngIf="sections['orgnlPmtInf']">
                         <div class="form-group full-width">
                             <label>Orgnl Pmt Inf ID <span class="req">*</span></label>
-                            <input formControlName="orgnlPmtInfId" maxlength="35">
+                            <input formControlName="orgnlPmtInfId" maxlength="35" (input)="handleInput($event, 'orgnlPmtInfId', 'PmtInfId')">
+                            <div class="validation-msg" *ngIf="err('orgnlPmtInfId')">{{err('orgnlPmtInfId')}}</div>
                         </div>
 
                         <!-- Transactions Array -->
@@ -303,11 +332,13 @@
                                 <div class="grid" style="padding: 15px;">
                                     <div class="form-group">
                                         <label>Orgnl Instr ID</label>
-                                        <input formControlName="orgnlInstrId" maxlength="35">
+                                        <input formControlName="orgnlInstrId" maxlength="35" (input)="handleInput($event, 'transactions.' + i + '.orgnlInstrId', 'InstrId')">
+                                        <div class="validation-msg" *ngIf="err('transactions.' + i + '.orgnlInstrId')">{{err('transactions.' + i + '.orgnlInstrId')}}</div>
                                     </div>
                                     <div class="form-group">
                                         <label>Orgnl End-To-End ID <span class="req">*</span></label>
-                                        <input formControlName="orgnlEndToEndId" maxlength="35">
+                                        <input formControlName="orgnlEndToEndId" maxlength="35" (input)="handleInput($event, 'transactions.' + i + '.orgnlEndToEndId', 'EndToEndId')">
+                                        <div class="validation-msg" *ngIf="err('transactions.' + i + '.orgnlEndToEndId')">{{err('transactions.' + i + '.orgnlEndToEndId')}}</div>
                                     </div>
                                     <div class="form-group full-width">
                                         <label>Orgnl UETR <span class="req">*</span></label>
@@ -335,7 +366,8 @@
                                         <label>Additional Information</label>
                                         <div formArrayName="addtlInf">
                                             <div *ngFor="let info of getAddtlInf(tx); let j = index" style="display: flex; gap: 8px; margin-bottom: 5px;">
-                                                <input [formControlName]="j" maxlength="105" style="flex: 1;" placeholder="Add details...">
+                                                <input [formControlName]="j" maxlength="105" style="flex: 1;" placeholder="Add details..." (input)="handleInput($event, 'transactions.' + i + '.addtlInf.' + j, 'AddtlInf')">
+                                                <div class="validation-msg" *ngIf="err('transactions.' + i + '.addtlInf.' + j)">{{err('transactions.' + i + '.addtlInf.' + j)}}</div>
                                                 <button type="button" class="btn-remove-small" (click)="removeAddtlInf(tx, j)" *ngIf="getAddtlInf(tx).length > 1"><mat-icon>close</mat-icon></button>
                                             </div>
                                         </div>
@@ -346,7 +378,7 @@
                                             <div class="section-title" style="background: rgba(0,0,0,0.03); font-size: 0.85rem; border: none; border-radius: 8px;">
                                                 <span>Originator (Orgtr)</span>
                                             </div>
-                                        <ng-container *ngTemplateOutlet="partyForm; context: { group: tx.get('orgtr'), prefix: 'orgtr', title: 'Originator Identification', required: false }"></ng-container>
+                                        <ng-container *ngTemplateOutlet="partyForm; context: { group: tx.get('orgtr'), prefix: 'transactions.' + i + '.orgtr', title: 'Originator Identification', required: false }"></ng-container>
                                     </div>
                                 </div>
                             </div>
@@ -404,7 +436,8 @@
         <div class="party-grid">
             <div class="form-group full-width" *ngIf="!hideName">
                 <label>Name</label>
-                <input formControlName="name" placeholder="Business Name">
+                <input formControlName="name" placeholder="Business Name" (input)="handleInput($event, prefix + '.name', 'Nm')">
+                <div class="validation-msg" *ngIf="err(prefix + '.name')">{{err(prefix + '.name')}}</div>
             </div>
             <div class="form-group">
                 <label>ID Type</label>
@@ -415,7 +448,20 @@
             </div>
             
             <ng-container *ngIf="group.get('idType')?.value === 'org'">
-                <div class="form-group"><label>AnyBIC</label><input formControlName="orgAnyBic" class="auto-uppercase" maxlength="11"></div>
+                <div class="form-group">
+                    <label>AnyBIC</label>
+                    <input formControlName="orgAnyBic" class="auto-uppercase" maxlength="11" (input)="handleInput($event, prefix + '.orgAnyBic', 'BICFI')">
+                    <div class="validation-msg" *ngIf="err(prefix + '.orgAnyBic')">{{err(prefix + '.orgAnyBic')}}</div>
+                </div>
+                <div class="form-group">
+                    <label>LEI</label>
+                    <input formControlName="orgLei" class="auto-uppercase" maxlength="20" (input)="handleInput($event, prefix + '.orgLei', 'LEI')" (blur)="checkLei($event, prefix + '.orgLei')">
+                    <div class="validation-msg" *ngIf="err(prefix + '.orgLei')">{{err(prefix + '.orgLei')}}</div>
+                </div>
+                <div class="form-group"><label>AnyBIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
+<input formControlName="orgAnyBic" class="auto-uppercase" maxlength="11">
+<button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('orgAnyBic', group)" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
+</div></div>
                 <div class="form-group"><label>LEI</label><input formControlName="orgLei" class="auto-uppercase" maxlength="20"></div>
                 
                 <div class="party-group full-width" style="margin-top: 10px; border: 1px dashed var(--border-light); padding: 10px; border-radius: 8px;">
@@ -423,7 +469,8 @@
                     <div class="party-grid">
                         <div class="form-group">
                             <label>Other ID (Othr.Id)</label>
-                            <input formControlName="orgId" maxlength="35" placeholder="Identification string">
+                            <input formControlName="orgId" maxlength="35" placeholder="Identification string" (input)="handleInput($event, prefix + '.orgId', 'Id')">
+                            <div class="validation-msg" *ngIf="err(prefix + '.orgId')">{{err(prefix + '.orgId')}}</div>
                             <div class="field-hint" *ngIf="getSchemeGuidance(group, 'org') as hint">
                                 <mat-icon style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle;">info</mat-icon> {{hint}}
                             </div>
@@ -437,11 +484,13 @@
                         </div>
                         <div class="form-group">
                             <label>Proprietary (Prtry)</label>
-                            <input formControlName="orgPrtry" maxlength="35" [disabled]="group.get('orgScheme')?.value">
+                        <input formControlName="orgPrtry" maxlength="35" [disabled]="group.get('orgScheme')?.value" (input)="handleInput($event, prefix + '.orgPrtry', 'Prtry')">
+                        <div class="validation-msg" *ngIf="err(prefix + '.orgPrtry')">{{err(prefix + '.orgPrtry')}}</div>
                         </div>
                         <div class="form-group">
                             <label>Issuer (Issr)</label>
-                            <input formControlName="orgIssr" maxlength="35">
+                        <input formControlName="orgIssr" maxlength="35" (input)="handleInput($event, prefix + '.orgIssr', 'Issr')">
+                        <div class="validation-msg" *ngIf="err(prefix + '.orgIssr')">{{err(prefix + '.orgIssr')}}</div>
                         </div>
                     </div>
                 </div>
@@ -449,8 +498,16 @@
 
             <ng-container *ngIf="group.get('idType')?.value === 'prvt'">
                 <div class="form-group"><label>Birth Date</label><input type="date" formControlName="prvtBirthDt"></div>
-                <div class="form-group"><label>City of Birth</label><input formControlName="prvtCity"></div>
-                <div class="form-group"><label>Province of Birth</label><input formControlName="prvtProv" maxlength="35"></div>
+                <div class="form-group">
+                    <label>City of Birth</label>
+                    <input formControlName="prvtCity" maxlength="35" (input)="handleInput($event, prefix + '.prvtCity', 'City')">
+                    <div class="validation-msg" *ngIf="err(prefix + '.prvtCity')">{{err(prefix + '.prvtCity')}}</div>
+                </div>
+                <div class="form-group">
+                    <label>Province of Birth</label>
+                    <input formControlName="prvtProv" maxlength="35" (input)="handleInput($event, prefix + '.prvtProv', 'Prov')">
+                    <div class="validation-msg" *ngIf="err(prefix + '.prvtProv')">{{err(prefix + '.prvtProv')}}</div>
+                </div>
                 <div class="form-group"><label>Country of Birth</label>
                     <select formControlName="prvtCtry">
                         <option value="">Select Country...</option>
@@ -463,7 +520,8 @@
                     <div class="party-grid">
                         <div class="form-group">
                             <label>Other ID (Othr.Id)</label>
-                            <input formControlName="prvtId" maxlength="35">
+                            <input formControlName="prvtId" maxlength="35" (input)="handleInput($event, prefix + '.prvtId', 'Id')">
+                            <div class="validation-msg" *ngIf="err(prefix + '.prvtId')">{{err(prefix + '.prvtId')}}</div>
                             <div class="field-hint" *ngIf="getSchemeGuidance(group, 'prvt') as hint">
                                 <mat-icon style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle;">info</mat-icon> {{hint}}
                             </div>
@@ -477,11 +535,13 @@
                         </div>
                         <div class="form-group">
                             <label>Proprietary (Prtry)</label>
-                            <input formControlName="prvtPrtry" maxlength="35" [disabled]="group.get('prvtScheme')?.value">
+                            <input formControlName="prvtPrtry" maxlength="35" [disabled]="group.get('prvtScheme')?.value" (input)="handleInput($event, prefix + '.prvtPrtry', 'Prtry')">
+                            <div class="validation-msg" *ngIf="err(prefix + '.prvtPrtry')">{{err(prefix + '.prvtPrtry')}}</div>
                         </div>
                         <div class="form-group">
                             <label>Issuer (Issr)</label>
-                            <input formControlName="prvtIssr" maxlength="35">
+                            <input formControlName="prvtIssr" maxlength="35" (input)="handleInput($event, prefix + '.prvtIssr', 'Issr')">
+                            <div class="validation-msg" *ngIf="err(prefix + '.prvtIssr')">{{err(prefix + '.prvtIssr')}}</div>
                         </div>
                     </div>
                 </div>
@@ -511,19 +571,45 @@
                     <div class="party-grid" *ngIf="group.get('postal.addrType')?.value !== 'none'">
                         <!-- Structured Section -->
                         <ng-container *ngIf="['structured','hybrid'].includes(group.get('postal.addrType')?.value)">
-                            <div class="form-group"><label>Dept</label><input formControlName="dept" maxlength="70"></div>
-                            <div class="form-group"><label>SubDept</label><input formControlName="subDept" maxlength="70"></div>
-                            <div class="form-group"><label>Street</label><input formControlName="street" maxlength="70"></div>
-                            <div class="form-group"><label>BldgNb</label><input formControlName="bldgNb" maxlength="16"></div>
-                            <div class="form-group"><label>BldgNm</label><input formControlName="bldgNm" maxlength="35"></div>
-                            <div class="form-group"><label>Floor</label><input formControlName="floor" maxlength="70"></div>
-                            <div class="form-group"><label>PstBx</label><input formControlName="pstBx" maxlength="16"></div>
-                            <div class="form-group"><label>Room</label><input formControlName="room" maxlength="70"></div>
-                            <div class="form-group"><label>PstCd</label><input formControlName="pstCd" maxlength="16"></div>
-                            <div class="form-group"><label>Town</label><input formControlName="town" maxlength="35"></div>
-                            <div class="form-group"><label>TownLctn</label><input formControlName="townLctn" maxlength="35"></div>
-                            <div class="form-group"><label>District</label><input formControlName="district" maxlength="35"></div>
-                            <div class="form-group"><label>CtrySub</label><input formControlName="ctrySub" maxlength="35"></div>
+                            <div class="form-group"><label>Dept</label><input formControlName="dept" maxlength="70" (input)="handleInput($event, prefix + '.postal.dept', 'Dept')">
+                                <div class="validation-msg" *ngIf="err(prefix + '.postal.dept')">{{err(prefix + '.postal.dept')}}</div>
+                            </div>
+                            <div class="form-group"><label>SubDept</label><input formControlName="subDept" maxlength="70" (input)="handleInput($event, prefix + '.postal.subDept', 'SubDept')">
+                                <div class="validation-msg" *ngIf="err(prefix + '.postal.subDept')">{{err(prefix + '.postal.subDept')}}</div>
+                            </div>
+                            <div class="form-group"><label>Street</label><input formControlName="street" maxlength="70" (input)="handleInput($event, prefix + '.postal.street', 'Street')">
+                                <div class="validation-msg" *ngIf="err(prefix + '.postal.street')">{{err(prefix + '.postal.street')}}</div>
+                            </div>
+                            <div class="form-group"><label>BldgNb</label><input formControlName="bldgNb" maxlength="16" (input)="handleInput($event, prefix + '.postal.bldgNb', 'BldgNb')">
+                                <div class="validation-msg" *ngIf="err(prefix + '.postal.bldgNb')">{{err(prefix + '.postal.bldgNb')}}</div>
+                            </div>
+                            <div class="form-group"><label>BldgNm</label><input formControlName="bldgNm" maxlength="35" (input)="handleInput($event, prefix + '.postal.bldgNm', 'BldgNm')">
+                                <div class="validation-msg" *ngIf="err(prefix + '.postal.bldgNm')">{{err(prefix + '.postal.bldgNm')}}</div>
+                            </div>
+                            <div class="form-group"><label>Floor</label><input formControlName="floor" maxlength="70" (input)="handleInput($event, prefix + '.postal.floor', 'Floor')">
+                                <div class="validation-msg" *ngIf="err(prefix + '.postal.floor')">{{err(prefix + '.postal.floor')}}</div>
+                            </div>
+                            <div class="form-group"><label>PstBx</label><input formControlName="pstBx" maxlength="16" (input)="handleInput($event, prefix + '.postal.pstBx', 'PstBx')">
+                                <div class="validation-msg" *ngIf="err(prefix + '.postal.pstBx')">{{err(prefix + '.postal.pstBx')}}</div>
+                            </div>
+                            <div class="form-group"><label>Room</label><input formControlName="room" maxlength="70" (input)="handleInput($event, prefix + '.postal.room', 'Room')">
+                                <div class="validation-msg" *ngIf="err(prefix + '.postal.room')">{{err(prefix + '.postal.room')}}</div>
+                            </div>
+                            <div class="form-group"><label>PstCd</label><input formControlName="pstCd" maxlength="16" (input)="handleInput($event, prefix + '.postal.pstCd', 'PstCd')">
+                                <div class="validation-msg" *ngIf="err(prefix + '.postal.pstCd')">{{err(prefix + '.postal.pstCd')}}</div>
+                            </div>
+                            <div class="form-group"><label>Town</label><input formControlName="town" maxlength="35" (input)="handleInput($event, prefix + '.postal.town', 'Town')">
+                                <div class="validation-msg" *ngIf="err(prefix + '.postal.town')">{{err(prefix + '.postal.town')}}</div>
+                            </div>
+                            <div class="form-group"><label>TownLctn</label><input formControlName="townLctn" maxlength="35" (input)="handleInput($event, prefix + '.postal.townLctn', 'TownLctn')">
+                                <div class="validation-msg" *ngIf="err(prefix + '.postal.townLctn')">{{err(prefix + '.postal.townLctn')}}</div>
+                            </div>
+                            <div class="form-group"><label>District</label><input formControlName="district" maxlength="35" (input)="handleInput($event, prefix + '.postal.district', 'District')">
+                                <div class="validation-msg" *ngIf="err(prefix + '.postal.district')">{{err(prefix + '.postal.district')}}</div>
+                            </div>
+                            <div class="form-group"><label>CtrySub</label><input formControlName="ctrySub" maxlength="35" (input)="handleInput($event, prefix + '.postal.ctrySub', 'CtrySub')">
+                                <div class="validation-msg" *ngIf="err(prefix + '.postal.ctrySub')">{{err(prefix + '.postal.ctrySub')}}</div>
+                            </div>
                         </ng-container>
 
                         <!-- Always show Country if not 'none' -->
@@ -541,7 +627,8 @@
                                 <div *ngFor="let l of getAddrLines(group); let k = index" class="form-group row-layout" style="margin-bottom: 5px;">
                                     <label>Address Line {{k+1}}</label>
                                     <div style="display: flex; gap: 8px; flex: 1;">
-                                        <input [formControlName]="k" maxlength="70" style="flex: 1;" [placeholder]="k === 0 ? 'e.g. 123 Wall Street' : 'e.g. Suite 400'">
+                                        <input [formControlName]="k" maxlength="70" style="flex: 1;" [placeholder]="k === 0 ? 'e.g. 123 Wall Street' : 'e.g. Suite 400'" (input)="handleInput($event, prefix + '.postal.addrLines.' + k, 'AdrLine')">
+                                        <div class="validation-msg" *ngIf="err(prefix + '.postal.addrLines.' + k)">{{err(prefix + '.postal.addrLines.' + k)}}</div>
                                         <button type="button" class="btn-remove-small" (click)="removeAddrLine(group, k)" *ngIf="getAddrLines(group).length > 1"><mat-icon>close</mat-icon></button>
                                     </div>
                                 </div>
@@ -563,7 +650,15 @@
     <div class="party-group full-width" [formGroup]="group">
         <div class="party-group-title" [class.mandatory]="required">{{title}}</div>
         <div class="party-grid">
-            <div class="form-group"><label>BICFI</label><input formControlName="bic" class="auto-uppercase" maxlength="11"></div>
+            <div class="form-group">
+                <label>BICFI</label>
+                <input formControlName="bic" class="auto-uppercase" maxlength="11" (input)="handleInput($event, prefix + '.bic', 'BICFI')">
+                <div class="validation-msg" *ngIf="err(prefix + '.bic')">{{err(prefix + '.bic')}}</div>
+            </div>
+            <div class="form-group"><label>BICFI</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
+<input formControlName="bic" class="auto-uppercase" maxlength="11">
+<button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('bic', group)" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
+</div></div>
             
             <div class="party-group full-width" style="margin-top: 10px; border: 1px dashed var(--border-light); padding: 10px; border-radius: 8px;">
                 <div class="party-group-title" style="font-size: 0.65rem; opacity: 0.8;">Financial Institution Identification</div>
@@ -578,11 +673,13 @@
                     </div>
                     <div class="form-group">
                         <label>Member ID (MmbId)</label>
-                        <input formControlName="mmbId" maxlength="35" class="auto-uppercase">
+                        <input formControlName="mmbId" maxlength="35" class="auto-uppercase" (input)="handleInput($event, prefix + '.mmbId', 'MmbId')">
+                        <div class="validation-msg" *ngIf="err(prefix + '.mmbId')">{{err(prefix + '.mmbId')}}</div>
                     </div>
                     <div class="form-group">
                         <label>LEI</label>
-                        <input formControlName="lei" maxlength="20" class="auto-uppercase" placeholder="20-char LEI">
+                        <input formControlName="lei" maxlength="20" class="auto-uppercase" placeholder="20-char LEI" (input)="handleInput($event, prefix + '.lei', 'LEI')" (blur)="checkLei($event, prefix + '.lei')">
+                        <div class="validation-msg" *ngIf="err(prefix + '.lei')">{{err(prefix + '.lei')}}</div>
                     </div>
                 </div>
             </div>

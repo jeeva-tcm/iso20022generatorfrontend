@@ -32,8 +32,15 @@
                                                 Originator (From FI)</div>
                                         <div class="form-group">
                                                 <label>From BIC <span class="req">*</span></label>
-                                                <input formControlName="head_fromBic" maxlength="11"
-                                                        placeholder="e.g. HDFCINBB" class="auto-uppercase">
+                                                <div class="uetr-control-row">
+                                                        <input formControlName="head_fromBic" maxlength="11"
+                                                                placeholder="e.g. HDFCINBB" class="auto-uppercase">
+                                                        <button type="button" class="uetr-refresh-btn"
+                                                                (click)="openBicSearch('head_fromBic')"
+                                                                matTooltip="Search BIC">
+                                                                <mat-icon>search</mat-icon>
+                                                        </button>
+                                                </div>
                                                 <div class="char-counter" [class.near-limit]="isNearLimit('head_fromBic', 11)" [class.at-limit]="isAtLimit('head_fromBic', 11)">{{charCount('head_fromBic', 11)}}</div>
                                                 <div class="validation-msg" *ngIf="err('head_fromBic') as e">{{e}}</div>
                                         </div>
@@ -71,8 +78,15 @@
                                                 Receiver (To FI)</div>
                                         <div class="form-group">
                                                 <label>To BIC <span class="req">*</span></label>
-                                                <input formControlName="head_toBic" maxlength="11"
-                                                        placeholder="e.g. CHASUS33" class="auto-uppercase">
+                                                <div class="uetr-control-row">
+                                                        <input formControlName="head_toBic" maxlength="11"
+                                                                placeholder="e.g. CHASUS33" class="auto-uppercase">
+                                                        <button type="button" class="uetr-refresh-btn"
+                                                                (click)="openBicSearch('head_toBic')"
+                                                                matTooltip="Search BIC">
+                                                                <mat-icon>search</mat-icon>
+                                                        </button>
+                                                </div>
                                                 <div class="char-counter" [class.near-limit]="isNearLimit('head_toBic', 11)" [class.at-limit]="isAtLimit('head_toBic', 11)">{{charCount('head_toBic', 11)}}</div>
                                                 <div class="validation-msg" *ngIf="err('head_toBic') as e">{{e}}</div>
                                         </div>
@@ -176,8 +190,15 @@
                                                         <!-- Related From Identities -->
                                                         <div class="form-group">
                                                                 <label>Related From BIC</label>
-                                                                <input formControlName="head_rltd_fromBic"
-                                                                        maxlength="11" placeholder="Related Sender BIC">
+                                                                <div class="uetr-control-row">
+                                                                        <input formControlName="head_rltd_fromBic"
+                                                                                maxlength="11" placeholder="Related Sender BIC">
+                                                                        <button type="button" class="uetr-refresh-btn"
+                                                                                (click)="openBicSearch('head_rltd_fromBic')"
+                                                                                matTooltip="Search BIC">
+                                                                                <mat-icon>search</mat-icon>
+                                                                        </button>
+                                                                </div>
                                                                 <div class="validation-msg"
                                                                         *ngIf="err('head_rltd_fromBic') as e">{{e}}
                                                                 </div>
@@ -215,8 +236,15 @@
                                                         <!-- Related To Identities -->
                                                         <div class="form-group">
                                                                 <label>Related To BIC</label>
-                                                                <input formControlName="head_rltd_toBic" maxlength="11"
-                                                                        placeholder="Related Receiver BIC">
+                                                                <div class="uetr-control-row">
+                                                                        <input formControlName="head_rltd_toBic" maxlength="11"
+                                                                                placeholder="Related Receiver BIC">
+                                                                        <button type="button" class="uetr-refresh-btn"
+                                                                                (click)="openBicSearch('head_rltd_toBic')"
+                                                                                matTooltip="Search BIC">
+                                                                                <mat-icon>search</mat-icon>
+                                                                        </button>
+                                                                </div>
                                                                 <div class="validation-msg"
                                                                         *ngIf="err('head_rltd_toBic') as e">{{e}}
                                                                 </div>
@@ -325,14 +353,14 @@
                                         <div class="party-group">
                                                 <div class="party-group-title mandatory">Assignor (Agent) <span class="req">*</span></div>
                                                 <ng-container
-                                                        *ngTemplateOutlet="partyForm; context:{prefix:'assgnr',isAgent:true, title:'Assignor'}"></ng-container>
+                                                        *ngTemplateOutlet="partyForm; context:{prefix:'assgnr',isAgent:true, title:'Assignor', group: form}"></ng-container>
                                         </div>
 
                                         <!-- Assignee -->
                                         <div class="party-group">
                                                 <div class="party-group-title mandatory">Assignee (Agent) <span class="req">*</span></div>
                                                 <ng-container
-                                                        *ngTemplateOutlet="partyForm; context:{prefix:'assgne',isAgent:true, title:'Assignee'}"></ng-container>
+                                                        *ngTemplateOutlet="partyForm; context:{prefix:'assgne',isAgent:true, title:'Assignee', group: form}"></ng-container>
                                         </div>
 
                                          <div class="section-title">Case & Creator (<code>&lt;Case&gt;</code>)</div>
@@ -349,7 +377,7 @@
                                                                 Creator of Case (Cretr) — Party Only
                                                         </div>
                                                         <ng-container
-                                                                *ngTemplateOutlet="partyForm; context:{prefix:'cretr',isAgent:false, title:'Creator Party (Pty)'}"></ng-container>
+                                                                *ngTemplateOutlet="partyForm; context:{prefix:'cretr',isAgent:false, title:'Creator Party (Pty)', group: form}"></ng-container>
                                                 </div>
                                          </div>
 
@@ -503,11 +531,8 @@
                                                 </select>
                                                 <div class="validation-msg" *ngIf="err('cxlRsnCd') as e">{{e}}</div>
                                                 <div class="field-hint">Predefined ISO 20022 cancellation reason codes only</div>
-                                        </div>
-                                        <div class="form-group"><label>Additional Info <span
-                                                                class="opt">Optional</span></label><input
-                                                        formControlName="cxlRsnAddtlInf" maxlength="140"
-                                                        placeholder="e.g. Duplicate payment cancellation request">
+                                                <label>Additional Information</label>
+                                                <input formControlName="cxlRsnAddtlInf" maxlength="140">
                                                 <div class="char-counter" [class.near-limit]="isNearLimit('cxlRsnAddtlInf', 140)" [class.at-limit]="isAtLimit('cxlRsnAddtlInf', 140)">{{charCount('cxlRsnAddtlInf', 140)}}</div>
                                         </div>
 
@@ -515,7 +540,7 @@
                                         <div class="party-group">
                                                 <div class="party-group-title">Originator of Cancellation (Party)</div>
                                                 <ng-container
-                                                        *ngTemplateOutlet="partyForm; context:{prefix:'cxlRsnOrgtr',isAgent:false, title:'Originator'}"></ng-container>
+                                                        *ngTemplateOutlet="partyForm; context:{prefix:'cxlRsnOrgtr',isAgent:false, title:'Originator', group: form}"></ng-container>
                                         </div>
 
 
@@ -571,18 +596,32 @@
 </div>
 
 
-<ng-template #partyForm let-prefix="prefix" let-isAgent="isAgent" let-title="title" let-required="required">
+<ng-template #partyForm let-prefix="prefix" let-isAgent="isAgent" let-title="title" let-required="required" let-group="group">
         <div [formGroup]="form" class="party-grid">
                 <!-- BIC -->
                 <div class="form-group" *ngIf="isAgent">
                         <label>{{title}} BIC <span class="req" *ngIf="required">*</span></label>
-                        <input [formControlName]="prefix+'Bic'" maxlength="11" placeholder="e.g. HDFCINBB" class="auto-uppercase">
+                        <div class="uetr-control-row">
+                                <input [formControlName]="prefix+'Bic'" maxlength="11" placeholder="e.g. HDFCINBB" class="auto-uppercase">
+                                <button type="button" class="uetr-refresh-btn"
+                                        (click)="openBicSearchGroup(prefix+'Bic', group)"
+                                        matTooltip="Search BIC">
+                                        <mat-icon>search</mat-icon>
+                                </button>
+                        </div>
                         <div class="char-counter">{{charCount(prefix+'Bic', 11)}}</div>
                         <div class="validation-msg" *ngIf="err(prefix+'Bic') as e">{{e}}</div>
                 </div>
                 <div class="form-group" *ngIf="!isAgent">
                         <label>{{title}} BIC <span class="req" *ngIf="required">*</span></label>
-                        <input [formControlName]="prefix+'OrgAnyBIC'" maxlength="11" placeholder="e.g. HDFCINBB" class="auto-uppercase">
+                        <div class="uetr-control-row">
+                                <input [formControlName]="prefix+'OrgAnyBIC'" maxlength="11" placeholder="e.g. HDFCINBB" class="auto-uppercase">
+                                <button type="button" class="uetr-refresh-btn"
+                                        (click)="openBicSearchGroup(prefix+'OrgAnyBIC', group)"
+                                        matTooltip="Search BIC">
+                                        <mat-icon>search</mat-icon>
+                                </button>
+                        </div>
                         <div class="validation-msg" *ngIf="err(prefix+'OrgAnyBIC') as e">{{e}}</div>
                 </div>
 
