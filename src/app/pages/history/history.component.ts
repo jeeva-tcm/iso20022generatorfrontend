@@ -43,6 +43,7 @@ export class HistoryComponent implements OnInit {
     displayedColumns: string[] = ['validation_id', 'timestamp', 'type', 'no_of_files', 'status', 'metrics', 'actions'];
     isLoading: boolean = false;
     searchTerm: string = '';
+    currentFilter: 'ALL' | 'PASSED' | 'FAILED' = 'ALL';
     expandedElement: any | null = null;
     expandedDetail: any = null;
     selectedSubFile: any = null;
@@ -112,11 +113,29 @@ export class HistoryComponent implements OnInit {
                     this.dataSource.data = aggregated;
                     this.dataSource.paginator = this.paginator;
 
-                    // Custom filter to target only ID and Message Type
-                    this.dataSource.filterPredicate = (record: any, filter: string) => {
+                    // Custom filter to target ID, Message Type, AND Status Tab
+                    this.dataSource.filterPredicate = (record: any, filterValue: string) => {
+                        const [search, statusTab] = filterValue.split('|');
+                        
+                        // 1. Status Tab Filter
+                        let matchStatus = false;
+                        if (statusTab === 'ALL') {
+                            matchStatus = true;
+                        } else if (statusTab === 'PASSED') {
+                            // "Passed" now includes strictly clean PASSED and those with WARNINGS
+                            matchStatus = record.status === 'PASSED' || record.status === 'WARNING';
+                        } else {
+                            matchStatus = record.status === statusTab;
+                        }
+                        
+                        if (!matchStatus) return false;
+
+                        // 2. Text Search Filter
                         const searchStr = `${record.batch_id || record.id || record.validation_id || ''} ${record.message_type || ''}`.toLowerCase();
-                        return searchStr.includes(filter.toLowerCase());
+                        return searchStr.includes(search.toLowerCase());
                     };
+
+                    this.applyFilter(); // Initial filter apply
 
                     this.isLoading = false;
                 },
@@ -127,12 +146,25 @@ export class HistoryComponent implements OnInit {
             });
     }
 
-    applyFilter() {
-        this.dataSource.filter = this.searchTerm.trim().toLowerCase();
+    applyFilter(status?: 'ALL' | 'PASSED' | 'FAILED') {
+        if (status) {
+            this.currentFilter = status;
+        }
+        // Use a combined string as the filter trigger
+        this.dataSource.filter = `${this.searchTerm.trim().toLowerCase()}|${this.currentFilter}`;
 
         if (this.dataSource.paginator) {
             this.dataSource.paginator.firstPage();
         }
+    }
+
+    getPassedCount(): number {
+        // Includes both clean passes and warnings
+        return this.dataSource.data.filter(r => r.status === 'PASSED' || r.status === 'WARNING').length;
+    }
+
+    getFailedCount(): number {
+        return this.dataSource.data.filter(r => r.status === 'FAILED').length;
     }
 
     getStatusClass(status: string) {

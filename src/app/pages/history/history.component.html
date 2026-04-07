@@ -7,11 +7,29 @@
     <mat-card>
         <mat-progress-bar mode="indeterminate" *ngIf="isLoading"></mat-progress-bar>
         <mat-card-content>
+            <div class="status-tabs-container">
+                <button class="status-tab" [class.active]="currentFilter === 'ALL'" (click)="applyFilter('ALL')">
+                    <mat-icon>list</mat-icon>
+                    <span>All Records</span>
+                    <span class="tab-count">{{dataSource.data.length}}</span>
+                </button>
+                <button class="status-tab tab-passed" [class.active]="currentFilter === 'PASSED'" (click)="applyFilter('PASSED')">
+                    <mat-icon>check_circle</mat-icon>
+                    <span>Passed</span>
+                    <span class="tab-count">{{ getPassedCount() }}</span>
+                </button>
+                <button class="status-tab tab-failed" [class.active]="currentFilter === 'FAILED'" (click)="applyFilter('FAILED')">
+                    <mat-icon>cancel</mat-icon>
+                    <span>Failed</span>
+                    <span class="tab-count">{{ getFailedCount() }}</span>
+                </button>
+            </div>
+
             <div class="filter-bar">
                 <div class="vp-search-wrap">
                     <mat-icon>search</mat-icon>
                     <input type="text" [(ngModel)]="searchTerm" (input)="applyFilter()"
-                        placeholder="Search Validation ID or Type...">
+                        placeholder="Filter validation history...">
                 </div>
 
                 <div class="header-actions">
