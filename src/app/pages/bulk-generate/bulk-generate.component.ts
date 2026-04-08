@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -19,9 +19,15 @@ interface MessageTypeConfig {
   id: string;
   label: string;
   description: string;
-  family: 'PACS' | 'CAMT' | 'PAIN';
+  family: string;
   badge: string;
   blocks: MessageBlock[];
+}
+
+interface MessageFamily {
+  name: string;
+  label: string;
+  messages: MessageTypeConfig[];
 }
 
 interface GeneratedMessage {
@@ -30,6 +36,7 @@ interface GeneratedMessage {
   message_type: string;
   status: string;
   error?: string;
+  validation_report?: any;
 }
 
 interface DependencyWarning {
@@ -39,201 +46,41 @@ interface DependencyWarning {
   requiredLabel: string;
 }
 
-const MESSAGE_CONFIGS: MessageTypeConfig[] = [
-  {
-    id: 'pacs.008',
-    label: 'pacs.008.001.08',
-    description: 'Customer Credit Transfer',
-    family: 'PACS',
-    badge: 'pacs',
-    blocks: [
-      { id: 'instructing_agent',           label: 'Instructing Agent',            mandatory: true },
-      { id: 'instructed_agent',            label: 'Instructed Agent',             mandatory: true },
-      { id: 'debtor_agent',                label: 'Debtor Agent',                 mandatory: true },
-      { id: 'debtor',                      label: 'Debtor',                       mandatory: true },
-      { id: 'debtor_account',              label: 'Debtor Account',               mandatory: true,  requires: ['debtor'] },
-      { id: 'creditor_agent',              label: 'Creditor Agent',               mandatory: true },
-      { id: 'creditor',                    label: 'Creditor',                     mandatory: true },
-      { id: 'creditor_account',            label: 'Creditor Account',             mandatory: true,  requires: ['creditor'] },
-      { id: 'previous_instructing_agent_1',label: 'Previous Instructing Agent 1', mandatory: false },
-      { id: 'previous_instructing_agent_2',label: 'Previous Instructing Agent 2', mandatory: false, requires: ['previous_instructing_agent_1'] },
-      { id: 'previous_instructing_agent_3',label: 'Previous Instructing Agent 3', mandatory: false, requires: ['previous_instructing_agent_2'] },
-      { id: 'intermediary_agent_1',        label: 'Intermediary Agent 1',         mandatory: false },
-      { id: 'intermediary_agent_1_account',label: 'Intermediary Agent 1 Account', mandatory: false, requires: ['intermediary_agent_1'] },
-      { id: 'intermediary_agent_2',        label: 'Intermediary Agent 2',         mandatory: false, requires: ['intermediary_agent_1'] },
-      { id: 'intermediary_agent_2_account',label: 'Intermediary Agent 2 Account', mandatory: false, requires: ['intermediary_agent_2'] },
-      { id: 'intermediary_agent_3',        label: 'Intermediary Agent 3',         mandatory: false, requires: ['intermediary_agent_2'] },
-      { id: 'intermediary_agent_3_account',label: 'Intermediary Agent 3 Account', mandatory: false, requires: ['intermediary_agent_3'] },
-      { id: 'debtor_agent_account',        label: 'Debtor Agent Account',         mandatory: false, requires: ['debtor_agent'] },
-      { id: 'creditor_agent_account',      label: 'Creditor Agent Account',       mandatory: false, requires: ['creditor_agent'] },
-      { id: 'ultimate_debtor',             label: 'Ultimate Debtor',              mandatory: false },
-      { id: 'ultimate_creditor',           label: 'Ultimate Creditor',            mandatory: false },
-      { id: 'payment_type_information',    label: 'Payment Type Information',     mandatory: false },
-      { id: 'remittance_information',      label: 'Remittance Information',       mandatory: false },
-      { id: 'charges_information',         label: 'Charges Information',          mandatory: false },
-      { id: 'settlement_time_request',     label: 'Settlement Time Request',      mandatory: false },
-    ]
-  },
-  {
-    id: 'pacs.009',
-    label: 'pacs.009.001.08',
-    description: 'FI Credit Transfer',
-    family: 'PACS',
-    badge: 'pacs',
-    blocks: [
-      { id: 'instructing_agent',           label: 'Instructing Agent',            mandatory: true },
-      { id: 'instructed_agent',            label: 'Instructed Agent',             mandatory: true },
-      { id: 'debtor',                      label: 'Debtor',                       mandatory: false },
-      { id: 'debtor_account',              label: 'Debtor Account',               mandatory: false, requires: ['debtor'] },
-      { id: 'debtor_agent',                label: 'Debtor Agent',                 mandatory: false },
-      { id: 'debtor_agent_account',        label: 'Debtor Agent Account',         mandatory: false, requires: ['debtor_agent'] },
-      { id: 'creditor_agent',              label: 'Creditor Agent',               mandatory: false },
-      { id: 'creditor_agent_account',      label: 'Creditor Agent Account',       mandatory: false, requires: ['creditor_agent'] },
-      { id: 'creditor',                    label: 'Creditor',                     mandatory: false },
-      { id: 'creditor_account',            label: 'Creditor Account',             mandatory: false, requires: ['creditor'] },
-      { id: 'previous_instructing_agent_1',label: 'Previous Instructing Agent 1', mandatory: false },
-      { id: 'previous_instructing_agent_2',label: 'Previous Instructing Agent 2', mandatory: false, requires: ['previous_instructing_agent_1'] },
-      { id: 'previous_instructing_agent_3',label: 'Previous Instructing Agent 3', mandatory: false, requires: ['previous_instructing_agent_2'] },
-      { id: 'intermediary_agent_1',        label: 'Intermediary Agent 1',         mandatory: false },
-      { id: 'intermediary_agent_1_account',label: 'Intermediary Agent 1 Account', mandatory: false, requires: ['intermediary_agent_1'] },
-      { id: 'intermediary_agent_2',        label: 'Intermediary Agent 2',         mandatory: false, requires: ['intermediary_agent_1'] },
-      { id: 'intermediary_agent_2_account',label: 'Intermediary Agent 2 Account', mandatory: false, requires: ['intermediary_agent_2'] },
-      { id: 'intermediary_agent_3',        label: 'Intermediary Agent 3',         mandatory: false, requires: ['intermediary_agent_2'] },
-      { id: 'intermediary_agent_3_account',label: 'Intermediary Agent 3 Account', mandatory: false, requires: ['intermediary_agent_3'] },
-      { id: 'ultimate_debtor',             label: 'Ultimate Debtor',              mandatory: false },
-      { id: 'ultimate_creditor',           label: 'Ultimate Creditor',            mandatory: false },
-      { id: 'payment_type_information',    label: 'Payment Type Information',     mandatory: false },
-      { id: 'remittance_information',      label: 'Remittance Information',       mandatory: false },
-      { id: 'charges_information',         label: 'Charges Information',          mandatory: false },
-      { id: 'settlement_time_request',     label: 'Settlement Time Request',      mandatory: false },
-    ]
-  },
-  {
-    id: 'pacs.009.cov',
-    label: 'pacs.009.001.08 COV',
-    description: 'FI Credit Transfer (Coverage)',
-    family: 'PACS',
-    badge: 'pacs',
-    blocks: [
-      { id: 'instructing_agent',                       label: 'Instructing Agent',                         mandatory: true },
-      { id: 'instructed_agent',                        label: 'Instructed Agent',                          mandatory: true },
-      { id: 'underlying_customer_credit_transfer',     label: 'Underlying Customer Credit Transfer (COV)', mandatory: true },
-      { id: 'debtor',                                  label: 'Debtor',                                    mandatory: false },
-      { id: 'debtor_account',                          label: 'Debtor Account',                            mandatory: false, requires: ['debtor'] },
-      { id: 'debtor_agent',                            label: 'Debtor Agent',                              mandatory: false },
-      { id: 'debtor_agent_account',                    label: 'Debtor Agent Account',                      mandatory: false, requires: ['debtor_agent'] },
-      { id: 'creditor_agent',                          label: 'Creditor Agent',                            mandatory: false },
-      { id: 'creditor_agent_account',                  label: 'Creditor Agent Account',                    mandatory: false, requires: ['creditor_agent'] },
-      { id: 'creditor',                                label: 'Creditor',                                  mandatory: false },
-      { id: 'creditor_account',                        label: 'Creditor Account',                          mandatory: false, requires: ['creditor'] },
-      { id: 'previous_instructing_agent_1',            label: 'Previous Instructing Agent 1',              mandatory: false },
-      { id: 'intermediary_agent_1',                    label: 'Intermediary Agent 1',                      mandatory: false },
-      { id: 'intermediary_agent_1_account',            label: 'Intermediary Agent 1 Account',              mandatory: false, requires: ['intermediary_agent_1'] },
-      { id: 'intermediary_agent_2',                    label: 'Intermediary Agent 2',                      mandatory: false, requires: ['intermediary_agent_1'] },
-      { id: 'intermediary_agent_2_account',            label: 'Intermediary Agent 2 Account',              mandatory: false, requires: ['intermediary_agent_2'] },
-      { id: 'intermediary_agent_3',                    label: 'Intermediary Agent 3',                      mandatory: false, requires: ['intermediary_agent_2'] },
-      { id: 'ultimate_debtor',                         label: 'Ultimate Debtor',                           mandatory: false },
-      { id: 'ultimate_creditor',                       label: 'Ultimate Creditor',                         mandatory: false },
-      { id: 'payment_type_information',                label: 'Payment Type Information',                  mandatory: false },
-      { id: 'remittance_information',                  label: 'Remittance Information',                    mandatory: false },
-    ]
-  },
-  {
-    id: 'pacs.004',
-    label: 'pacs.004.001.09',
-    description: 'Payment Return',
-    family: 'PACS',
-    badge: 'pacs',
-    blocks: [
-      { id: 'instructing_agent',  label: 'Instructing Agent',        mandatory: true },
-      { id: 'instructed_agent',   label: 'Instructed Agent',         mandatory: true },
-      { id: 'debtor_agent',       label: 'Return Debtor Agent',      mandatory: true },
-      { id: 'debtor',             label: 'Return Debtor',            mandatory: true },
-      { id: 'debtor_account',     label: 'Return Debtor Account',    mandatory: false, requires: ['debtor'] },
-      { id: 'creditor_agent',     label: 'Return Creditor Agent',    mandatory: true },
-      { id: 'creditor',           label: 'Return Creditor',          mandatory: true },
-      { id: 'creditor_account',   label: 'Return Creditor Account',  mandatory: false, requires: ['creditor'] },
-      { id: 'intermediary_agent_1',label: 'Intermediary Agent 1',    mandatory: false },
-      { id: 'ultimate_debtor',    label: 'Ultimate Debtor',          mandatory: false },
-      { id: 'ultimate_creditor',  label: 'Ultimate Creditor',        mandatory: false },
-      { id: 'charges_information',label: 'Charges Information',      mandatory: false },
-      { id: 'remittance_information',label: 'Remittance Information',mandatory: false },
-    ]
-  },
-  {
-    id: 'pacs.003',
-    label: 'pacs.003.001.08',
-    description: 'Customer Direct Debit',
-    family: 'PACS',
-    badge: 'pacs',
-    blocks: [
-      { id: 'instructing_agent',        label: 'Instructing Agent',        mandatory: true },
-      { id: 'instructed_agent',         label: 'Instructed Agent',         mandatory: true },
-      { id: 'debtor_agent',             label: 'Debtor Agent',             mandatory: true },
-      { id: 'debtor',                   label: 'Debtor',                   mandatory: true },
-      { id: 'debtor_account',           label: 'Debtor Account',           mandatory: true,  requires: ['debtor'] },
-      { id: 'creditor_agent',           label: 'Creditor Agent',           mandatory: true },
-      { id: 'creditor',                 label: 'Creditor',                 mandatory: true },
-      { id: 'creditor_account',         label: 'Creditor Account',         mandatory: true,  requires: ['creditor'] },
-      { id: 'creditor_agent_account',   label: 'Creditor Agent Account',   mandatory: false, requires: ['creditor_agent'] },
-      { id: 'ultimate_debtor',          label: 'Ultimate Debtor',          mandatory: false },
-      { id: 'ultimate_creditor',        label: 'Ultimate Creditor',        mandatory: false },
-      { id: 'payment_type_information', label: 'Payment Type Information', mandatory: false },
-      { id: 'remittance_information',   label: 'Remittance Information',   mandatory: false },
-      { id: 'charges_information',      label: 'Charges Information',      mandatory: false },
-    ]
-  },
-  {
-    id: 'pacs.002',
-    label: 'pacs.002.001.10',
-    description: 'Payment Status Report',
-    family: 'PACS',
-    badge: 'pacs',
-    blocks: [
-      { id: 'instructing_agent', label: 'Instructing Agent', mandatory: true },
-      { id: 'instructed_agent',  label: 'Instructed Agent',  mandatory: true },
-      { id: 'debtor',            label: 'Original Debtor',   mandatory: false },
-      { id: 'creditor',          label: 'Original Creditor', mandatory: false },
-      { id: 'charges_information',label: 'Charges Information', mandatory: false },
-    ]
-  },
-  {
-    id: 'pacs.010',
-    label: 'pacs.010.001.10',
-    description: 'Interbank Direct Debit',
-    family: 'PACS',
-    badge: 'pacs',
-    blocks: [
-      { id: 'instructing_agent',        label: 'Instructing Agent',        mandatory: true },
-      { id: 'instructed_agent',         label: 'Instructed Agent',         mandatory: true },
-      { id: 'debtor_agent',             label: 'Debtor Agent',             mandatory: true },
-      { id: 'debtor',                   label: 'Debtor',                   mandatory: true },
-      { id: 'debtor_account',           label: 'Debtor Account',           mandatory: true,  requires: ['debtor'] },
-      { id: 'creditor_agent',           label: 'Creditor Agent',           mandatory: false },
-      { id: 'creditor',                 label: 'Creditor',                 mandatory: false },
-      { id: 'creditor_account',         label: 'Creditor Account',         mandatory: false, requires: ['creditor'] },
-      { id: 'payment_type_information', label: 'Payment Type Information', mandatory: false },
-      { id: 'remittance_information',   label: 'Remittance Information',   mandatory: false },
-    ]
-  },
-  {
-    id: 'pacs.010.v3',
-    label: 'pacs.010.001.03',
-    description: 'Margin Collection',
-    family: 'PACS',
-    badge: 'pacs',
-    blocks: [
-      { id: 'instructing_agent',  label: 'Instructing Agent',  mandatory: true },
-      { id: 'instructed_agent',   label: 'Instructed Agent',   mandatory: true },
-      { id: 'debtor_agent',       label: 'Debtor Agent',       mandatory: true },
-      { id: 'debtor',             label: 'Debtor',             mandatory: true },
-      { id: 'debtor_account',     label: 'Debtor Account',     mandatory: true,  requires: ['debtor'] },
-      { id: 'creditor_agent',     label: 'Creditor Agent',     mandatory: false },
-      { id: 'creditor',           label: 'Creditor',           mandatory: false },
-      { id: 'creditor_account',   label: 'Creditor Account',   mandatory: false, requires: ['creditor'] },
-      { id: 'remittance_information',label:'Remittance Information',mandatory:false},
-    ]
-  },
+/**
+ * Single source of truth: Manual Entry popularMessages.
+ * Bulk Generation dynamically derives its config from this list.
+ * When a new message is added in Manual Entry, add it here
+ * and it automatically appears in both Manual Entry AND Bulk Generation.
+ */
+const MANUAL_ENTRY_MESSAGES: {
+  id: string;
+  name: string;
+  type: string;
+  bulkId: string;          // key used by the backend bulk generator
+}[] = [
+  // ── PACS Messages ──
+  { id: 'pacs.008.001.08', name: 'Customer Credit Transfer',     type: 'pacs', bulkId: 'pacs.008' },
+  { id: 'pacs.003.001.08', name: 'Customer Direct Debit',        type: 'pacs', bulkId: 'pacs.003' },
+  { id: 'pacs.009.001.08', name: 'FI Credit Transfer',           type: 'pacs', bulkId: 'pacs.009' },
+  { id: 'pacs.009.001.08_ADV', name: 'FI Credit Transfer (Adv)', type: 'pacs', bulkId: 'pacs.009' },
+  { id: 'pacs.009.001.08 COV', name: 'FI Credit Transfer (Cov)', type: 'pacs', bulkId: 'pacs.009.cov' },
+  { id: 'pacs.004.001.09', name: 'Payment Return',               type: 'pacs', bulkId: 'pacs.004' },
+  { id: 'pacs.002.001.10', name: 'Payment Status Report',        type: 'pacs', bulkId: 'pacs.002' },
+  { id: 'pacs.010.001.10', name: 'Interbank Direct Debit',       type: 'pacs', bulkId: 'pacs.010' },
+  { id: 'pacs.010.001.03', name: 'Margin Collection',            type: 'pacs', bulkId: 'pacs.010.v3' },
+
+  // ── CAMT Messages ──
+  { id: 'camt.057.001.08', name: 'Notification to Receive',              type: 'camt', bulkId: 'camt.057' },
+  { id: 'camt.052.001.08', name: 'Account Report',                       type: 'camt', bulkId: 'camt.052' },
+  { id: 'camt.053.001.08', name: 'Bank To Customer Statement',           type: 'camt', bulkId: 'camt.053' },
+  { id: 'camt.054.001.08', name: 'Debit Credit Notification',            type: 'camt', bulkId: 'camt.054' },
+  { id: 'camt.055.001.08', name: 'Customer Payment Cancellation Request',type: 'camt', bulkId: 'camt.055' },
+  { id: 'camt.056.001.11', name: 'FI To FI Payment Cancellation',        type: 'camt', bulkId: 'camt.056' },
+
+  // ── PAIN Messages ──
+  { id: 'pain.001.001.09', name: 'Credit Transfer Initiation',   type: 'pain', bulkId: 'pain.001' },
+  { id: 'pain.002.001.10', name: 'Payment Status Report',        type: 'pain', bulkId: 'pain.002' },
+  { id: 'pain.008.001.08', name: 'Direct Debit Initiation',      type: 'pain', bulkId: 'pain.008' },
 ];
 
 @Component({
@@ -245,7 +92,12 @@ const MESSAGE_CONFIGS: MessageTypeConfig[] = [
 })
 export class BulkGenerateComponent implements OnInit {
 
-  messageConfigs = MESSAGE_CONFIGS;
+  /** All message configs dynamically built from Manual Entry source */
+  messageConfigs: MessageTypeConfig[] = [];
+
+  /** Grouped by family for category display */
+  messageFamilies: MessageFamily[] = [];
+
   selectedConfig: MessageTypeConfig | null = null;
 
   messageCount: number = 10;
@@ -262,16 +114,226 @@ export class BulkGenerateComponent implements OnInit {
   generatedMessages: GeneratedMessage[] = [];
   expandedIndex: number | null = null;
 
+  // generation stats from backend response
+  generationStats: {
+    requested: number;
+    produced: number;
+    totalAttempts: number;
+  } | null = null;
+
   // preview / results view
   view: 'config' | 'results' = 'config';
+
+  // loading state for blocks
+  loadingBlocks = false;
+
+  // ── Search State ──
+  searchQuery = '';
+  showDropdown = false;
+  highlightedSuggestionIndex = -1;
+  searchSuggestions: MessageTypeConfig[] = [];
 
   constructor(
     private http: HttpClient,
     private config: ConfigService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private elRef: ElementRef
   ) {}
 
-  ngOnInit() {}
+  /** Close dropdown when clicking outside the search container */
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const searchContainer = this.elRef.nativeElement.querySelector('.search-container');
+    if (searchContainer && !searchContainer.contains(event.target as Node)) {
+      this.showDropdown = false;
+      this.highlightedSuggestionIndex = -1;
+    }
+  }
+
+  ngOnInit() {
+    this.buildConfigsFromManualEntry();
+  }
+
+  // ── Dynamic Config Builder ────────────────────────────────────────────────
+
+  /**
+   * Build message configs from the single source of truth (MANUAL_ENTRY_MESSAGES).
+   * Groups them by family (PACS, CAMT, PAIN) for the UI.
+   * Blocks are loaded on-demand from the backend when a message is selected.
+   */
+  private buildConfigsFromManualEntry() {
+    const familyMap: Record<string, { label: string; configs: MessageTypeConfig[] }> = {};
+
+    const familyLabels: Record<string, string> = {
+      pacs: 'PACS Messages',
+      camt: 'Cash Management (CAMT)',
+      pain: 'Payment Initiation (PAIN)',
+    };
+
+    for (const msg of MANUAL_ENTRY_MESSAGES) {
+      const cfg: MessageTypeConfig = {
+        id: msg.bulkId,
+        label: msg.id,
+        description: msg.name,
+        family: msg.type.toUpperCase(),
+        badge: msg.type,
+        blocks: [],  // loaded on-demand from backend
+      };
+
+      if (!familyMap[msg.type]) {
+        familyMap[msg.type] = {
+          label: familyLabels[msg.type] || msg.type.toUpperCase(),
+          configs: [],
+        };
+      }
+      familyMap[msg.type].configs.push(cfg);
+      this.messageConfigs.push(cfg);
+    }
+
+    // Build ordered family groups
+    const familyOrder = ['pacs', 'camt', 'pain'];
+    for (const key of familyOrder) {
+      if (familyMap[key]) {
+        this.messageFamilies.push({
+          name: key,
+          label: familyMap[key].label,
+          messages: familyMap[key].configs,
+        });
+      }
+    }
+
+    // Any remaining families not in the order
+    for (const key of Object.keys(familyMap)) {
+      if (!familyOrder.includes(key)) {
+        this.messageFamilies.push({
+          name: key,
+          label: familyMap[key].label,
+          messages: familyMap[key].configs,
+        });
+      }
+    }
+  }
+
+  // ── Search / Filter Logic ──────────────────────────────────────────────────
+
+  /** Filtered families based on searchQuery — filters cards across code, description, and family */
+  get filteredFamilies(): MessageFamily[] {
+    const q = this.searchQuery.trim().toLowerCase();
+    if (!q) return this.messageFamilies;
+
+    return this.messageFamilies
+      .map(family => {
+        const filtered = family.messages.filter(cfg =>
+          cfg.label.toLowerCase().includes(q) ||
+          cfg.description.toLowerCase().includes(q) ||
+          cfg.family.toLowerCase().includes(q) ||
+          cfg.id.toLowerCase().includes(q) ||
+          family.label.toLowerCase().includes(q)
+        );
+        return { ...family, messages: filtered };
+      })
+      .filter(family => family.messages.length > 0);
+  }
+
+  /** Total count of visible messages after filtering */
+  get filteredMessageCount(): number {
+    return this.filteredFamilies.reduce((sum, f) => sum + f.messages.length, 0);
+  }
+
+  /** Whether the search has no results */
+  get hasNoResults(): boolean {
+    return this.searchQuery.trim().length > 0 && this.filteredMessageCount === 0;
+  }
+
+  onSearchInput() {
+    const q = this.searchQuery.trim().toLowerCase();
+    this.highlightedSuggestionIndex = -1;
+
+    if (q.length === 0) {
+      this.searchSuggestions = [];
+      this.showDropdown = false;
+      return;
+    }
+
+    // Build flat suggestion list (max 8)
+    this.searchSuggestions = this.messageConfigs.filter(cfg =>
+      cfg.label.toLowerCase().includes(q) ||
+      cfg.description.toLowerCase().includes(q) ||
+      cfg.family.toLowerCase().includes(q) ||
+      cfg.id.toLowerCase().includes(q)
+    ).slice(0, 8);
+
+    this.showDropdown = this.searchSuggestions.length > 0;
+  }
+
+  onSearchKeydown(event: KeyboardEvent) {
+    if (!this.showDropdown || this.searchSuggestions.length === 0) {
+      // If Enter is pressed with an exact-ish match
+      if (event.key === 'Enter') {
+        const q = this.searchQuery.trim().toLowerCase();
+        const exact = this.messageConfigs.find(cfg =>
+          cfg.label.toLowerCase() === q ||
+          cfg.description.toLowerCase() === q
+        );
+        if (exact) {
+          this.selectSuggestion(exact);
+        }
+      }
+      return;
+    }
+
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        this.highlightedSuggestionIndex = Math.min(
+          this.highlightedSuggestionIndex + 1,
+          this.searchSuggestions.length - 1
+        );
+        break;
+
+      case 'ArrowUp':
+        event.preventDefault();
+        this.highlightedSuggestionIndex = Math.max(
+          this.highlightedSuggestionIndex - 1,
+          0
+        );
+        break;
+
+      case 'Enter':
+        event.preventDefault();
+        if (this.highlightedSuggestionIndex >= 0 && this.highlightedSuggestionIndex < this.searchSuggestions.length) {
+          this.selectSuggestion(this.searchSuggestions[this.highlightedSuggestionIndex]);
+        } else if (this.searchSuggestions.length === 1) {
+          this.selectSuggestion(this.searchSuggestions[0]);
+        }
+        break;
+
+      case 'Escape':
+        this.showDropdown = false;
+        this.highlightedSuggestionIndex = -1;
+        break;
+    }
+  }
+
+  selectSuggestion(cfg: MessageTypeConfig) {
+    this.showDropdown = false;
+    this.highlightedSuggestionIndex = -1;
+    this.searchQuery = cfg.label;
+    this.selectMessageType(cfg);
+  }
+
+  clearSearch() {
+    this.searchQuery = '';
+    this.searchSuggestions = [];
+    this.showDropdown = false;
+    this.highlightedSuggestionIndex = -1;
+  }
+
+  onSearchFocus() {
+    if (this.searchQuery.trim().length > 0 && this.searchSuggestions.length > 0) {
+      this.showDropdown = true;
+    }
+  }
 
   // ── Message Type Selection ──────────────────────────────────────────────────
 
@@ -283,9 +345,41 @@ export class BulkGenerateComponent implements OnInit {
     this.view = 'config';
     this.expandedIndex = null;
 
-    // Pre-check mandatory blocks
-    cfg.blocks.forEach(b => {
-      this.blockChecked[b.id] = b.mandatory;
+    // If blocks haven't been loaded yet, fetch from backend
+    if (cfg.blocks.length === 0) {
+      this.loadBlocksFromBackend(cfg);
+    } else {
+      // Pre-check mandatory blocks
+      cfg.blocks.forEach(b => {
+        this.blockChecked[b.id] = b.mandatory;
+      });
+    }
+  }
+
+  private loadBlocksFromBackend(cfg: MessageTypeConfig) {
+    this.loadingBlocks = true;
+    this.http.get<any>(this.config.getApiUrl(`/bulk-generate/blocks/${cfg.id}`)).subscribe({
+      next: (res) => {
+        const blocks: MessageBlock[] = (res.blocks || []).map((b: any) => ({
+          id: b.id,
+          label: b.label,
+          mandatory: b.mandatory,
+          requires: b.requires || undefined
+        }));
+        cfg.blocks = blocks;
+        this.loadingBlocks = false;
+
+        // Pre-check mandatory blocks
+        cfg.blocks.forEach(b => {
+          this.blockChecked[b.id] = b.mandatory;
+        });
+      },
+      error: () => {
+        this.loadingBlocks = false;
+        this.snackBar.open('Failed to load block configuration.', 'Close', {
+          duration: 4000, horizontalPosition: 'center', verticalPosition: 'bottom'
+        });
+      }
     });
   }
 
@@ -394,7 +488,8 @@ export class BulkGenerateComponent implements OnInit {
       this.selectedConfig &&
       !this.messageCountError &&
       this.messageCount >= 1 &&
-      this.dependencyWarnings.length === 0
+      this.dependencyWarnings.length === 0 &&
+      this.selectedConfig.blocks.length > 0
     );
   }
 
@@ -405,6 +500,7 @@ export class BulkGenerateComponent implements OnInit {
 
     this.isGenerating = true;
     this.generatedMessages = [];
+    this.generationStats = null;
 
     const payload = {
       message_type: this.selectedConfig.id,
@@ -416,19 +512,31 @@ export class BulkGenerateComponent implements OnInit {
       next: (res) => {
         this.generatedMessages = res.messages || [];
         this.isGenerating = false;
-        this.view = 'results';
         this.expandedIndex = null;
+
+        // Store generation stats for display
+        this.generationStats = {
+          requested: res.requested || this.messageCount,
+          produced: res.count || 0,
+          totalAttempts: res.total_attempts || 0
+        };
+
+        // Backend guarantees exactly N valid messages — always show success
+        this.view = 'results';
         this.snackBar.open(
-          `Generated ${res.count} ${this.selectedConfig!.label} messages successfully.`,
+          `✅ Generated ${res.count} valid messages successfully.`,
           'Close',
           { duration: 4000, horizontalPosition: 'center', verticalPosition: 'bottom' }
         );
       },
       error: (err) => {
         this.isGenerating = false;
-        const detail = err?.error?.detail || err?.message || 'Generation failed.';
-        this.snackBar.open(`Error: ${detail}`, 'Close', {
-          duration: 5000,
+        // Handle both string detail and object detail from HTTP 500 catastrophic errors
+        const detail = typeof err?.error?.detail === 'string'
+          ? err.error.detail
+          : err?.error?.detail?.message || err?.message || 'Generation failed. Please try again.';
+        this.snackBar.open(`❌ ${detail}`, 'Close', {
+          duration: 8000,
           horizontalPosition: 'center',
           verticalPosition: 'bottom'
         });

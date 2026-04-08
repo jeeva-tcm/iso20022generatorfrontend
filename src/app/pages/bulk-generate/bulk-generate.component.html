@@ -41,21 +41,91 @@
     <div class="section-header">
       <mat-icon class="section-icon">grid_view</mat-icon>
       <span>Select Message Type</span>
+      <span class="msg-total-count" *ngIf="!searchQuery.trim()">{{ messageConfigs.length }} message types available</span>
+      <span class="msg-total-count search-result-count" *ngIf="searchQuery.trim()">{{ filteredMessageCount }} of {{ messageConfigs.length }} matching</span>
     </div>
-    <div class="msg-type-grid">
-      <div
-        *ngFor="let cfg of messageConfigs"
-        class="msg-card"
-        [class.selected]="selectedConfig?.id === cfg.id"
-        (click)="selectMessageType(cfg)"
-      >
-        <div class="msg-card-top">
-          <span class="msg-tag" [class]="'msg-tag ' + cfg.badge">{{ cfg.family }}</span>
-          <mat-icon class="msg-card-check" *ngIf="selectedConfig?.id === cfg.id">check_circle</mat-icon>
+
+    <!-- Search Bar -->
+    <div class="search-container">
+      <div class="search-input-wrap" [class.focused]="showDropdown" [class.has-query]="searchQuery.trim().length > 0">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input
+          type="text"
+          class="search-input"
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="onSearchInput()"
+          (keydown)="onSearchKeydown($event)"
+          (focus)="onSearchFocus()"
+          placeholder="Search message type by code or name..."
+          autocomplete="off"
+          id="msg-search-input"
+        />
+        <button
+          class="search-clear-btn"
+          *ngIf="searchQuery.trim().length > 0"
+          (click)="clearSearch(); $event.stopPropagation()"
+          matTooltip="Clear search"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Dropdown Suggestions -->
+      <div class="search-dropdown" *ngIf="showDropdown && searchSuggestions.length > 0">
+        <div
+          class="search-suggestion"
+          *ngFor="let s of searchSuggestions; let i = index"
+          [class.highlighted]="i === highlightedSuggestionIndex"
+          (click)="selectSuggestion(s); $event.stopPropagation()"
+          (mouseenter)="highlightedSuggestionIndex = i"
+        >
+          <span class="suggestion-tag" [class]="'suggestion-tag ' + s.badge">{{ s.family }}</span>
+          <div class="suggestion-text">
+            <span class="suggestion-label">{{ s.label }}</span>
+            <span class="suggestion-desc">{{ s.description }}</span>
+          </div>
+          <mat-icon class="suggestion-arrow">arrow_forward</mat-icon>
         </div>
-        <div class="msg-card-label">{{ cfg.label }}</div>
-        <div class="msg-card-desc">{{ cfg.description }}</div>
-        <div class="msg-card-blocks">{{ cfg.blocks.length }} blocks available</div>
+      </div>
+    </div>
+
+    <!-- No Results -->
+    <div class="search-no-results" *ngIf="hasNoResults">
+      <mat-icon>search_off</mat-icon>
+      <div class="no-results-text">
+        <strong>No message types found</strong>
+        <span>No results for "<em>{{ searchQuery }}</em>". Try a different search term.</span>
+      </div>
+      <button class="no-results-clear" (click)="clearSearch()">
+        <mat-icon>refresh</mat-icon>
+        Show all message types
+      </button>
+    </div>
+
+    <!-- Category-grouped message cards (filtered) -->
+    <div class="msg-families" *ngIf="!hasNoResults">
+      <div class="msg-family-group" *ngFor="let family of filteredFamilies">
+        <div class="family-header">
+          <span class="family-tag" [class]="'family-tag ' + family.name">{{ family.messages[0]?.family }}</span>
+          <span class="family-label">{{ family.label }}</span>
+          <span class="family-count">{{ family.messages.length }}</span>
+        </div>
+        <div class="msg-type-grid">
+          <div
+            *ngFor="let cfg of family.messages"
+            class="msg-card"
+            [class.selected]="selectedConfig?.id === cfg.id && selectedConfig?.label === cfg.label"
+            (click)="selectMessageType(cfg)"
+          >
+            <div class="msg-card-top">
+              <span class="msg-tag" [class]="'msg-tag ' + cfg.badge">{{ cfg.family }}</span>
+              <mat-icon class="msg-card-check" *ngIf="selectedConfig?.id === cfg.id && selectedConfig?.label === cfg.label">check_circle</mat-icon>
+            </div>
+            <div class="msg-card-label">{{ cfg.label }}</div>
+            <div class="msg-card-desc">{{ cfg.description }}</div>
+            <div class="msg-card-blocks" *ngIf="cfg.blocks.length > 0">{{ cfg.blocks.length }} blocks available</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -63,8 +133,16 @@
   <!-- ══════════════════ CONFIGURATION PANEL ══════════════════ -->
   <ng-container *ngIf="selectedConfig && view === 'config'">
 
+    <!-- Loading Blocks -->
+    <div class="section" *ngIf="loadingBlocks">
+      <div class="blocks-loading">
+        <div class="blocks-loading-spinner"></div>
+        <span>Loading block configuration...</span>
+      </div>
+    </div>
+
     <!-- Message Count -->
-    <div class="section">
+    <div class="section" *ngIf="!loadingBlocks && selectedConfig.blocks.length > 0">
       <div class="section-header">
         <mat-icon class="section-icon">tag</mat-icon>
         <span>Number of Messages to Generate</span>
@@ -92,7 +170,7 @@
     </div>
 
     <!-- Block Selection -->
-    <div class="section">
+    <div class="section" *ngIf="!loadingBlocks && selectedConfig.blocks.length > 0">
       <div class="section-header">
         <mat-icon class="section-icon">checklist</mat-icon>
         <span>Select Message Blocks — <span class="msg-label-inline">{{ selectedConfig.label }}</span></span>
@@ -174,7 +252,7 @@
     </div><!-- /section -->
 
     <!-- Generate Button -->
-    <div class="generate-bar">
+    <div class="generate-bar" *ngIf="!loadingBlocks && selectedConfig.blocks.length > 0">
       <div class="gen-summary" *ngIf="selectedConfig">
         Generating <strong>{{ messageCount || 0 }}</strong> &times;
         <strong>{{ selectedConfig.label }}</strong>
@@ -199,9 +277,10 @@
         <div class="spinner-ring"></div>
         <mat-icon class="spinner-icon">auto_awesome</mat-icon>
       </div>
-      <div class="generating-title">Generating Messages…</div>
+      <div class="generating-title">Generating &amp; Validating…</div>
       <div class="generating-subtitle">
-        Creating <strong>{{ messageCount }}</strong> {{ selectedConfig?.label }} messages with random valid data.
+        Creating <strong>{{ messageCount }}</strong> {{ selectedConfig?.label }} messages. 
+        Running mandatory XSD and business rule validation for each sample.
         Please wait.
       </div>
     </div>
@@ -213,9 +292,9 @@
     <!-- Results Toolbar -->
     <div class="results-toolbar">
       <div class="results-info">
-        <mat-icon>check_circle</mat-icon>
+        <mat-icon style="color: #4caf50">check_circle</mat-icon>
         <span>
-          <strong>{{ generatedMessages.length }}</strong> messages generated
+          <strong>{{ generatedMessages.length }}</strong> valid messages generated
           <span class="results-type">— {{ selectedConfig?.label }}</span>
         </span>
       </div>
@@ -234,6 +313,7 @@
         </button>
       </div>
     </div>
+
 
     <!-- Results Table -->
     <div class="results-table">
@@ -261,9 +341,9 @@
           </span>
           <span class="col-lines">{{ getLineCount(msg.xml) }}</span>
           <span class="col-status">
-            <span class="status-badge" [class]="msg.status === 'error' ? 'status-error' : 'status-ok'">
-              <mat-icon>{{ msg.status === 'error' ? 'error' : 'check_circle' }}</mat-icon>
-              {{ msg.status === 'error' ? 'Error' : 'Valid' }}
+            <span class="status-badge" [class.status-valid]="msg.status === 'VALID'" [class.status-error]="msg.status === 'error'">
+              <mat-icon>{{ msg.status === 'error' ? 'error' : 'verified_user' }}</mat-icon>
+              {{ msg.status === 'error' ? 'Error' : 'Validated' }}
             </span>
           </span>
           <span class="col-actions" (click)="$event.stopPropagation()">
