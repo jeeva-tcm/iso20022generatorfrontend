@@ -5,12 +5,12 @@ export const environment = {
     apiBaseUrl: 'http://localhost:8001',
     firebaseConfig: {
         
-        apiKey: "AIzaSyCWkQ7izNkRPM4gE1HISRPnwFOgm1WrHg4",
-  authDomain: "isovalidator2.firebaseapp.com",
-  projectId: "isovalidator2",
-  storageBucket: "isovalidator2.firebasestorage.app",
-  messagingSenderId: "653661877429",
-  appId: "1:653661877429:web:60861122e04af3b13c7afc",
-  measurementId: "G-6HWFM21RJD"
+        apiKey: "AIzaSyBHD--ylzxTtP0JLI7j1ajSNx-9tzLneKw",
+  authDomain: "avid-winter-492811-g9.firebaseapp.com",
+  projectId: "avid-winter-492811-g9",
+  storageBucket: "avid-winter-492811-g9.firebasestorage.app",
+  messagingSenderId: "926327189516",
+  appId: "1:926327189516:web:d0a7b912cc633b032d3e29",
+  measurementId: "G-J2XH6CXTQP"
     }
 };
