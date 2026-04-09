@@ -1,5 +1,6 @@
 // src/environments/environment.ts
 // Local development settings
+import { initializeApp } from "firebase/app";
 export const environment = {
     production: false,
     apiBaseUrl: 'http://localhost:8001',
@@ -14,3 +15,4 @@ export const environment = {
   measurementId: "G-J2XH6CXTQP"
     }
 };
+const app = initializeApp(environment.firebaseConfig);

@@ -1,5 +1,8 @@
 // src/environments/environment.prod.ts
 // Production settings
+
+import { initializeApp } from "firebase/app";
+
 export const environment = {
     production: true,
      apiBaseUrl: 'https://iso20022generatorbackend.onrender.com',
@@ -13,3 +16,4 @@ export const environment = {
   measurementId: "G-J2XH6CXTQP"
     }
 };
+const app = initializeApp(environment.firebaseConfig);
