@@ -1,6 +1,12 @@
-# LambdaTest AI Cloud Configuration
-project_id: "your_project_id"
-folder_id: "your_folder_id"
-assignee: your_user_id
-environment_id: environment_id
-test_url: "https://your-deployed-app-url.com/"
+# LambdaTest Configuration
+
+# Project and folder configuration
+project_id: "01KPB5KRH09TR87X76WMA6MS9F"
+folder_id: "01KPB5KRHPJQJWRZW0SSGEPK63"
+
+# Test Run configuration
+assignee: 3254070
+environment_id: 258739
+
+# Test URL for automation
+test_url: "https://demo.lambdatestinternal.com"
