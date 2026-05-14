@@ -1,4 +1,4 @@
-/* ============================================
+﻿/* ============================================
    ISO 20022 RAG Chatbot - Floating Widget CSS
    ============================================ */
 
@@ -10,25 +10,25 @@
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+    background: linear-gradient(135deg, #2563eb 0%, #2563eb 50%, #2563eb 100%);
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 6px 24px rgba(99, 102, 241, 0.45), 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 6px 24px rgba(37, 99, 235, 0.45), 0 2px 8px rgba(0, 0, 0, 0.15);
     z-index: 10000;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .chatbot-fab:hover {
     transform: scale(1.08);
-    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.55), 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 32px rgba(37, 99, 235, 0.55), 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .chatbot-fab.open {
     transform: rotate(0deg) scale(1);
-    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    background: linear-gradient(135deg, #1d4ed8, #2563eb);
 }
 
 .fab-icon {
@@ -61,7 +61,7 @@
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: rgba(99, 102, 241, 0.3);
+    background: rgba(37, 99, 235, 0.3);
     animation: pulse 2s ease-in-out infinite;
     pointer-events: none;
 }
@@ -129,7 +129,7 @@
     width: 38px;
     height: 38px;
     border-radius: 12px;
-    background: linear-gradient(135deg, #6366f1, #a855f7);
+    background: linear-gradient(135deg, #2563eb, #2563eb);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -247,7 +247,7 @@
     width: 30px;
     height: 30px;
     border-radius: 10px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: linear-gradient(135deg, #2563eb, #2563eb);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -266,7 +266,7 @@
 }
 
 .user-bubble {
-    background: linear-gradient(135deg, #6366f1, #7c3aed);
+    background: linear-gradient(135deg, #2563eb, #2563eb);
     color: white;
     border-bottom-right-radius: 4px;
 }
@@ -293,7 +293,7 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #6366f1;
+    background: #2563eb;
     animation: typingBounce 1.4s infinite ease-in-out;
 }
 
@@ -321,12 +321,12 @@
 .source-chip {
     display: inline-block;
     font-size: 10px;
-    background: rgba(99, 102, 241, 0.15);
-    color: #a5b4fc;
+    background: rgba(37, 99, 235, 0.15);
+    color: #93c5fd;
     padding: 2px 8px;
     border-radius: 6px;
     margin: 2px 4px 2px 0;
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    border: 1px solid rgba(37, 99, 235, 0.2);
 }
 
 .message-meta {
@@ -371,9 +371,9 @@
 .suggestion-chip {
     font-size: 12px;
     padding: 6px 12px;
-    background: rgba(99, 102, 241, 0.1);
-    color: #a5b4fc;
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    background: rgba(37, 99, 235, 0.1);
+    color: #93c5fd;
+    border: 1px solid rgba(37, 99, 235, 0.2);
     border-radius: 20px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -382,8 +382,8 @@
 }
 
 .suggestion-chip:hover {
-    background: rgba(99, 102, 241, 0.2);
-    border-color: rgba(99, 102, 241, 0.4);
+    background: rgba(37, 99, 235, 0.2);
+    border-color: rgba(37, 99, 235, 0.4);
     color: #c4b5fd;
     transform: translateY(-1px);
 }
@@ -408,7 +408,7 @@
 }
 
 .input-wrapper:focus-within {
-    border-color: rgba(99, 102, 241, 0.6);
+    border-color: rgba(37, 99, 235, 0.6);
     background: rgba(255, 255, 255, 0.08); /* Slightly lighter on focus for contrast */
 }
 
@@ -424,7 +424,7 @@
     max-height: 80px;
     line-height: 1.4;
     padding: 6px 0;
-    caret-color: #6366f1; /* Custom cursor color */
+    caret-color: #2563eb; /* Custom cursor color */
 }
 
 .chat-input::placeholder {
@@ -448,7 +448,7 @@
     height: 36px;
     border: none;
     border-radius: 10px;
-    background: linear-gradient(135deg, #6366f1, #7c3aed);
+    background: linear-gradient(135deg, #2563eb, #2563eb);
     color: white;
     cursor: pointer;
     display: flex;
@@ -459,7 +459,7 @@
 }
 
 .send-btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, #4f46e5, #6d28d9);
+    background: linear-gradient(135deg, #1d4ed8, #6d28d9);
     transform: scale(1.05);
 }
 
@@ -487,11 +487,11 @@
     margin: 6px 0;
     white-space: pre-wrap;
     word-break: break-all;
-    color: #a5b4fc;
+    color: #93c5fd;
 }
 
 :host ::ng-deep .chat-inline-code {
-    background: rgba(99, 102, 241, 0.15);
+    background: rgba(37, 99, 235, 0.15);
     padding: 1px 6px;
     border-radius: 4px;
     font-size: 12px;

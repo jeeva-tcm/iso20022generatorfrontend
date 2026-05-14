@@ -1,4 +1,4 @@
-:host {
+﻿:host {
     display: flex;
     flex-direction: column;
     height: 100vh;
@@ -31,7 +31,7 @@
     --bg-card-hover: #f9fafb;
     --text-main: #020617;
     --text-muted: #64748b;
-    --accent-color: #6366f1;
+    --accent-color: #2563eb;
 }
 
 
@@ -312,10 +312,10 @@ textarea {
 
 .action-btn-small:hover:not(:disabled) {
     background: #fdfdfd;
-    color: #4f46e5;
-    border-color: #4f46e5;
+    color: #1d4ed8;
+    border-color: #1d4ed8;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.12);
+    box-shadow: 0 4px 12px rgba(29, 78, 216, 0.12);
 }
 
 .action-btn-small:disabled {
@@ -876,15 +876,15 @@ textarea.code-editor {
 }
 
 .vm-action-btn.run {
-    background: rgba(99, 102, 241, 0.1);
-    border-color: rgba(99, 102, 241, 0.3);
-    color: #818cf8;
+    background: rgba(37, 99, 235, 0.1);
+    border-color: rgba(37, 99, 235, 0.3);
+    color: #60a5fa;
 }
 
 .vm-action-btn.run:hover {
-    background: #6366f1;
+    background: #2563eb;
     color: white;
-    border-color: #6366f1;
+    border-color: #2563eb;
 }
 
 .validation-modal {
@@ -923,7 +923,7 @@ textarea.code-editor {
 }
 
 .vm-title mat-icon {
-    color: #6366f1;
+    color: #2563eb;
     font-size: 22px;
     width: 22px;
     height: 22px;
@@ -979,7 +979,7 @@ textarea.code-editor {
     width: 40px;
     height: 40px;
     border: 3px solid var(--border-light);
-    border-top-color: #6366f1;
+    border-top-color: #2563eb;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
@@ -1416,7 +1416,7 @@ body.dark-theme .vm-detail-box {
 .vm-box-label {
     font-size: 0.65rem;
     font-weight: 700;
-    color: #4f46e5;
+    color: #1d4ed8;
     margin-bottom: 6px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -1436,7 +1436,7 @@ body.dark-theme .vm-box-val {
 .vm-box-val.mono {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.7rem;
-    color: #4f46e5;
+    color: #1d4ed8;
 }
 
 .vm-detail-fix {
@@ -1444,16 +1444,16 @@ body.dark-theme .vm-box-val {
     border: 1px solid #e0e7ff;
     border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.05);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.05);
 }
 
 body.dark-theme .vm-detail-fix {
-    background: rgba(99, 102, 241, 0.03);
-    border-color: rgba(99, 102, 241, 0.15);
+    background: rgba(37, 99, 235, 0.03);
+    border-color: rgba(37, 99, 235, 0.15);
 }
 
 .vm-fix-header {
-    background: rgba(99, 102, 241, 0.05);
+    background: rgba(37, 99, 235, 0.05);
     padding: 8px 14px;
     display: flex;
     align-items: center;
@@ -1461,7 +1461,7 @@ body.dark-theme .vm-detail-fix {
 }
 
 body.dark-theme .vm-fix-header {
-    background: rgba(99, 102, 241, 0.1);
+    background: rgba(37, 99, 235, 0.1);
 }
 
 .vm-fix-header mat-icon {
@@ -1474,7 +1474,7 @@ body.dark-theme .vm-fix-header {
 .vm-fix-header span {
     font-size: 0.65rem;
     font-weight: 800;
-    color: #4f46e5;
+    color: #1d4ed8;
     letter-spacing: 0.05em;
     text-transform: uppercase;
 }
@@ -1490,25 +1490,25 @@ body.dark-theme .vm-fix-header {
 .vm-fix-text {
     flex: 1;
     font-size: 0.8rem;
-    color: #312e81;
+    color: #1e3a8a;
     line-height: 1.6;
     font-weight: 500;
 }
 
 body.dark-theme .vm-fix-text {
-    color: #c7d2fe;
+    color: #bfdbfe;
 }
 
 .vm-fix-copy-btn {
     background: #ffffff;
     border: 1px solid #e0e7ff;
-    color: #4f46e5;
+    color: #1d4ed8;
     padding: 6px;
     border-radius: 6px;
     cursor: pointer;
     display: flex;
     transition: all 0.2s;
-    box-shadow: 0 2px 4px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1);
 }
 
 body.dark-theme .vm-fix-copy-btn {
@@ -1562,7 +1562,7 @@ body.dark-theme .vm-fix-copy-btn {
     align-items: center;
     gap: 4px;
     padding: 6px 12px;
-    background: var(--accent-color, #6366f1);
+    background: var(--accent-color, #2563eb);
     color: #fff;
     border: none;
     border-radius: 6px;
@@ -1621,14 +1621,14 @@ body.dark-theme .vm-fix-copy-btn {
     gap: 6px;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 4px 12px rgba(129, 140, 248, 0.3);
+    box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .btn-add-tx:hover {
     transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 6px 15px rgba(129, 140, 248, 0.4);
+    box-shadow: 0 6px 15px rgba(96, 165, 250, 0.4);
 }
 
 .btn-add-tx:active {

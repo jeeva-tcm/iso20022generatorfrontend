@@ -1,4 +1,4 @@
-/* ===================================================================
+﻿/* ===================================================================
    ISO 20022 Validator — Multi-File UI
    Dark premium theme matching the design reference
    =================================================================== */
@@ -47,7 +47,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
 
   mat-icon {
     color: #fff;
@@ -90,9 +90,9 @@
 }
 
 .badge-purple {
-  background: rgba(168, 85, 247, 0.1);
-  color: #9333ea;
-  border: 1px solid rgba(168, 85, 247, 0.2);
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  border: 1px solid rgba(37, 99, 235, 0.2);
 }
 
 .badge-cyan {
@@ -131,7 +131,7 @@
 }
 
 .dot-purple {
-  background: #a855f7;
+  background: #2563eb;
 }
 
 .dot-blue {
@@ -186,20 +186,20 @@
 
 .drop-zone:hover,
 .drop-zone.dragging {
-  border-color: #6366f1;
-  background: rgba(99, 102, 241, 0.1);
+  border-color: #2563eb;
+  background: rgba(37, 99, 235, 0.1);
 }
 
 .drop-icon mat-icon {
   font-size: 36px;
   width: 36px;
   height: 36px;
-  color: rgba(99, 102, 241, 0.6);
+  color: rgba(37, 99, 235, 0.6);
   transition: color 0.2s;
 }
 
 .drop-zone:hover .drop-icon mat-icon {
-  color: #6366f1;
+  color: #2563eb;
 }
 
 .drop-title {
@@ -338,7 +338,7 @@
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: inherit;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
 
   mat-icon {
     font-size: 18px;
@@ -399,9 +399,9 @@
 }
 
 .file-item.selected {
-  background: rgba(99, 102, 241, 0.12);
-  border-color: rgba(99, 102, 241, 0.4);
-  border-left: 3px solid #6366f1;
+  background: rgba(37, 99, 235, 0.12);
+  border-color: rgba(37, 99, 235, 0.4);
+  border-left: 3px solid #2563eb;
 }
 
 .fi-top {
@@ -478,9 +478,9 @@
 }
 
 .badge-status-validating {
-  background: rgba(99, 102, 241, 0.15);
-  color: #818cf8;
-  border: 1px solid rgba(99, 102, 241, 0.25);
+  background: rgba(37, 99, 235, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(37, 99, 235, 0.25);
 }
 
 .badge-status-pending {
@@ -613,7 +613,7 @@
   font-size: 40px !important;
   width: 40px !important;
   height: 40px !important;
-  color: #6366f1;
+  color: #2563eb;
 }
 
 .pending-file-info h3 {
@@ -636,14 +636,14 @@
   padding: 14px 36px;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #2563eb 100%);
   color: #fff;
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
   font-family: inherit;
-  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.35);
 
   mat-icon {
     font-size: 22px;
@@ -655,7 +655,7 @@
 .btn-validate-big:hover {
   opacity: 0.88;
   transform: translateY(-2px);
-  box-shadow: 0 6px 28px rgba(99, 102, 241, 0.45);
+  box-shadow: 0 6px 28px rgba(37, 99, 235, 0.45);
 }
 
 /* ── Validating State ── */
@@ -666,7 +666,7 @@
   justify-content: center;
   height: 100%;
   gap: 20px;
-  color: #6366f1;
+  color: #2563eb;
 
   p {
     color: #94a3b8;
@@ -679,7 +679,7 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  border: 3px solid rgba(99, 102, 241, 0.3);
+  border: 3px solid rgba(37, 99, 235, 0.3);
   animation: pulse-ring 1.5s ease-out infinite;
 }
 
@@ -851,8 +851,8 @@
 }
 
 .family-other {
-  background: rgba(99, 102, 241, 0.15);
-  color: #a5b4fc;
+  background: rgba(37, 99, 235, 0.15);
+  color: #93c5fd;
 }
 
 /* ── Layer Grid ── */
@@ -1075,7 +1075,7 @@
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.8px;
-  color: #6366f1;
+  color: #2563eb;
   text-transform: uppercase;
   margin-bottom: 8px;
 }
@@ -1097,7 +1097,7 @@
   padding: 7px 14px;
   border: none;
   border-radius: 7px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #2563eb, #2563eb);
   color: #fff;
   font-size: 10px;
   font-weight: 700;
@@ -1326,9 +1326,9 @@
 }
 
 .btn-paste-xml:hover {
-  background: rgba(99, 102, 241, 0.1);
-  border-color: #6366f1;
-  color: #c7d2fe;
+  background: rgba(37, 99, 235, 0.1);
+  border-color: #2563eb;
+  color: #bfdbfe;
 }
 
 .btn-paste-xml mat-icon {
@@ -1360,8 +1360,8 @@
 }
 
 .paste-textarea:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .paste-textarea::placeholder {
@@ -1464,7 +1464,7 @@
 
 .vs-lbl {
   font-size: 12px;
-  color: #c7d2fe;
+  color: #bfdbfe;
   font-weight: 600;
   display: flex;
   text-transform: uppercase;
@@ -1754,7 +1754,7 @@ body.light-theme .btn-download {
 }
 
 .vp-search input:focus {
-  border-color: #6366f1;
+  border-color: #2563eb;
 }
 
 .vp-search mat-icon {
@@ -1852,9 +1852,9 @@ body.light-theme .btn-download {
   letter-spacing: 0.5px;
   padding: 3px 8px;
   border-radius: 5px;
-  background: rgba(99, 102, 241, 0.12);
-  color: #818cf8;
-  border: 1px solid rgba(99, 102, 241, 0.25);
+  background: rgba(37, 99, 235, 0.12);
+  color: #60a5fa;
+  border: 1px solid rgba(37, 99, 235, 0.25);
   white-space: nowrap;
 }
 
@@ -1951,9 +1951,9 @@ body.light-theme .btn-download {
 }
 
 .status-badge.validating {
-  background: rgba(99, 102, 241, 0.1);
-  color: #818cf8;
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  background: rgba(37, 99, 235, 0.1);
+  color: #60a5fa;
+  border: 1px solid rgba(37, 99, 235, 0.3);
 }
 
 .status-badge.failed {
@@ -2090,8 +2090,8 @@ body.light-theme .btn-download {
 }
 
 .layer-title.layer-expanded {
-  background: rgba(99, 102, 241, 0.05);
-  border-bottom-color: rgba(99, 102, 241, 0.2);
+  background: rgba(37, 99, 235, 0.05);
+  border-bottom-color: rgba(37, 99, 235, 0.2);
 }
 
 .layer-chevron {
@@ -2174,14 +2174,14 @@ body.dark-theme .issue-card {
 }
 
 .issue-card:hover {
-  border-color: #6366f1;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.12);
+  border-color: #2563eb;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);
   transform: translateY(-1px);
 }
 
 .issue-card.expanded {
-  border-color: #6366f1;
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
+  border-color: #2563eb;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.15);
 }
 
 
@@ -2284,7 +2284,7 @@ body.dark-theme .issue-card {
 .di-label {
   font-size: 0.65rem;
   font-weight: 700;
-  color: #4f46e5;
+  color: #1d4ed8;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -2304,7 +2304,7 @@ body.dark-theme .issue-card {
 .di-val.mono {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.7rem;
-  color: #4f46e5;
+  color: #1d4ed8;
 }
 
 .detail-fix-box {
@@ -2312,7 +2312,7 @@ body.dark-theme .issue-card {
   border: 1px solid #e0e7ff;
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.05);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.05);
 }
 
 .df-header {
@@ -2320,7 +2320,7 @@ body.dark-theme .issue-card {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(99, 102, 241, 0.05);
+  background: rgba(37, 99, 235, 0.05);
 }
 
 .df-header mat-icon {
@@ -2333,7 +2333,7 @@ body.dark-theme .issue-card {
 .df-header span {
   font-size: 0.65rem;
   font-weight: 800;
-  color: #4f46e5;
+  color: #1d4ed8;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -2348,7 +2348,7 @@ body.dark-theme .issue-card {
 
 .df-text {
   font-size: 0.8rem;
-  color: #312e81;
+  color: #1e3a8a;
   line-height: 1.6;
   font-weight: 500;
 }
@@ -2356,17 +2356,17 @@ body.dark-theme .issue-card {
 .df-copy-btn {
   background: #ffffff;
   border: 1px solid #e0e7ff;
-  color: #4f46e5;
+  color: #1d4ed8;
   padding: 6px;
   border-radius: 6px;
   cursor: pointer;
   display: flex;
   transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1);
 }
 
 .df-copy-btn:hover {
-  background: #4f46e5;
+  background: #1d4ed8;
   color: white;
   transform: translateY(-1px);
 }
@@ -2523,7 +2523,7 @@ body.dark-theme .issue-card {
   background: var(--primary-gradient);
   color: white;
   border: none;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;

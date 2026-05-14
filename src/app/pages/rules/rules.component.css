@@ -1,4 +1,4 @@
-/* ── Container ── */
+﻿/* ── Container ── */
 .rules-container {
     width: 100%;
     max-width: 1200px;
@@ -61,7 +61,7 @@
 }
 
 /* Top accent line per column */
-.layer-col:nth-child(1) { border-top: 3px solid #6366f1; }
+.layer-col:nth-child(1) { border-top: 3px solid #2563eb; }
 .layer-col:nth-child(2) { border-top: 3px solid #0ea5e9; }
 .layer-col:nth-child(3) { border-top: 3px solid #f59e0b; }
 
@@ -75,7 +75,7 @@
     letter-spacing: -2px;
 }
 
-.layer-col:nth-child(1) .layer-num { color: #6366f1; }
+.layer-col:nth-child(1) .layer-num { color: #2563eb; }
 .layer-col:nth-child(2) .layer-num { color: #0ea5e9; }
 .layer-col:nth-child(3) .layer-num { color: #f59e0b; }
 

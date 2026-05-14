@@ -1035,6 +1035,7 @@ export class Camt054Component implements OnInit, OnDestroy {
   clearDraft(): void {
     try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
     this.showDraftBanner = false;
+    window.location.reload();
   }
 
   private scheduleDraftSave(): void {
