@@ -578,24 +578,29 @@ export class Camt054Component implements OnInit, OnDestroy {
   err(f: string, group?: any): string | null {
     const c = group ? group.get(f) : this.form.get(f);
     if (!c || c.valid) return null;
-
     if (c.errors?.['required']) return 'Required field.';
     if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
     if (c.errors?.['pattern']) {
       const fl = f.toLowerCase();
       if (fl.includes('bic')) return 'Valid 8 or 11-char BIC required.';
-      if (fl.includes('iban')) return 'Invalid IBAN format.';
-      if (fl.includes('amount') || fl.includes('amt')) return 'Numbers only (up to 5 decimals).';
+      if (fl.includes('iban')) return 'Valid 34-char IBAN required.';
+      if (fl.includes('uetr')) return 'Invalid UETR format';
+      if (fl.includes('lei')) return 'Must be 20-char LEI.';
+      if (fl.includes('ctry') || fl.includes('country')) return '2-letter ISO code required.';
+      if (fl.includes('amount') || fl.includes('amt')) return 'Max 18 digits, up to 5 decimals.';
+      if (fl.includes('bldgnb') || fl.includes('pstcd') || fl.includes('pstbx')) return 'Invalid character. Only ISO 20022 MX allowed characters permitted.';
+      if (fl.includes('name') || fl.includes('nm') || fl.includes('strtnm') || fl.includes('twnnm') || fl.includes('dept') || fl.includes('flr') || fl.includes('room') || fl.includes('adrline')) return 'Invalid characters. Only ISO 20022 MX allowed characters permitted.';
       return 'Invalid format.';
     }
     return 'Invalid value.';
   }
 
-  hint(f: string, max: number, group?: any): string | null {
-    if (!this.showMaxLenWarning[f]) return null;
+  hint(f: string, maxLen: number, group?: any): string | null {
     const c = group ? group.get(f) : this.form.get(f);
-    const len = c?.value?.length || 0;
-    return `Maximum ${max} characters reached (${len}/${max})`;
+    if (!c || !c.value) return null;
+    const len = c.value.toString().length;
+    if (len >= maxLen) return `Maximum ${maxLen} characters reached (${len}/${maxLen})`;
+    return null;
   }
 
   copyToClipboard() {

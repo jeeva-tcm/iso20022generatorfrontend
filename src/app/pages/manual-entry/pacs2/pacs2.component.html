@@ -73,6 +73,7 @@
                     <div class="form-group">
                         <label>Business Service <span class="req">*</span></label>
                         <input formControlName="bizSvc" required>
+                        <div class="validation-msg" *ngIf="err('bizSvc') as e">{{e}}</div>
                     </div>
 
                     <div class="section-title">Original Group Information</div>
@@ -85,10 +86,12 @@
                     <div class="form-group">
                         <label>Original Msg Name ID <span class="req">*</span></label>
                         <input formControlName="orgnlMsgNmId" required>
+                        <div class="validation-msg" *ngIf="err('orgnlMsgNmId') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
                         <label>Original Creation DateTime <span class="req">*</span></label>
                         <input formControlName="orgnlCreDtTm" required>
+                        <div class="validation-msg" *ngIf="err('orgnlCreDtTm') as e">{{e}}</div>
                     </div>
 
                     <div class="section-title">Transaction References</div>
@@ -128,11 +131,13 @@
                         <select formControlName="txSts" required>
                             <option *ngFor="let s of statusCodes" [value]="s">{{s}}</option>
                         </select>
+                        <div class="validation-msg" *ngIf="err('txSts') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
                         <label>Clearing System Reference</label>
                         <input formControlName="clrSysRef" maxlength="35">
                         <div class="validation-msg" *ngIf="err('clrSysRef') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('clrSysRef', 35) as h">{{h}}</div>
                     </div>
                     <div class="form-group intermediary-field">
                         <label>Reason Code <span class="req" *ngIf="form.get('txSts')?.value === 'RJCT' || form.get('txSts')?.value === 'PDNG'">*</span></label>
@@ -145,18 +150,22 @@
                     <div class="form-group intermediary-field">
                         <label>Proprietary Reason</label>
                         <input formControlName="stsRsnPrtry">
+                        <div class="validation-msg" *ngIf="err('stsRsnPrtry') as e">{{e}}</div>
                     </div>
                     <div class="form-group intermediary-field">
                         <label>Additional Information</label>
                         <textarea formControlName="stsRsnAddtlInf" rows="2"></textarea>
+                        <div class="validation-msg" *ngIf="err('stsRsnAddtlInf') as e">{{e}}</div>
                     </div>
 
                     <div class="section-title">Effective Date & Time</div>
                     <div class="form-group"><label>Effective Date</label>
                         <input formControlName="effDt" type="date">
+                        <div class="validation-msg" *ngIf="err('effDt') as e">{{e}}</div>
                     </div>
                     <div class="form-group"><label>Effective Date Time (ISO)</label>
                         <input formControlName="effDtTm" placeholder="2026-03-19T12:00:00Z">
+                        <div class="validation-msg" *ngIf="err('effDtTm') as e">{{e}}</div>
                     </div>
 
                     <div class="party-group">
@@ -165,23 +174,45 @@
                             <div class="form-group intermediary-field">
                                 <label>NAME</label>
                                 <input formControlName="stsRsnOrgtrName" placeholder="Bank or Entity reporting status">
+                                <div class="validation-msg" *ngIf="err('stsRsnOrgtrName') as e">{{e}}</div>
                             </div>
                             <div class="address-subgrid">
-                                <div class="form-group"><label>BUILDING NUMBER</label><input formControlName="stsRsnOrgtrBldgNb"></div>
-                                <div class="form-group"><label>BUILDING NAME</label><input formControlName="stsRsnOrgtrBldgNm"></div>
-                                <div class="form-group"><label>STREET NAME</label><input formControlName="stsRsnOrgtrStrtNm"></div>
-                                <div class="form-group"><label>POST CODE</label><input formControlName="stsRsnOrgtrPstCd"></div>
+                                <div class="form-group"><label>BUILDING NUMBER</label><input formControlName="stsRsnOrgtrBldgNb">
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrBldgNb') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('stsRsnOrgtrBldgNb', 16) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>BUILDING NAME</label><input formControlName="stsRsnOrgtrBldgNm">
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrBldgNm') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('stsRsnOrgtrBldgNm', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>STREET NAME</label><input formControlName="stsRsnOrgtrStrtNm">
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrStrtNm') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('stsRsnOrgtrStrtNm', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>POST CODE</label><input formControlName="stsRsnOrgtrPstCd">
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrPstCd') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('stsRsnOrgtrPstCd', 16) as h">{{h}}</div>
+                                </div>
                                 <div class="form-group"><label>CITY (TOWN NAME)</label>
                                     <input formControlName="stsRsnOrgtrTwnNm">
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrTwnNm') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('stsRsnOrgtrTwnNm', 35) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group"><label>COUNTRY</label>
                                     <select formControlName="stsRsnOrgtrCtry">
                                         <option value="">Select Country</option>
                                         <option *ngFor="let c of countries" [value]="c">{{c}}</option>
                                     </select>
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrCtry') as e">{{e}}</div>
                                 </div>
-                                <div class="form-group"><label>ADDRESS LINE 1</label><input formControlName="stsRsnOrgtrAdrLine1"></div>
-                                <div class="form-group"><label>ADDRESS LINE 2</label><input formControlName="stsRsnOrgtrAdrLine2"></div>
+                                <div class="form-group"><label>ADDRESS LINE 1</label><input formControlName="stsRsnOrgtrAdrLine1">
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrAdrLine1') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('stsRsnOrgtrAdrLine1', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>ADDRESS LINE 2</label><input formControlName="stsRsnOrgtrAdrLine2">
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrAdrLine2') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('stsRsnOrgtrAdrLine2', 70) as h">{{h}}</div>
+                                </div>
                             </div>
 
                             <!-- Identifiers -->

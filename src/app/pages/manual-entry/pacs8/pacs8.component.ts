@@ -1018,14 +1018,14 @@ export class Pacs8Component implements OnInit, OnDestroy {
         tx += this.tag('SttlmTmIndctn', stind, 4);
     }
 
-    // UltmtDbtr, Dbtr, DbtrAcct, DbtrAgt, DbtrAgtAcct
+    // UltmtDbtr, DbtrAgt, DbtrAgtAcct, Dbtr, DbtrAcct (ISO 20022 pacs.008 schema order)
     if (v.ultmtDbtrName?.trim() || (v.ultmtDbtrAddrType && v.ultmtDbtrAddrType !== 'none') || (v.ultmtDbtrIdType && v.ultmtDbtrIdType !== 'none')) {
       tx += this.tag('UltmtDbtr', this.el('Nm', v.ultmtDbtrName, 5) + this.addrXml(v, 'ultmtDbtr', 5) + this.partyIdXml(v, 'ultmtDbtr', 5), 4);
     }
-    tx += this.partyAgentXml('Dbtr', 'dbtr', v, 4);
-    if (v.dbtrAcct?.trim()) tx += this.tag('DbtrAcct', this.tag('Id', formatAcct(v.dbtrAcct, 5), 5), 4);
     tx += this.agt('DbtrAgt', 'dbtrAgt', v, 4);
     if (v.dbtrAgtAcct?.trim()) tx += this.tag('DbtrAgtAcct', this.tag('Id', formatAcct(v.dbtrAgtAcct, 5), 5), 4);
+    tx += this.partyAgentXml('Dbtr', 'dbtr', v, 4);
+    if (v.dbtrAcct?.trim()) tx += this.tag('DbtrAcct', this.tag('Id', formatAcct(v.dbtrAcct, 5), 5), 4);
 
     // CdtrAgt, CdtrAgtAcct, Cdtr, CdtrAcct, UltmtCdtr
     tx += this.agt('CdtrAgt', 'cdtrAgt', v, 4);

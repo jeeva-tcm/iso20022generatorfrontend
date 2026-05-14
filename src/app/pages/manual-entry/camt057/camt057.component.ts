@@ -44,7 +44,7 @@ export class Camt057Component implements OnInit, OnDestroy {
     categoryPurposes: string[] = [];
     purposes: string[] = [];
 
-    agentPrefixes = ['dbtr', 'dbtrAgt', 'intrmyAgt'];
+    agentPrefixes = ['dbtr', 'dbtrAgt', 'intrmyAgt', 'instgAgt', 'instdAgt'];
 
     private readonly DRAFT_KEY = 'draft_camt057';
     private draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -632,6 +632,8 @@ export class Camt057Component implements OnInit, OnDestroy {
         let ntfctnPartiesXml = partyXml('Dbtr', 'dbtr');
         ntfctnPartiesXml += agtXmlWithAcct('DbtrAgt', 'dbtrAgt');
         ntfctnPartiesXml += agtXmlWithAcct('IntrmyAgt', 'intrmyAgt');
+        ntfctnPartiesXml += agtXmlWithAcct('InstgAgt', 'instgAgt');
+        ntfctnPartiesXml += agtXmlWithAcct('InstdAgt', 'instdAgt');
 
         // Optional Item components
         let itmXml = `        <Itm>\n          <Id>${this.e(v.itmId)}</Id>\n`;
@@ -959,6 +961,8 @@ ${ntfctnPartiesXml}${itmXml}
                 parseAgent('Dbtr', 'dbtr');
                 parseAgent('DbtrAgt', 'dbtrAgt');
                 parseAgent('IntrmyAgt', 'intrmyAgt');
+                parseAgent('InstgAgt', 'instgAgt');
+                parseAgent('InstdAgt', 'instdAgt');
 
                 const parseAcct = (tag: string, prefix: string) => {
                     const node = ntfctn.getElementsByTagName(tag + 'Acct')[0];
@@ -968,6 +972,8 @@ ${ntfctnPartiesXml}${itmXml}
                 parseAcct('Dbtr', 'dbtr');
                 parseAcct('DbtrAgt', 'dbtrAgt');
                 parseAcct('IntrmyAgt', 'intrmyAgt');
+                parseAcct('InstgAgt', 'instgAgt');
+                parseAcct('InstdAgt', 'instdAgt');
 
                 const tryTagInItm = (parentOrEl: string | Element, child: string) => {
                     const p = typeof parentOrEl === 'string' ? itm.getElementsByTagName(parentOrEl)[0] : parentOrEl;

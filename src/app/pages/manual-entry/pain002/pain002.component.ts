@@ -727,6 +727,14 @@ ${doc.trimEnd()}
     return null;
   }
 
+  hint(path: string, maxLen: number): string | null {
+    const c = this.form.get(path);
+    if (!c || !c.value) return null;
+    const len = c.value.toString().length;
+    if (len >= maxLen) return `Maximum ${maxLen} characters reached (${len}/${maxLen})`;
+    return null;
+  }
+
   charCount(path: string, max: number) { const v = this.form.get(path)?.value || ''; return `${v.length}/${max}`; }
   isNearLimit(path: string, max: number) { return (this.form.get(path)?.value || '').length > max * 0.8; }
   getValidationLayers() { return Object.keys(this.validationReport?.layer_status || {}).sort(); }

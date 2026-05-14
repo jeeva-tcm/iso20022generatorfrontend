@@ -59,35 +59,50 @@
                                 <div class="form-group">
                                     <label>Street Name</label>
                                     <input formControlName="fromStrtNm" maxlength="70">
+                                    <div class="validation-msg" *ngIf="err('fromStrtNm') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('fromStrtNm', 70) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Building Number</label>
                                     <input formControlName="fromBldgNb" maxlength="16">
+                                    <div class="validation-msg" *ngIf="err('fromBldgNb') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('fromBldgNb', 16) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Post Code</label>
                                     <input formControlName="fromPstCd" maxlength="16">
+                                    <div class="validation-msg" *ngIf="err('fromPstCd') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('fromPstCd', 16) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Town Name</label>
                                     <input formControlName="fromTwnNm" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('fromTwnNm') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('fromTwnNm', 35) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Country Sub-Division</label>
                                     <input formControlName="fromCtrySubDvsn" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('fromCtrySubDvsn') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('fromCtrySubDvsn', 35) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Country <span class="req">*</span></label>
                                     <input formControlName="fromCtry" maxlength="2" placeholder="e.g. US">
                                     <div class="validation-msg" *ngIf="err('fromCtry') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('fromCtry', 2) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Address Line 1</label>
                                     <input formControlName="fromAdrLine1" maxlength="70">
+                                    <div class="validation-msg" *ngIf="err('fromAdrLine1') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('fromAdrLine1', 70) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Address Line 2</label>
                                     <input formControlName="fromAdrLine2" maxlength="70">
+                                    <div class="validation-msg" *ngIf="err('fromAdrLine2') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('fromAdrLine2', 70) as h">{{h}}</div>
                                 </div>
                             </div>
 

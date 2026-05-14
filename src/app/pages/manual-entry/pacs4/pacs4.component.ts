@@ -375,10 +375,12 @@ export class Pacs4Component implements OnInit, OnDestroy {
         tx += this.agt('InstdAgt', 'instdAgt', v, 4);
 
         let rtrChain = '';
+        rtrChain += this.party('UltmtDbtr', 'ultmtDbtr', v, 5);
         rtrChain += this.party('Dbtr', 'dbtr', v, 5);
         rtrChain += this.agt('DbtrAgt', 'dbtrAgt', v, 5);
         rtrChain += this.agt('CdtrAgt', 'cdtrAgt', v, 5);
         rtrChain += this.party('Cdtr', 'cdtr', v, 5);
+        rtrChain += this.party('UltmtCdtr', 'ultmtCdtr', v, 5);
         tx += this.tag('RtrChain', rtrChain, 4);
 
         let rtrRsnInner = this.tag('Rsn', this.el('Cd', v.rtrRsnCd, 6), 5);
