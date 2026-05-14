@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,7 +19,7 @@ import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog
     templateUrl: './pacs10v3.component.html',
     styleUrl: './pacs10v3.component.css'
 })
-export class Pacs10v3Component implements OnInit {
+export class Pacs10v3Component implements OnInit, OnDestroy {
     form!: FormGroup;
     generatedXml = '';
     currentTab: 'form' | 'preview' = 'form';
@@ -61,6 +61,10 @@ export class Pacs10v3Component implements OnInit {
     agentPrefixes = ['instgAgt', 'instdAgt', 'dbtrAgt', 'cdtrAgt', 'intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'];
     partyPrefixes = ['dbtr', 'cdtr', 'ultmtDbtr', 'ultmtCdtr'];
 
+    private readonly DRAFT_KEY = 'draft_pacs010v3';
+    private draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
+    showDraftBanner = false;
+
     constructor(
         private fb: FormBuilder,
         private http: HttpClient,
@@ -82,9 +86,16 @@ export class Pacs10v3Component implements OnInit {
         this.form.get('instgAgtBic')?.valueChanges.subscribe(v => this.form.patchValue({ fromBic: v }, { emitEvent: false }));
         this.form.get('instdAgtBic')?.valueChanges.subscribe(v => this.form.patchValue({ toBic: v }, { emitEvent: false }));
 
+        const hadDraft = this.loadDraft();
+        if (hadDraft) {
+          this.showDraftBanner = true;
+          this.generateXml();
+        }
+
         this.form.valueChanges.subscribe(() => {
+            this.scheduleDraftSave();
             this.updateConditionalValidators();
-            this.updateClearingSystemValidation(); 
+            this.updateClearingSystemValidation();
         });
 
         this.form.get('currency')?.valueChanges.subscribe(() => {
@@ -533,6 +544,15 @@ export class Pacs10v3Component implements OnInit {
         this.form = this.fb.group(c);
     }
 
+    get bicSameWarning(): string | null {
+        const from = (this.form.get('fromBic')?.value || '').trim().toUpperCase();
+        const to = (this.form.get('toBic')?.value || '').trim().toUpperCase();
+        if (!from || !to) return null;
+        return from === to
+            ? 'Sender BIC and Receiver BIC are identical. The instructing and instructed agents must represent different financial institutions.'
+            : null;
+    }
+
     generateXml() {
         if (this.isParsingXml) return;
         const v = this.form.value;
@@ -813,7 +833,8 @@ ${this.rmtInf(v)}
     copyFix(txt: string, e: MouseEvent) { e.stopPropagation(); if (txt) { navigator.clipboard.writeText(txt).then(() => this.snackBar.open('Fix suggestion copied!', '', { duration: 1500 })); } }
 
     validateMessage() {
-        this.generateXml();
+                if (this.bicSameWarning) return;
+                this.generateXml();
         this.validateFullMessageErrors();
         if (this.form.invalid) this.form.markAllAsTouched();
         if (!this.generatedXml?.trim()) return;
@@ -827,7 +848,7 @@ ${this.rmtInf(v)}
             message_type: 'pacs.010.001.03',
             store_in_history: true
         }).subscribe({
-            next: (data: any) => { this.validationReport = data; this.validationStatus = 'done'; },
+            next: (data: any) => { this.validationReport = data; this.clearDraft(); this.validationStatus = 'done'; },
             error: (err) => {
                 this.validationReport = {
                     status: 'FAIL', errors: 1, warnings: 0, message: 'pacs.010.001.03', total_time_ms: 0,
@@ -953,6 +974,34 @@ ${this.rmtInf(v)}
     hasSectionError(prefixes: string[]): boolean { return prefixes.some(p => Object.keys(this.form.controls).some(key => key.startsWith(p) && this.form.get(key)?.invalid && (this.form.get(key)?.touched || this.form.get(key)?.dirty))); }
 
     private formatAmount(val: any): string { if (!val) return '0.00'; let numStr = val.toString().trim().replace(/,/g, ''); const num = parseFloat(numStr); return isNaN(num) ? '0.00' : num.toFixed(2); }
+
+    private saveDraft(): void {
+        try { localStorage.setItem(this.DRAFT_KEY, JSON.stringify(this.form.value)); }
+        catch (e) { console.warn('Draft save failed:', e); }
+    }
+
+    private loadDraft(): boolean {
+        try {
+            const saved = localStorage.getItem(this.DRAFT_KEY);
+            if (!saved) return false;
+            this.form.patchValue(JSON.parse(saved), { emitEvent: false });
+            return true;
+        } catch (e) { console.warn('Draft load failed:', e); return false; }
+    }
+
+    clearDraft(): void {
+        try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
+        this.showDraftBanner = false;
+    }
+
+    private scheduleDraftSave(): void {
+        if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+        this.draftSaveTimer = setTimeout(() => this.saveDraft(), 2000);
+    }
+
+    ngOnDestroy(): void {
+        if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+    }
 
     validateManualUetr() {
         const uetrCtrl = this.form.get('uetr');

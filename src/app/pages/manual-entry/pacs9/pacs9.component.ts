@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
@@ -20,7 +20,7 @@ import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog
     templateUrl: './pacs9.component.html',
     styleUrl: './pacs9.component.css'
 })
-export class Pacs9Component implements OnInit {
+export class Pacs9Component implements OnInit, OnDestroy {
     form!: FormGroup;
     generatedXml = '';
     currentTab: 'form' | 'preview' = 'form';
@@ -50,6 +50,10 @@ export class Pacs9Component implements OnInit {
     agentPrefixes = ['instgAgt', 'instdAgt', 'dbtrFi', 'cdtrFi', 'dbtrAgt', 'cdtrAgt',
         'prvsInstgAgt1', 'prvsInstgAgt2', 'prvsInstgAgt3',
         'intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'];
+
+    private readonly DRAFT_KEY = 'draft_pacs009';
+    private draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
+    showDraftBanner = false;
 
     constructor(
         private fb: FormBuilder,
@@ -85,10 +89,17 @@ export class Pacs9Component implements OnInit {
             this.updateClearingSystemValidation();
         });
 
+        const hadDraft = this.loadDraft();
+        if (hadDraft) {
+          this.showDraftBanner = true;
+          this.generateXml();
+        }
+
         // Track form changes for live XML update
         this.form.valueChanges.subscribe(() => {
             this.updateConditionalValidators();
             this.generateXml();
+            this.scheduleDraftSave();
         });
 
         // Init history
@@ -589,6 +600,15 @@ export class Pacs9Component implements OnInit {
 
 
 
+    get bicSameWarning(): string | null {
+        const from = (this.form.get('fromBic')?.value || '').trim().toUpperCase();
+        const to = (this.form.get('toBic')?.value || '').trim().toUpperCase();
+        if (!from || !to) return null;
+        return from === to
+            ? 'Sender BIC and Receiver BIC are identical. The instructing and instructed agents must represent different financial institutions.'
+            : null;
+    }
+
     generateXml() {
         if (this.isParsingXml) return;
 
@@ -898,7 +918,8 @@ ${tx}\t\t\t</CdtTrfTxInf>
 
     // Validation
     validateMessage() {
-        this.generateXml();
+                if (this.bicSameWarning) return;
+                this.generateXml();
         if (this.form.invalid) {
             this.form.markAllAsTouched();
             this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
@@ -919,6 +940,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
         }).subscribe({
             next: (data: any) => {
                 this.validationReport = data;
+                this.clearDraft();
                 this.validationStatus = 'done';
             },
             error: (err) => {
@@ -1403,5 +1425,33 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 group.markAsDirty();
             }
         });
+    }
+
+    private saveDraft(): void {
+        try { localStorage.setItem(this.DRAFT_KEY, JSON.stringify(this.form.value)); }
+        catch (e) { console.warn('Draft save failed:', e); }
+    }
+
+    private loadDraft(): boolean {
+        try {
+            const saved = localStorage.getItem(this.DRAFT_KEY);
+            if (!saved) return false;
+            this.form.patchValue(JSON.parse(saved), { emitEvent: false });
+            return true;
+        } catch (e) { console.warn('Draft load failed:', e); return false; }
+    }
+
+    clearDraft(): void {
+        try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
+        this.showDraftBanner = false;
+    }
+
+    private scheduleDraftSave(): void {
+        if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+        this.draftSaveTimer = setTimeout(() => this.saveDraft(), 2000);
+    }
+
+    ngOnDestroy(): void {
+        if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
     }
 }

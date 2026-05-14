@@ -1,6 +1,6 @@
 import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -17,7 +17,7 @@ import { UetrService } from '../../../services/uetr.service';
   templateUrl: './pain002.component.html',
   styleUrls: ['./pain002.component.css']
 })
-export class Pain002Component implements OnInit {
+export class Pain002Component implements OnInit, OnDestroy {
   @ViewChild('xmlEditor') xmlEditor!: ElementRef<HTMLTextAreaElement>;
   @ViewChild('lineNumbers') lineNumbersRef!: ElementRef<HTMLDivElement>;
 
@@ -70,6 +70,10 @@ export class Pain002Component implements OnInit {
   };
 
   countries: string[] = [];
+
+  private readonly DRAFT_KEY = 'draft_pain002';
+  private draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
+  showDraftBanner = false;
 
   // Codelists
   charSetOptions = ['UTF-8', 'US-ASCII', 'ISO-8859-1'];
@@ -141,6 +145,11 @@ export class Pain002Component implements OnInit {
   ngOnInit() {
     this.fetchCountries();
     this.buildForm();
+    const hadDraft = this.loadDraft();
+    if (hadDraft) {
+      this.showDraftBanner = true;
+      this.generateXml();
+    }
     this.generateXml();
     this.pushHistory();
   }
@@ -291,6 +300,7 @@ export class Pain002Component implements OnInit {
       if (!this.isParsingXml && !this.isInternalChange) {
         this.generateXml();
         this.pushHistory();
+        this.scheduleDraftSave();
       }
     });
 
@@ -484,6 +494,15 @@ export class Pain002Component implements OnInit {
   isoNow() { return new Date().toISOString().split('.')[0] + 'Z'; }
   fdt(d: string) { return d ? d.replace('Z', '+00:00') : d; }
 
+  get bicSameWarning(): string | null {
+    const from = (this.form.get('head_fromBic')?.value || '').trim().toUpperCase();
+    const to = (this.form.get('head_toBic')?.value || '').trim().toUpperCase();
+    if (!from || !to) return null;
+    return from === to
+      ? 'Sender BIC and Receiver BIC are identical. The instructing and instructed agents must represent different financial institutions.'
+      : null;
+  }
+
   generateXml() {
     const v = this.form.getRawValue();
     let bah = '';
@@ -673,7 +692,8 @@ ${doc.trimEnd()}
   onEditorChange(e: string) { this.generatedXml = e; this.refreshLineCount(); }
 
   validateMessage() {
-    this.generateXml();
+        if (this.bicSameWarning) return;
+        this.generateXml();
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
@@ -687,7 +707,7 @@ ${doc.trimEnd()}
       message_type: 'pain.002.001.10',
       store_in_history: true
     }).subscribe({
-      next: (data: any) => { this.validationReport = data; this.validationStatus = 'done'; },
+      next: (data: any) => { this.validationReport = data; this.validationStatus = 'done'; this.clearDraft(); },
       error: (err) => {
         this.validationReport = { status: 'FAIL', errors: 1, warnings: 0, details: [{ severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR', path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'), fix_suggestion: 'Ensure the validation server is running.' }] };
         this.validationStatus = 'done';
@@ -749,5 +769,33 @@ ${doc.trimEnd()}
         group.get(controlName)?.markAsDirty();
       }
     });
+  }
+
+  private saveDraft(): void {
+    try { localStorage.setItem(this.DRAFT_KEY, JSON.stringify(this.form.value)); }
+    catch (e) { console.warn('Draft save failed:', e); }
+  }
+
+  private loadDraft(): boolean {
+    try {
+      const saved = localStorage.getItem(this.DRAFT_KEY);
+      if (!saved) return false;
+      this.form.patchValue(JSON.parse(saved), { emitEvent: false });
+      return true;
+    } catch (e) { console.warn('Draft load failed:', e); return false; }
+  }
+
+  clearDraft(): void {
+    try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
+    this.showDraftBanner = false;
+  }
+
+  private scheduleDraftSave(): void {
+    if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+    this.draftSaveTimer = setTimeout(() => this.saveDraft(), 2000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
   }
 }

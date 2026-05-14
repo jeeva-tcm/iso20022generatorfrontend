@@ -8,7 +8,15 @@
         <div class="left-panel">
             <form [formGroup]="form" class="content-box">
                 <div class="grid">
-                    
+
+                    <div class="draft-banner" *ngIf="showDraftBanner">
+                        <mat-icon>restore</mat-icon>
+                        <span>Draft restored from your last session.</span>
+                        <button type="button" class="draft-clear-btn" (click)="clearDraft()">
+                            <mat-icon>close</mat-icon> Clear
+                        </button>
+                    </div>
+
                     <!-- Business Application Header -->
                     <div class="section-title" (click)="toggleSection('appHdr')" style="cursor:pointer">
                         Business Application Header (AppHdr)

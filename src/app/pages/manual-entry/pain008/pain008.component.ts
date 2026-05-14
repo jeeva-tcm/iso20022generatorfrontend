@@ -1,6 +1,6 @@
 import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -17,7 +17,7 @@ import { FormattingService } from '../../../services/formatting.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule]
 })
-export class Pain008Component implements OnInit {
+export class Pain008Component implements OnInit, OnDestroy {
   form!: FormGroup;
   generatedXml = '';
   isParsingXml = false;
@@ -54,6 +54,10 @@ export class Pain008Component implements OnInit {
   warningTimeouts: { [key: string]: any } = {};
   showMaxLenWarning: { [key: string]: boolean } = {};
 
+  private readonly DRAFT_KEY = 'draft_pain008';
+  private draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
+  showDraftBanner = false;
+
   constructor(
     private dialog: MatDialog,
     private fb: FormBuilder,
@@ -65,9 +69,39 @@ export class Pain008Component implements OnInit {
 
   ngOnInit() {
     this.buildForm();
+    const hadDraft = this.loadDraft();
+    if (hadDraft) {
+      this.showDraftBanner = true;
+      this.generateXml();
+    }
     this.generateXml();
     this.pushHistory();
-    this.form.valueChanges.subscribe(() => this.generateXml());
+    this.form.valueChanges.subscribe(() => { this.updateConditionalValidators(); this.generateXml(); this.scheduleDraftSave(); });
+    this.updateConditionalValidators();
+  }
+
+  private updateConditionalValidators() {
+    const ADDR_PAT = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
+    ['initgPty', 'cdtr', 'dbtr'].forEach(p => {
+      const addrType = this.form.get(p + 'AddrType')?.value;
+      const ctry = this.form.get(p + 'Ctry');
+      const twnNm = this.form.get(p + 'TwnNm');
+      if (!ctry || !twnNm) return;
+
+      if (addrType && addrType !== 'none') {
+        ctry.setValidators([Validators.required, Validators.pattern(/^[A-Z]{2,2}$/)]);
+      } else {
+        ctry.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
+      }
+      ctry.updateValueAndValidity({ emitEvent: false });
+
+      if (addrType === 'structured' || addrType === 'hybrid') {
+        twnNm.setValidators([Validators.required, Validators.maxLength(35), ADDR_PAT]);
+      } else {
+        twnNm.setValidators([Validators.maxLength(35), ADDR_PAT]);
+      }
+      twnNm.updateValueAndValidity({ emitEvent: false });
+    });
   }
 
   private buildForm() {
@@ -457,6 +491,15 @@ export class Pain008Component implements OnInit {
 
   isoNow(): string { return new Date().toISOString().split('.')[0] + '+00:00'; }
   isoNowDate(): string { return new Date().toISOString().split('T')[0]; }
+
+  get bicSameWarning(): string | null {
+    const from = (this.form.get('fromBic')?.value || '').trim().toUpperCase();
+    const to = (this.form.get('toBic')?.value || '').trim().toUpperCase();
+    if (!from || !to) return null;
+    return from === to
+      ? 'Sender BIC and Receiver BIC are identical. The instructing and instructed agents must represent different financial institutions.'
+      : null;
+  }
 
   generateXml() {
     if (this.isParsingXml) return;
@@ -933,14 +976,15 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
   downloadXml() { const b = new Blob([this.generatedXml], { type: 'application/xml' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `pain008-${Date.now()}.xml`; a.click(); }
 
   validateMessage() {
-    this.showValidationModal = true;
+        if (this.bicSameWarning) return;
+        this.showValidationModal = true;
     this.validationStatus = 'validating';
     this.validationReport = null;
     this.validationExpandedIssue = null;
     this.http.post(this.config.getApiUrl('/validate'), {
       xml_content: this.generatedXml, message_type: 'pain.008.001.08', mode: 'Full 1-3'
     }).subscribe({
-      next: (res: any) => { this.validationReport = res; this.validationStatus = 'done'; },
+      next: (res: any) => { this.validationReport = res; this.validationStatus = 'done'; this.clearDraft(); },
       error: (err) => {
         this.validationReport = {
           status: 'FAIL', errors: 1, warnings: 0, message: 'pain.008.001.08', total_time_ms: 0,
@@ -1054,5 +1098,33 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
         group.get(controlName)?.markAsDirty();
       }
     });
+  }
+
+  private saveDraft(): void {
+    try { localStorage.setItem(this.DRAFT_KEY, JSON.stringify(this.form.value)); }
+    catch (e) { console.warn('Draft save failed:', e); }
+  }
+
+  private loadDraft(): boolean {
+    try {
+      const saved = localStorage.getItem(this.DRAFT_KEY);
+      if (!saved) return false;
+      this.form.patchValue(JSON.parse(saved), { emitEvent: false });
+      return true;
+    } catch (e) { console.warn('Draft load failed:', e); return false; }
+  }
+
+  clearDraft(): void {
+    try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
+    this.showDraftBanner = false;
+  }
+
+  private scheduleDraftSave(): void {
+    if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+    this.draftSaveTimer = setTimeout(() => this.saveDraft(), 2000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
   }
 }

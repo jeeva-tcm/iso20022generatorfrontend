@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -17,7 +17,7 @@ import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog
   templateUrl: './camt055.component.html',
   styleUrls: ['./camt055.component.css']
 })
-export class Camt055Component implements OnInit {
+export class Camt055Component implements OnInit, OnDestroy {
   @ViewChild('xmlEditor') xmlEditor!: ElementRef<HTMLTextAreaElement>;
   @ViewChild('lineNumbers') lineNumbersRef!: ElementRef<HTMLDivElement>;
 
@@ -67,6 +67,10 @@ export class Camt055Component implements OnInit {
   orgSchemeCodes = ['LEI', 'DUNS', 'VAT', 'TXID', 'GIIN', 'CRN'];
   prvtSchemeCodes = ['CCPT', 'DRLC', 'NIDN', 'SSSN', 'PASSPORT', 'NATIONALID'];
 
+  private readonly DRAFT_KEY = 'draft_camt055';
+  private draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
+  showDraftBanner = false;
+
   orgSchemeGuidance: Record<string, string> = {
     'LEI': 'Enter valid Legal Entity Identifier (20 characters)',
     'DUNS': 'Enter valid DUNS number (9 digits)',
@@ -98,8 +102,38 @@ export class Camt055Component implements OnInit {
   ngOnInit() {
     this.fetchCountries();
     this.buildForm();
+    const hadDraft = this.loadDraft();
+    if (hadDraft) {
+      this.showDraftBanner = true;
+      this.generateXml();
+    }
     this.generateXml();
     this.pushHistory();
+    this.updateConditionalValidators();
+  }
+
+  private updateConditionalValidators() {
+    const ADDR_PAT = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
+    [...this.agentPrefixes, ...this.partyPrefixes].forEach(p => {
+      const addrType = this.form.get(p + 'AddrType')?.value;
+      const ctry = this.form.get(p + 'Ctry');
+      const twnNm = this.form.get(p + 'TwnNm');
+      if (!ctry || !twnNm) return;
+
+      if (addrType && addrType !== 'none') {
+        ctry.setValidators([Validators.required, Validators.pattern(/^[A-Z]{2,2}$/)]);
+      } else {
+        ctry.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
+      }
+      ctry.updateValueAndValidity({ emitEvent: false });
+
+      if (addrType === 'structured' || addrType === 'hybrid') {
+        twnNm.setValidators([Validators.required, Validators.maxLength(35), ADDR_PAT]);
+      } else {
+        twnNm.setValidators([Validators.maxLength(35), ADDR_PAT]);
+      }
+      twnNm.updateValueAndValidity({ emitEvent: false });
+    });
   }
 
   fetchCountries() {
@@ -315,8 +349,10 @@ export class Camt055Component implements OnInit {
 
     this.form.valueChanges.subscribe(() => {
       if (!this.isParsingXml && !this.isInternalChange) {
+        this.updateConditionalValidators();
         this.generateXml();
         this.pushHistory();
+        this.scheduleDraftSave();
         // Clear submission errors on any change
         if (this.showSubmissionErrors) {
           this.showSubmissionErrors = false;
@@ -437,6 +473,15 @@ export class Camt055Component implements OnInit {
 
   isoNow(): string {
     return this.fdt(new Date().toISOString());
+  }
+
+  get bicSameWarning(): string | null {
+    const from = (this.form.get('head_fromBic')?.value || '').trim().toUpperCase();
+    const to = (this.form.get('head_toBic')?.value || '').trim().toUpperCase();
+    if (!from || !to) return null;
+    return from === to
+      ? 'Sender BIC and Receiver BIC are identical. The instructing and instructed agents must represent different financial institutions.'
+      : null;
   }
 
   generateXml() {
@@ -1200,7 +1245,8 @@ ${txInf.trimEnd()}
   }
 
   validateMessage() {
-    this.generateXml();
+        if (this.bicSameWarning) return;
+        this.generateXml();
     this.form.markAllAsTouched();
     if (this.form.invalid) {
       this.formSubmissionErrors = this.collectValidationErrors();
@@ -1225,6 +1271,7 @@ ${txInf.trimEnd()}
       next: (data: any) => {
         this.validationReport = data;
         this.validationStatus = 'done';
+        this.clearDraft();
       },
       error: (err) => {
         this.validationReport = {
@@ -1303,6 +1350,34 @@ ${txInf.trimEnd()}
         group.get(controlName)?.markAsDirty();
       }
     });
+  }
+
+  private saveDraft(): void {
+    try { localStorage.setItem(this.DRAFT_KEY, JSON.stringify(this.form.value)); }
+    catch (e) { console.warn('Draft save failed:', e); }
+  }
+
+  private loadDraft(): boolean {
+    try {
+      const saved = localStorage.getItem(this.DRAFT_KEY);
+      if (!saved) return false;
+      this.form.patchValue(JSON.parse(saved), { emitEvent: false });
+      return true;
+    } catch (e) { console.warn('Draft load failed:', e); return false; }
+  }
+
+  clearDraft(): void {
+    try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
+    this.showDraftBanner = false;
+  }
+
+  private scheduleDraftSave(): void {
+    if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+    this.draftSaveTimer = setTimeout(() => this.saveDraft(), 2000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
   }
 }
 

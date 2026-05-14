@@ -7,6 +7,15 @@
         <div class="left-panel">
             <form [formGroup]="form" class="content-box">
                 <div class="grid">
+
+                    <div class="draft-banner" *ngIf="showDraftBanner">
+                        <mat-icon>restore</mat-icon>
+                        <span>Draft restored from your last session.</span>
+                        <button type="button" class="draft-clear-btn" (click)="clearDraft()">
+                            <mat-icon>close</mat-icon> Clear
+                        </button>
+                    </div>
+
                     <!-- ═══ AppHdr ═══ -->
                     <div class="section-title">Message Header (AppHdr)</div>
                     <div class="form-group"><label>CharSet</label><input formControlName="charSet" maxlength="20" placeholder="Optional"></div>
@@ -34,6 +43,10 @@
                         </div>
                         <div class="validation-msg" *ngIf="err('toBic') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('toBic', 11) as h">{{h}}</div>
+                    </div>
+                    <div class="bic-same-warning" *ngIf="bicSameWarning">
+                      <mat-icon>warning_amber</mat-icon>
+                      <span>{{ bicSameWarning }}</span>
                     </div>
                     <div class="form-group"><label>Receiver ClrSys Code</label><input formControlName="toClrSysCd" maxlength="5" placeholder="Optional"></div>
                     <div class="form-group"><label>Receiver Member ID</label><input formControlName="toMmbId" maxlength="35" placeholder="Optional"></div>
@@ -136,8 +149,12 @@
                                 <div class="form-group"><label>Country Sub Division</label><input formControlName="initgPtyCtrySubDvsn" maxlength="35"></div>
                             </ng-container>
                             <ng-container *ngIf="['structured', 'unstructured', 'hybrid'].includes(form.value.initgPtyAddrType)">
-                                <div class="form-group"><label>Town Name</label><input formControlName="initgPtyTwnNm" maxlength="35"></div>
-                                <div class="form-group"><label>Country</label><input formControlName="initgPtyCtry" maxlength="2" placeholder="e.g. US"></div>
+                                <div class="form-group"><label>Town Name</label><input formControlName="initgPtyTwnNm" maxlength="35">
+                                  <div class="validation-msg" *ngIf="err('initgPtyTwnNm') as e">{{e}}</div>
+                                </div>
+                                <div class="form-group"><label>Country</label><input formControlName="initgPtyCtry" maxlength="2" placeholder="e.g. US">
+                                  <div class="validation-msg" *ngIf="err('initgPtyCtry') as e">{{e}}</div>
+                                </div>
                             </ng-container>
                             <ng-container *ngIf="['unstructured', 'hybrid'].includes(form.value.initgPtyAddrType)">
                                 <div class="form-group"><label>Address Line 1</label><input formControlName="initgPtyAdrLine1" maxlength="70"></div>
@@ -205,8 +222,12 @@
                                 <div class="form-group"><label>Country Sub Division</label><input formControlName="cdtrCtrySubDvsn" maxlength="35"></div>
                             </ng-container>
                             <ng-container *ngIf="['structured', 'unstructured', 'hybrid'].includes(form.value.cdtrAddrType)">
-                                <div class="form-group"><label>Town Name</label><input formControlName="cdtrTwnNm" maxlength="35"></div>
-                                <div class="form-group"><label>Country</label><input formControlName="cdtrCtry" maxlength="2" placeholder="e.g. GB"></div>
+                                <div class="form-group"><label>Town Name</label><input formControlName="cdtrTwnNm" maxlength="35">
+                                  <div class="validation-msg" *ngIf="err('cdtrTwnNm') as e">{{e}}</div>
+                                </div>
+                                <div class="form-group"><label>Country</label><input formControlName="cdtrCtry" maxlength="2" placeholder="e.g. GB">
+                                  <div class="validation-msg" *ngIf="err('cdtrCtry') as e">{{e}}</div>
+                                </div>
                             </ng-container>
                             <ng-container *ngIf="['unstructured', 'hybrid'].includes(form.value.cdtrAddrType)">
                                 <div class="form-group"><label>Address Line 1</label><input formControlName="cdtrAdrLine1" maxlength="70"></div>

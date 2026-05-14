@@ -615,6 +615,88 @@ body.light-theme .validation-msg.success {
 
 /* Validation highlights removed at user request */
 
+/* BIC Same-Value Warning Banner */
+.bic-same-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 12px;
+    margin: 6px 0 12px 0;
+    background: rgba(251, 191, 36, 0.10);
+    border: 1px solid rgba(251, 191, 36, 0.35);
+    border-radius: 6px;
+    color: #f59e0b;
+    font-size: 12px;
+}
+.bic-same-warning mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+/* Draft Restore Banner */
+.draft-banner {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0 0 10px 0;
+    margin-bottom: 4px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border-light);
+    border-radius: 0;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    line-height: 1;
+}
+.draft-banner mat-icon {
+    color: #f59e0b;
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+.draft-clear-btn {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    background: transparent;
+    border: none;
+    color: #f59e0b;
+    cursor: pointer;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    opacity: 0.7;
+    transition: opacity 0.15s;
+}
+.draft-clear-btn mat-icon {
+    font-size: 12px;
+    width: 12px;
+    height: 12px;
+}
+.draft-clear-btn:hover {
+    opacity: 1;
+    background: transparent;
+}
+body.light-theme .draft-banner {
+    color: #94a3b8;
+    border-bottom-color: #e2e8f0;
+}
+body.light-theme .draft-clear-btn {
+    color: #d97706;
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;

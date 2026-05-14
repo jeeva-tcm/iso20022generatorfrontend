@@ -32,6 +32,26 @@
                         placeholder="Filter validation history...">
                 </div>
 
+                <div class="msg-type-filter">
+                    <mat-icon class="filter-icon-sm">filter_list</mat-icon>
+                    <div class="custom-select-wrap" [class.open]="msgTypeDropdownOpen">
+                        <button type="button" class="custom-select-trigger" (click)="toggleMsgTypeDropdown($event)">
+                            <span>{{ messageTypeFilter === 'ALL' ? 'All Types' : messageTypeFilter }}</span>
+                            <svg class="select-chevron" viewBox="0 0 16 16" fill="none">
+                                <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                        <div class="custom-select-panel" *ngIf="msgTypeDropdownOpen">
+                            <div class="custom-option"
+                                 *ngFor="let t of availableMessageTypes"
+                                 [class.selected]="messageTypeFilter === t"
+                                 (click)="selectMsgType($event, t)">
+                                {{ t === 'ALL' ? 'All Types' : t }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="header-actions">
                     <button class="btn-action refresh" (click)="loadHistory()">
                         <mat-icon>refresh</mat-icon> REFRESH

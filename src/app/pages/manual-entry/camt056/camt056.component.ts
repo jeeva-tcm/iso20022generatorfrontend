@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -19,7 +19,7 @@ import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, MatDialogModule]
 })
-export class Camt056Component implements OnInit {
+export class Camt056Component implements OnInit, OnDestroy {
   form!: FormGroup;
   generatedXml = '';
   isParsingXml = false;
@@ -53,6 +53,10 @@ export class Camt056Component implements OnInit {
 
   showMaxLenWarning: { [key: string]: boolean } = {};
 
+  private readonly DRAFT_KEY = 'draft_camt056';
+  private draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
+  showDraftBanner = false;
+
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
@@ -66,11 +70,17 @@ export class Camt056Component implements OnInit {
   ngOnInit() {
     this.fetchCodelists();
     this.buildForm();
+    const hadDraft = this.loadDraft();
+    if (hadDraft) {
+      this.showDraftBanner = true;
+      this.generateXml();
+    }
     this.generateXml();
     this.pushHistory();
 
     this.form.valueChanges.subscribe(() => {
       this.generateXml();
+      this.scheduleDraftSave();
     });
   }
 
@@ -584,6 +594,7 @@ export class Camt056Component implements OnInit {
       next: (res: any) => {
         this.validationReport = res;
         this.validationStatus = 'done';
+        this.clearDraft();
       },
       error: (err) => {
         this.validationReport = {
@@ -725,5 +736,33 @@ export class Camt056Component implements OnInit {
 
   syncScroll(editor: any, gutter: any) {
     gutter.scrollTop = editor.scrollTop;
+  }
+
+  private saveDraft(): void {
+    try { localStorage.setItem(this.DRAFT_KEY, JSON.stringify(this.form.value)); }
+    catch (e) { console.warn('Draft save failed:', e); }
+  }
+
+  private loadDraft(): boolean {
+    try {
+      const saved = localStorage.getItem(this.DRAFT_KEY);
+      if (!saved) return false;
+      this.form.patchValue(JSON.parse(saved), { emitEvent: false });
+      return true;
+    } catch (e) { console.warn('Draft load failed:', e); return false; }
+  }
+
+  clearDraft(): void {
+    try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
+    this.showDraftBanner = false;
+  }
+
+  private scheduleDraftSave(): void {
+    if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+    this.draftSaveTimer = setTimeout(() => this.saveDraft(), 2000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
   }
 }

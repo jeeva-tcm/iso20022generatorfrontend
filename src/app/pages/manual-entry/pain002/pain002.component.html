@@ -8,7 +8,15 @@
         <div class="left-panel">
             <form [formGroup]="form" class="content-box">
                 <div class="grid">
-                    
+
+                    <div class="draft-banner" *ngIf="showDraftBanner">
+                        <mat-icon>restore</mat-icon>
+                        <span>Draft restored from your last session.</span>
+                        <button type="button" class="draft-clear-btn" (click)="clearDraft()">
+                            <mat-icon>close</mat-icon> Clear
+                        </button>
+                    </div>
+
                     <!-- 1. Application Header (BAH) -->
                     <div class="section-title section-blue" (click)="toggleSection('bah')">
                         <span>Application Header (AppHdr)</span>
@@ -116,6 +124,10 @@
 <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('head_toBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
 </div>
                             <div class="validation-msg" *ngIf="err('head_toBic')">{{err('head_toBic')}}</div>
+                        </div>
+                        <div class="bic-same-warning" *ngIf="bicSameWarning">
+                          <mat-icon>warning_amber</mat-icon>
+                          <span>{{ bicSameWarning }}</span>
                         </div>
 
                         <!-- Receiver Clearing System ID -->

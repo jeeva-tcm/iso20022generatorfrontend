@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
@@ -21,7 +21,7 @@ import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog
   templateUrl: './pacs3.component.html',
   styleUrl: './pacs3.component.css'
 })
-export class Pacs3Component implements OnInit {
+export class Pacs3Component implements OnInit, OnDestroy {
   form!: FormGroup;
   generatedXml = '';
   currentTab: 'form' | 'preview' = 'form';
@@ -55,6 +55,10 @@ export class Pacs3Component implements OnInit {
 
   partyPrefixes = ['ultmtDbtr', 'ultmtCdtr', 'initgPty', 'instgPty', 'orgnlDbtr', 'orgnlCdtrSchme'];
 
+  private readonly DRAFT_KEY = 'draft_pacs003';
+  private draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
+  showDraftBanner = false;
+
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
@@ -85,10 +89,17 @@ export class Pacs3Component implements OnInit {
     this.form.get('instdAgtBic')?.valueChanges.subscribe(v => {
       this.form.patchValue({ toBic: v }, { emitEvent: false });
     });
+    const hadDraft = this.loadDraft();
+    if (hadDraft) {
+      this.showDraftBanner = true;
+      this.generateXml();
+    }
+
     this.form.valueChanges.subscribe(() => {
       this.updateConditionalValidators();
       this.updateClearingSystemValidation();
       this.generateXml();
+      this.scheduleDraftSave();
     });
 
     // Init history
@@ -903,6 +914,15 @@ export class Pacs3Component implements OnInit {
     return list[ccy.toUpperCase()] !== undefined ? list[ccy.toUpperCase()] : 2;
   }
 
+  get bicSameWarning(): string | null {
+    const from = (this.form.get('fromBic')?.value || '').trim().toUpperCase();
+    const to = (this.form.get('toBic')?.value || '').trim().toUpperCase();
+    if (!from || !to) return null;
+    return from === to
+      ? 'Sender BIC and Receiver BIC are identical. The instructing and instructed agents must represent different financial institutions.'
+      : null;
+  }
+
   generateXml() {
     if (this.isParsingXml) return;
 
@@ -1448,7 +1468,8 @@ ${tx}\t\t\t</DrctDbtTxInf>
   // Validation
 
   validateMessage() {
-    this.generateXml();
+        if (this.bicSameWarning) return;
+        this.generateXml();
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
@@ -1469,6 +1490,7 @@ ${tx}\t\t\t</DrctDbtTxInf>
     }).subscribe({
       next: (data: any) => {
         this.validationReport = data;
+        this.clearDraft();
         this.validationStatus = 'done';
       },
       error: (err) => {
@@ -1971,5 +1993,33 @@ ${tx}\t\t\t</DrctDbtTxInf>
         group.get(controlName)?.markAsDirty();
       }
     });
+  }
+
+  private saveDraft(): void {
+    try { localStorage.setItem(this.DRAFT_KEY, JSON.stringify(this.form.value)); }
+    catch (e) { console.warn('Draft save failed:', e); }
+  }
+
+  private loadDraft(): boolean {
+    try {
+      const saved = localStorage.getItem(this.DRAFT_KEY);
+      if (!saved) return false;
+      this.form.patchValue(JSON.parse(saved), { emitEvent: false });
+      return true;
+    } catch (e) { console.warn('Draft load failed:', e); return false; }
+  }
+
+  clearDraft(): void {
+    try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
+    this.showDraftBanner = false;
+  }
+
+  private scheduleDraftSave(): void {
+    if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+    this.draftSaveTimer = setTimeout(() => this.saveDraft(), 2000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
   }
 }

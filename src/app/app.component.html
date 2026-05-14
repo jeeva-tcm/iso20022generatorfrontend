@@ -1,7 +1,21 @@
 <mat-toolbar color="primary" class="header">
     <span class="logo-container">
-        <mat-icon class="logo-icon">verified_user</mat-icon>
-        <span style="margin-left: -1px;margin-right: 7px;">ISO 20022 Validator</span>
+        <div class="logo-mark">
+            <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17 2L3 8v9c0 8.2 5.9 15.9 14 18 8.1-2.1 14-9.8 14-18V8L17 2z" fill="url(#lg1)"/>
+                <path d="M11.5 17.5l4 4 7-8" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                <defs>
+                    <linearGradient id="lg1" x1="3" y1="2" x2="31" y2="34" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#6366f1"/>
+                        <stop offset="1" stop-color="#a855f7"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+        </div>
+        <div class="logo-text-group">
+            <span class="logo-primary">ISO 20022</span>
+            <span class="logo-secondary">Validator</span>
+        </div>
     </span>
 
     <span class="spacer"></span>
@@ -223,8 +237,6 @@
             <mat-icon>{{ isDarkMode ? 'wb_sunny' : 'nights_stay' }}</mat-icon>
         </button>
     </nav>
-
-    <span class="spacer"></span>
 
     <div class="user-info">
 

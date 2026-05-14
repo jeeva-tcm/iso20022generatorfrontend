@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,7 +19,7 @@ import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog
     templateUrl: './pacs4.component.html',
     styleUrl: './pacs4.component.css'
 })
-export class Pacs4Component implements OnInit {
+export class Pacs4Component implements OnInit, OnDestroy {
     form!: FormGroup;
     generatedXml = '';
     currentTab: 'form' | 'preview' = 'form';
@@ -51,6 +51,10 @@ export class Pacs4Component implements OnInit {
     ];
 
     agentPrefixes = ['instgAgt', 'instdAgt', 'initgPty', 'dbtr', 'dbtrAgt', 'cdtrAgt', 'cdtr', 'ultmtDbtr', 'ultmtCdtr'];
+
+    private readonly DRAFT_KEY = 'draft_pacs004';
+    private draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
+    showDraftBanner = false;
 
     // Validation Modal State
     showValidationModal = false;
@@ -85,13 +89,46 @@ export class Pacs4Component implements OnInit {
             this.updateAmountValidator('orgnlAmount', 'orgnlCurrency');
         });
 
+        const hadDraft = this.loadDraft();
+        if (hadDraft) {
+          this.showDraftBanner = true;
+          this.generateXml();
+        }
+
         this.form.valueChanges.subscribe(() => {
+            this.updateConditionalValidators();
             this.generateXml();
+            this.scheduleDraftSave();
         });
 
         this.pushHistory();
         this.updateAmountValidator('amount', 'currency');
         this.updateAmountValidator('orgnlAmount', 'orgnlCurrency');
+        this.updateConditionalValidators();
+    }
+
+    private updateConditionalValidators() {
+        const ADDR_PAT = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
+        this.agentPrefixes.forEach(p => {
+            const addrType = this.form.get(p + 'AddrType')?.value;
+            const ctry = this.form.get(p + 'Ctry');
+            const twnNm = this.form.get(p + 'TwnNm');
+            if (!ctry || !twnNm) return;
+
+            if (addrType && addrType !== 'none') {
+                ctry.setValidators([Validators.required, Validators.pattern(/^[A-Z]{2,2}$/)]);
+            } else {
+                ctry.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
+            }
+            ctry.updateValueAndValidity({ emitEvent: false });
+
+            if (addrType === 'structured' || addrType === 'hybrid') {
+                twnNm.setValidators([Validators.required, Validators.maxLength(35), ADDR_PAT]);
+            } else {
+                twnNm.setValidators([Validators.maxLength(35), ADDR_PAT]);
+            }
+            twnNm.updateValueAndValidity({ emitEvent: false });
+        });
     }
 
     openBicSearch(f: string): void {
@@ -295,6 +332,15 @@ export class Pacs4Component implements OnInit {
         let s = dt.trim().replace(/\.\d+/, '').replace('Z', '+00:00');
         if (s && !/([+-]\d{2}:\d{2})$/.test(s)) s += '+00:00';
         return s;
+    }
+
+    get bicSameWarning(): string | null {
+        const from = (this.form.get('fromBic')?.value || '').trim().toUpperCase();
+        const to = (this.form.get('toBic')?.value || '').trim().toUpperCase();
+        if (!from || !to) return null;
+        return from === to
+            ? 'Sender BIC and Receiver BIC are identical. The instructing and instructed agents must represent different financial institutions.'
+            : null;
     }
 
     generateXml() {
@@ -630,7 +676,8 @@ ${tx}\t\t\t</TxInf>
     downloadXml() { const b = new Blob([this.generatedXml], { type: 'application/xml' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `pacs004-${Date.now()}.xml`; a.click(); }
 
     validateMessage() {
-        this.showValidationModal = true;
+                if (this.bicSameWarning) return;
+                this.showValidationModal = true;
         this.validationStatus = 'validating';
         this.http.post(this.config.getApiUrl('/validate'), {
             xml_content: this.generatedXml,
@@ -638,7 +685,7 @@ ${tx}\t\t\t</TxInf>
             message_type: 'pacs.004.001.09',
             store_in_history: true
         }).subscribe({
-            next: (data: any) => { this.validationReport = data; this.validationStatus = 'done'; },
+            next: (data: any) => { this.validationReport = data; this.clearDraft(); this.validationStatus = 'done'; },
             error: (err) => { this.validationStatus = 'done'; this.snackBar.open('Backend Error', 'Close', { duration: 3000 }); }
         });
     }
@@ -752,5 +799,33 @@ ${tx}\t\t\t</TxInf>
         navigator.clipboard.writeText(suggestion).then(() => {
             this.snackBar.open('Fix suggestion copied!', 'Close', { duration: 2000 });
         });
+    }
+
+    private saveDraft(): void {
+        try { localStorage.setItem(this.DRAFT_KEY, JSON.stringify(this.form.value)); }
+        catch (e) { console.warn('Draft save failed:', e); }
+    }
+
+    private loadDraft(): boolean {
+        try {
+            const saved = localStorage.getItem(this.DRAFT_KEY);
+            if (!saved) return false;
+            this.form.patchValue(JSON.parse(saved), { emitEvent: false });
+            return true;
+        } catch (e) { console.warn('Draft load failed:', e); return false; }
+    }
+
+    clearDraft(): void {
+        try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
+        this.showDraftBanner = false;
+    }
+
+    private scheduleDraftSave(): void {
+        if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+        this.draftSaveTimer = setTimeout(() => this.saveDraft(), 2000);
+    }
+
+    ngOnDestroy(): void {
+        if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
     }
 }

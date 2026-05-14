@@ -24,6 +24,14 @@
 
                                 <div class="grid">
 
+                                        <div class="draft-banner" *ngIf="showDraftBanner">
+                                            <mat-icon>restore</mat-icon>
+                                            <span>Draft restored from your last session.</span>
+                                            <button type="button" class="draft-clear-btn" (click)="clearDraft()">
+                                                <mat-icon>close</mat-icon> Clear
+                                            </button>
+                                        </div>
+
                                         <div class="section-title">Application Header (AppHdr)</div>
 
                                         <!-- From Section -->
@@ -89,6 +97,10 @@
                                                 </div>
                                                 <div class="char-counter" [class.near-limit]="isNearLimit('head_toBic', 11)" [class.at-limit]="isAtLimit('head_toBic', 11)">{{charCount('head_toBic', 11)}}</div>
                                                 <div class="validation-msg" *ngIf="err('head_toBic') as e">{{e}}</div>
+                                        </div>
+                                        <div class="bic-same-warning" *ngIf="bicSameWarning">
+                                          <mat-icon>warning_amber</mat-icon>
+                                          <span>{{ bicSameWarning }}</span>
                                         </div>
                                         <div class="form-group">
                                                 <label>Clearing System Code (Cd) <span class="opt">Optional</span></label>
@@ -663,6 +675,7 @@
                                         *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
                                         <label>{{title}} Town Name</label>
                                         <input [formControlName]="prefix+'TwnNm'" maxlength="35">
+                                        <div class="validation-msg" *ngIf="err(prefix+'TwnNm') as e">{{e}}</div>
                                 </div>
                                 <div class="form-group">
                                         <label>{{title}} Country</label>

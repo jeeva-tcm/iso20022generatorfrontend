@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -44,6 +44,27 @@ export class HistoryComponent implements OnInit {
     isLoading: boolean = false;
     searchTerm: string = '';
     currentFilter: 'ALL' | 'PASSED' | 'FAILED' = 'ALL';
+    messageTypeFilter: string = 'ALL';
+    readonly ALL_MESSAGE_TYPES: string[] = [
+        'camt.052.001.08',
+        'camt.053.001.08',
+        'camt.054.001.08',
+        'camt.055.001.08',
+        'camt.056.001.11',
+        'camt.057.001.08',
+        'pacs.002.001.10',
+        'pacs.003.001.08',
+        'pacs.004.001.09',
+        'pacs.008.001.08',
+        'pacs.009.001.08',
+        'pacs.009.001.12',
+        'pacs.010.001.03',
+        'pacs.010.001.10',
+        'pain.001.001.09',
+        'pain.002.001.10',
+        'pain.008.001.08',
+    ];
+    availableMessageTypes: string[] = ['ALL'];
     expandedElement: any | null = null;
     expandedDetail: any = null;
     selectedSubFile: any = null;
@@ -64,6 +85,7 @@ export class HistoryComponent implements OnInit {
     ) { }
 
     ngOnInit() {
+        this.availableMessageTypes = ['ALL', ...this.ALL_MESSAGE_TYPES];
         this.loadHistory();
     }
 
@@ -110,13 +132,23 @@ export class HistoryComponent implements OnInit {
                     // Sort by timestamp descending
                     aggregated.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
+                    // Merge hardcoded known types with any extra types found in records
+                    const dynamicTypes = [...new Set(
+                        aggregated.map((r: any) => r.message_type).filter(Boolean)
+                    )] as string[];
+                    const merged = [...new Set([...this.ALL_MESSAGE_TYPES, ...dynamicTypes])].sort();
+                    this.availableMessageTypes = ['ALL', ...merged];
+                    if (!this.availableMessageTypes.includes(this.messageTypeFilter)) {
+                        this.messageTypeFilter = 'ALL';
+                    }
+
                     this.dataSource.data = aggregated;
                     this.dataSource.paginator = this.paginator;
 
                     // Custom filter to target ID, Message Type, AND Status Tab
                     this.dataSource.filterPredicate = (record: any, filterValue: string) => {
-                        const [search, statusTab] = filterValue.split('|');
-                        
+                        const [search, statusTab, msgType] = filterValue.split('|');
+
                         // 1. Status Tab Filter
                         let matchStatus = false;
                         if (statusTab === 'ALL') {
@@ -127,10 +159,18 @@ export class HistoryComponent implements OnInit {
                         } else {
                             matchStatus = record.status === statusTab;
                         }
-                        
                         if (!matchStatus) return false;
 
-                        // 2. Text Search Filter
+                        // 2. Message Type Filter
+                        if (msgType && msgType !== 'ALL') {
+                            const allTypes = [
+                                record.message_type || '',
+                                ...((record.batch_records || []).map((r: any) => r.message_type || ''))
+                            ];
+                            if (!allTypes.some((t: string) => t === msgType)) return false;
+                        }
+
+                        // 3. Text Search Filter
                         const searchStr = `${record.batch_id || record.id || record.validation_id || ''} ${record.message_type || ''}`.toLowerCase();
                         return searchStr.includes(search.toLowerCase());
                     };
@@ -151,11 +191,34 @@ export class HistoryComponent implements OnInit {
             this.currentFilter = status;
         }
         // Use a combined string as the filter trigger
-        this.dataSource.filter = `${this.searchTerm.trim().toLowerCase()}|${this.currentFilter}`;
+        this.dataSource.filter = `${this.searchTerm.trim().toLowerCase()}|${this.currentFilter}|${this.messageTypeFilter}`;
 
         if (this.dataSource.paginator) {
             this.dataSource.paginator.firstPage();
         }
+    }
+
+    onMessageTypeChange() {
+        this.applyFilter();
+    }
+
+    msgTypeDropdownOpen = false;
+
+    toggleMsgTypeDropdown(e: Event) {
+        e.stopPropagation();
+        this.msgTypeDropdownOpen = !this.msgTypeDropdownOpen;
+    }
+
+    selectMsgType(e: Event, t: string) {
+        e.stopPropagation();
+        this.messageTypeFilter = t;
+        this.msgTypeDropdownOpen = false;
+        this.applyFilter();
+    }
+
+    @HostListener('document:click')
+    closeDropdown() {
+        this.msgTypeDropdownOpen = false;
     }
 
     getPassedCount(): number {

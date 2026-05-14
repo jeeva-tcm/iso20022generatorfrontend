@@ -225,7 +225,7 @@
 
                 <!-- Issues details grouping below -->
                 <div class="layer-detail-item" *ngFor="let l of getGroupedIssues(f.report)">
-                  <div class="layer-title" (click)="toggleLayer(f, l.name)" 
+                  <div class="layer-title" (click)="toggleLayer(f, l.name); $event.stopPropagation()"
                     [class.layer-expanded]="isLayerExpanded(f, l.name)">
                     <mat-icon class="layer-chevron"
                       [style.transform]="isLayerExpanded(f, l.name) ? 'rotate(90deg)' : 'rotate(0deg)'">chevron_right</mat-icon>

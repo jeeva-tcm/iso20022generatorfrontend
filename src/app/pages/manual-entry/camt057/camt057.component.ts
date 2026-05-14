@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
@@ -20,7 +20,7 @@ import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog
     templateUrl: './camt057.component.html',
     styleUrl: './camt057.component.css'
 })
-export class Camt057Component implements OnInit {
+export class Camt057Component implements OnInit, OnDestroy {
     form!: FormGroup;
     generatedXml = '';
     currentTab: 'form' | 'preview' = 'form';
@@ -46,6 +46,10 @@ export class Camt057Component implements OnInit {
 
     agentPrefixes = ['dbtr', 'dbtrAgt', 'intrmyAgt'];
 
+    private readonly DRAFT_KEY = 'draft_camt057';
+    private draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
+    showDraftBanner = false;
+
     constructor(
         private fb: FormBuilder,
         private http: HttpClient,
@@ -64,6 +68,11 @@ export class Camt057Component implements OnInit {
     ngOnInit() {
         this.fetchCodelists();
         this.buildForm();
+        const hadDraft = this.loadDraft();
+        if (hadDraft) {
+          this.showDraftBanner = true;
+          this.generateXml();
+        }
         this.generateXml();
         this.onEditorChange(this.generatedXml, true);
         this.form.get('currency')?.valueChanges.subscribe(() => {
@@ -74,6 +83,7 @@ export class Camt057Component implements OnInit {
         this.form.valueChanges.subscribe(() => {
             this.updateConditionalValidators();
             this.generateXml();
+            this.scheduleDraftSave();
         });
 
         // Init history
@@ -546,6 +556,15 @@ export class Camt057Component implements OnInit {
         const d = new Date(), p = (n: number) => n.toString().padStart(2, '0');
         const off = -d.getTimezoneOffset(), s = off >= 0 ? '+' : '-';
         return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}${s}${p(Math.floor(Math.abs(off) / 60))}:${p(Math.abs(off) % 60)}`;
+    }
+
+    get bicSameWarning(): string | null {
+        const from = (this.form.get('fromBic')?.value || '').trim().toUpperCase();
+        const to = (this.form.get('toBic')?.value || '').trim().toUpperCase();
+        if (!from || !to) return null;
+        return from === to
+            ? 'Sender BIC and Receiver BIC are identical. The instructing and instructed agents must represent different financial institutions.'
+            : null;
     }
 
     generateXml() {
@@ -1164,7 +1183,8 @@ ${ntfctnPartiesXml}${itmXml}
     }
 
     validateMessage() {
-        this.generateXml();
+                if (this.bicSameWarning) return;
+                this.generateXml();
         if (this.form.invalid) {
             this.form.markAllAsTouched();
             this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
@@ -1186,6 +1206,7 @@ ${ntfctnPartiesXml}${itmXml}
             next: (data: any) => {
                 this.validationReport = data;
                 this.validationStatus = 'done';
+                this.clearDraft();
             },
             error: (err) => {
                 this.validationReport = {
@@ -1320,5 +1341,33 @@ ${ntfctnPartiesXml}${itmXml}
                 group.get(controlName)?.markAsDirty();
             }
         });
+    }
+
+    private saveDraft(): void {
+        try { localStorage.setItem(this.DRAFT_KEY, JSON.stringify(this.form.value)); }
+        catch (e) { console.warn('Draft save failed:', e); }
+    }
+
+    private loadDraft(): boolean {
+        try {
+            const saved = localStorage.getItem(this.DRAFT_KEY);
+            if (!saved) return false;
+            this.form.patchValue(JSON.parse(saved), { emitEvent: false });
+            return true;
+        } catch (e) { console.warn('Draft load failed:', e); return false; }
+    }
+
+    clearDraft(): void {
+        try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
+        this.showDraftBanner = false;
+    }
+
+    private scheduleDraftSave(): void {
+        if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+        this.draftSaveTimer = setTimeout(() => this.saveDraft(), 2000);
+    }
+
+    ngOnDestroy(): void {
+        if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
     }
 }

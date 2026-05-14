@@ -176,7 +176,7 @@ export class ValidateComponent implements OnInit {
 
   toggleLayer(f: FileEntry, layerName: string) {
     const key = f.id + '_' + layerName;
-    this.expandedLayers[key] = !this.isLayerExpanded(f, layerName);
+    this.expandedLayers = { ...this.expandedLayers, [key]: !this.expandedLayers[key] };
   }
 
   isLayerExpanded(f: FileEntry, layerName: string): boolean {
@@ -194,7 +194,7 @@ export class ValidateComponent implements OnInit {
       this.issueFilters[key] = 'ALL';
     } else {
       this.issueFilters[key] = type;
-      this.expandedLayers[key] = true;
+      this.expandedLayers = { ...this.expandedLayers, [key]: true };
     }
   }
 

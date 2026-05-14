@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -17,7 +17,7 @@ import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, MatDialogModule]
 })
-export class Pain001Component implements OnInit {
+export class Pain001Component implements OnInit, OnDestroy {
   form!: FormGroup;
   generatedXml = '';
   currentTab: 'form' | 'preview' = 'form';
@@ -47,6 +47,10 @@ export class Pain001Component implements OnInit {
   warningTimeouts: { [key: string]: any } = {};
   showMaxLenWarning: { [key: string]: boolean } = {};
 
+  private readonly DRAFT_KEY = 'draft_pain001';
+  private draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
+  showDraftBanner = false;
+
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
@@ -58,11 +62,44 @@ export class Pain001Component implements OnInit {
 
   ngOnInit() {
     this.buildForm();
+    const hadDraft = this.loadDraft();
+    if (hadDraft) {
+      this.showDraftBanner = true;
+      this.generateXml();
+    }
     this.generateXml();
     this.pushHistory();
 
     this.form.valueChanges.subscribe(() => {
+      this.updateConditionalValidators();
       this.generateXml();
+      this.scheduleDraftSave();
+    });
+
+    this.updateConditionalValidators();
+  }
+
+  private updateConditionalValidators() {
+    const ADDR_PAT = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
+    ['dbtr', 'dbtrAgt', 'cdtrAgt', 'cdtr'].forEach(p => {
+      const addrType = this.form.get(p + 'AddrType')?.value;
+      const ctry = this.form.get(p + 'Ctry');
+      const twnNm = this.form.get(p + 'TwnNm');
+      if (!ctry || !twnNm) return;
+
+      if (addrType && addrType !== 'none') {
+        ctry.setValidators([Validators.required, Validators.pattern(/^[A-Z]{2,2}$/)]);
+      } else {
+        ctry.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
+      }
+      ctry.updateValueAndValidity({ emitEvent: false });
+
+      if (addrType === 'structured' || addrType === 'hybrid') {
+        twnNm.setValidators([Validators.required, Validators.maxLength(35), ADDR_PAT]);
+      } else {
+        twnNm.setValidators([Validators.maxLength(35), ADDR_PAT]);
+      }
+      twnNm.updateValueAndValidity({ emitEvent: false });
     });
   }
 
@@ -294,6 +331,15 @@ export class Pain001Component implements OnInit {
     s = s.replace(/\.\d+/, '').replace('Z', '+00:00');
     if (s && !/([+-]\d{2}:\d{2})$/.test(s)) s += '+00:00';
     return s;
+  }
+
+  get bicSameWarning(): string | null {
+    const from = (this.form.get('head_fromBic')?.value || '').trim().toUpperCase();
+    const to = (this.form.get('head_toBic')?.value || '').trim().toUpperCase();
+    if (!from || !to) return null;
+    return from === to
+      ? 'Sender BIC and Receiver BIC are identical. The instructing and instructed agents must represent different financial institutions.'
+      : null;
   }
 
   generateXml() {
@@ -941,7 +987,8 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
   downloadXml() { const b = new Blob([this.generatedXml], { type: 'application/xml' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `pain001-${Date.now()}.xml`; a.click(); }
 
   validateMessage() {
-    this.showValidationModal = true;
+        if (this.bicSameWarning) return;
+        this.showValidationModal = true;
     this.validationStatus = 'validating';
     this.validationReport = null;
     this.validationExpandedIssue = null;
@@ -951,9 +998,10 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
       message_type: 'pain.001.001.09', // Kept as pain.001.001.09 for this component
       mode: 'Full 1-3'
     }).subscribe({
-      next: (res: any) => { 
-        this.validationReport = res; 
-        this.validationStatus = 'done'; 
+      next: (res: any) => {
+        this.validationReport = res;
+        this.validationStatus = 'done';
+        this.clearDraft();
       },
       error: (err) => { 
         this.validationReport = {
@@ -1190,5 +1238,33 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
 
   syncScroll(editor: HTMLTextAreaElement, gutter: HTMLDivElement) {
     gutter.scrollTop = editor.scrollTop;
+  }
+
+  private saveDraft(): void {
+    try { localStorage.setItem(this.DRAFT_KEY, JSON.stringify(this.form.value)); }
+    catch (e) { console.warn('Draft save failed:', e); }
+  }
+
+  private loadDraft(): boolean {
+    try {
+      const saved = localStorage.getItem(this.DRAFT_KEY);
+      if (!saved) return false;
+      this.form.patchValue(JSON.parse(saved), { emitEvent: false });
+      return true;
+    } catch (e) { console.warn('Draft load failed:', e); return false; }
+  }
+
+  clearDraft(): void {
+    try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
+    this.showDraftBanner = false;
+  }
+
+  private scheduleDraftSave(): void {
+    if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+    this.draftSaveTimer = setTimeout(() => this.saveDraft(), 2000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
   }
 }
