@@ -728,6 +728,7 @@ ${doc.trimEnd()}
   }
 
   hint(path: string, maxLen: number): string | null {
+    if (this.err(path)) return null;
     const c = this.form.get(path);
     if (!c || !c.value) return null;
     const len = c.value.toString().length;

@@ -1172,6 +1172,7 @@ ${txInf.trimEnd()}
   }
 
   hint(f: string, max: number): string | null {
+    if (this.err(f)) return null;
     const v = this.form.get(f)?.value || '';
     if (v.length >= max) return `${v.length}/${max} (at limit)`;
     return null;

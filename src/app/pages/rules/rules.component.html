@@ -1,124 +1,110 @@
-<div class="rules-container animate-fade-in">
+<div class="rules-container">
+
   <div class="page-header">
+    <div class="page-header-eyebrow">ISO 20022 · SWIFT CBPR+ · SR2025</div>
     <h1>Validation Rule Engine</h1>
-    <p>
-      A multi-layered defense system ensuring 100% compliance with ISO 20022
-      standards.
-    </p>
+    <p>A multi-layered defense system ensuring 100% compliance with ISO 20022 standards.</p>
   </div>
 
   <div class="rules-stack">
-    <mat-card class="layer-card">
-      <div class="layer-badge">LAYER 1</div>
-      <mat-card-header>
-        <mat-card-title>Syntax & XML Well-Formedness</mat-card-title>
-        <mat-card-subtitle>Foundational Validation</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <p>
-          Performs foundational technical validation of the incoming ISO 20022
-          XML message before schema or business rule processing begins.
-        </p>
 
-        <h4 class="validation-section-title">Validates:</h4>
-        <ul class="rule-list">
-          <li>
-            <mat-icon>check</mat-icon>
-            <strong>UTF-8 Encoding Compliance</strong> - Ensures proper character encoding
-          </li>
-          <li>
-            <mat-icon>check</mat-icon>
-            <strong>XML Parse-ability</strong> - Validates no malformed or unclosed tags
-          </li>
-          <li>
-            <mat-icon>check</mat-icon>
-            <strong>Namespace Declarations</strong> - Verifies URN format (e.g.,
-            urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08)
-          </li>
-        </ul>
+    <!-- LAYER 1 -->
+    <div class="layer-col">
+      <div class="layer-num">01</div>
+      <div class="layer-title">Syntax &amp; XML Well-Formedness</div>
+      <div class="layer-sub">Foundational Validation</div>
+      <p class="layer-desc">
+        Performs foundational technical validation of the incoming ISO 20022
+        XML message before schema or business rule processing begins.
+      </p>
+      <div class="divider"></div>
+      <ul class="rule-list">
+        <li>
+          <mat-icon>check_circle</mat-icon>
+          <span><strong>UTF-8 Encoding Compliance</strong> — Ensures proper character encoding</span>
+        </li>
+        <li>
+          <mat-icon>check_circle</mat-icon>
+          <span><strong>XML Parse-ability</strong> — Validates no malformed or unclosed tags</span>
+        </li>
+        <li>
+          <mat-icon>check_circle</mat-icon>
+          <span><strong>Namespace Declarations</strong> — Verifies URN format (e.g., urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08)</span>
+        </li>
+      </ul>
+    </div>
 
+    <!-- LAYER 2 -->
+    <div class="layer-col">
+      <div class="layer-num">02</div>
+      <div class="layer-title">Schema Validation (Structural)</div>
+      <div class="layer-sub">SR2025 XSD &amp; BAH Compliance</div>
+      <p class="layer-desc">
+        Validates the message structure against official SR2025 ISO 20022 XML
+        Schema Definitions (XSD) and Business Application Header (BAH) schema.
+      </p>
+      <div class="divider"></div>
+      <ul class="rule-list">
+        <li>
+          <mat-icon>check_circle</mat-icon>
+          <span>SR2025 schema validation (pacs.008.001.08, pacs.009.001.08, etc.)</span>
+        </li>
+        <li>
+          <mat-icon>check_circle</mat-icon>
+          <span>Business Application Header (BAH) mandatory field validations</span>
+        </li>
+        <li>
+          <mat-icon>check_circle</mat-icon>
+          <span>Mandatory vs Optional element presence enforcement</span>
+        </li>
+        <li>
+          <mat-icon>check_circle</mat-icon>
+          <span>Data type compliance (Amount)</span>
+        </li>
+        <li>
+          <mat-icon>check_circle</mat-icon>
+          <span>Cardinality validation (minOccurs / maxOccurs rules)</span>
+        </li>
+        <li>
+          <mat-icon>check_circle</mat-icon>
+          <span>BIC format validation (8 or 11 characters – ISO 9362)</span>
+        </li>
+      </ul>
+    </div>
 
-      </mat-card-content>
-    </mat-card>
+    <!-- LAYER 3 -->
+    <div class="layer-col">
+      <div class="layer-num">03</div>
+      <div class="layer-title">Business Rules &amp; Reference Data</div>
+      <div class="layer-sub">Semantic &amp; SWIFT Compliance</div>
+      <p class="layer-desc">
+        Applies semantic-level validation, cross-field business rules, and
+        reference data verification (BIC/Currency) based on SWIFT CBPR+ guidelines.
+      </p>
+      <div class="divider"></div>
+      <ul class="rule-list">
+        <li>
+          <mat-icon>check_circle</mat-icon>
+          <span>Purpose Code validation against ISO Code Sets (SALA/RENT/SUPP)</span>
+        </li>
+        <li>
+          <mat-icon>check_circle</mat-icon>
+          <span>BIC code verification (SWIFT Directory) &amp; Currency code validation (ISO 4217)</span>
+        </li>
+        <li>
+          <mat-icon>check_circle</mat-icon>
+          <span>Charge Bearer validation (SLEV, SHAR, CRED, DEBT) logic</span>
+        </li>
+        <li>
+          <mat-icon>check_circle</mat-icon>
+          <span>Conditional Amount Limits and High-Value payment flagging</span>
+        </li>
+        <li class="rule-item-sanctions">
+          <mat-icon class="icon-sanctions">gpp_bad</mat-icon>
+          <span><strong>Sanctions Screening</strong> — Fail-fast country &amp; party name screening against sanctioned jurisdictions (OFAC / UN / EU lists); any match raises a <code>SANCTIONS_BLOCKED</code> error and aborts processing</span>
+        </li>
+      </ul>
+    </div>
 
-    <mat-card class="layer-card">
-      <div class="layer-badge">LAYER 2</div>
-      <mat-card-header>
-        <mat-card-title>Schema Validation (Structural)</mat-card-title>
-        <mat-card-subtitle>SR2025 XSD & BAH Compliance </mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <p>
-          Validates the message structure against official SR2025 ISO 20022 XML
-          Schema Definitions (XSD) and Business Application Header (BAH) schema.
-        </p>
-        <ul class="rule-list">
-          <li>
-            <mat-icon>check</mat-icon>
-            SR2025 schema validation (pacs.008.001.08, pacs.009.001.08, etc.)
-          </li>
-          <li>
-            <mat-icon>check</mat-icon>
-            Business Application Header (BAH) mandatory field validations
-          </li>
-          <li>
-            <mat-icon>check</mat-icon>
-            Mandatory vs Optional element presence enforcement
-          </li>
-          <li>
-            <mat-icon>check</mat-icon>
-            Data type compliance (Amount)
-          </li>
-          <li>
-            <mat-icon>check</mat-icon>
-            Cardinality validation (minOccurs / maxOccurs rules)
-          </li>
-          <li>
-            <mat-icon>check</mat-icon>
-            BIC format validation (8 or 11 characters – ISO 9362)
-          </li>
-          <!-- <li>
-                <mat-icon>check</mat-icon>
-                ISO 8601 date-time format compliance (YYYY-MM-DDThh:mm:ssZ)
-            </li> -->
-          <!-- <li>
-                <mat-icon>check</mat-icon>
-                Business Service code validation (e.g., swift.cbprplus.02)
-            </li> -->
-        </ul>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="layer-card">
-      <div class="layer-badge">LAYER 3</div>
-      <mat-card-header>
-        <mat-card-title>Business Rules & Reference Data</mat-card-title>
-        <mat-card-subtitle>Semantic & SWIFT Compliance</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <p>
-          Applies semantic-level validation, cross-field business rules, and
-          reference data verification (BIC/Currency) based on SWIFT CBPR+ guidelines.
-        </p>
-        <ul class="rule-list">
-          <li>
-            <mat-icon>check</mat-icon>
-            Purpose Code validation against ISO Code Sets (SALA/RENT/SUPP)
-          </li>
-          <li>
-            <mat-icon>check</mat-icon>
-            BIC code verification (SWIFT Directory) & Currency code validation (ISO 4217)
-          </li>
-          <li>
-            <mat-icon>check</mat-icon>
-            Charge Bearer validation (SLEV, SHAR, CRED, DEBT) logic
-          </li>
-          <li>
-            <mat-icon>check</mat-icon>
-            Conditional Amount Limits and High-Value payment flagging
-          </li>
-        </ul>
-      </mat-card-content>
-    </mat-card>
   </div>
 </div>
