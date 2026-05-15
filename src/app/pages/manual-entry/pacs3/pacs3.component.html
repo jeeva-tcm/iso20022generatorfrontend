@@ -38,7 +38,11 @@
                                                 <div class="field-hint at-limit" *ngIf="hint('fromBic', 11) as h">{{h}}
                                                 </div>
                                         </div>
-                                        <div class="form-group"><label>AppHdr Related Msg ID</label><input formControlName="rltd"></div><div class="form-group"><label>Related Msg CharSet</label><input formControlName="rltdCharSet"></div>
+                                        <div class="form-group"><label>AppHdr Related Msg ID</label><input formControlName="rltd">
+                                                <div class="validation-msg" *ngIf="err('rltd') as e">{{e}}</div>
+                                        </div><div class="form-group"><label>Related Msg CharSet</label><input formControlName="rltdCharSet">
+                                                <div class="validation-msg" *ngIf="err('rltdCharSet') as e">{{e}}</div>
+                                        </div>
                                          <div class="form-group"><label>Receiver BIC <span class="req">*</span></label>
                                                  <div class="uetr-control-row">
                                                           <input formControlName="toBic" maxlength="11" class="auto-uppercase" required>
@@ -56,6 +60,10 @@
                                         <div class="form-group"><label>Business Msg ID <span
                                                                 class="req">*</span></label><input
                                                         formControlName="bizMsgId" maxlength="35" required>
+                                                <div class="validation-msg" *ngIf="err('bizMsgId') as e">{{e}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('bizMsgId', 35) as h">{{h}}
+                                                </div>
+                                        </div>
                                          <div class="form-group"><label>Receiver Member ID</label><input formControlName="toMmbId" maxlength="35">
                                                  <div class="validation-msg" *ngIf="err('toMmbId') as e">{{e}}</div>
                                                  <div class="field-hint at-limit" *ngIf="hint('toMmbId', 35) as h">{{h}}</div>
@@ -68,10 +76,6 @@
                                                  <div class="validation-msg" *ngIf="err('toLei') as e">{{e}}</div>
                                                  <div class="field-hint at-limit" *ngIf="hint('toLei', 20) as h">{{h}}</div>
                                          </div>
-                                                <div class="validation-msg" *ngIf="err('bizMsgId') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('bizMsgId', 35) as h">{{h}}
-                                                </div>
-                                        </div>
                                         <div class="form-group"><label>Message ID <span
                                                                 class="req">*</span></label><input
                                                         formControlName="msgId" maxlength="35" required>
@@ -100,10 +104,18 @@
                                                 </select>
                                                 <div class="validation-msg" *ngIf="err('sttlmMtd') as e">{{e}}</div>
                                         </div>
-                                        <div class="form-group"><label>Market Practice</label><input formControlName="mktPrctc"></div>
-                                        <div class="form-group"><label>AppHdr Registry</label><input formControlName="regyId" placeholder="e.g. SWIFT"></div>
-                                        <div class="form-group"><label>Copy/Duplicate</label><select formControlName="cpyDplct"><option value="">None</option><option value="COPY">COPY</option><option value="DUPL">DUPL</option></select></div>
-                                         <div class="form-group"><label>AppHdr Priority</label><input formControlName="appHdrPrty" placeholder="e.g. HIGH"></div>
+                                        <div class="form-group"><label>Market Practice</label><input formControlName="mktPrctc">
+                                                <div class="validation-msg" *ngIf="err('mktPrctc') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>AppHdr Registry</label><input formControlName="regyId" placeholder="e.g. SWIFT">
+                                                <div class="validation-msg" *ngIf="err('regyId') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Copy/Duplicate</label><select formControlName="cpyDplct"><option value="">None</option><option value="COPY">COPY</option><option value="DUPL">DUPL</option></select>
+                                                <div class="validation-msg" *ngIf="err('cpyDplct') as e">{{e}}</div>
+                                        </div>
+                                         <div class="form-group"><label>AppHdr Priority</label><input formControlName="appHdrPrty" placeholder="e.g. HIGH">
+                                                <div class="validation-msg" *ngIf="err('appHdrPrty') as e">{{e}}</div>
+                                         </div>
                                                                                  <div class="form-group"><label>Sttlm Account IBAN</label>
                                                   <input formControlName="sttlmAcctId" placeholder="IBAN" maxlength="34">
                                                   <div class="validation-msg" *ngIf="err('sttlmAcctId') as e">{{e}}</div>
@@ -114,14 +126,19 @@
                                                   <div class="validation-msg" *ngIf="err('sttlmAcctOthrId') as e">{{e}}</div>
                                                   <div class="field-hint at-limit" *ngIf="hint('sttlmAcctOthrId', 35) as h">{{h}}</div>
                                           </div>
-                                         <div class="form-group"><label>Sttlm Account Type Code</label><input formControlName="sttlmAcctTpCd"></div>
+                                         <div class="form-group"><label>Sttlm Account Type Code</label><input formControlName="sttlmAcctTpCd">
+                                                <div class="validation-msg" *ngIf="err('sttlmAcctTpCd') as e">{{e}}</div>
+                                         </div>
                                          <div class="form-group"><label>Sttlm Account Currency</label>
                                                 <select formControlName="sttlmAcctCcy">
                                                         <option value="">None</option>
                                                         <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
                                                 </select>
+                                                <div class="validation-msg" *ngIf="err('sttlmAcctCcy') as e">{{e}}</div>
                                          </div>
-                                         <div class="form-group"><label>Sttlm Account Name</label><input formControlName="sttlmAcctNm"></div>
+                                         <div class="form-group"><label>Sttlm Account Name</label><input formControlName="sttlmAcctNm">
+                                                <div class="validation-msg" *ngIf="err('sttlmAcctNm') as e">{{e}}</div>
+                                         </div>
 
                                         <div class="section-title">Transaction Details</div>
                                         <div class="form-group intermediary-field"><label>Instruction ID <span
@@ -195,30 +212,37 @@
                                         </div>
                                         <div class="form-group intermediary-field"><label>Instructed Amount</label>
                                                 <input formControlName="instdAmt" pattern="^\d{1,18}(\.\d{1,5})?$">
+                                                <div class="validation-msg" *ngIf="err('instdAmt') as e">{{e}}</div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>Instructed Currency</label>
                                                 <select formControlName="instdAmtCcy">
                                                         <option value="">None</option>
                                                         <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
                                                 </select>
+                                                <div class="validation-msg" *ngIf="err('instdAmtCcy') as e">{{e}}</div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>Exchange Rate</label>
                                                 <input formControlName="xchgRate" pattern="^\d{1,11}(\.\d{1,10})?$">
+                                                <div class="validation-msg" *ngIf="err('xchgRate') as e">{{e}}</div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>Debit DateTime</label>
                                                 <input type="datetime-local" formControlName="dbtDtTm">
+                                                <div class="validation-msg" *ngIf="err('dbtDtTm') as e">{{e}}</div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>Credit DateTime</label>
                                                 <input type="datetime-local" formControlName="cdtDtTm">
+                                                <div class="validation-msg" *ngIf="err('cdtDtTm') as e">{{e}}</div>
                                         </div>                                    
                                         <div class="form-group intermediary-field"><label>Charges Amount</label>
                                                 <input formControlName="chrgsInfAmt" pattern="^\d{1,18}(\.\d{1,5})?$">
+                                                <div class="validation-msg" *ngIf="err('chrgsInfAmt') as e">{{e}}</div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>Charges Currency</label>
                                                 <select formControlName="chrgsInfCcy">
                                                         <option value="">None</option>
                                                         <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
                                                 </select>
+                                                <div class="validation-msg" *ngIf="err('chrgsInfCcy') as e">{{e}}</div>
                                         </div>
                                          <div class="form-group intermediary-field"><label>Charges Agt 2 BIC</label>
                                                  <div class="uetr-control-row">
@@ -226,18 +250,30 @@
                                                          <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('chrgsInfAgtBic2', form)" title="Search BIC"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
                                                          </button>
                                                  </div>
+                                                 <div class="validation-msg" *ngIf="err('chrgsInfAgtBic2') as e">{{e}}</div>
+                                                 <div class="field-hint at-limit" *ngIf="hint('chrgsInfAgtBic2', 11) as h">{{h}}</div>
                                          </div>
-                                         <div class="form-group intermediary-field"><label>Charges Amt 2</label><input formControlName="chrgsInfAmt2"></div>
-                                         <div class="form-group intermediary-field"><label>Charges Ccy 2</label><select formControlName="chrgsInfCcy2"><option value="">None</option><option *ngFor="let c of currencies" [value]="c">{{c}}</option></select></div>
+                                         <div class="form-group intermediary-field"><label>Charges Amt 2</label><input formControlName="chrgsInfAmt2">
+                                                <div class="validation-msg" *ngIf="err('chrgsInfAmt2') as e">{{e}}</div>
+                                         </div>
+                                         <div class="form-group intermediary-field"><label>Charges Ccy 2</label><select formControlName="chrgsInfCcy2"><option value="">None</option><option *ngFor="let c of currencies" [value]="c">{{c}}</option></select>
+                                                <div class="validation-msg" *ngIf="err('chrgsInfCcy2') as e">{{e}}</div>
+                                         </div>
                                           <div class="form-group intermediary-field"><label>Charges Agt 3 BIC</label>
                                                  <div class="uetr-control-row">
                                                          <input formControlName="chrgsInfAgtBic3" maxlength="11" class="auto-uppercase">
                                                          <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('chrgsInfAgtBic3', form)" title="Search BIC"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
                                                          </button>
                                                  </div>
+                                                 <div class="validation-msg" *ngIf="err('chrgsInfAgtBic3') as e">{{e}}</div>
+                                                 <div class="field-hint at-limit" *ngIf="hint('chrgsInfAgtBic3', 11) as h">{{h}}</div>
+                                          </div>
+                                         <div class="form-group intermediary-field"><label>Charges Amt 3</label><input formControlName="chrgsInfAmt3">
+                                                <div class="validation-msg" *ngIf="err('chrgsInfAmt3') as e">{{e}}</div>
                                          </div>
-                                         <div class="form-group intermediary-field"><label>Charges Amt 3</label><input formControlName="chrgsInfAmt3"></div>
-                                         <div class="form-group intermediary-field"><label>Charges Ccy 3</label><select formControlName="chrgsInfCcy3"><option value="">None</option><option *ngFor="let c of currencies" [value]="c">{{c}}</option></select></div>                                    
+                                         <div class="form-group intermediary-field"><label>Charges Ccy 3</label><select formControlName="chrgsInfCcy3"><option value="">None</option><option *ngFor="let c of currencies" [value]="c">{{c}}</option></select>
+                                                <div class="validation-msg" *ngIf="err('chrgsInfCcy3') as e">{{e}}</div>
+                                         </div>                                    
                                         <div class="form-group intermediary-field"><label>Settlement Priority <span
                                                                 class="opt">Optional</span></label>
                                                 <select formControlName="sttlmPrty">
@@ -289,8 +325,12 @@
                                                         <span class="opt">Optional</span></label><input
                                                         formControlName="svcLvlPrtry" placeholder="Max 35 chars">
                                                 <div class="validation-msg" *ngIf="err('svcLvlPrtry') as e">{{e}}</div>
-                                         <div class="form-group intermediary-field"><label>Service Level 2 Code</label><input formControlName="svcLvlCd2" placeholder="e.g. PRPT"></div>
-                                         <div class="form-group intermediary-field"><label>Service Level 3 Code</label><input formControlName="svcLvlCd3" placeholder="e.g. NURG"></div>
+                                         <div class="form-group intermediary-field"><label>Service Level 2 Code</label><input formControlName="svcLvlCd2" placeholder="e.g. PRPT">
+                                                <div class="validation-msg" *ngIf="err('svcLvlCd2') as e">{{e}}</div>
+                                         </div>
+                                         <div class="form-group intermediary-field"><label>Service Level 3 Code</label><input formControlName="svcLvlCd3" placeholder="e.g. NURG">
+                                                <div class="validation-msg" *ngIf="err('svcLvlCd3') as e">{{e}}</div>
+                                         </div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>Local Instrument Code <span
                                                                 class="opt">Optional</span></label><input
@@ -350,12 +390,14 @@
                                         </div>
                                         <div class="form-group intermediary-field"><label>Date Of Signature</label>
                                                 <input formControlName="dtOfSgntr" type="date" min="0001-01-01" max="9999-12-31">
+                                                <div class="validation-msg" *ngIf="err('dtOfSgntr') as e">{{e}}</div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>Amendment Indicator</label>
                                                 <select formControlName="amdmntInd">
                                                     <option value="false">False</option>
                                                     <option value="true">True</option>
                                                 </select>
+                                                <div class="validation-msg" *ngIf="err('amdmntInd') as e">{{e}}</div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>Original Mandate ID</label>
                                                 <input formControlName="orgnlMndtId" maxlength="35">
@@ -368,7 +410,10 @@
                                                 <div class="field-hint at-limit" *ngIf="hint('orgnlCdtrSchmeIdNm', 140) as h">{{h}}</div>
                                         </div>
                                          <div class="party-group"><div class="party-group-title">Original Creditor Scheme ID</div><ng-container *ngTemplateOutlet="partyForm; context:{prefix:'orgnlCdtrSchme',isAgent:false, title:'Original Creditor Scheme ID', group: form}"></ng-container></div>
-                                         <div class="form-group intermediary-field"><label>Original Creditor Agent Account</label><input formControlName="orgnlCdtrAgtAcct" maxlength="34"></div>
+                                         <div class="form-group intermediary-field"><label>Original Creditor Agent Account</label><input formControlName="orgnlCdtrAgtAcct" maxlength="34">
+                                                <div class="validation-msg" *ngIf="err('orgnlCdtrAgtAcct') as e">{{e}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('orgnlCdtrAgtAcct', 34) as h">{{h}}</div>
+                                         </div>
 
                                         <div class="section-title">Transaction Agents</div>
 
@@ -538,6 +583,7 @@
                                                                         <option value="TELB">TELB – Telecom / Other
                                                                                 beneficiary contact</option>
                                                                 </select>
+                                                                <div class="validation-msg" *ngIf="err('instrForCdtrAgt1Cd') as e">{{e}}</div>
                                                         </div>
                                                         <div class="form-group">
                                                                 <label>Instruction Information</label>
@@ -565,6 +611,7 @@
                                                                         <option value="TELB">TELB – Telecom / Other
                                                                                 beneficiary contact</option>
                                                                 </select>
+                                                                <div class="validation-msg" *ngIf="err('instrForCdtrAgt2Cd') as e">{{e}}</div>
                                                         </div>
                                                         <div class="form-group">
                                                                 <label>Instruction Information</label>
@@ -592,6 +639,7 @@
                                                                         <option value="TELA">TELA – Telecom account
                                                                                 owner</option>
                                                                 </select>
+                                                                <div class="validation-msg" *ngIf="err('instrForNxtAgt1Cd') as e">{{e}}</div>
                                                         </div>
                                                         <div class="form-group">
                                                                 <label>Instruction Information</label>
@@ -613,6 +661,7 @@
                                                                         <option value="TELA">TELA – Telecom account
                                                                                 owner</option>
                                                                 </select>
+                                                                <div class="validation-msg" *ngIf="err('instrForNxtAgt2Cd') as e">{{e}}</div>
                                                         </div>
                                                         <div class="form-group">
                                                                 <label>Instruction Information</label>
@@ -634,6 +683,7 @@
                                                                         <option value="TELA">TELA – Telecom account
                                                                                 owner</option>
                                                                 </select>
+                                                                <div class="validation-msg" *ngIf="err('instrForNxtAgt3Cd') as e">{{e}}</div>
                                                         </div>
                                                         <div class="form-group">
                                                                 <label>Instruction Information</label>
@@ -655,6 +705,7 @@
                                                                         <option value="TELA">TELA – Telecom account
                                                                                 owner</option>
                                                                 </select>
+                                                                <div class="validation-msg" *ngIf="err('instrForNxtAgt4Cd') as e">{{e}}</div>
                                                         </div>
                                                         <div class="form-group">
                                                                 <label>Instruction Information</label>
@@ -676,6 +727,7 @@
                                                                         <option value="TELA">TELA – Telecom account
                                                                                 owner</option>
                                                                 </select>
+                                                                <div class="validation-msg" *ngIf="err('instrForNxtAgt5Cd') as e">{{e}}</div>
                                                         </div>
                                                         <div class="form-group">
                                                                 <label>Instruction Information</label>
@@ -697,6 +749,7 @@
                                                                         <option value="TELA">TELA – Telecom account
                                                                                 owner</option>
                                                                 </select>
+                                                                <div class="validation-msg" *ngIf="err('instrForNxtAgt6Cd') as e">{{e}}</div>
                                                         </div>
                                                         <div class="form-group">
                                                                 <label>Instruction Information</label>
@@ -715,18 +768,28 @@
                                                         <option value="">None</option>
                                                         <option *ngFor="let p of purposes" [value]="p">{{p}}</option>
                                                 </select>
+                                                <div class="validation-msg" *ngIf="err('purpCd') as e">{{e}}</div>
                                         </div>
-                                        <div class="form-group intermediary-field"><label>Regulatory Reporting Code 1</label><input formControlName="rgltryRptg1Code" maxlength="10"></div>
+                                        <div class="form-group intermediary-field"><label>Regulatory Reporting Code 1</label><input formControlName="rgltryRptg1Code" maxlength="10">
+                                                <div class="validation-msg" *ngIf="err('rgltryRptg1Code') as e">{{e}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('rgltryRptg1Code', 10) as h">{{h}}</div>
+                                        </div>
                                         <div class="form-group intermediary-field"><label>Regulatory Reporting Inf 1</label><input formControlName="rgltryRptg1Inf" maxlength="35">
                                                 <div class="validation-msg" *ngIf="err('rgltryRptg1Inf') as e">{{e}}</div>
                                                 <div class="field-hint at-limit" *ngIf="hint('rgltryRptg1Inf', 35) as h">{{h}}</div>
                                         </div>
-                                        <div class="form-group intermediary-field"><label>Regulatory Reporting Code 2</label><input formControlName="rgltryRptg2Code" maxlength="10"></div>
+                                        <div class="form-group intermediary-field"><label>Regulatory Reporting Code 2</label><input formControlName="rgltryRptg2Code" maxlength="10">
+                                                <div class="validation-msg" *ngIf="err('rgltryRptg2Code') as e">{{e}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('rgltryRptg2Code', 10) as h">{{h}}</div>
+                                        </div>
                                         <div class="form-group intermediary-field"><label>Regulatory Reporting Inf 2</label><input formControlName="rgltryRptg2Inf" maxlength="35">
                                                 <div class="validation-msg" *ngIf="err('rgltryRptg2Inf') as e">{{e}}</div>
                                                 <div class="field-hint at-limit" *ngIf="hint('rgltryRptg2Inf', 35) as h">{{h}}</div>
                                         </div>
-                                        <div class="form-group intermediary-field"><label>Regulatory Reporting Code 3</label><input formControlName="rgltryRptg3Code" maxlength="10"></div>
+                                        <div class="form-group intermediary-field"><label>Regulatory Reporting Code 3</label><input formControlName="rgltryRptg3Code" maxlength="10">
+                                                <div class="validation-msg" *ngIf="err('rgltryRptg3Code') as e">{{e}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('rgltryRptg3Code', 10) as h">{{h}}</div>
+                                        </div>
                                         <div class="form-group intermediary-field"><label>Regulatory Reporting Inf 3</label><input formControlName="rgltryRptg3Inf" maxlength="35">
                                                 <div class="validation-msg" *ngIf="err('rgltryRptg3Inf') as e">{{e}}</div>
                                                 <div class="field-hint at-limit" *ngIf="hint('rgltryRptg3Inf', 35) as h">{{h}}</div>
@@ -761,6 +824,7 @@
                                                                 <option value="ustrd">Unstructured</option>
                                                                 <option value="strd">Structured</option>
                                                         </select>
+                                                        <div class="validation-msg" *ngIf="err('rmtInfType') as e">{{e}}</div>
                                                 </div>
                                         </div>
 
@@ -824,6 +888,7 @@
                                                                         <option value="DNFA">DNFA (Debit Note)</option>
                                                                         <option value="VCHR">VCHR (Voucher)</option>
                                                                 </select>
+                                                                <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocCd') as e">{{e}}</div>
                                                         </div>
                                                         <div class="form-group">
                                                                 <label>Referred Document Number</label>
@@ -980,6 +1045,7 @@
                                 <option value="unstructured">Unstructured</option>
                                 <option value="hybrid">Hybrid</option>
                         </select>
+                        <div class="validation-msg" *ngIf="err(prefix+'AddrType') as e">{{e}}</div>
                 </div>
 
                 <!-- Dynamic Address Fields -->
@@ -1103,6 +1169,7 @@
                 <div class="form-group">
                         <label>{{title}} Account Number</label>
                         <input [formControlName]="prefix+'Acct'" maxlength="34">
+                        <div class="validation-msg" *ngIf="err(prefix+'Acct') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint(prefix+'Acct', 34) as h">{{h}}</div>
                 </div>
 

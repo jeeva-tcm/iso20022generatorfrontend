@@ -212,30 +212,74 @@
                                 </select>
                             </div>
                             <ng-container *ngIf="['structured', 'hybrid'].includes(form.value.initgPtyAddrType)">
-                                <div class="form-group"><label>Department</label><input formControlName="initgPtyDept" maxlength="70"></div>
-                                <div class="form-group"><label>Sub Department</label><input formControlName="initgPtySubDept" maxlength="70"></div>
-                                <div class="form-group"><label>Street Name</label><input formControlName="initgPtyStrtNm" maxlength="70"></div>
-                                <div class="form-group"><label>Building Number</label><input formControlName="initgPtyBldgNb" maxlength="16"></div>
-                                <div class="form-group"><label>Building Name</label><input formControlName="initgPtyBldgNm" maxlength="35"></div>
-                                <div class="form-group"><label>Floor</label><input formControlName="initgPtyFlr" maxlength="70"></div>
-                                <div class="form-group"><label>Post Box</label><input formControlName="initgPtyPstBx" maxlength="16"></div>
-                                <div class="form-group"><label>Room</label><input formControlName="initgPtyRoom" maxlength="70"></div>
-                                <div class="form-group"><label>Postal Code</label><input formControlName="initgPtyPstCd" maxlength="16"></div>
-                                <div class="form-group"><label>Town Location Name</label><input formControlName="initgPtyTwnLctnNm" maxlength="35"></div>
-                                <div class="form-group"><label>District Name</label><input formControlName="initgPtyDstrctNm" maxlength="35"></div>
-                                <div class="form-group"><label>Country Sub Division</label><input formControlName="initgPtyCtrySubDvsn" maxlength="35"></div>
+                                <div class="form-group"><label>Department</label><input formControlName="initgPtyDept" maxlength="70">
+                                    <div class="validation-msg" *ngIf="err('initgPtyDept') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtyDept', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Sub Department</label><input formControlName="initgPtySubDept" maxlength="70">
+                                    <div class="validation-msg" *ngIf="err('initgPtySubDept') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtySubDept', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Street Name</label><input formControlName="initgPtyStrtNm" maxlength="70">
+                                    <div class="validation-msg" *ngIf="err('initgPtyStrtNm') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtyStrtNm', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Building Number</label><input formControlName="initgPtyBldgNb" maxlength="16">
+                                    <div class="validation-msg" *ngIf="err('initgPtyBldgNb') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtyBldgNb', 16) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Building Name</label><input formControlName="initgPtyBldgNm" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('initgPtyBldgNm') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtyBldgNm', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Floor</label><input formControlName="initgPtyFlr" maxlength="70">
+                                    <div class="validation-msg" *ngIf="err('initgPtyFlr') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtyFlr', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Post Box</label><input formControlName="initgPtyPstBx" maxlength="16">
+                                    <div class="validation-msg" *ngIf="err('initgPtyPstBx') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtyPstBx', 16) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Room</label><input formControlName="initgPtyRoom" maxlength="70">
+                                    <div class="validation-msg" *ngIf="err('initgPtyRoom') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtyRoom', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Postal Code</label><input formControlName="initgPtyPstCd" maxlength="16">
+                                    <div class="validation-msg" *ngIf="err('initgPtyPstCd') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtyPstCd', 16) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Town Location Name</label><input formControlName="initgPtyTwnLctnNm" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('initgPtyTwnLctnNm') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtyTwnLctnNm', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>District Name</label><input formControlName="initgPtyDstrctNm" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('initgPtyDstrctNm') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtyDstrctNm', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Country Sub Division</label><input formControlName="initgPtyCtrySubDvsn" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('initgPtyCtrySubDvsn') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtyCtrySubDvsn', 35) as h">{{h}}</div>
+                                </div>
                             </ng-container>
                             <ng-container *ngIf="['structured', 'unstructured', 'hybrid'].includes(form.value.initgPtyAddrType)">
                                 <div class="form-group"><label>Town Name</label><input formControlName="initgPtyTwnNm" maxlength="35">
                                   <div class="validation-msg" *ngIf="err('initgPtyTwnNm') as e">{{e}}</div>
+                                  <div class="field-hint at-limit" *ngIf="hint('initgPtyTwnNm', 35) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group"><label>Country</label><input formControlName="initgPtyCtry" maxlength="2" placeholder="e.g. US">
                                   <div class="validation-msg" *ngIf="err('initgPtyCtry') as e">{{e}}</div>
+                                  <div class="field-hint at-limit" *ngIf="hint('initgPtyCtry', 2) as h">{{h}}</div>
                                 </div>
                             </ng-container>
                             <ng-container *ngIf="['unstructured', 'hybrid'].includes(form.value.initgPtyAddrType)">
-                                <div class="form-group"><label>Address Line 1</label><input formControlName="initgPtyAdrLine1" maxlength="70"></div>
-                                <div class="form-group"><label>Address Line 2</label><input formControlName="initgPtyAdrLine2" maxlength="70"></div>
+                                <div class="form-group"><label>Address Line 1</label><input formControlName="initgPtyAdrLine1" maxlength="70">
+                                    <div class="validation-msg" *ngIf="err('initgPtyAdrLine1') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtyAdrLine1', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Address Line 2</label><input formControlName="initgPtyAdrLine2" maxlength="70">
+                                    <div class="validation-msg" *ngIf="err('initgPtyAdrLine2') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtyAdrLine2', 70) as h">{{h}}</div>
+                                </div>
                             </ng-container>
                         </div>
                     </div>
@@ -246,10 +290,22 @@
                             <div class="form-group"><label>BIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
 <input formControlName="fwdgAgtBic" maxlength="11" placeholder="Optional">
 <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('fwdgAgtBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
-</div></div>
-                            <div class="form-group"><label>ClrSys Code</label><input formControlName="fwdgAgtClrSysCd" maxlength="5" placeholder="Optional"></div>
-                            <div class="form-group"><label>Member ID</label><input formControlName="fwdgAgtMmbId" maxlength="35" placeholder="Optional"></div>
-                            <div class="form-group"><label>LEI</label><input formControlName="fwdgAgtLei" maxlength="20" placeholder="Optional"></div>
+</div>
+                                <div class="validation-msg" *ngIf="err('fwdgAgtBic') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('fwdgAgtBic', 11) as h">{{h}}</div>
+                            </div>
+                            <div class="form-group"><label>ClrSys Code</label><input formControlName="fwdgAgtClrSysCd" maxlength="5" placeholder="Optional">
+                                <div class="validation-msg" *ngIf="err('fwdgAgtClrSysCd') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('fwdgAgtClrSysCd', 5) as h">{{h}}</div>
+                            </div>
+                            <div class="form-group"><label>Member ID</label><input formControlName="fwdgAgtMmbId" maxlength="35" placeholder="Optional">
+                                <div class="validation-msg" *ngIf="err('fwdgAgtMmbId') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('fwdgAgtMmbId', 35) as h">{{h}}</div>
+                            </div>
+                            <div class="form-group"><label>LEI</label><input formControlName="fwdgAgtLei" maxlength="20" placeholder="Optional">
+                                <div class="validation-msg" *ngIf="err('fwdgAgtLei') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('fwdgAgtLei', 20) as h">{{h}}</div>
+                            </div>
                         </div>
                     </div>
 
@@ -275,7 +331,10 @@
                                 <div class="validation-msg" *ngIf="err('cdtrName') as e">{{e}}</div>
                                 <div class="field-hint at-limit" *ngIf="hint('cdtrName', 140) as h">{{h}}</div>
                             </div>
-                            <div class="form-group"><label>Country of Residence</label><input formControlName="cdtrCtryOfRes" maxlength="2" placeholder="e.g. GB"></div>
+                            <div class="form-group"><label>Country of Residence</label><input formControlName="cdtrCtryOfRes" maxlength="2" placeholder="e.g. GB">
+                                <div class="validation-msg" *ngIf="err('cdtrCtryOfRes') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('cdtrCtryOfRes', 2) as h">{{h}}</div>
+                            </div>
                             <div class="form-group"><label>Address Type</label>
                                 <select formControlName="cdtrAddrType">
                                     <option value="none">None</option>
@@ -285,30 +344,74 @@
                                 </select>
                             </div>
                             <ng-container *ngIf="['structured', 'hybrid'].includes(form.value.cdtrAddrType)">
-                                <div class="form-group"><label>Department</label><input formControlName="cdtrDept" maxlength="70"></div>
-                                <div class="form-group"><label>Sub Department</label><input formControlName="cdtrSubDept" maxlength="70"></div>
-                                <div class="form-group"><label>Street Name</label><input formControlName="cdtrStrtNm" maxlength="70"></div>
-                                <div class="form-group"><label>Building Number</label><input formControlName="cdtrBldgNb" maxlength="16"></div>
-                                <div class="form-group"><label>Building Name</label><input formControlName="cdtrBldgNm" maxlength="35"></div>
-                                <div class="form-group"><label>Floor</label><input formControlName="cdtrFlr" maxlength="70"></div>
-                                <div class="form-group"><label>Post Box</label><input formControlName="cdtrPstBx" maxlength="16"></div>
-                                <div class="form-group"><label>Room</label><input formControlName="cdtrRoom" maxlength="70"></div>
-                                <div class="form-group"><label>Postal Code</label><input formControlName="cdtrPstCd" maxlength="16"></div>
-                                <div class="form-group"><label>Town Location Name</label><input formControlName="cdtrTwnLctnNm" maxlength="35"></div>
-                                <div class="form-group"><label>District Name</label><input formControlName="cdtrDstrctNm" maxlength="35"></div>
-                                <div class="form-group"><label>Country Sub Division</label><input formControlName="cdtrCtrySubDvsn" maxlength="35"></div>
+                                <div class="form-group"><label>Department</label><input formControlName="cdtrDept" maxlength="70">
+                                    <div class="validation-msg" *ngIf="err('cdtrDept') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('cdtrDept', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Sub Department</label><input formControlName="cdtrSubDept" maxlength="70">
+                                    <div class="validation-msg" *ngIf="err('cdtrSubDept') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('cdtrSubDept', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Street Name</label><input formControlName="cdtrStrtNm" maxlength="70">
+                                    <div class="validation-msg" *ngIf="err('cdtrStrtNm') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('cdtrStrtNm', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Building Number</label><input formControlName="cdtrBldgNb" maxlength="16">
+                                    <div class="validation-msg" *ngIf="err('cdtrBldgNb') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('cdtrBldgNb', 16) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Building Name</label><input formControlName="cdtrBldgNm" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('cdtrBldgNm') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('cdtrBldgNm', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Floor</label><input formControlName="cdtrFlr" maxlength="70">
+                                    <div class="validation-msg" *ngIf="err('cdtrFlr') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('cdtrFlr', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Post Box</label><input formControlName="cdtrPstBx" maxlength="16">
+                                    <div class="validation-msg" *ngIf="err('cdtrPstBx') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('cdtrPstBx', 16) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Room</label><input formControlName="cdtrRoom" maxlength="70">
+                                    <div class="validation-msg" *ngIf="err('cdtrRoom') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('cdtrRoom', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Postal Code</label><input formControlName="cdtrPstCd" maxlength="16">
+                                    <div class="validation-msg" *ngIf="err('cdtrPstCd') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('cdtrPstCd', 16) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Town Location Name</label><input formControlName="cdtrTwnLctnNm" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('cdtrTwnLctnNm') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('cdtrTwnLctnNm', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>District Name</label><input formControlName="cdtrDstrctNm" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('cdtrDstrctNm') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('cdtrDstrctNm', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Country Sub Division</label><input formControlName="cdtrCtrySubDvsn" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('cdtrCtrySubDvsn') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('cdtrCtrySubDvsn', 35) as h">{{h}}</div>
+                                </div>
                             </ng-container>
                             <ng-container *ngIf="['structured', 'unstructured', 'hybrid'].includes(form.value.cdtrAddrType)">
                                 <div class="form-group"><label>Town Name</label><input formControlName="cdtrTwnNm" maxlength="35">
                                   <div class="validation-msg" *ngIf="err('cdtrTwnNm') as e">{{e}}</div>
+                                  <div class="field-hint at-limit" *ngIf="hint('cdtrTwnNm', 35) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group"><label>Country</label><input formControlName="cdtrCtry" maxlength="2" placeholder="e.g. GB">
                                   <div class="validation-msg" *ngIf="err('cdtrCtry') as e">{{e}}</div>
+                                  <div class="field-hint at-limit" *ngIf="hint('cdtrCtry', 2) as h">{{h}}</div>
                                 </div>
                             </ng-container>
                             <ng-container *ngIf="['unstructured', 'hybrid'].includes(form.value.cdtrAddrType)">
-                                <div class="form-group"><label>Address Line 1</label><input formControlName="cdtrAdrLine1" maxlength="70"></div>
-                                <div class="form-group"><label>Address Line 2</label><input formControlName="cdtrAdrLine2" maxlength="70"></div>
+                                <div class="form-group"><label>Address Line 1</label><input formControlName="cdtrAdrLine1" maxlength="70">
+                                    <div class="validation-msg" *ngIf="err('cdtrAdrLine1') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('cdtrAdrLine1', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Address Line 2</label><input formControlName="cdtrAdrLine2" maxlength="70">
+                                    <div class="validation-msg" *ngIf="err('cdtrAdrLine2') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('cdtrAdrLine2', 70) as h">{{h}}</div>
+                                </div>
                             </ng-container>
                         </div>
                     </div>
@@ -320,10 +423,22 @@
                                 <div class="validation-msg" *ngIf="err('cdtrIban') as e">{{e}}</div>
                                 <div class="field-hint at-limit" *ngIf="hint('cdtrIban', 34) as h">{{h}}</div>
                             </div>
-                            <div class="form-group"><label>Other ID</label><input formControlName="cdtrAcctOthrId" maxlength="34" placeholder="Alternative to IBAN"></div>
-                            <div class="form-group"><label>Currency</label><input formControlName="cdtrAcctCcy" maxlength="3" placeholder="e.g. EUR"></div>
-                            <div class="form-group"><label>Account Name</label><input formControlName="cdtrAcctNm" maxlength="70" placeholder="Optional"></div>
-                            <div class="form-group"><label>Account Type Code</label><input formControlName="cdtrAcctTpCd" maxlength="4" placeholder="Optional"></div>
+                            <div class="form-group"><label>Other ID</label><input formControlName="cdtrAcctOthrId" maxlength="34" placeholder="Alternative to IBAN">
+                                <div class="validation-msg" *ngIf="err('cdtrAcctOthrId') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('cdtrAcctOthrId', 34) as h">{{h}}</div>
+                            </div>
+                            <div class="form-group"><label>Currency</label><input formControlName="cdtrAcctCcy" maxlength="3" placeholder="e.g. EUR">
+                                <div class="validation-msg" *ngIf="err('cdtrAcctCcy') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('cdtrAcctCcy', 3) as h">{{h}}</div>
+                            </div>
+                            <div class="form-group"><label>Account Name</label><input formControlName="cdtrAcctNm" maxlength="70" placeholder="Optional">
+                                <div class="validation-msg" *ngIf="err('cdtrAcctNm') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('cdtrAcctNm', 70) as h">{{h}}</div>
+                            </div>
+                            <div class="form-group"><label>Account Type Code</label><input formControlName="cdtrAcctTpCd" maxlength="4" placeholder="Optional">
+                                <div class="validation-msg" *ngIf="err('cdtrAcctTpCd') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('cdtrAcctTpCd', 4) as h">{{h}}</div>
+                            </div>
                         </div>
                     </div>
 
@@ -335,29 +450,60 @@
 <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('cdtrAgtBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
 </div>
                                 <div class="validation-msg" *ngIf="err('cdtrAgtBic') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('cdtrAgtBic', 11) as h">{{h}}</div>
                             </div>
-                            <div class="form-group"><label>ClrSys Code</label><input formControlName="cdtrAgtClrSysCd" maxlength="5" placeholder="Optional"></div>
-                            <div class="form-group"><label>Member ID</label><input formControlName="cdtrAgtMmbId" maxlength="35" placeholder="Optional"></div>
-                            <div class="form-group"><label>LEI</label><input formControlName="cdtrAgtLei" maxlength="20" placeholder="Optional"></div>
-                            <div class="form-group"><label>Agent Name</label><input formControlName="cdtrAgtNm" maxlength="140" placeholder="Optional"></div>
+                            <div class="form-group"><label>ClrSys Code</label><input formControlName="cdtrAgtClrSysCd" maxlength="5" placeholder="Optional">
+                                <div class="validation-msg" *ngIf="err('cdtrAgtClrSysCd') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('cdtrAgtClrSysCd', 5) as h">{{h}}</div>
+                            </div>
+                            <div class="form-group"><label>Member ID</label><input formControlName="cdtrAgtMmbId" maxlength="35" placeholder="Optional">
+                                <div class="validation-msg" *ngIf="err('cdtrAgtMmbId') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('cdtrAgtMmbId', 35) as h">{{h}}</div>
+                            </div>
+                            <div class="form-group"><label>LEI</label><input formControlName="cdtrAgtLei" maxlength="20" placeholder="Optional">
+                                <div class="validation-msg" *ngIf="err('cdtrAgtLei') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('cdtrAgtLei', 20) as h">{{h}}</div>
+                            </div>
+                            <div class="form-group"><label>Agent Name</label><input formControlName="cdtrAgtNm" maxlength="140" placeholder="Optional">
+                                <div class="validation-msg" *ngIf="err('cdtrAgtNm') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('cdtrAgtNm', 140) as h">{{h}}</div>
+                            </div>
                         </div>
                     </div>
 
                     <div class="party-group">
                         <div class="party-group-title">Creditor Agent Account</div>
                         <div class="party-grid">
-                            <div class="form-group"><label>IBAN</label><input formControlName="cdtrAgtAcctIban" maxlength="34" placeholder="Optional"></div>
-                            <div class="form-group"><label>Other ID</label><input formControlName="cdtrAgtAcctOthrId" maxlength="34" placeholder="Optional"></div>
-                            <div class="form-group"><label>Currency</label><input formControlName="cdtrAgtAcctCcy" maxlength="3" placeholder="Optional"></div>
+                            <div class="form-group"><label>IBAN</label><input formControlName="cdtrAgtAcctIban" maxlength="34" placeholder="Optional">
+                                <div class="validation-msg" *ngIf="err('cdtrAgtAcctIban') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('cdtrAgtAcctIban', 34) as h">{{h}}</div>
+                            </div>
+                            <div class="form-group"><label>Other ID</label><input formControlName="cdtrAgtAcctOthrId" maxlength="34" placeholder="Optional">
+                                <div class="validation-msg" *ngIf="err('cdtrAgtAcctOthrId') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('cdtrAgtAcctOthrId', 34) as h">{{h}}</div>
+                            </div>
+                            <div class="form-group"><label>Currency</label><input formControlName="cdtrAgtAcctCcy" maxlength="3" placeholder="Optional">
+                                <div class="validation-msg" *ngIf="err('cdtrAgtAcctCcy') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('cdtrAgtAcctCcy', 3) as h">{{h}}</div>
+                            </div>
                         </div>
                     </div>
 
                     <div class="party-group">
                         <div class="party-group-title">Charges Account</div>
                         <div class="party-grid">
-                            <div class="form-group"><label>IBAN</label><input formControlName="chrgsAcctIban" maxlength="34" placeholder="Optional"></div>
-                            <div class="form-group"><label>Other ID</label><input formControlName="chrgsAcctOthrId" maxlength="34" placeholder="Optional"></div>
-                            <div class="form-group"><label>Currency</label><input formControlName="chrgsAcctCcy" maxlength="3" placeholder="Optional"></div>
+                            <div class="form-group"><label>IBAN</label><input formControlName="chrgsAcctIban" maxlength="34" placeholder="Optional">
+                                <div class="validation-msg" *ngIf="err('chrgsAcctIban') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('chrgsAcctIban', 34) as h">{{h}}</div>
+                            </div>
+                            <div class="form-group"><label>Other ID</label><input formControlName="chrgsAcctOthrId" maxlength="34" placeholder="Optional">
+                                <div class="validation-msg" *ngIf="err('chrgsAcctOthrId') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('chrgsAcctOthrId', 34) as h">{{h}}</div>
+                            </div>
+                            <div class="form-group"><label>Currency</label><input formControlName="chrgsAcctCcy" maxlength="3" placeholder="Optional">
+                                <div class="validation-msg" *ngIf="err('chrgsAcctCcy') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('chrgsAcctCcy', 3) as h">{{h}}</div>
+                            </div>
                         </div>
                     </div>
 
@@ -367,9 +513,18 @@
                             <div class="form-group"><label>BIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
 <input formControlName="chrgsAcctAgtBic" maxlength="11" placeholder="Optional">
 <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('chrgsAcctAgtBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
-</div></div>
-                            <div class="form-group"><label>Member ID</label><input formControlName="chrgsAcctAgtMmbId" maxlength="35" placeholder="Optional"></div>
-                            <div class="form-group"><label>LEI</label><input formControlName="chrgsAcctAgtLei" maxlength="20" placeholder="Optional"></div>
+</div>
+                                <div class="validation-msg" *ngIf="err('chrgsAcctAgtBic') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('chrgsAcctAgtBic', 11) as h">{{h}}</div>
+                            </div>
+                            <div class="form-group"><label>Member ID</label><input formControlName="chrgsAcctAgtMmbId" maxlength="35" placeholder="Optional">
+                                <div class="validation-msg" *ngIf="err('chrgsAcctAgtMmbId') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('chrgsAcctAgtMmbId', 35) as h">{{h}}</div>
+                            </div>
+                            <div class="form-group"><label>LEI</label><input formControlName="chrgsAcctAgtLei" maxlength="20" placeholder="Optional">
+                                <div class="validation-msg" *ngIf="err('chrgsAcctAgtLei') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint('chrgsAcctAgtLei', 20) as h">{{h}}</div>
+                            </div>
                         </div>
                     </div>
 
@@ -396,27 +551,52 @@
                             <div class="tx-grid">
                                 <!-- PmtId -->
                                 <div class="form-group"><label>Instruction ID <span class="req">*</span></label><input formControlName="instrId" maxlength="35">
-                                    <div class="validation-msg" *ngIf="err('instrId', tx) as e">{{e}}</div></div>
+                                    <div class="validation-msg" *ngIf="err('instrId', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('instrId', 35) as h">{{h}}</div>
+                                </div>
                                 <div class="form-group"><label>End To End ID <span class="req">*</span></label><input formControlName="endToEndId" maxlength="35">
-                                    <div class="validation-msg" *ngIf="err('endToEndId', tx) as e">{{e}}</div></div>
+                                    <div class="validation-msg" *ngIf="err('endToEndId', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('endToEndId', 35) as h">{{h}}</div>
+                                </div>
                                 <div class="form-group"><label>UETR <span class="req">*</span></label><input formControlName="uetr" maxlength="36" placeholder="UUID Format">
-                                    <div class="validation-msg" *ngIf="err('uetr', tx) as e">{{e}}</div></div>
+                                    <div class="validation-msg" *ngIf="err('uetr', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('uetr', 36) as h">{{h}}</div>
+                                </div>
 
                                 <!-- PmtTpInf -->
                                 <div class="form-group"><label>Instruction Priority</label>
                                     <select formControlName="instrPrty"><option value="">None</option><option *ngFor="let p of priorities" [value]="p">{{p}}</option></select></div>
-                                <div class="form-group"><label>Service Level Code</label><input formControlName="svcLvlCd" maxlength="4" placeholder="e.g. SEPA"></div>
-                                <div class="form-group"><label>Service Level Proprietary</label><input formControlName="svcLvlPrtry" maxlength="35" placeholder="Optional"></div>
-                                <div class="form-group"><label>Local Instrument Code</label><input formControlName="lclInstrmCd" maxlength="35" placeholder="e.g. CORE"></div>
-                                <div class="form-group"><label>Local Instrument Proprietary</label><input formControlName="lclInstrmPrtry" maxlength="35" placeholder="Optional"></div>
+                                <div class="form-group"><label>Service Level Code</label><input formControlName="svcLvlCd" maxlength="4" placeholder="e.g. SEPA">
+                                    <div class="validation-msg" *ngIf="err('svcLvlCd', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('svcLvlCd', 4) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Service Level Proprietary</label><input formControlName="svcLvlPrtry" maxlength="35" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('svcLvlPrtry', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('svcLvlPrtry', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Local Instrument Code</label><input formControlName="lclInstrmCd" maxlength="35" placeholder="e.g. CORE">
+                                    <div class="validation-msg" *ngIf="err('lclInstrmCd', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('lclInstrmCd', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Local Instrument Proprietary</label><input formControlName="lclInstrmPrtry" maxlength="35" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('lclInstrmPrtry', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('lclInstrmPrtry', 35) as h">{{h}}</div>
+                                </div>
                                 <div class="form-group"><label>Sequence Type <span class="req">*</span></label>
                                     <select formControlName="seqTp"><option *ngFor="let s of sequenceTypes" [value]="s">{{s}}</option></select></div>
-                                <div class="form-group"><label>Category Purpose Code</label><input formControlName="ctgyPurpCd" maxlength="4" placeholder="e.g. CASH"></div>
-                                <div class="form-group"><label>Category Purpose Proprietary</label><input formControlName="ctgyPurpPrtry" maxlength="35" placeholder="Optional"></div>
+                                <div class="form-group"><label>Category Purpose Code</label><input formControlName="ctgyPurpCd" maxlength="4" placeholder="e.g. CASH">
+                                    <div class="validation-msg" *ngIf="err('ctgyPurpCd', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('ctgyPurpCd', 4) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Category Purpose Proprietary</label><input formControlName="ctgyPurpPrtry" maxlength="35" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('ctgyPurpPrtry', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('ctgyPurpPrtry', 35) as h">{{h}}</div>
+                                </div>
 
                                 <!-- Amount -->
                                 <div class="form-group"><label>Amount <span class="req">*</span></label><input formControlName="amount" type="text" placeholder="0.00">
-                                    <div class="validation-msg" *ngIf="err('amount', tx) as e">{{e}}</div></div>
+                                    <div class="validation-msg" *ngIf="err('amount', tx) as e">{{e}}</div>
+                                </div>
                                 <div class="form-group"><label>Currency <span class="req">*</span></label>
                                     <select formControlName="currency"><option *ngFor="let c of currencies" [value]="c">{{c}}</option></select></div>
                                 <div class="form-group"><label>Charge Bearer</label>
@@ -427,43 +607,90 @@
                                     <div class="mandate-section-title"><mat-icon>description</mat-icon> Mandate Related Information</div>
                                     <div class="mandate-grid">
                                         <div class="form-group"><label>Mandate ID <span class="req">*</span></label><input formControlName="mndtId" maxlength="35">
-                                            <div class="validation-msg" *ngIf="err('mndtId', tx) as e">{{e}}</div></div>
+                                            <div class="validation-msg" *ngIf="err('mndtId', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('mndtId', 35) as h">{{h}}</div>
+                                        </div>
                                         <div class="form-group"><label>Date of Signature</label><input type="date" formControlName="dtOfSgntr"></div>
                                         <div class="form-group"><label>Amendment Indicator</label>
                                             <select formControlName="amdmntInd"><option value="false">false</option><option value="true">true</option></select></div>
-                                        <div class="form-group"><label>Original Mandate ID</label><input formControlName="orgnlMndtId" maxlength="35" placeholder="If amended"></div>
-                                        <div class="form-group"><label>Orgnl Cdtr Scheme Name</label><input formControlName="orgnlCdtrSchmeIdNm" maxlength="140" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Original Mandate ID</label><input formControlName="orgnlMndtId" maxlength="35" placeholder="If amended">
+                                            <div class="validation-msg" *ngIf="err('orgnlMndtId', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('orgnlMndtId', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Orgnl Cdtr Scheme Name</label><input formControlName="orgnlCdtrSchmeIdNm" maxlength="140" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('orgnlCdtrSchmeIdNm', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('orgnlCdtrSchmeIdNm', 140) as h">{{h}}</div>
+                                        </div>
                                         <div class="form-group"><label>Orgnl Cdtr Scheme BIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
 <input formControlName="orgnlCdtrSchmeIdBic" maxlength="11" placeholder="Optional">
 <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('orgnlCdtrSchmeIdBic', i)" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
-</div></div>
+</div>
+                                            <div class="validation-msg" *ngIf="err('orgnlCdtrSchmeIdBic', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('orgnlCdtrSchmeIdBic', 11) as h">{{h}}</div>
+                                        </div>
                                         <div class="form-group"><label>Orgnl Creditor Agent BIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
 <input formControlName="orgnlCdtrAgtBic" maxlength="11" placeholder="Optional">
 <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('orgnlCdtrAgtBic', i)" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
-</div></div>
-                                        <div class="form-group"><label>Orgnl Debtor Name</label><input formControlName="orgnlDbtrNm" maxlength="140" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Orgnl Debtor Acct IBAN</label><input formControlName="orgnlDbtrAcctIban" maxlength="34" placeholder="Optional"></div>
+</div>
+                                            <div class="validation-msg" *ngIf="err('orgnlCdtrAgtBic', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('orgnlCdtrAgtBic', 11) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Orgnl Debtor Name</label><input formControlName="orgnlDbtrNm" maxlength="140" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('orgnlDbtrNm', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('orgnlDbtrNm', 140) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Orgnl Debtor Acct IBAN</label><input formControlName="orgnlDbtrAcctIban" maxlength="34" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('orgnlDbtrAcctIban', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('orgnlDbtrAcctIban', 34) as h">{{h}}</div>
+                                        </div>
                                         <div class="form-group"><label>Orgnl Debtor Agent BIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
 <input formControlName="orgnlDbtrAgtBic" maxlength="11" placeholder="Optional">
 <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('orgnlDbtrAgtBic', i)" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
-</div></div>
+</div>
+                                            <div class="validation-msg" *ngIf="err('orgnlDbtrAgtBic', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('orgnlDbtrAgtBic', 11) as h">{{h}}</div>
+                                        </div>
                                         <div class="form-group"><label>Orgnl Final Colltn Date</label><input type="date" formControlName="orgnlFnlColltnDt"></div>
                                         <div class="form-group"><label>Orgnl Frequency Type</label>
                                             <select formControlName="orgnlFrqcyTp"><option value="">None</option><option *ngFor="let f of frequencyTypes" [value]="f">{{f}}</option></select></div>
-                                        <div class="form-group"><label>Orgnl Reason Code</label><input formControlName="orgnlRsnCd" maxlength="4" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Orgnl Reason Proprietary</label><input formControlName="orgnlRsnPrtry" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Orgnl Tracking Days</label><input formControlName="orgnlTrckgDays" maxlength="2" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Electronic Signature</label><input formControlName="elctrncSgntr" maxlength="1025" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Orgnl Reason Code</label><input formControlName="orgnlRsnCd" maxlength="4" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('orgnlRsnCd', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('orgnlRsnCd', 4) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Orgnl Reason Proprietary</label><input formControlName="orgnlRsnPrtry" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('orgnlRsnPrtry', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('orgnlRsnPrtry', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Orgnl Tracking Days</label><input formControlName="orgnlTrckgDays" maxlength="2" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('orgnlTrckgDays', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('orgnlTrckgDays', 2) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Electronic Signature</label><input formControlName="elctrncSgntr" maxlength="1025" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('elctrncSgntr', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('elctrncSgntr', 1025) as h">{{h}}</div>
+                                        </div>
                                         <div class="form-group"><label>First Collection Date</label><input type="date" formControlName="frstColltnDt"></div>
                                         <div class="form-group"><label>Final Collection Date</label><input type="date" formControlName="fnlColltnDt"></div>
                                         <div class="form-group"><label>Frequency Type</label>
                                             <select formControlName="frqcyTp"><option value="">None</option><option *ngFor="let f of frequencyTypes" [value]="f">{{f}}</option></select></div>
                                         <div class="form-group"><label>Frequency Period Type</label>
                                             <select formControlName="frqcyPrdTp"><option value="">None</option><option *ngFor="let f of frequencyTypes" [value]="f">{{f}}</option></select></div>
-                                        <div class="form-group"><label>Count Per Period</label><input formControlName="frqcyPrdCntPerPrd" maxlength="4" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Reason Code</label><input formControlName="rsnCd" maxlength="4" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Reason Proprietary</label><input formControlName="rsnPrtry" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Tracking Days</label><input formControlName="trckgDays" maxlength="2" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Count Per Period</label><input formControlName="frqcyPrdCntPerPrd" maxlength="4" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('frqcyPrdCntPerPrd', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('frqcyPrdCntPerPrd', 4) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Reason Code</label><input formControlName="rsnCd" maxlength="4" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rsnCd', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rsnCd', 4) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Reason Proprietary</label><input formControlName="rsnPrtry" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rsnPrtry', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rsnPrtry', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Tracking Days</label><input formControlName="trckgDays" maxlength="2" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('trckgDays', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('trckgDays', 2) as h">{{h}}</div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -471,20 +698,41 @@
                                 <div class="mandate-section">
                                     <div class="mandate-section-title"><mat-icon>badge</mat-icon> Creditor Scheme Identification</div>
                                     <div class="mandate-grid">
-                                        <div class="form-group"><label>Name</label><input formControlName="cdtrSchmeIdNm" maxlength="140" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Other ID</label><input formControlName="cdtrSchmeIdOthrId" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Scheme Name Code</label><input formControlName="cdtrSchmeIdOthrSchmeNmCd" maxlength="4" placeholder="e.g. SEPA"></div>
-                                        <div class="form-group"><label>Scheme Name Proprietary</label><input formControlName="cdtrSchmeIdOthrSchmeNmPrtry" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Issuer</label><input formControlName="cdtrSchmeIdOthrIssr" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Name</label><input formControlName="cdtrSchmeIdNm" maxlength="140" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('cdtrSchmeIdNm', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('cdtrSchmeIdNm', 140) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Other ID</label><input formControlName="cdtrSchmeIdOthrId" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('cdtrSchmeIdOthrId', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('cdtrSchmeIdOthrId', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Scheme Name Code</label><input formControlName="cdtrSchmeIdOthrSchmeNmCd" maxlength="4" placeholder="e.g. SEPA">
+                                            <div class="validation-msg" *ngIf="err('cdtrSchmeIdOthrSchmeNmCd', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('cdtrSchmeIdOthrSchmeNmCd', 4) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Scheme Name Proprietary</label><input formControlName="cdtrSchmeIdOthrSchmeNmPrtry" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('cdtrSchmeIdOthrSchmeNmPrtry', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('cdtrSchmeIdOthrSchmeNmPrtry', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Issuer</label><input formControlName="cdtrSchmeIdOthrIssr" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('cdtrSchmeIdOthrIssr', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('cdtrSchmeIdOthrIssr', 35) as h">{{h}}</div>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <!-- PreNtfctn -->
-                                <div class="form-group"><label>Pre-Notification ID</label><input formControlName="preNtfctnId" maxlength="35" placeholder="Optional"></div>
+                                <div class="form-group"><label>Pre-Notification ID</label><input formControlName="preNtfctnId" maxlength="35" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('preNtfctnId', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('preNtfctnId', 35) as h">{{h}}</div>
+                                </div>
                                 <div class="form-group"><label>Pre-Notification Date</label><input type="date" formControlName="preNtfctnDt"></div>
 
                                 <!-- UltmtCdtr -->
-                                <div class="form-group"><label>Ultimate Creditor Name</label><input formControlName="ultmtCdtrName" maxlength="140" placeholder="Optional"></div>
+                                <div class="form-group"><label>Ultimate Creditor Name</label><input formControlName="ultmtCdtrName" maxlength="140" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('ultmtCdtrName', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('ultmtCdtrName', 140) as h">{{h}}</div>
+                                </div>
 
                                 <!-- Debtor Agent -->
                                 <div class="party-group-title mandatory" style="grid-column: 1 / -1; margin-top: 0.5rem; font-size: 0.7rem;">Debtor Agent</div>
@@ -493,18 +741,38 @@
 <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('dbtrAgtBic', i)" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
 </div>
                                     <div class="validation-msg" *ngIf="err('dbtrAgtBic', tx) as e">{{e}}</div></div>
-                                <div class="form-group"><label>ClrSys Code</label><input formControlName="dbtrAgtClrSysCd" maxlength="5" placeholder="Optional"></div>
-                                <div class="form-group"><label>Member ID</label><input formControlName="dbtrAgtMmbId" maxlength="35" placeholder="Optional"></div>
-                                <div class="form-group"><label>LEI</label><input formControlName="dbtrAgtLei" maxlength="20" placeholder="Optional"></div>
+                                <div class="form-group"><label>ClrSys Code</label><input formControlName="dbtrAgtClrSysCd" maxlength="5" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('dbtrAgtClrSysCd', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrAgtClrSysCd', 5) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Member ID</label><input formControlName="dbtrAgtMmbId" maxlength="35" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('dbtrAgtMmbId', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrAgtMmbId', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>LEI</label><input formControlName="dbtrAgtLei" maxlength="20" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('dbtrAgtLei', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrAgtLei', 20) as h">{{h}}</div>
+                                </div>
                                 <div class="party-group-title" style="grid-column: 1 / -1; margin-top: 0.3rem; font-size: 0.65rem;">Debtor Agent Account</div>
-                                <div class="form-group"><label>IBAN</label><input formControlName="dbtrAgtAcctIban" maxlength="34" placeholder="Optional"></div>
-                                <div class="form-group"><label>Other ID</label><input formControlName="dbtrAgtAcctOthrId" maxlength="34" placeholder="Optional"></div>
+                                <div class="form-group"><label>IBAN</label><input formControlName="dbtrAgtAcctIban" maxlength="34" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('dbtrAgtAcctIban', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrAgtAcctIban', 34) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Other ID</label><input formControlName="dbtrAgtAcctOthrId" maxlength="34" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('dbtrAgtAcctOthrId', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrAgtAcctOthrId', 34) as h">{{h}}</div>
+                                </div>
 
                                 <!-- Debtor -->
                                 <div class="party-group-title mandatory" style="grid-column: 1 / -1; margin-top: 0.5rem; font-size: 0.7rem;">Debtor</div>
                                 <div class="form-group"><label>Name <span class="req">*</span></label><input formControlName="dbtrName" maxlength="140">
-                                    <div class="validation-msg" *ngIf="err('dbtrName', tx) as e">{{e}}</div></div>
-                                <div class="form-group"><label>Country of Residence</label><input formControlName="dbtrCtryOfRes" maxlength="2" placeholder="e.g. DE"></div>
+                                    <div class="validation-msg" *ngIf="err('dbtrName', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrName', 140) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Country of Residence</label><input formControlName="dbtrCtryOfRes" maxlength="2" placeholder="e.g. DE">
+                                    <div class="validation-msg" *ngIf="err('dbtrCtryOfRes', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrCtryOfRes', 2) as h">{{h}}</div>
+                                </div>
                                 <div class="form-group"><label>Address Type</label>
                                     <select formControlName="dbtrAddrType">
                                         <option value="none">None</option>
@@ -514,60 +782,164 @@
                                     </select>
                                 </div>
                                 <ng-container *ngIf="['structured', 'hybrid'].includes(tx.get('dbtrAddrType')?.value)">
-                                    <div class="form-group"><label>Department</label><input formControlName="dbtrDept" maxlength="70"></div>
-                                    <div class="form-group"><label>Sub Department</label><input formControlName="dbtrSubDept" maxlength="70"></div>
-                                    <div class="form-group"><label>Street Name</label><input formControlName="dbtrStrtNm" maxlength="70"></div>
-                                    <div class="form-group"><label>Building Number</label><input formControlName="dbtrBldgNb" maxlength="16"></div>
-                                    <div class="form-group"><label>Building Name</label><input formControlName="dbtrBldgNm" maxlength="35"></div>
-                                    <div class="form-group"><label>Floor</label><input formControlName="dbtrFlr" maxlength="70"></div>
-                                    <div class="form-group"><label>Post Box</label><input formControlName="dbtrPstBx" maxlength="16"></div>
-                                    <div class="form-group"><label>Room</label><input formControlName="dbtrRoom" maxlength="70"></div>
-                                    <div class="form-group"><label>Postal Code</label><input formControlName="dbtrPstCd" maxlength="16"></div>
-                                    <div class="form-group"><label>Town Location Name</label><input formControlName="dbtrTwnLctnNm" maxlength="35"></div>
-                                    <div class="form-group"><label>District Name</label><input formControlName="dbtrDstrctNm" maxlength="35"></div>
-                                    <div class="form-group"><label>Country Sub Division</label><input formControlName="dbtrCtrySubDvsn" maxlength="35"></div>
+                                    <div class="form-group"><label>Department</label><input formControlName="dbtrDept" maxlength="70">
+                                        <div class="validation-msg" *ngIf="err('dbtrDept', tx) as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint('dbtrDept', 70) as h">{{h}}</div>
+                                    </div>
+                                    <div class="form-group"><label>Sub Department</label><input formControlName="dbtrSubDept" maxlength="70">
+                                        <div class="validation-msg" *ngIf="err('dbtrSubDept', tx) as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint('dbtrSubDept', 70) as h">{{h}}</div>
+                                    </div>
+                                    <div class="form-group"><label>Street Name</label><input formControlName="dbtrStrtNm" maxlength="70">
+                                        <div class="validation-msg" *ngIf="err('dbtrStrtNm', tx) as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint('dbtrStrtNm', 70) as h">{{h}}</div>
+                                    </div>
+                                    <div class="form-group"><label>Building Number</label><input formControlName="dbtrBldgNb" maxlength="16">
+                                        <div class="validation-msg" *ngIf="err('dbtrBldgNb', tx) as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint('dbtrBldgNb', 16) as h">{{h}}</div>
+                                    </div>
+                                    <div class="form-group"><label>Building Name</label><input formControlName="dbtrBldgNm" maxlength="35">
+                                        <div class="validation-msg" *ngIf="err('dbtrBldgNm', tx) as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint('dbtrBldgNm', 35) as h">{{h}}</div>
+                                    </div>
+                                    <div class="form-group"><label>Floor</label><input formControlName="dbtrFlr" maxlength="70">
+                                        <div class="validation-msg" *ngIf="err('dbtrFlr', tx) as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint('dbtrFlr', 70) as h">{{h}}</div>
+                                    </div>
+                                    <div class="form-group"><label>Post Box</label><input formControlName="dbtrPstBx" maxlength="16">
+                                        <div class="validation-msg" *ngIf="err('dbtrPstBx', tx) as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint('dbtrPstBx', 16) as h">{{h}}</div>
+                                    </div>
+                                    <div class="form-group"><label>Room</label><input formControlName="dbtrRoom" maxlength="70">
+                                        <div class="validation-msg" *ngIf="err('dbtrRoom', tx) as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint('dbtrRoom', 70) as h">{{h}}</div>
+                                    </div>
+                                    <div class="form-group"><label>Postal Code</label><input formControlName="dbtrPstCd" maxlength="16">
+                                        <div class="validation-msg" *ngIf="err('dbtrPstCd', tx) as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint('dbtrPstCd', 16) as h">{{h}}</div>
+                                    </div>
+                                    <div class="form-group"><label>Town Location Name</label><input formControlName="dbtrTwnLctnNm" maxlength="35">
+                                        <div class="validation-msg" *ngIf="err('dbtrTwnLctnNm', tx) as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint('dbtrTwnLctnNm', 35) as h">{{h}}</div>
+                                    </div>
+                                    <div class="form-group"><label>District Name</label><input formControlName="dbtrDstrctNm" maxlength="35">
+                                        <div class="validation-msg" *ngIf="err('dbtrDstrctNm', tx) as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint('dbtrDstrctNm', 35) as h">{{h}}</div>
+                                    </div>
+                                    <div class="form-group"><label>Country Sub Division</label><input formControlName="dbtrCtrySubDvsn" maxlength="35">
+                                        <div class="validation-msg" *ngIf="err('dbtrCtrySubDvsn', tx) as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint('dbtrCtrySubDvsn', 35) as h">{{h}}</div>
+                                    </div>
                                 </ng-container>
                                 <ng-container *ngIf="['structured', 'unstructured', 'hybrid'].includes(tx.get('dbtrAddrType')?.value)">
-                                    <div class="form-group"><label>Town Name</label><input formControlName="dbtrTwnNm" maxlength="35"></div>
-                                    <div class="form-group"><label>Country</label><input formControlName="dbtrCtry" maxlength="2" placeholder="e.g. DE"></div>
+                                    <div class="form-group"><label>Town Name</label><input formControlName="dbtrTwnNm" maxlength="35">
+                                        <div class="validation-msg" *ngIf="err('dbtrTwnNm', tx) as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint('dbtrTwnNm', 35) as h">{{h}}</div>
+                                    </div>
+                                    <div class="form-group"><label>Country</label><input formControlName="dbtrCtry" maxlength="2" placeholder="e.g. DE">
+                                        <div class="validation-msg" *ngIf="err('dbtrCtry', tx) as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint('dbtrCtry', 2) as h">{{h}}</div>
+                                    </div>
                                 </ng-container>
                                 <ng-container *ngIf="['unstructured', 'hybrid'].includes(tx.get('dbtrAddrType')?.value)">
-                                    <div class="form-group"><label>Address Line 1</label><input formControlName="dbtrAdrLine1" maxlength="70"></div>
-                                    <div class="form-group"><label>Address Line 2</label><input formControlName="dbtrAdrLine2" maxlength="70"></div>
+                                    <div class="form-group"><label>Address Line 1</label><input formControlName="dbtrAdrLine1" maxlength="70">
+                                        <div class="validation-msg" *ngIf="err('dbtrAdrLine1', tx) as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint('dbtrAdrLine1', 70) as h">{{h}}</div>
+                                    </div>
+                                    <div class="form-group"><label>Address Line 2</label><input formControlName="dbtrAdrLine2" maxlength="70">
+                                        <div class="validation-msg" *ngIf="err('dbtrAdrLine2', tx) as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint('dbtrAdrLine2', 70) as h">{{h}}</div>
+                                    </div>
                                 </ng-container>
                                 <div class="form-group"><label>OrgId AnyBIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
 <input formControlName="dbtrOrgIdAnyBic" maxlength="11" placeholder="Optional">
 <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('dbtrOrgIdAnyBic', i)" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
-</div></div>
-                                <div class="form-group"><label>OrgId LEI</label><input formControlName="dbtrOrgIdLei" maxlength="20" placeholder="Optional"></div>
-                                <div class="form-group"><label>OrgId Other ID</label><input formControlName="dbtrOrgIdOthrId" maxlength="35" placeholder="Optional"></div>
-                                <div class="form-group"><label>OrgId SchmeNm Code</label><input formControlName="dbtrOrgIdOthrSchmeNmCd" maxlength="4" placeholder="Optional"></div>
-                                <div class="form-group"><label>OrgId Issuer</label><input formControlName="dbtrOrgIdOthrIssr" maxlength="35" placeholder="Optional"></div>
+</div>
+                                    <div class="validation-msg" *ngIf="err('dbtrOrgIdAnyBic', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrOrgIdAnyBic', 11) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>OrgId LEI</label><input formControlName="dbtrOrgIdLei" maxlength="20" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('dbtrOrgIdLei', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrOrgIdLei', 20) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>OrgId Other ID</label><input formControlName="dbtrOrgIdOthrId" maxlength="35" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('dbtrOrgIdOthrId', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrOrgIdOthrId', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>OrgId SchmeNm Code</label><input formControlName="dbtrOrgIdOthrSchmeNmCd" maxlength="4" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('dbtrOrgIdOthrSchmeNmCd', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrOrgIdOthrSchmeNmCd', 4) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>OrgId Issuer</label><input formControlName="dbtrOrgIdOthrIssr" maxlength="35" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('dbtrOrgIdOthrIssr', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrOrgIdOthrIssr', 35) as h">{{h}}</div>
+                                </div>
                                 <div class="form-group"><label>PrvtId Birth Date</label><input type="date" formControlName="dbtrPrvtIdBirthDt"></div>
-                                <div class="form-group"><label>PrvtId City of Birth</label><input formControlName="dbtrPrvtIdCityOfBirth" maxlength="35" placeholder="Optional"></div>
-                                <div class="form-group"><label>PrvtId Country of Birth</label><input formControlName="dbtrPrvtIdCtryOfBirth" maxlength="2" placeholder="e.g. DE"></div>
-                                <div class="form-group"><label>PrvtId Other ID</label><input formControlName="dbtrPrvtIdOthrId" maxlength="35" placeholder="Optional"></div>
-                                <div class="form-group"><label>PrvtId SchmeNm Code</label><input formControlName="dbtrPrvtIdOthrSchmeNmCd" maxlength="4" placeholder="Optional"></div>
-                                <div class="form-group"><label>PrvtId Issuer</label><input formControlName="dbtrPrvtIdOthrIssr" maxlength="35" placeholder="Optional"></div>
+                                <div class="form-group"><label>PrvtId City of Birth</label><input formControlName="dbtrPrvtIdCityOfBirth" maxlength="35" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('dbtrPrvtIdCityOfBirth', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrPrvtIdCityOfBirth', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>PrvtId Country of Birth</label><input formControlName="dbtrPrvtIdCtryOfBirth" maxlength="2" placeholder="e.g. DE">
+                                    <div class="validation-msg" *ngIf="err('dbtrPrvtIdCtryOfBirth', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrPrvtIdCtryOfBirth', 2) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>PrvtId Other ID</label><input formControlName="dbtrPrvtIdOthrId" maxlength="35" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('dbtrPrvtIdOthrId', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrPrvtIdOthrId', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>PrvtId SchmeNm Code</label><input formControlName="dbtrPrvtIdOthrSchmeNmCd" maxlength="4" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('dbtrPrvtIdOthrSchmeNmCd', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrPrvtIdOthrSchmeNmCd', 4) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>PrvtId Issuer</label><input formControlName="dbtrPrvtIdOthrIssr" maxlength="35" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('dbtrPrvtIdOthrIssr', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrPrvtIdOthrIssr', 35) as h">{{h}}</div>
+                                </div>
 
                                 <!-- Debtor Account -->
                                 <div class="party-group-title mandatory" style="grid-column: 1 / -1; margin-top: 0.5rem; font-size: 0.7rem;">Debtor Account</div>
                                 <div class="form-group"><label>IBAN <span class="req">*</span></label><input formControlName="dbtrIban" maxlength="34">
-                                    <div class="validation-msg" *ngIf="err('dbtrIban', tx) as e">{{e}}</div></div>
-                                <div class="form-group"><label>Other ID</label><input formControlName="dbtrAcctOthrId" maxlength="34" placeholder="Alternative to IBAN"></div>
-                                <div class="form-group"><label>Currency</label><input formControlName="dbtrAcctCcy" maxlength="3" placeholder="e.g. EUR"></div>
-                                <div class="form-group"><label>Account Name</label><input formControlName="dbtrAcctNm" maxlength="70" placeholder="Optional"></div>
-                                <div class="form-group"><label>Account Type Code</label><input formControlName="dbtrAcctTpCd" maxlength="4" placeholder="Optional"></div>
+                                    <div class="validation-msg" *ngIf="err('dbtrIban', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrIban', 34) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Other ID</label><input formControlName="dbtrAcctOthrId" maxlength="34" placeholder="Alternative to IBAN">
+                                    <div class="validation-msg" *ngIf="err('dbtrAcctOthrId', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrAcctOthrId', 34) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Currency</label><input formControlName="dbtrAcctCcy" maxlength="3" placeholder="e.g. EUR">
+                                    <div class="validation-msg" *ngIf="err('dbtrAcctCcy', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrAcctCcy', 3) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Account Name</label><input formControlName="dbtrAcctNm" maxlength="70" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('dbtrAcctNm', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrAcctNm', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Account Type Code</label><input formControlName="dbtrAcctTpCd" maxlength="4" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('dbtrAcctTpCd', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrAcctTpCd', 4) as h">{{h}}</div>
+                                </div>
 
                                 <!-- UltmtDbtr -->
-                                <div class="form-group"><label>Ultimate Debtor Name</label><input formControlName="ultmtDbtrName" maxlength="140" placeholder="Optional"></div>
+                                <div class="form-group"><label>Ultimate Debtor Name</label><input formControlName="ultmtDbtrName" maxlength="140" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('ultmtDbtrName', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('ultmtDbtrName', 140) as h">{{h}}</div>
+                                </div>
 
                                 <!-- InstrForCdtrAgt -->
-                                <div class="form-group" style="grid-column: 1 / -1;"><label>Instruction for Creditor Agent</label><input formControlName="instrForCdtrAgt" maxlength="140" placeholder="Optional"></div>
+                                <div class="form-group" style="grid-column: 1 / -1;"><label>Instruction for Creditor Agent</label><input formControlName="instrForCdtrAgt" maxlength="140" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('instrForCdtrAgt', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('instrForCdtrAgt', 140) as h">{{h}}</div>
+                                </div>
 
                                 <!-- Purpose -->
-                                <div class="form-group"><label>Purpose Code</label><input formControlName="purpCd" maxlength="4" placeholder="e.g. CASH"></div>
-                                <div class="form-group"><label>Purpose Proprietary</label><input formControlName="purpPrtry" maxlength="35" placeholder="Optional"></div>
+                                <div class="form-group"><label>Purpose Code</label><input formControlName="purpCd" maxlength="4" placeholder="e.g. CASH">
+                                    <div class="validation-msg" *ngIf="err('purpCd', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('purpCd', 4) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Purpose Proprietary</label><input formControlName="purpPrtry" maxlength="35" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('purpPrtry', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('purpPrtry', 35) as h">{{h}}</div>
+                                </div>
 
                                 <!-- RgltryRptg -->
                                 <div class="mandate-section">
@@ -575,15 +947,38 @@
                                     <div class="mandate-grid">
                                         <div class="form-group"><label>Debit/Credit Indicator</label>
                                             <select formControlName="rgltryRptgInd"><option value="">None</option><option *ngFor="let r of dbtCdtRptgInd" [value]="r">{{r}}</option></select></div>
-                                        <div class="form-group"><label>Authority Name</label><input formControlName="rgltryRptgAuthrtyNm" maxlength="140" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Authority Country</label><input formControlName="rgltryRptgAuthrtyCtry" maxlength="2" placeholder="e.g. DE"></div>
-                                        <div class="form-group"><label>Details Type</label><input formControlName="rgltryRptgDtlsTp" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Authority Name</label><input formControlName="rgltryRptgAuthrtyNm" maxlength="140" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rgltryRptgAuthrtyNm', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rgltryRptgAuthrtyNm', 140) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Authority Country</label><input formControlName="rgltryRptgAuthrtyCtry" maxlength="2" placeholder="e.g. DE">
+                                            <div class="validation-msg" *ngIf="err('rgltryRptgAuthrtyCtry', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rgltryRptgAuthrtyCtry', 2) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Details Type</label><input formControlName="rgltryRptgDtlsTp" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rgltryRptgDtlsTp', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rgltryRptgDtlsTp', 35) as h">{{h}}</div>
+                                        </div>
                                         <div class="form-group"><label>Details Date</label><input type="date" formControlName="rgltryRptgDtlsDt"></div>
-                                        <div class="form-group"><label>Details Code</label><input formControlName="rgltryRptgDtlsCd" maxlength="10" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Details Country</label><input formControlName="rgltryRptgDtlsCtry" maxlength="2" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Details Amount</label><input formControlName="rgltryRptgDtlsAmt" placeholder="0.00"></div>
-                                        <div class="form-group"><label>Details Amount Ccy</label><input formControlName="rgltryRptgDtlsAmtCcy" maxlength="3" placeholder="EUR"></div>
-                                        <div class="form-group"><label>Details Information</label><input formControlName="rgltryRptgDtlsInf" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Details Code</label><input formControlName="rgltryRptgDtlsCd" maxlength="10" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rgltryRptgDtlsCd', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rgltryRptgDtlsCd', 10) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Details Country</label><input formControlName="rgltryRptgDtlsCtry" maxlength="2" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rgltryRptgDtlsCtry', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rgltryRptgDtlsCtry', 2) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Details Amount</label><input formControlName="rgltryRptgDtlsAmt" placeholder="0.00">
+                                            <div class="validation-msg" *ngIf="err('rgltryRptgDtlsAmt', tx) as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Details Amount Ccy</label><input formControlName="rgltryRptgDtlsAmtCcy" maxlength="3" placeholder="EUR">
+                                            <div class="validation-msg" *ngIf="err('rgltryRptgDtlsAmtCcy', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rgltryRptgDtlsAmtCcy', 3) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Details Information</label><input formControlName="rgltryRptgDtlsInf" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rgltryRptgDtlsInf', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rgltryRptgDtlsInf', 35) as h">{{h}}</div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -591,23 +986,69 @@
                                 <div class="mandate-section">
                                     <div class="mandate-section-title"><mat-icon>receipt</mat-icon> Tax Information</div>
                                     <div class="mandate-grid">
-                                        <div class="form-group"><label>Creditor Tax ID</label><input formControlName="taxCdtrTaxId" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Creditor Regn ID</label><input formControlName="taxCdtrRegnId" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Creditor Tax Type</label><input formControlName="taxCdtrTaxTp" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Debtor Tax ID</label><input formControlName="taxDbtrTaxId" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Debtor Regn ID</label><input formControlName="taxDbtrRegnId" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Debtor Tax Type</label><input formControlName="taxDbtrTaxTp" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Authorisation Title</label><input formControlName="taxAuthsnTitl" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Authorisation Name</label><input formControlName="taxAuthsnNm" maxlength="140" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Admin Zone</label><input formControlName="taxAdmstnZone" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Reference Number</label><input formControlName="taxRefNb" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Method</label><input formControlName="taxMtd" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Total Taxable Base Amt</label><input formControlName="taxTtlTaxblBaseAmt" placeholder="0.00"></div>
-                                        <div class="form-group"><label>Total Taxable Base Ccy</label><input formControlName="taxTtlTaxblBaseAmtCcy" maxlength="3" placeholder="EUR"></div>
-                                        <div class="form-group"><label>Total Tax Amount</label><input formControlName="taxTtlTaxAmt" placeholder="0.00"></div>
-                                        <div class="form-group"><label>Total Tax Ccy</label><input formControlName="taxTtlTaxAmtCcy" maxlength="3" placeholder="EUR"></div>
+                                        <div class="form-group"><label>Creditor Tax ID</label><input formControlName="taxCdtrTaxId" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('taxCdtrTaxId', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('taxCdtrTaxId', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Creditor Regn ID</label><input formControlName="taxCdtrRegnId" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('taxCdtrRegnId', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('taxCdtrRegnId', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Creditor Tax Type</label><input formControlName="taxCdtrTaxTp" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('taxCdtrTaxTp', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('taxCdtrTaxTp', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Debtor Tax ID</label><input formControlName="taxDbtrTaxId" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('taxDbtrTaxId', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('taxDbtrTaxId', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Debtor Regn ID</label><input formControlName="taxDbtrRegnId" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('taxDbtrRegnId', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('taxDbtrRegnId', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Debtor Tax Type</label><input formControlName="taxDbtrTaxTp" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('taxDbtrTaxTp', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('taxDbtrTaxTp', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Authorisation Title</label><input formControlName="taxAuthsnTitl" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('taxAuthsnTitl', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('taxAuthsnTitl', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Authorisation Name</label><input formControlName="taxAuthsnNm" maxlength="140" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('taxAuthsnNm', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('taxAuthsnNm', 140) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Admin Zone</label><input formControlName="taxAdmstnZone" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('taxAdmstnZone', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('taxAdmstnZone', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Reference Number</label><input formControlName="taxRefNb" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('taxRefNb', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('taxRefNb', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Method</label><input formControlName="taxMtd" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('taxMtd', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('taxMtd', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Total Taxable Base Amt</label><input formControlName="taxTtlTaxblBaseAmt" placeholder="0.00">
+                                            <div class="validation-msg" *ngIf="err('taxTtlTaxblBaseAmt', tx) as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Total Taxable Base Ccy</label><input formControlName="taxTtlTaxblBaseAmtCcy" maxlength="3" placeholder="EUR">
+                                            <div class="validation-msg" *ngIf="err('taxTtlTaxblBaseAmtCcy', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('taxTtlTaxblBaseAmtCcy', 3) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Total Tax Amount</label><input formControlName="taxTtlTaxAmt" placeholder="0.00">
+                                            <div class="validation-msg" *ngIf="err('taxTtlTaxAmt', tx) as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Total Tax Ccy</label><input formControlName="taxTtlTaxAmtCcy" maxlength="3" placeholder="EUR">
+                                            <div class="validation-msg" *ngIf="err('taxTtlTaxAmtCcy', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('taxTtlTaxAmtCcy', 3) as h">{{h}}</div>
+                                        </div>
                                         <div class="form-group"><label>Date</label><input type="date" formControlName="taxDt"></div>
-                                        <div class="form-group"><label>Sequence Number</label><input formControlName="taxSeqNb" maxlength="18" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Sequence Number</label><input formControlName="taxSeqNb" maxlength="18" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('taxSeqNb', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('taxSeqNb', 18) as h">{{h}}</div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -615,10 +1056,16 @@
                                 <div class="mandate-section">
                                     <div class="mandate-section-title"><mat-icon>link</mat-icon> Related Remittance Information</div>
                                     <div class="mandate-grid">
-                                        <div class="form-group"><label>Remittance ID</label><input formControlName="rltdRmtInfRmtId" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Remittance ID</label><input formControlName="rltdRmtInfRmtId" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rltdRmtInfRmtId', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rltdRmtInfRmtId', 35) as h">{{h}}</div>
+                                        </div>
                                         <div class="form-group"><label>Method</label>
                                             <select formControlName="rltdRmtInfMtd"><option value="">None</option><option *ngFor="let m of rmtMethods" [value]="m">{{m}}</option></select></div>
-                                        <div class="form-group"><label>Electronic Address</label><input formControlName="rltdRmtInfElctrncAdr" maxlength="2048" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Electronic Address</label><input formControlName="rltdRmtInfElctrncAdr" maxlength="2048" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rltdRmtInfElctrncAdr', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rltdRmtInfElctrncAdr', 2048) as h">{{h}}</div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -627,7 +1074,9 @@
                                     <div class="mandate-section-title"><mat-icon>note</mat-icon> Remittance Information</div>
                                     <div class="mandate-grid">
                                         <div class="form-group" style="grid-column: 1 / -1;"><label>Unstructured</label><input formControlName="rmtInfUstrd" maxlength="140" placeholder="Free text (max 140)">
-                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfUstrd', 140, tx) as h">{{h}}</div></div>
+                                            <div class="validation-msg" *ngIf="err('rmtInfUstrd', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfUstrd', 140, tx) as h">{{h}}</div>
+                                        </div>
                                     </div>
                                 </div>
                                 <!-- Strd > RfrdDocInf -->
@@ -636,41 +1085,110 @@
                                     <div class="mandate-grid">
                                         <div class="form-group"><label>Doc Type Code</label>
                                             <select formControlName="rmtInfStrdRfrdDocCd"><option value="">None</option><option *ngFor="let d of rfrdDocCodes" [value]="d">{{d}}</option></select></div>
-                                        <div class="form-group"><label>Doc Type Proprietary</label><input formControlName="rmtInfStrdRfrdDocPrtry" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Issuer</label><input formControlName="rmtInfStrdRfrdDocIssr" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Document Number</label><input formControlName="rmtInfStrdRfrdDocNb" maxlength="35" placeholder="e.g. INV-001"></div>
+                                        <div class="form-group"><label>Doc Type Proprietary</label><input formControlName="rmtInfStrdRfrdDocPrtry" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocPrtry', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdRfrdDocPrtry', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Issuer</label><input formControlName="rmtInfStrdRfrdDocIssr" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocIssr', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdRfrdDocIssr', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Document Number</label><input formControlName="rmtInfStrdRfrdDocNb" maxlength="35" placeholder="e.g. INV-001">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocNb', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdRfrdDocNb', 35) as h">{{h}}</div>
+                                        </div>
                                         <div class="form-group"><label>Related Date</label><input type="date" formControlName="rmtInfStrdRfrdDocRltdDt"></div>
-                                        <div class="form-group"><label>Line Details Desc</label><input formControlName="rmtInfStrdRfrdDocLineDtlsDesc" maxlength="140" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Line Due Payable Amt</label><input formControlName="rmtInfStrdRfrdDocLineDtlsDuePyblAmt" placeholder="0.00"></div>
-                                        <div class="form-group"><label>Line Due Payable Ccy</label><input formControlName="rmtInfStrdRfrdDocLineDtlsDuePyblAmtCcy" maxlength="3" placeholder="EUR"></div>
-                                        <div class="form-group"><label>Line Credit Note Amt</label><input formControlName="rmtInfStrdRfrdDocLineDtlsCdtNoteAmt" placeholder="0.00"></div>
-                                        <div class="form-group"><label>Line Credit Note Ccy</label><input formControlName="rmtInfStrdRfrdDocLineDtlsCdtNoteAmtCcy" maxlength="3" placeholder="EUR"></div>
-                                        <div class="form-group"><label>Line Remitted Amt</label><input formControlName="rmtInfStrdRfrdDocLineDtlsRmtdAmt" placeholder="0.00"></div>
-                                        <div class="form-group"><label>Line Remitted Ccy</label><input formControlName="rmtInfStrdRfrdDocLineDtlsRmtdAmtCcy" maxlength="3" placeholder="EUR"></div>
+                                        <div class="form-group"><label>Line Details Desc</label><input formControlName="rmtInfStrdRfrdDocLineDtlsDesc" maxlength="140" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocLineDtlsDesc', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdRfrdDocLineDtlsDesc', 140) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Line Due Payable Amt</label><input formControlName="rmtInfStrdRfrdDocLineDtlsDuePyblAmt" placeholder="0.00">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocLineDtlsDuePyblAmt', tx) as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Line Due Payable Ccy</label><input formControlName="rmtInfStrdRfrdDocLineDtlsDuePyblAmtCcy" maxlength="3" placeholder="EUR">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocLineDtlsDuePyblAmtCcy', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdRfrdDocLineDtlsDuePyblAmtCcy', 3) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Line Credit Note Amt</label><input formControlName="rmtInfStrdRfrdDocLineDtlsCdtNoteAmt" placeholder="0.00">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocLineDtlsCdtNoteAmt', tx) as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Line Credit Note Ccy</label><input formControlName="rmtInfStrdRfrdDocLineDtlsCdtNoteAmtCcy" maxlength="3" placeholder="EUR">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocLineDtlsCdtNoteAmtCcy', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdRfrdDocLineDtlsCdtNoteAmtCcy', 3) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Line Remitted Amt</label><input formControlName="rmtInfStrdRfrdDocLineDtlsRmtdAmt" placeholder="0.00">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocLineDtlsRmtdAmt', tx) as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Line Remitted Ccy</label><input formControlName="rmtInfStrdRfrdDocLineDtlsRmtdAmtCcy" maxlength="3" placeholder="EUR">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocLineDtlsRmtdAmtCcy', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdRfrdDocLineDtlsRmtdAmtCcy', 3) as h">{{h}}</div>
+                                        </div>
                                     </div>
                                 </div>
                                 <!-- Strd > RfrdDocAmt -->
                                 <div class="mandate-section">
                                     <div class="mandate-section-title"><mat-icon>account_balance_wallet</mat-icon> Referred Document Amount (Strd)</div>
                                     <div class="mandate-grid">
-                                        <div class="form-group"><label>Due Payable Amt</label><input formControlName="rmtInfStrdRfrdDocAmtDuePyblAmt" placeholder="0.00"></div>
-                                        <div class="form-group"><label>Due Payable Ccy</label><input formControlName="rmtInfStrdRfrdDocAmtDuePyblAmtCcy" maxlength="3" placeholder="EUR"></div>
-                                        <div class="form-group"><label>Discount Type Code</label><input formControlName="rmtInfStrdRfrdDocAmtDscntApldAmtTpCd" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Discount Amount</label><input formControlName="rmtInfStrdRfrdDocAmtDscntApldAmt" placeholder="0.00"></div>
-                                        <div class="form-group"><label>Discount Ccy</label><input formControlName="rmtInfStrdRfrdDocAmtDscntApldAmtCcy" maxlength="3" placeholder="EUR"></div>
-                                        <div class="form-group"><label>Credit Note Amt</label><input formControlName="rmtInfStrdRfrdDocAmtCdtNoteAmt" placeholder="0.00"></div>
-                                        <div class="form-group"><label>Credit Note Ccy</label><input formControlName="rmtInfStrdRfrdDocAmtCdtNoteAmtCcy" maxlength="3" placeholder="EUR"></div>
-                                        <div class="form-group"><label>Tax Amt Type Code</label><input formControlName="rmtInfStrdRfrdDocAmtTaxAmtTpCd" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Tax Amount</label><input formControlName="rmtInfStrdRfrdDocAmtTaxAmt" placeholder="0.00"></div>
-                                        <div class="form-group"><label>Tax Amount Ccy</label><input formControlName="rmtInfStrdRfrdDocAmtTaxAmtCcy" maxlength="3" placeholder="EUR"></div>
-                                        <div class="form-group"><label>Adj Amount</label><input formControlName="rmtInfStrdRfrdDocAmtAdjAmt" placeholder="0.00"></div>
-                                        <div class="form-group"><label>Adj Amount Ccy</label><input formControlName="rmtInfStrdRfrdDocAmtAdjAmtCcy" maxlength="3" placeholder="EUR"></div>
+                                        <div class="form-group"><label>Due Payable Amt</label><input formControlName="rmtInfStrdRfrdDocAmtDuePyblAmt" placeholder="0.00">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmtDuePyblAmt', tx) as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Due Payable Ccy</label><input formControlName="rmtInfStrdRfrdDocAmtDuePyblAmtCcy" maxlength="3" placeholder="EUR">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmtDuePyblAmtCcy', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdRfrdDocAmtDuePyblAmtCcy', 3) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Discount Type Code</label><input formControlName="rmtInfStrdRfrdDocAmtDscntApldAmtTpCd" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmtDscntApldAmtTpCd', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdRfrdDocAmtDscntApldAmtTpCd', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Discount Amount</label><input formControlName="rmtInfStrdRfrdDocAmtDscntApldAmt" placeholder="0.00">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmtDscntApldAmt', tx) as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Discount Ccy</label><input formControlName="rmtInfStrdRfrdDocAmtDscntApldAmtCcy" maxlength="3" placeholder="EUR">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmtDscntApldAmtCcy', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdRfrdDocAmtDscntApldAmtCcy', 3) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Credit Note Amt</label><input formControlName="rmtInfStrdRfrdDocAmtCdtNoteAmt" placeholder="0.00">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmtCdtNoteAmt', tx) as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Credit Note Ccy</label><input formControlName="rmtInfStrdRfrdDocAmtCdtNoteAmtCcy" maxlength="3" placeholder="EUR">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmtCdtNoteAmtCcy', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdRfrdDocAmtCdtNoteAmtCcy', 3) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Tax Amt Type Code</label><input formControlName="rmtInfStrdRfrdDocAmtTaxAmtTpCd" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmtTaxAmtTpCd', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdRfrdDocAmtTaxAmtTpCd', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Tax Amount</label><input formControlName="rmtInfStrdRfrdDocAmtTaxAmt" placeholder="0.00">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmtTaxAmt', tx) as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Tax Amount Ccy</label><input formControlName="rmtInfStrdRfrdDocAmtTaxAmtCcy" maxlength="3" placeholder="EUR">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmtTaxAmtCcy', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdRfrdDocAmtTaxAmtCcy', 3) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Adj Amount</label><input formControlName="rmtInfStrdRfrdDocAmtAdjAmt" placeholder="0.00">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmtAdjAmt', tx) as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Adj Amount Ccy</label><input formControlName="rmtInfStrdRfrdDocAmtAdjAmtCcy" maxlength="3" placeholder="EUR">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmtAdjAmtCcy', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdRfrdDocAmtAdjAmtCcy', 3) as h">{{h}}</div>
+                                        </div>
                                         <div class="form-group"><label>Adj Cdt/Dbt Ind</label>
                                             <select formControlName="rmtInfStrdRfrdDocAmtAdjCdtDbtInd"><option value="">None</option><option *ngFor="let c of cdtDbtInds" [value]="c">{{c}}</option></select></div>
-                                        <div class="form-group"><label>Adj Reason</label><input formControlName="rmtInfStrdRfrdDocAmtAdjRsn" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Adj Addtl Info</label><input formControlName="rmtInfStrdRfrdDocAmtAdjAddtlInf" maxlength="140" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Remitted Amount</label><input formControlName="rmtInfStrdRfrdDocAmtRmtdAmt" placeholder="0.00"></div>
-                                        <div class="form-group"><label>Remitted Ccy</label><input formControlName="rmtInfStrdRfrdDocAmtRmtdAmtCcy" maxlength="3" placeholder="EUR"></div>
+                                        <div class="form-group"><label>Adj Reason</label><input formControlName="rmtInfStrdRfrdDocAmtAdjRsn" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmtAdjRsn', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdRfrdDocAmtAdjRsn', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Adj Addtl Info</label><input formControlName="rmtInfStrdRfrdDocAmtAdjAddtlInf" maxlength="140" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmtAdjAddtlInf', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdRfrdDocAmtAdjAddtlInf', 140) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Remitted Amount</label><input formControlName="rmtInfStrdRfrdDocAmtRmtdAmt" placeholder="0.00">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmtRmtdAmt', tx) as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Remitted Ccy</label><input formControlName="rmtInfStrdRfrdDocAmtRmtdAmtCcy" maxlength="3" placeholder="EUR">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmtRmtdAmtCcy', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdRfrdDocAmtRmtdAmtCcy', 3) as h">{{h}}</div>
+                                        </div>
                                     </div>
                                 </div>
                                 <!-- Strd > CdtrRefInf -->
@@ -679,54 +1197,139 @@
                                     <div class="mandate-grid">
                                         <div class="form-group"><label>Ref Type Code</label>
                                             <select formControlName="rmtInfStrdCdtrRefCd"><option value="">None</option><option *ngFor="let c of cdtrRefCodes" [value]="c">{{c}}</option></select></div>
-                                        <div class="form-group"><label>Ref Type Prtry</label><input formControlName="rmtInfStrdCdtrRefPrtry" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Issuer</label><input formControlName="rmtInfStrdCdtrRefIssr" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Reference</label><input formControlName="rmtInfStrdCdtrRefRef" maxlength="35" placeholder="e.g. RF1853900000000"></div>
+                                        <div class="form-group"><label>Ref Type Prtry</label><input formControlName="rmtInfStrdCdtrRefPrtry" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdCdtrRefPrtry', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdCdtrRefPrtry', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Issuer</label><input formControlName="rmtInfStrdCdtrRefIssr" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdCdtrRefIssr', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdCdtrRefIssr', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Reference</label><input formControlName="rmtInfStrdCdtrRefRef" maxlength="35" placeholder="e.g. RF1853900000000">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdCdtrRefRef', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdCdtrRefRef', 35) as h">{{h}}</div>
+                                        </div>
                                     </div>
                                 </div>
                                 <!-- Strd > Invcr / Invcee -->
                                 <div class="mandate-section">
                                     <div class="mandate-section-title"><mat-icon>storefront</mat-icon> Invoicer / Invoicee (Strd)</div>
                                     <div class="mandate-grid">
-                                        <div class="form-group"><label>Invoicer Name</label><input formControlName="rmtInfStrdInvcrNm" maxlength="140" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Invoicer Town</label><input formControlName="rmtInfStrdInvcrTwnNm" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Invoicer Country</label><input formControlName="rmtInfStrdInvcrCtry" maxlength="2" placeholder="e.g. GB"></div>
-                                        <div class="form-group"><label>Invoicee Name</label><input formControlName="rmtInfStrdInvceeNm" maxlength="140" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Invoicee Town</label><input formControlName="rmtInfStrdInvceeTwnNm" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Invoicee Country</label><input formControlName="rmtInfStrdInvceeCtry" maxlength="2" placeholder="e.g. DE"></div>
+                                        <div class="form-group"><label>Invoicer Name</label><input formControlName="rmtInfStrdInvcrNm" maxlength="140" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdInvcrNm', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdInvcrNm', 140) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Invoicer Town</label><input formControlName="rmtInfStrdInvcrTwnNm" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdInvcrTwnNm', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdInvcrTwnNm', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Invoicer Country</label><input formControlName="rmtInfStrdInvcrCtry" maxlength="2" placeholder="e.g. GB">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdInvcrCtry', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdInvcrCtry', 2) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Invoicee Name</label><input formControlName="rmtInfStrdInvceeNm" maxlength="140" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdInvceeNm', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdInvceeNm', 140) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Invoicee Town</label><input formControlName="rmtInfStrdInvceeTwnNm" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdInvceeTwnNm', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdInvceeTwnNm', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Invoicee Country</label><input formControlName="rmtInfStrdInvceeCtry" maxlength="2" placeholder="e.g. DE">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdInvceeCtry', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdInvceeCtry', 2) as h">{{h}}</div>
+                                        </div>
                                     </div>
                                 </div>
                                 <!-- Strd > TaxRmt -->
                                 <div class="mandate-section">
                                     <div class="mandate-section-title"><mat-icon>account_balance</mat-icon> Tax Remittance (Strd)</div>
                                     <div class="mandate-grid">
-                                        <div class="form-group"><label>Cdtr Tax ID</label><input formControlName="rmtInfStrdTaxRmtCdtrTaxId" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Cdtr Regn ID</label><input formControlName="rmtInfStrdTaxRmtCdtrRegnId" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Cdtr Tax Type</label><input formControlName="rmtInfStrdTaxRmtCdtrTaxTp" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Dbtr Tax ID</label><input formControlName="rmtInfStrdTaxRmtDbtrTaxId" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Dbtr Regn ID</label><input formControlName="rmtInfStrdTaxRmtDbtrRegnId" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Dbtr Tax Type</label><input formControlName="rmtInfStrdTaxRmtDbtrTaxTp" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>UltmtDbtr Tax ID</label><input formControlName="rmtInfStrdTaxRmtUltmtDbtrTaxId" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>UltmtDbtr Regn ID</label><input formControlName="rmtInfStrdTaxRmtUltmtDbtrRegnId" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>UltmtDbtr Tax Type</label><input formControlName="rmtInfStrdTaxRmtUltmtDbtrTaxTp" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Admin Zone</label><input formControlName="rmtInfStrdTaxRmtAdmstnZone" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Reference Number</label><input formControlName="rmtInfStrdTaxRmtRefNb" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Total Tax Amt</label><input formControlName="rmtInfStrdTaxRmtTtlTaxAmt" placeholder="0.00"></div>
-                                        <div class="form-group"><label>Total Tax Ccy</label><input formControlName="rmtInfStrdTaxRmtTtlTaxAmtCcy" maxlength="3" placeholder="EUR"></div>
+                                        <div class="form-group"><label>Cdtr Tax ID</label><input formControlName="rmtInfStrdTaxRmtCdtrTaxId" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdTaxRmtCdtrTaxId', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdTaxRmtCdtrTaxId', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Cdtr Regn ID</label><input formControlName="rmtInfStrdTaxRmtCdtrRegnId" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdTaxRmtCdtrRegnId', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdTaxRmtCdtrRegnId', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Cdtr Tax Type</label><input formControlName="rmtInfStrdTaxRmtCdtrTaxTp" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdTaxRmtCdtrTaxTp', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdTaxRmtCdtrTaxTp', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Dbtr Tax ID</label><input formControlName="rmtInfStrdTaxRmtDbtrTaxId" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdTaxRmtDbtrTaxId', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdTaxRmtDbtrTaxId', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Dbtr Regn ID</label><input formControlName="rmtInfStrdTaxRmtDbtrRegnId" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdTaxRmtDbtrRegnId', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdTaxRmtDbtrRegnId', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Dbtr Tax Type</label><input formControlName="rmtInfStrdTaxRmtDbtrTaxTp" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdTaxRmtDbtrTaxTp', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdTaxRmtDbtrTaxTp', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>UltmtDbtr Tax ID</label><input formControlName="rmtInfStrdTaxRmtUltmtDbtrTaxId" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdTaxRmtUltmtDbtrTaxId', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdTaxRmtUltmtDbtrTaxId', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>UltmtDbtr Regn ID</label><input formControlName="rmtInfStrdTaxRmtUltmtDbtrRegnId" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdTaxRmtUltmtDbtrRegnId', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdTaxRmtUltmtDbtrRegnId', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>UltmtDbtr Tax Type</label><input formControlName="rmtInfStrdTaxRmtUltmtDbtrTaxTp" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdTaxRmtUltmtDbtrTaxTp', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdTaxRmtUltmtDbtrTaxTp', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Admin Zone</label><input formControlName="rmtInfStrdTaxRmtAdmstnZone" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdTaxRmtAdmstnZone', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdTaxRmtAdmstnZone', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Reference Number</label><input formControlName="rmtInfStrdTaxRmtRefNb" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdTaxRmtRefNb', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdTaxRmtRefNb', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Total Tax Amt</label><input formControlName="rmtInfStrdTaxRmtTtlTaxAmt" placeholder="0.00">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdTaxRmtTtlTaxAmt', tx) as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Total Tax Ccy</label><input formControlName="rmtInfStrdTaxRmtTtlTaxAmtCcy" maxlength="3" placeholder="EUR">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdTaxRmtTtlTaxAmtCcy', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdTaxRmtTtlTaxAmtCcy', 3) as h">{{h}}</div>
+                                        </div>
                                     </div>
                                 </div>
                                 <!-- Strd > GrnshmtRmt -->
                                 <div class="mandate-section">
                                     <div class="mandate-section-title"><mat-icon>policy</mat-icon> Garnishment Remittance (Strd)</div>
                                     <div class="mandate-grid">
-                                        <div class="form-group"><label>Type Code</label><input formControlName="rmtInfStrdGrnshmtTpCd" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Type Proprietary</label><input formControlName="rmtInfStrdGrnshmtTpPrtry" maxlength="35" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Garnishee Name</label><input formControlName="rmtInfStrdGrnshmtGrnsheeNm" maxlength="140" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Garnishment Admin Name</label><input formControlName="rmtInfStrdGrnshmtGrnshmtAdmstrNm" maxlength="140" placeholder="Optional"></div>
-                                        <div class="form-group"><label>Reference Number</label><input formControlName="rmtInfStrdGrnshmtRefNb" maxlength="35" placeholder="Optional"></div>
+                                        <div class="form-group"><label>Type Code</label><input formControlName="rmtInfStrdGrnshmtTpCd" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdGrnshmtTpCd', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdGrnshmtTpCd', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Type Proprietary</label><input formControlName="rmtInfStrdGrnshmtTpPrtry" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdGrnshmtTpPrtry', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdGrnshmtTpPrtry', 35) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Garnishee Name</label><input formControlName="rmtInfStrdGrnshmtGrnsheeNm" maxlength="140" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdGrnshmtGrnsheeNm', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdGrnshmtGrnsheeNm', 140) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Garnishment Admin Name</label><input formControlName="rmtInfStrdGrnshmtGrnshmtAdmstrNm" maxlength="140" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdGrnshmtGrnshmtAdmstrNm', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdGrnshmtGrnshmtAdmstrNm', 140) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Reference Number</label><input formControlName="rmtInfStrdGrnshmtRefNb" maxlength="35" placeholder="Optional">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdGrnshmtRefNb', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdGrnshmtRefNb', 35) as h">{{h}}</div>
+                                        </div>
                                         <div class="form-group"><label>Date</label><input type="date" formControlName="rmtInfStrdGrnshmtDt"></div>
-                                        <div class="form-group"><label>Remitted Amount</label><input formControlName="rmtInfStrdGrnshmtRmtdAmt" placeholder="0.00"></div>
-                                        <div class="form-group"><label>Remitted Ccy</label><input formControlName="rmtInfStrdGrnshmtRmtdAmtCcy" maxlength="3" placeholder="EUR"></div>
+                                        <div class="form-group"><label>Remitted Amount</label><input formControlName="rmtInfStrdGrnshmtRmtdAmt" placeholder="0.00">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdGrnshmtRmtdAmt', tx) as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Remitted Ccy</label><input formControlName="rmtInfStrdGrnshmtRmtdAmtCcy" maxlength="3" placeholder="EUR">
+                                            <div class="validation-msg" *ngIf="err('rmtInfStrdGrnshmtRmtdAmtCcy', tx) as e">{{e}}</div>
+                                            <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdGrnshmtRmtdAmtCcy', 3) as h">{{h}}</div>
+                                        </div>
                                         <div class="form-group"><label>Family Medical Insurance</label>
                                             <select formControlName="rmtInfStrdGrnshmtFmlyMdclInsrncInd"><option value="">None</option><option value="true">true</option><option value="false">false</option></select></div>
                                         <div class="form-group"><label>Employee Termination</label>
@@ -734,7 +1337,10 @@
                                     </div>
                                 </div>
                                 <!-- Strd > AddtlRmtInf -->
-                                <div class="form-group" style="grid-column: 1 / -1;"><label>Additional Remittance Info (Strd)</label><input formControlName="rmtInfStrdAddtlRmtInf" maxlength="140" placeholder="Optional"></div>
+                                <div class="form-group" style="grid-column: 1 / -1;"><label>Additional Remittance Info (Strd)</label><input formControlName="rmtInfStrdAddtlRmtInf" maxlength="140" placeholder="Optional">
+                                    <div class="validation-msg" *ngIf="err('rmtInfStrdAddtlRmtInf', tx) as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdAddtlRmtInf', 140) as h">{{h}}</div>
+                                </div>
 
                             </div>
                         </div>

@@ -1,4 +1,4 @@
-:host {
+﻿:host {
     display: flex;
     flex-direction: column;
     height: 100vh;
@@ -831,15 +831,15 @@ textarea.code-editor {
 }
 
 .vm-action-btn.run {
-    background: rgba(99, 102, 241, 0.1);
+    background: rgba(37, 99, 235, 0.1);
     color: var(--accent-color);
     border-color: var(--accent-color);
 }
 
 .vm-action-btn.run:hover {
-    background: #6366f1;
+    background: #2563eb;
     color: white;
-    border-color: #6366f1;
+    border-color: #2563eb;
 }
 
 .validation-modal {
@@ -878,7 +878,7 @@ textarea.code-editor {
 }
 
 .vm-title mat-icon {
-    color: #6366f1;
+    color: #2563eb;
     font-size: 22px;
     width: 22px;
     height: 22px;
@@ -934,7 +934,7 @@ textarea.code-editor {
     width: 40px;
     height: 40px;
     border: 3px solid var(--border-light);
-    border-top-color: #6366f1;
+    border-top-color: #2563eb;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
@@ -1304,7 +1304,7 @@ textarea.code-editor {
     align-items: center;
     gap: 4px;
     padding: 6px 12px;
-    background: var(--accent-color, #6366f1);
+    background: var(--accent-color, #2563eb);
     color: #fff;
     border: none;
     border-radius: 6px;
@@ -1464,12 +1464,12 @@ input[list]::-webkit-calendar-picker-indicator {
 
 .action-btn.copy, 
 .action-btn.download {
-    background: #6366f1; /* Consistent Indigo/Purple */
+    background: #2563eb; /* Consistent Indigo/Purple */
 }
 
 .action-btn.copy:hover, 
 .action-btn.download:hover {
-    background: #4f46e5;
+    background: #1d4ed8;
     transform: translateY(-0.5px);
     box-shadow: 0 3px 5px rgba(0, 0, 0, 0.12);
 }

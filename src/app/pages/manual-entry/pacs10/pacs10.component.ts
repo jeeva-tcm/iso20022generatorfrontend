@@ -1414,6 +1414,7 @@ ${this.rmtInf(v)}
     clearDraft(): void {
         try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
         this.showDraftBanner = false;
+        window.location.reload();
     }
 
     private scheduleDraftSave(): void {

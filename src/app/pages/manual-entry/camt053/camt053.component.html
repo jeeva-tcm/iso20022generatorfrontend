@@ -28,6 +28,7 @@
                                     <option value="FIId">Financial Institution (FIId)</option>
                                     <option value="OrgId">Organization (OrgId)</option>
                                 </select>
+                                <div class="validation-msg" *ngIf="err('fromType') as e">{{e}}</div>
                             </div>
                             <div class="form-group" *ngIf="form.get('fromType')?.value === 'OrgId'">
                                 <label>Name <span class="req">*</span></label>
@@ -113,14 +114,20 @@
                                 <div class="form-group">
                                     <label>Clearing System ID</label>
                                     <input formControlName="fromClrSysCd" maxlength="5" placeholder="e.g. USABA">
+                                    <div class="validation-msg" *ngIf="err('fromClrSysCd') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('fromClrSysCd', 5) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Member ID</label>
                                     <input formControlName="fromClrSysMmbId" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('fromClrSysMmbId') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('fromClrSysMmbId', 35) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Branch ID</label>
                                     <input formControlName="fromBrnchId" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('fromBrnchId') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('fromBrnchId', 35) as h">{{h}}</div>
                                 </div>
                             </div>
 
@@ -131,14 +138,20 @@
                                 <div class="form-group">
                                     <label>Other ID</label>
                                     <input formControlName="fromOrgOthrId" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('fromOrgOthrId') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('fromOrgOthrId', 35) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Scheme Name (Cd)</label>
                                     <input formControlName="fromOrgOthrSchme" maxlength="4">
+                                    <div class="validation-msg" *ngIf="err('fromOrgOthrSchme') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('fromOrgOthrSchme', 4) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Issuer</label>
                                     <input formControlName="fromOrgOthrIssr" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('fromOrgOthrIssr') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('fromOrgOthrIssr', 35) as h">{{h}}</div>
                                 </div>
                             </div>
 
@@ -149,15 +162,21 @@
                                 <div class="form-group">
                                     <label>Contact Name</label>
                                     <input formControlName="fromCtctNm" maxlength="140">
+                                    <div class="validation-msg" *ngIf="err('fromCtctNm') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('fromCtctNm', 140) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Phone Number</label>
                                     <input formControlName="fromCtctPhne" maxlength="35" placeholder="+xx xxx xxx">
+                                    <div class="validation-msg" *ngIf="err('fromCtctPhne') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('fromCtctPhne', 35) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Email Address</label>
                                     <input formControlName="fromCtctEmail" maxlength="256"
                                         placeholder="email@example.com">
+                                    <div class="validation-msg" *ngIf="err('fromCtctEmail') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('fromCtctEmail', 256) as h">{{h}}</div>
                                 </div>
                             </div>
                         </div>
@@ -173,6 +192,7 @@
                                     <option value="FIId">Financial Institution (FIId)</option>
                                     <option value="OrgId">Organization (OrgId)</option>
                                 </select>
+                                <div class="validation-msg" *ngIf="err('toType') as e">{{e}}</div>
                             </div>
                             <div class="form-group" *ngIf="form.get('toType')?.value === 'OrgId'">
                                 <label>Name <span class="req">*</span></label>
@@ -208,35 +228,50 @@
                                 <div class="form-group">
                                     <label>Street Name</label>
                                     <input formControlName="toStrtNm" maxlength="70">
+                                    <div class="validation-msg" *ngIf="err('toStrtNm') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('toStrtNm', 70) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Building Number</label>
                                     <input formControlName="toBldgNb" maxlength="16">
+                                    <div class="validation-msg" *ngIf="err('toBldgNb') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('toBldgNb', 16) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Post Code</label>
                                     <input formControlName="toPstCd" maxlength="16">
+                                    <div class="validation-msg" *ngIf="err('toPstCd') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('toPstCd', 16) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Town Name</label>
                                     <input formControlName="toTwnNm" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('toTwnNm') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('toTwnNm', 35) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Country Sub-Division</label>
                                     <input formControlName="toCtrySubDvsn" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('toCtrySubDvsn') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('toCtrySubDvsn', 35) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Country <span class="req">*</span></label>
                                     <input formControlName="toCtry" maxlength="2" placeholder="e.g. GB">
                                     <div class="validation-msg" *ngIf="err('toCtry') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('toCtry', 2) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Address Line 1</label>
                                     <input formControlName="toAdrLine1" maxlength="70">
+                                    <div class="validation-msg" *ngIf="err('toAdrLine1') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('toAdrLine1', 70) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Address Line 2</label>
                                     <input formControlName="toAdrLine2" maxlength="70">
+                                    <div class="validation-msg" *ngIf="err('toAdrLine2') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('toAdrLine2', 70) as h">{{h}}</div>
                                 </div>
                             </div>
 
@@ -247,14 +282,20 @@
                                 <div class="form-group">
                                     <label>Clearing System ID</label>
                                     <input formControlName="toClrSysCd" maxlength="5" placeholder="e.g. USABA">
+                                    <div class="validation-msg" *ngIf="err('toClrSysCd') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('toClrSysCd', 5) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Member ID</label>
                                     <input formControlName="toClrSysMmbId" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('toClrSysMmbId') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('toClrSysMmbId', 35) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Branch ID</label>
                                     <input formControlName="toBrnchId" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('toBrnchId') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('toBrnchId', 35) as h">{{h}}</div>
                                 </div>
                             </div>
 
@@ -265,14 +306,20 @@
                                 <div class="form-group">
                                     <label>Other ID</label>
                                     <input formControlName="toOrgOthrId" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('toOrgOthrId') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('toOrgOthrId', 35) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Scheme Name (Cd)</label>
                                     <input formControlName="toOrgOthrSchme" maxlength="4">
+                                    <div class="validation-msg" *ngIf="err('toOrgOthrSchme') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('toOrgOthrSchme', 4) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Issuer</label>
                                     <input formControlName="toOrgOthrIssr" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('toOrgOthrIssr') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('toOrgOthrIssr', 35) as h">{{h}}</div>
                                 </div>
                             </div>
 
@@ -283,15 +330,21 @@
                                 <div class="form-group">
                                     <label>Contact Name</label>
                                     <input formControlName="toCtctNm" maxlength="140">
+                                    <div class="validation-msg" *ngIf="err('toCtctNm') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('toCtctNm', 140) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Phone Number</label>
                                     <input formControlName="toCtctPhne" maxlength="35" placeholder="+xx xxx xxx">
+                                    <div class="validation-msg" *ngIf="err('toCtctPhne') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('toCtctPhne', 35) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Email Address</label>
                                     <input formControlName="toCtctEmail" maxlength="256"
                                         placeholder="email@example.com">
+                                    <div class="validation-msg" *ngIf="err('toCtctEmail') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('toCtctEmail', 256) as h">{{h}}</div>
                                 </div>
                             </div>
                         </div>
@@ -304,15 +357,18 @@
                             <label>Business Message ID <span class="req">*</span></label>
                             <input formControlName="bizMsgId" maxlength="35">
                             <div class="validation-msg" *ngIf="err('bizMsgId') as e">{{e}}</div>
+                            <div class="field-hint at-limit" *ngIf="hint('bizMsgId', 35) as h">{{h}}</div>
                         </div>
                         <div class="form-group">
                             <label>Business Service <span class="req">*</span></label>
                             <input formControlName="bizSvc" maxlength="35">
                             <div class="validation-msg" *ngIf="err('bizSvc') as e">{{e}}</div>
+                            <div class="field-hint at-limit" *ngIf="hint('bizSvc', 35) as h">{{h}}</div>
                         </div>
                         <div class="form-group">
                             <label>Character Set</label>
                             <input formControlName="appHdrCharSet" placeholder="e.g. UTF-8">
+                            <div class="validation-msg" *ngIf="err('appHdrCharSet') as e">{{e}}</div>
                         </div>
                         <div class="form-group">
                             <label>Creation Date (AppHdr) <span class="req">*</span></label>
@@ -324,10 +380,12 @@
                     <div class="form-group">
                         <label>Market Practice (Regy)</label>
                         <input formControlName="appHdrMktPrctcRegy" placeholder="Registry name">
+                        <div class="validation-msg" *ngIf="err('appHdrMktPrctcRegy') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
                         <label>Market Practice (ID)</label>
                         <input formControlName="appHdrMktPrctcId" placeholder="Specification ID">
+                        <div class="validation-msg" *ngIf="err('appHdrMktPrctcId') as e">{{e}}</div>
                     </div>
 
                     <div class="section-title">Group Header (GrpHdr)</div>
@@ -340,6 +398,7 @@
                     <div class="form-group">
                         <label>Recipient Name (MsgRcpt)</label>
                         <input formControlName="grpHdrMsgRcptNm">
+                        <div class="validation-msg" *ngIf="err('grpHdrMsgRcptNm') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
                         <label>Recipient BIC</label>
@@ -348,10 +407,13 @@
                             <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('grpHdrMsgRcptBic')" matTooltip="Search BIC"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
                             </button>
                         </div>
+                        <div class="validation-msg" *ngIf="err('grpHdrMsgRcptBic') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('grpHdrMsgRcptBic', 11) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
                         <label>Pagination (Page Number)</label>
                         <input formControlName="grpHdrMsgPgntnPgNb">
+                        <div class="validation-msg" *ngIf="err('grpHdrMsgPgntnPgNb') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
                         <label>Last Page Indicator</label>
@@ -360,14 +422,18 @@
                             <option value="true">true</option>
                             <option value="false">false</option>
                         </select>
+                        <div class="validation-msg" *ngIf="err('grpHdrMsgPgntnLastPg') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
                         <label>Original Biz Query MsgId</label>
                         <input formControlName="grpHdrOrgnlBizQryMsgId">
+                        <div class="validation-msg" *ngIf="err('grpHdrOrgnlBizQryMsgId') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
                         <label>Additional Info (GrpHdr)</label>
                         <input formControlName="grpHdrAddtlInf" maxlength="500">
+                        <div class="validation-msg" *ngIf="err('grpHdrAddtlInf') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('grpHdrAddtlInf', 500) as h">{{h}}</div>
                     </div>
 
                     <div class="section-title">Statement IDentification</div>

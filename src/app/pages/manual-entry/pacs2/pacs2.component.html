@@ -104,6 +104,7 @@
                     <div class="form-group intermediary-field">
                         <label>Original End To End ID</label>
                         <input formControlName="orgnlEndToEndId">
+                        <div class="validation-msg" *ngIf="err('orgnlEndToEndId') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('orgnlEndToEndId', 35) as h">{{h}}</div>
                     </div>
                     <div class="form-group intermediary-field">
@@ -229,11 +230,13 @@
                                         </button>
                                     </div>
                                     <div class="validation-msg" *ngIf="err('stsRsnOrgtrAnyBIC') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('stsRsnOrgtrAnyBIC', 11) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>LEI</label>
                                     <input formControlName="stsRsnOrgtrLei" maxlength="20" placeholder="20-char LEI">
                                     <div class="validation-msg" *ngIf="err('stsRsnOrgtrLei') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('stsRsnOrgtrLei', 20) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Country of Residence</label>
@@ -248,34 +251,67 @@
                             <!-- Org ID Other -->
                             <div class="subsection">
                                 <div class="subsection-header">Organization ID - Other Identity</div>
-                                <div class="form-group"><label>Other ID</label><input formControlName="stsRsnOrgtrOrgIdOthrId" maxlength="35"></div>
-                                <div class="form-group"><label>Scheme Code</label><input formControlName="stsRsnOrgtrOrgIdOthrSchmeNmCd" maxlength="4" placeholder="e.g. TXID"></div>
-                                <div class="form-group"><label>Scheme Proprietary</label><input formControlName="stsRsnOrgtrOrgIdOthrSchmeNmPrtry" maxlength="35"></div>
-                                <div class="form-group"><label>Issuer</label><input formControlName="stsRsnOrgtrOrgIdOthrIssr" maxlength="35"></div>
+                                <div class="form-group"><label>Other ID</label><input formControlName="stsRsnOrgtrOrgIdOthrId" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrOrgIdOthrId') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('stsRsnOrgtrOrgIdOthrId', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Scheme Code</label><input formControlName="stsRsnOrgtrOrgIdOthrSchmeNmCd" maxlength="4" placeholder="e.g. TXID">
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrOrgIdOthrSchmeNmCd') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('stsRsnOrgtrOrgIdOthrSchmeNmCd', 4) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Scheme Proprietary</label><input formControlName="stsRsnOrgtrOrgIdOthrSchmeNmPrtry" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrOrgIdOthrSchmeNmPrtry') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('stsRsnOrgtrOrgIdOthrSchmeNmPrtry', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Issuer</label><input formControlName="stsRsnOrgtrOrgIdOthrIssr" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrOrgIdOthrIssr') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('stsRsnOrgtrOrgIdOthrIssr', 35) as h">{{h}}</div>
+                                </div>
                             </div>
 
                             <!-- Birth Details -->
                             <div class="subsection">
                                 <div class="subsection-header">Private ID - Birth Details</div>
-                                <div class="form-group"><label>Birth Date</label><input formControlName="stsRsnOrgtrBirthDt" type="date"></div>
-                                <div class="form-group"><label>Province of Birth</label><input formControlName="stsRsnOrgtrPrvcOfBirth" maxlength="35"></div>
-                                <div class="form-group"><label>City of Birth</label><input formControlName="stsRsnOrgtrCityOfBirth" maxlength="35"></div>
+                                <div class="form-group"><label>Birth Date</label><input formControlName="stsRsnOrgtrBirthDt" type="date">
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrBirthDt') as e">{{e}}</div>
+                                </div>
+                                <div class="form-group"><label>Province of Birth</label><input formControlName="stsRsnOrgtrPrvcOfBirth" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrPrvcOfBirth') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('stsRsnOrgtrPrvcOfBirth', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>City of Birth</label><input formControlName="stsRsnOrgtrCityOfBirth" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrCityOfBirth') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('stsRsnOrgtrCityOfBirth', 35) as h">{{h}}</div>
+                                </div>
                                 <div class="form-group">
                                     <label>Country of Birth</label>
                                     <select formControlName="stsRsnOrgtrCtryOfBirth">
                                         <option value="">Select Country</option>
                                         <option *ngFor="let c of countries" [value]="c">{{c}}</option>
                                     </select>
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrCtryOfBirth') as e">{{e}}</div>
                                 </div>
                             </div>
 
                             <!-- Private ID Other -->
                             <div class="subsection">
                                 <div class="subsection-header">Private ID - Other Identity</div>
-                                <div class="form-group"><label>Other ID</label><input formControlName="stsRsnOrgtrPrvtIdOthrId" maxlength="35"></div>
-                                <div class="form-group"><label>Scheme Code</label><input formControlName="stsRsnOrgtrPrvtIdOthrSchmeNmCd" maxlength="4"></div>
-                                <div class="form-group"><label>Scheme Proprietary</label><input formControlName="stsRsnOrgtrPrvtIdOthrSchmeNmPrtry" maxlength="35"></div>
-                                <div class="form-group"><label>Issuer</label><input formControlName="stsRsnOrgtrPrvtIdOthrIssr" maxlength="35"></div>
+                                <div class="form-group"><label>Other ID</label><input formControlName="stsRsnOrgtrPrvtIdOthrId" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrPrvtIdOthrId') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('stsRsnOrgtrPrvtIdOthrId', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Scheme Code</label><input formControlName="stsRsnOrgtrPrvtIdOthrSchmeNmCd" maxlength="4">
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrPrvtIdOthrSchmeNmCd') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('stsRsnOrgtrPrvtIdOthrSchmeNmCd', 4) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Scheme Proprietary</label><input formControlName="stsRsnOrgtrPrvtIdOthrSchmeNmPrtry" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrPrvtIdOthrSchmeNmPrtry') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('stsRsnOrgtrPrvtIdOthrSchmeNmPrtry', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"><label>Issuer</label><input formControlName="stsRsnOrgtrPrvtIdOthrIssr" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('stsRsnOrgtrPrvtIdOthrIssr') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('stsRsnOrgtrPrvtIdOthrIssr', 35) as h">{{h}}</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -480,6 +516,7 @@
             <label>{{title}} Member ID</label>
             <input [formControlName]="prefix+'MmbId'" maxlength="35" placeholder="Clearing Member ID">
             <div class="validation-msg" *ngIf="err(prefix+'MmbId') as e">{{e}}</div>
+            <div class="field-hint at-limit" *ngIf="hint(prefix+'MmbId', 35) as h">{{h}}</div>
         </div>
 
         <!-- Clearing System Code -->
@@ -487,6 +524,7 @@
             <label>{{title}} Clearing System Code</label>
             <input [formControlName]="prefix+'ClrSysCd'" maxlength="5" placeholder="e.g. USABA, CHAPS, T2">
             <div class="validation-msg" *ngIf="err(prefix+'ClrSysCd') as e">{{e}}</div>
+            <div class="field-hint at-limit" *ngIf="hint(prefix+'ClrSysCd', 5) as h">{{h}}</div>
         </div>
 
         <!-- LEI -->
@@ -494,6 +532,7 @@
             <label>{{title}} LEI</label>
             <input [formControlName]="prefix+'Lei'" maxlength="20" placeholder="20-char LEI">
             <div class="validation-msg" *ngIf="err(prefix+'Lei') as e">{{e}}</div>
+            <div class="field-hint at-limit" *ngIf="hint(prefix+'Lei', 20) as h">{{h}}</div>
         </div>
     </div>
 </ng-template>

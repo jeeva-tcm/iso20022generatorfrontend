@@ -578,6 +578,7 @@ export class Camt056Component implements OnInit, OnDestroy {
   }
 
   hint(f: string, maxLen: number, group?: any): string | null {
+    if (this.err(f, group)) return null;
     const c = group ? group.get(f) : this.form.get(f);
     if (!c || !c.value) return null;
     const len = c.value.toString().length;
@@ -774,6 +775,7 @@ export class Camt056Component implements OnInit, OnDestroy {
   clearDraft(): void {
     try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
     this.showDraftBanner = false;
+    window.location.reload();
   }
 
   private scheduleDraftSave(): void {

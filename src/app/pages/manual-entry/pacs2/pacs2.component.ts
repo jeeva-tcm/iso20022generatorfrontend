@@ -851,6 +851,7 @@ ${txInf.trimEnd()}
   }
 
   hint(f: string, maxLen: number): string | null {
+    if (this.err(f)) return null;
     const c = this.form.get(f);
     if (!c || !c.value) return null;
     const len = c.value.toString().length;
@@ -909,6 +910,7 @@ ${txInf.trimEnd()}
   clearDraft(): void {
     try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
     this.showDraftBanner = false;
+    window.location.reload();
   }
 
   private scheduleDraftSave(): void {

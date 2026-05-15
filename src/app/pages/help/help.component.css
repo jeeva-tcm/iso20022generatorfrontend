@@ -1,4 +1,4 @@
-.help-container {
+﻿.help-container {
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
@@ -88,7 +88,7 @@ mat-card-content {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 8px 16px rgba(99, 102, 241, 0.25);
+    box-shadow: 0 8px 16px rgba(37, 99, 235, 0.25);
     margin-top: 2px;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -137,7 +137,7 @@ mat-card-content {
     border-radius: 6px;
     font-family: inherit;
     font-weight: 800;
-    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2);
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
 }
 
 .faq-item p {
@@ -260,7 +260,7 @@ mat-card-content {
 }
 
 .email-link {
-    color: #818cf8;
+    color: #60a5fa;
     text-decoration: none;
     font-weight: 600;
     font-size: 0.95rem;
@@ -268,7 +268,7 @@ mat-card-content {
 }
 
 .email-link:hover {
-    color: #a5b4fc;
+    color: #93c5fd;
     text-decoration: underline;
 }
 
@@ -300,8 +300,8 @@ mat-card-content {
 
 .resource-links a:hover {
     background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(99, 102, 241, 0.2);
-    color: #818cf8;
+    border-color: rgba(37, 99, 235, 0.2);
+    color: #60a5fa;
     transform: translateX(4px);
 }
 
