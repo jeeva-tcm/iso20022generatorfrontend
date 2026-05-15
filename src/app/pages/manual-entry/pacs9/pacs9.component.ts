@@ -12,6 +12,7 @@ import { UetrService } from '../../../services/uetr.service';
 import { ISO_PURPOSE_CODES } from '../../../constants/purpose-codes';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
+import { debounceTime } from 'rxjs/operators';
 
 @Component({
     selector: 'app-pacs9',
@@ -54,6 +55,7 @@ export class Pacs9Component implements OnInit, OnDestroy {
     private readonly DRAFT_KEY = 'draft_pacs009';
     private draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
     showDraftBanner = false;
+    isClearingDraft = false;
 
     constructor(
         private fb: FormBuilder,
@@ -96,7 +98,7 @@ export class Pacs9Component implements OnInit, OnDestroy {
         }
 
         // Track form changes for live XML update
-        this.form.valueChanges.subscribe(() => {
+        this.form.valueChanges.pipe(debounceTime(300)).subscribe(() => {
             this.updateConditionalValidators();
             this.generateXml();
             this.scheduleDraftSave();
@@ -357,7 +359,7 @@ export class Pacs9Component implements OnInit, OnDestroy {
         };
         // Address prefixes for agents
         this.agentPrefixes.forEach(p => {
-            if (!c[p + 'AddrType']) c[p + 'AddrType'] = 'none';
+            if (!c[p + 'AddrType']) c[p + 'AddrType'] = (p === 'instgAgt' || p === 'instdAgt') ? 'none' : 'hybrid';
             if (!c[p + 'AdrLine1']) c[p + 'AdrLine1'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
             if (!c[p + 'AdrLine2']) c[p + 'AdrLine2'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
             if (!c[p + 'Dept']) c[p + 'Dept'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
@@ -386,23 +388,23 @@ export class Pacs9Component implements OnInit, OnDestroy {
 
         // Add static address data to resolve "Name and Address must always be present together"
         // AND the rule: "If Address Line is present and any other element is present, then Town Name and Country are mandatory"
-        c['dbtrFiAddrType'] = ['unstructured'];
+        c['dbtrFiAddrType'] = ['hybrid'];
         c['dbtrFiCtry'] = ['US', Validators.pattern(/^[A-Z]{2,2}$/)];
         c['dbtrFiTwnNm'] = ['New York', [Validators.maxLength(35), ADDR_PATTERN]];
         c['dbtrFiAdrLine1'] = ['123 Wall Street', [Validators.maxLength(70), ADDR_PATTERN]];
 
-        c['cdtrFiAddrType'] = ['unstructured'];
+        c['cdtrFiAddrType'] = ['hybrid'];
         c['cdtrFiCtry'] = ['GB', Validators.pattern(/^[A-Z]{2,2}$/)];
         c['cdtrFiTwnNm'] = ['London', [Validators.maxLength(35), ADDR_PATTERN]];
         c['cdtrFiAdrLine1'] = ['456 Canary Wharf', [Validators.maxLength(70), ADDR_PATTERN]];
 
         // Also for Agents
-        c['dbtrAgtAddrType'] = ['unstructured'];
+        c['dbtrAgtAddrType'] = ['hybrid'];
         c['dbtrAgtCtry'] = ['US', Validators.pattern(/^[A-Z]{2,2}$/)];
         c['dbtrAgtTwnNm'] = ['New York', [Validators.maxLength(35), ADDR_PATTERN]];
         c['dbtrAgtAdrLine1'] = ['789 Banker Lane', [Validators.maxLength(70), ADDR_PATTERN]];
 
-        c['cdtrAgtAddrType'] = ['unstructured'];
+        c['cdtrAgtAddrType'] = ['hybrid'];
         c['cdtrAgtCtry'] = ['GB', Validators.pattern(/^[A-Z]{2,2}$/)];
         c['cdtrAgtTwnNm'] = ['London', [Validators.maxLength(35), ADDR_PATTERN]];
         c['cdtrAgtAdrLine1'] = ['321 Finance Square', [Validators.maxLength(70), ADDR_PATTERN]];
@@ -906,7 +908,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
         if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
 
         // AdrLine (unstructured or hybrid)
-        if (['unstructured', 'hybrid'].includes(type)) {
+        if (['hybrid', 'hybrid'].includes(type)) {
             if (v[p + 'AdrLine1']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine1'])}</AdrLine>`);
             if (v[p + 'AdrLine2']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine2'])}</AdrLine>`);
         }
@@ -1258,7 +1260,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
                             const lines = pstl.querySelectorAll(':scope > AdrLine');
                             if (lines.length > 0) patch[p + 'AdrLine1'] = lines[0].textContent || '';
                             if (lines.length > 1) patch[p + 'AdrLine2'] = lines[1].textContent || '';
-                            patch[p + 'AddrType'] = lines.length > 0 ? 'unstructured' : 'structured';
+                            patch[p + 'AddrType'] = lines.length > 0 ? 'hybrid' : 'structured';
                         }
                     }
                     const acct = getT(tag + 'Acct', tx);
@@ -1441,10 +1443,11 @@ ${tx}\t\t\t</CdtTrfTxInf>
         } catch (e) { console.warn('Draft load failed:', e); return false; }
     }
 
-    clearDraft(): void {
+    clearDraft(reload = false): void {
+        this.isClearingDraft = reload;
         try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
         this.showDraftBanner = false;
-        window.location.reload();
+        if (reload) { setTimeout(() => window.location.reload(), 500); }
     }
 
     private scheduleDraftSave(): void {

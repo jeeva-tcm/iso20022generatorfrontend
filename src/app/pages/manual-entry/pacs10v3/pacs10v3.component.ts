@@ -11,6 +11,7 @@ import { UetrService } from '../../../services/uetr.service';
 import { ISO_PURPOSE_CODES } from '../../../constants/purpose-codes';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
+import { debounceTime } from 'rxjs/operators';
 
 @Component({
     selector: 'app-pacs10v3',
@@ -64,6 +65,7 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
     private readonly DRAFT_KEY = 'draft_pacs010v3';
     private draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
     showDraftBanner = false;
+    isClearingDraft = false;
 
     constructor(
         private fb: FormBuilder,
@@ -92,7 +94,7 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
           this.generateXml();
         }
 
-        this.form.valueChanges.subscribe(() => {
+        this.form.valueChanges.pipe(debounceTime(300)).subscribe(() => {
             this.scheduleDraftSave();
             this.updateConditionalValidators();
             this.updateClearingSystemValidation();
@@ -403,14 +405,14 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
             cdtrAgtLei: ['7H6LDXLRUQGFU57RNE97', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
             cdtrAgtClrSysCd: ['USFW', Validators.maxLength(4)],
             cdtrAgtClrSysMmbId: ['MEM-CAGT-01', Validators.maxLength(35)],
-            cdtrAgtAddrType: ['structured'],
+            cdtrAgtAddrType: ['hybrid'],
             
             cdtrBic: ['CITIUS33XXX', BIC],
             cdtrName: ['CITIBANK NA', [Validators.maxLength(140), SAFE_NAME]],
             cdtrLei: ['E57ODZWZ7FF32TWEFS77', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
             cdtrClrSysCd: ['USFW', Validators.maxLength(4)],
             cdtrClrSysMmbId: ['MEM-CDTR-01', Validators.maxLength(35)],
-            cdtrAddrType: ['structured'],
+            cdtrAddrType: ['hybrid'],
             
             instrId: ['INSTR-2026-PAC010-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
             endToEndId: ['E2E-2026-PAC010-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
@@ -454,7 +456,7 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
             dbtrAgtLei: ['724500PMK2A2M1SQQ228', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
             dbtrAgtClrSysCd: ['USFW', Validators.maxLength(4)],
             dbtrAgtClrSysMmbId: ['MEM-DAGT-01', Validators.maxLength(35)],
-            dbtrAgtAddrType: ['structured'],
+            dbtrAgtAddrType: ['hybrid'],
             
             instgAgtBic: ['BOFAUS3NXXX', BIC],
             instdAgtBic: ['CITIUS33XXX', BIC],
@@ -480,7 +482,7 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
         prefixes.forEach(p => {
             const defaults = addrMap[p] || {};
             const isAgent = this.agentPrefixes.includes(p);
-            const defAddrType = addrPty.includes(p) ? 'structured' : 'none';
+            const defAddrType = (p === 'instgAgt' || p === 'instdAgt') ? 'none' : 'hybrid';
             if (!c[p + 'AddrType']) c[p + 'AddrType'] = [defAddrType];
 
             ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'Ctry']
@@ -989,10 +991,11 @@ ${this.rmtInf(v)}
         } catch (e) { console.warn('Draft load failed:', e); return false; }
     }
 
-    clearDraft(): void {
+    clearDraft(reload = false): void {
+        this.isClearingDraft = reload;
         try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
         this.showDraftBanner = false;
-        window.location.reload();
+        if (reload) { setTimeout(() => window.location.reload(), 500); }
     }
 
     private scheduleDraftSave(): void {

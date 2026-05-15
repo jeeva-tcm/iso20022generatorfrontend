@@ -12,6 +12,7 @@ import { UetrService } from '../../../services/uetr.service';
 import { ISO_PURPOSE_CODES } from '../../../constants/purpose-codes';
 import { MatDialog } from '@angular/material/dialog';
 import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
+import { debounceTime } from 'rxjs/operators';
 
 @Component({
     selector: 'app-pacs9cov',
@@ -57,6 +58,7 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
     private readonly DRAFT_KEY = 'draft_pacs009cov';
     private draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
     showDraftBanner = false;
+    isClearingDraft = false;
 
     constructor(
         private fb: FormBuilder,
@@ -99,7 +101,7 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
         }
 
         // Track form changes for live XML update
-        this.form.valueChanges.subscribe(() => {
+        this.form.valueChanges.pipe(debounceTime(300)).subscribe(() => {
             this.updateConditionalValidators();
             this.generateXml();
             this.scheduleDraftSave();
@@ -431,7 +433,7 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
         };
         // Address prefixes for main agents
         this.agentPrefixes.forEach(p => {
-            if (!c[p + 'AddrType']) c[p + 'AddrType'] = 'none';
+            if (!c[p + 'AddrType']) c[p + 'AddrType'] = (p === 'instgAgt' || p === 'instdAgt') ? 'none' : 'hybrid';
             if (!c[p + 'AdrLine1']) c[p + 'AdrLine1'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
             if (!c[p + 'AdrLine2']) c[p + 'AdrLine2'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
             if (!c[p + 'Dept']) c[p + 'Dept'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
@@ -459,7 +461,7 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
         });
         // Address prefixes for COV parties (Debtor / Creditor in UndrlygCstmrCdtTrf)
         this.covPartyPrefixes.forEach(p => {
-            if (!c[p + 'AddrType']) c[p + 'AddrType'] = 'none';
+            if (!c[p + 'AddrType']) c[p + 'AddrType'] = (p === 'instgAgt' || p === 'instdAgt') ? 'none' : 'hybrid';
             if (!c[p + 'AdrLine1']) c[p + 'AdrLine1'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
             if (!c[p + 'AdrLine2']) c[p + 'AdrLine2'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
             if (!c[p + 'Dept']) c[p + 'Dept'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
@@ -516,10 +518,13 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
             else if (p === 'covDbtr') label = 'Debtor Name';
             else if (p === 'covCdtr') label = 'Creditor Name';
 
+            const isDbtr = p.toLowerCase().includes('dbtr');
             c[p + 'Name'] = [label, [Validators.required, Validators.maxLength(140), SAFE_NAME]];
-            c[p + 'AddrType'] = ['unstructured'];
-            c[p + 'AdrLine1'] = ['123 Business Street', [Validators.maxLength(70), ADDR_PATTERN]];
-            c[p + 'Ctry'] = ['US', Validators.pattern(/^[A-Z]{2,2}$/)];
+            c[p + 'AddrType'] = ['hybrid'];
+            c[p + 'AdrLine1'] = [isDbtr ? '123 Business Street' : '456 Commerce Avenue', [Validators.maxLength(70), ADDR_PATTERN]];
+            c[p + 'AdrLine2'] = [isDbtr ? 'Suite 100' : 'Floor 12', [Validators.maxLength(70), ADDR_PATTERN]];
+            c[p + 'TwnNm'] = [isDbtr ? 'New York' : 'London', [Validators.maxLength(35), ADDR_PATTERN]];
+            c[p + 'Ctry'] = [isDbtr ? 'US' : 'GB', Validators.pattern(/^[A-Z]{2,2}$/)];
         });
 
         this.form = this.fb.group(c);
@@ -1645,10 +1650,11 @@ ${tx}\t\t\t</CdtTrfTxInf>
         } catch (e) { console.warn('Draft load failed:', e); return false; }
     }
 
-    clearDraft(): void {
+    clearDraft(reload = false): void {
+        this.isClearingDraft = reload;
         try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
         this.showDraftBanner = false;
-        window.location.reload();
+        if (reload) { setTimeout(() => window.location.reload(), 500); }
     }
 
     private scheduleDraftSave(): void {

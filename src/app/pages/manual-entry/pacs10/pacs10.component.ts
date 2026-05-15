@@ -11,6 +11,7 @@ import { UetrService } from '../../../services/uetr.service';
 import { ISO_PURPOSE_CODES } from '../../../constants/purpose-codes';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
+import { debounceTime } from 'rxjs/operators';
 
 @Component({
     selector: 'app-pacs10',
@@ -64,6 +65,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
     private readonly DRAFT_KEY = 'draft_pacs010';
     private draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
     showDraftBanner = false;
+    isClearingDraft = false;
 
     constructor(
         private fb: FormBuilder,
@@ -93,7 +95,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
           this.generateXml();
         }
 
-        this.form.valueChanges.subscribe(() => {
+        this.form.valueChanges.pipe(debounceTime(300)).subscribe(() => {
             this.scheduleDraftSave();
             this.updateConditionalValidators();
             this.updateClearingSystemValidation();
@@ -553,7 +555,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
             dbtrAgtLei: ['724500PMK2A2M1SQQ228', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
             dbtrAgtClrSysCd: ['USFW', Validators.maxLength(4)],
             dbtrAgtClrSysMmbId: ['MEM-DAGT-01', Validators.maxLength(35)],
-            dbtrAgtAddrType: ['structured'],
+            dbtrAgtAddrType: ['hybrid'],
             
             // Instructing / Instructed Agents
             instgAgtBic: ['BOFAUS3NXXX', BIC],
@@ -565,7 +567,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
         prefixes.forEach(p => {
             const isAgent = this.agentPrefixes.includes(p);
             
-            if (!c[p + 'AddrType']) c[p + 'AddrType'] = ['none'];
+            if (!c[p + 'AddrType']) c[p + 'AddrType'] = [(p === 'instgAgt' || p === 'instdAgt') ? 'none' : 'hybrid'];
             
             // Address field mapping per party
             const addrMap: any = {
@@ -1411,10 +1413,11 @@ ${this.rmtInf(v)}
         } catch (e) { console.warn('Draft load failed:', e); return false; }
     }
 
-    clearDraft(): void {
+    clearDraft(reload = false): void {
+        this.isClearingDraft = reload;
         try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
         this.showDraftBanner = false;
-        window.location.reload();
+        if (reload) { setTimeout(() => window.location.reload(), 500); }
     }
 
     private scheduleDraftSave(): void {
