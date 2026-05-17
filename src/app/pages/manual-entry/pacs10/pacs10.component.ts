@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -44,8 +44,8 @@ export class Pacs10Component implements OnInit, OnDestroy {
     validationReport: any = null;
     validationExpandedIssue: any = null;
 
-    get canUndoXml() { return this.xmlHistoryIdx > 0; }
-    get canRedoXml() { return this.xmlHistoryIdx < this.xmlHistory.length - 1; }
+    canUndoXml() { return this.xmlHistoryIdx > 0; }
+    canRedoXml() { return this.xmlHistoryIdx < this.xmlHistory.length - 1; }
 
     warningTimeouts: { [key: string]: any } = {};
     showMaxLenWarning: { [key: string]: boolean } = {};
@@ -1131,11 +1131,11 @@ ${this.rmtInf(v)}
     getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
     getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
     isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
-    isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
-    isLayerWarn(k: string) {
-        const s = this.getLayerStatus(k);
-        return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
-    }
+  isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
+  isLayerWarn(k: string) {
+    const s = this.getLayerStatus(k);
+    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+  }
 
     getValidationIssues(): any[] { return this.validationReport?.details ?? []; }
 
@@ -1428,5 +1428,13 @@ ${this.rmtInf(v)}
     ngOnDestroy(): void {
         if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
     }
-
+  openBicSearchGroup(controlName: string, group: FormGroup | any) {
+    const dialogRef = this.dialog.open(BicSearchDialogComponent, { width: '800px', disableClose: true });
+    dialogRef.afterClosed().subscribe(result => {
+        if (result && result.bic) {
+            group.get(controlName)?.patchValue(result.bic);
+            group.get(controlName)?.markAsDirty();
+        }
+    });
+  }
 }

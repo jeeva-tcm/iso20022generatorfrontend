@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -656,7 +656,10 @@ export class Camt056Component implements OnInit, OnDestroy {
   getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
   isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
   isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
-  isLayerWarn(k: string) { return this.getLayerStatus(k).includes('⚠'); }
+  isLayerWarn(k: string) {
+    const s = this.getLayerStatus(k);
+    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+  }
   getValidationIssues(): any[] { return this.validationReport?.details ?? []; }
   toggleValidationIssue(issue: any) { this.validationExpandedIssue = this.validationExpandedIssue === issue ? null : issue; }
   copyFix(text: string, e: MouseEvent) {
@@ -789,4 +792,9 @@ export class Camt056Component implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
   }
+  canUndoXml(): boolean { return this.xmlHistoryIdx > 0; }
+  canRedoXml(): boolean { return this.xmlHistoryIdx < this.xmlHistory.length - 1; }
+  viewXmlModal() { this.showValidationModal = false; }
+  editXmlModal() { this.showValidationModal = false; }
+  runValidationModal() { this.validateMessage(); }
 }

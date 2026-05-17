@@ -627,7 +627,7 @@ export class Camt052Component implements OnInit, OnDestroy {
             ntryXml += t(5) + '<Intrst>\n' + t(6) + '<TtlIntrstAndTaxAmt Ccy="' + this.e(v.currency) + '">' + this.formatting.formatAmount(v.ntryIntrstAmt, v.currency) + '</TtlIntrstAndTaxAmt>\n' + t(5) + '</Intrst>\n';
         }
 
-        // CardTx — PlainCardData requires XpryDt per SR2025; simple YYYY-MM format
+        // CardTx â€” PlainCardData requires XpryDt per SR2025; simple YYYY-MM format
         if (v.ntryCardTxPan?.trim()) {
             ntryXml += t(5) + '<CardTx>\n' + t(6) + '<Card>\n' + t(7) + '<PlainCardData>\n'
                 + t(8) + '<PAN>' + this.e(v.ntryCardTxPan) + '</PAN>\n'
@@ -778,7 +778,7 @@ export class Camt052Component implements OnInit, OnDestroy {
         if (v.appHdrCpyDplct?.trim()) this.generatedXml += t(2) + '<CpyDplct>' + this.e(v.appHdrCpyDplct) + '</CpyDplct>\n';
         if (v.appHdrPssblDplct === 'true' || v.appHdrPssblDplct === 'false') this.generatedXml += t(2) + '<PssblDplct>' + v.appHdrPssblDplct + '</PssblDplct>\n';
         if (v.appHdrPrty?.trim()) this.generatedXml += t(2) + '<Prty>' + this.e(v.appHdrPrty) + '</Prty>\n';
-        // Rltd block omitted — empty BkToCstmrAcctRpt element is invalid per SR2025 schema
+        // Rltd block omitted â€” empty BkToCstmrAcctRpt element is invalid per SR2025 schema
 
         this.generatedXml += t(1) + '</AppHdr>\n'
             + t(1) + '<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.052.001.08">\n'
@@ -1012,7 +1012,7 @@ export class Camt052Component implements OnInit, OnDestroy {
                     layer_status: {},
                     details: [{
                         severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
-                        path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'),
+                        path: '', message: 'Validation failed â€” ' + (err.error?.detail?.message || 'backend not reachable.'),
                         fix_suggestion: 'Ensure the validation server is running.'
                     }]
                 };
@@ -1021,7 +1021,11 @@ export class Camt052Component implements OnInit, OnDestroy {
         });
     }
 
-    closeValidationModal() {
+
+  viewXmlModal() { this.showValidationModal = false; }
+  editXmlModal() { this.showValidationModal = false; }
+  runValidationModal() { this.validateMessage(); }
+  closeValidationModal() {
         this.showValidationModal = false;
         this.validationReport = null;
         this.validationStatus = 'idle';
@@ -1039,8 +1043,11 @@ export class Camt052Component implements OnInit, OnDestroy {
     getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
     getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
     isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
-    isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
-    isLayerWarn(k: string) { const s = this.getLayerStatus(k); return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN'); }
+  isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
+  isLayerWarn(k: string) {
+    const s = this.getLayerStatus(k);
+    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+  }
     getValidationIssues(): any[] { return this.validationReport?.details ?? []; }
     toggleValidationIssue(issue: any) { this.validationExpandedIssue = this.validationExpandedIssue === issue ? null : issue; }
 
@@ -1065,7 +1072,7 @@ export class Camt052Component implements OnInit, OnDestroy {
         });
     }
 
-    runValidationModal() { this.validateMessage(); }
+
 
     private saveDraft(): void {
         try { localStorage.setItem(this.DRAFT_KEY, JSON.stringify(this.form.value)); }

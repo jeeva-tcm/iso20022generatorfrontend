@@ -217,16 +217,16 @@ export class Pacs4Component implements OnInit, OnDestroy {
         const c: any = {
             fromBic: ['BBBBUS33XXX', BIC_REQ],
             toBic: ['CCCCGB2LXXX', BIC_REQ],
-            bizMsgId: ['RTR-2026-FI-001', Validators.required],
-            msgId: ['RTR-2026-FI-001', Validators.required],
+            bizMsgId: ['RTR-2026-FI-001', [Validators.required, Validators.maxLength(35)]],
+            msgId: ['RTR-2026-FI-001', [Validators.required, Validators.maxLength(35)]],
             creDtTm: [this.isoNow(), Validators.required],
             nbOfTxs: ['1', [Validators.required, Validators.pattern(/^1$/)]],
             sttlmMtd: ['INDA', Validators.required],
 
-            rtrId: ['RTR-TX-001', Validators.required],
-            orgnlInstrId: ['INSTR-ORIG-001', Validators.required],
-            orgnlEndToEndId: ['E2E-ORIG-001', Validators.required],
-            orgnlTxId: ['TX-ORIG-001', Validators.required],
+            rtrId: ['RTR-TX-001', [Validators.required, Validators.maxLength(35)]],
+            orgnlInstrId: ['INSTR-ORIG-001', [Validators.required, Validators.maxLength(35)]],
+            orgnlEndToEndId: ['E2E-ORIG-001', [Validators.required, Validators.maxLength(35)]],
+            orgnlTxId: ['TX-ORIG-001', [Validators.required, Validators.maxLength(35)]],
             orgnlUETR: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
 
             amount: ['50000.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]],
@@ -238,10 +238,10 @@ export class Pacs4Component implements OnInit, OnDestroy {
             orgnlCurrency: ['USD', Validators.required],
             orgnlSttlmDt: [new Date().toISOString().split('T')[0], [Validators.required, Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]],
 
-            orgnlMsgId: ['ORIG-REF-001', Validators.required],
+            orgnlMsgId: ['ORIG-REF-001', [Validators.required, Validators.maxLength(35)]],
             orgnlMsgNmId: ['pacs.008.001.08', [Validators.required, Validators.pattern(/^pacs\.\d{3}\.\d{3}\.\d{2}$/)]],
 
-            rtrRsnCd: ['MS03', Validators.required],
+            rtrRsnCd: ['MS03', [Validators.required, Validators.maxLength(4)]],
             rtrRsnAddtlInf: ['', [Validators.maxLength(105), ADDR_PATTERN]],
         };
 
@@ -708,18 +708,12 @@ ${tx}\t\t\t</TxInf>
 
     closeValidationModal() { this.showValidationModal = false; }
     getValidationLayers() { return this.validationReport?.layer_status ? Object.keys(this.validationReport.layer_status) : []; }
-    isLayerPass(k: string) {
-        const s = this.getLayerStatus(k);
-        return s.includes('✅') || s === 'PASS' || s === 'SUCCESS';
-    }
-    isLayerFail(k: string) {
-        const s = this.getLayerStatus(k);
-        return s.includes('❌') || s === 'FAIL' || s === 'ERROR';
-    }
-    isLayerWarn(k: string) {
-        const s = this.getLayerStatus(k);
-        return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
-    }
+    isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
+  isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
+  isLayerWarn(k: string) {
+    const s = this.getLayerStatus(k);
+    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+  }
     getLayerName(k: string) { const m: any = { '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' }; return m[k] || `Layer ${k}`; }
     getLayerTime(k: string) { return this.validationReport.layer_status[k]?.time || 0; }
     getLayerStatus(k: string) { return this.validationReport?.layer_status[k]?.status || 'IDLE'; }

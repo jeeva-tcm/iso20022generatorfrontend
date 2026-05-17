@@ -113,7 +113,7 @@ export class Pain008Component implements OnInit, OnDestroy {
       fromClrSysCd: [''],
       fromMmbId: [''],
       fromLei: [''],
-      toBic: ['BANCGB2LXXX', [Validators.required, Validators.pattern(/^[A-Z0-9]{8,11}$/)]],
+      toBic: ['BOFAUS3NXXX', [Validators.required, Validators.pattern(/^[A-Z0-9]{8,11}$/)]],
       toClrSysCd: [''],
       toMmbId: [''],
       toLei: [''],
@@ -238,7 +238,7 @@ export class Pain008Component implements OnInit, OnDestroy {
       // PmtId
       instrId: ['INSTR-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
       endToEndId: ['E2E-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
-      uetr: [crypto.randomUUID ? crypto.randomUUID() : '550e8400-e29b-41d4-a716-446655440000', [Validators.required]],
+      uetr: [crypto.randomUUID ? crypto.randomUUID() : '550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
 
       // PmtTpInf
       instrPrty: ['NORM'],
@@ -998,6 +998,10 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
     });
   }
 
+  viewXmlModal() { this.showValidationModal = false; }
+  editXmlModal() { this.showValidationModal = false; }
+  runValidationModal() { this.validateMessage(); }
+
   closeValidationModal() { this.showValidationModal = false; this.validationReport = null; this.validationStatus = 'idle'; this.validationExpandedIssue = null; }
   getValidationLayers(): string[] { return this.validationReport?.layer_status ? Object.keys(this.validationReport.layer_status).sort() : []; }
   getLayerName(k: string): string { const n: Record<string, string> = { '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' }; return n[k] ?? `Layer ${k}`; }
@@ -1005,7 +1009,10 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
   getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
   isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
   isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
-  isLayerWarn(k: string) { const s = this.getLayerStatus(k); return s.includes('⚠') || s.includes('WARNING'); }
+  isLayerWarn(k: string) {
+    const s = this.getLayerStatus(k);
+    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+  }
   getValidationIssues(): any[] { return this.validationReport?.details ?? []; }
   toggleValidationIssue(issue: any) { this.validationExpandedIssue = this.validationExpandedIssue === issue ? null : issue; }
   copyFix(text: string, e: MouseEvent) { e.stopPropagation(); navigator.clipboard.writeText(text).then(() => this.snackBar.open('Copied!', '', { duration: 1500 })); }
@@ -1131,4 +1138,5 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
   ngOnDestroy(): void {
     if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
   }
+  countries = ['AF','AX','AL','DZ','AS','AD','AO','AI','AQ','AG','AR','AM','AW','AU','AT','AZ','BS','BH','BD','BB','BY','BE','BZ','BJ','BM','BT','BO','BQ','BA','BW','BV','BR','IO','BN','BG','BF','BI','CV','KH','CM','CA','KY','CF','TD','CL','CN','CX','CC','CO','KM','CG','CD','CK','CR','CI','HR','CU','CW','CY','CZ','DK','DJ','DM','DO','EC','EG','SV','GQ','ER','EE','SZ','ET','FK','FO','FJ','FI','FR','GF','PF','TF','GA','GM','GE','DE','GH','GI','GR','GL','GD','GP','GU','GT','GG','GN','GW','GY','HT','HM','VA','HN','HK','HU','IS','IN','ID','IR','IQ','IE','IM','IL','IT','JM','JP','JE','JO','KZ','KE','KI','KP','KR','KW','KG','LA','LV','LB','LS','LR','LY','LI','LT','LU','MO','MG','MW','MY','MV','ML','MT','MH','MQ','MR','MU','YT','MX','FM','MD','MC','MN','ME','MS','MA','MZ','MM','NA','NR','NP','NL','NC','NZ','NI','NE','NG','NU','NF','MK','MP','NO','OM','PK','PW','PS','PA','PG','PY','PE','PH','PN','PL','PT','PR','QA','RE','RO','RU','RW','BL','SH','KN','LC','MF','PM','VC','WS','SM','ST','SA','SN','RS','SC','SL','SG','SX','SK','SI','SB','SO','ZA','GS','SS','ES','LK','SD','SR','SJ','SE','CH','SY','TW','TJ','TZ','TH','TL','TG','TK','TO','TT','TN','TR','TM','TC','TV','UG','UA','AE','GB','US','UM','UY','UZ','VU','VE','VN','VG','VI','WF','EH','YE','ZM','ZW'];
 }

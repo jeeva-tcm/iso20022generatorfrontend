@@ -1281,11 +1281,11 @@ ${ntfctnPartiesXml}${itmXml}
     getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
     getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
     isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
-    isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
-    isLayerWarn(k: string) {
-        const s = this.getLayerStatus(k);
-        return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
-    }
+  isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
+  isLayerWarn(k: string) {
+    const s = this.getLayerStatus(k);
+    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+  }
 
     getValidationIssues(): any[] { return this.validationReport?.details ?? []; }
 

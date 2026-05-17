@@ -1,4 +1,4 @@
-﻿/* ===================================================================
+/* ===================================================================
    ISO 20022 Validator — Multi-File UI
    Dark premium theme matching the design reference
    =================================================================== */
@@ -964,7 +964,7 @@
   background: var(--bg-card);
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.18s;
+  transition: border-color 0.15s ease;
 }
 
 .issue-card:hover {
@@ -2175,13 +2175,10 @@ body.dark-theme .issue-card {
 
 .issue-card:hover {
   border-color: #2563eb;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);
-  transform: translateY(-1px);
 }
 
 .issue-card.expanded {
   border-color: #2563eb;
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.15);
 }
 
 

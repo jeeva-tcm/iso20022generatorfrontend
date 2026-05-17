@@ -1299,9 +1299,12 @@ ${txInf.trimEnd()}
 
   closeValidationModal() { this.showValidationModal = false; }
   getValidationLayers() { return this.validationReport?.layer_status ? Object.keys(this.validationReport.layer_status) : []; }
-  isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅') || this.getStatus(k) === 'PASS'; }
-  isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌') || this.getStatus(k) === 'FAIL'; }
-  isLayerWarn(k: string) { return this.getLayerStatus(k).includes('⚠'); }
+  isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
+  isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
+  isLayerWarn(k: string) {
+    const s = this.getLayerStatus(k);
+    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+  }
   private getStatus(k: string) { return this.validationReport?.layer_status[k]?.status; }
   getLayerName(k: string) { const m: any = { '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' }; return m[k] || `Layer ${k}`; }
   getLayerStatus(k: string) { return this.validationReport?.layer_status[k]?.status || 'IDLE'; }
@@ -1384,5 +1387,9 @@ ${txInf.trimEnd()}
   ngOnDestroy(): void {
     if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
   }
+  copyToClipboard() {
+    navigator.clipboard.writeText(this.generatedXml).then(() => {
+      this.snackBar.open('Copied to clipboard!', 'Close', { duration: 3000 });
+    });
+  }
 }
-

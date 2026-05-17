@@ -1,4 +1,4 @@
-﻿:host {
+:host {
     display: flex;
     flex-direction: column;
     height: 100vh;
@@ -11,32 +11,12 @@
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Force light theme variables correctly if they are shadowed */
-:host-context(body.light-theme) {
-    --editor-bg: #ffffff;
-    --editor-gutter: #f8fafc;
-    --editor-gutter-text: #94a3b8;
-    --editor-text: #1e293b;
-    --editor-thumb: #e2e8f0;
-    --editor-thumb-hover: #cbd5e1;
-    --border-light: #e2e8f0;
-    --bg-card: #ffffff;
-    --bg-card-hover: #f9fafb;
-    --text-main: #020617;
-    --text-muted: #64748b;
-    --accent-color: #2563eb;
-}
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-}
-
-label {
-    text-transform: none !important;
 }
 
 .container {
@@ -335,7 +315,6 @@ textarea {
 .line-numbers {
     width: 45px;
     height: 100%;
-    flex-shrink: 0;
     background: var(--editor-gutter);
     color: var(--editor-gutter-text);
     padding: 1rem 0;
@@ -365,9 +344,8 @@ textarea.code-editor {
     padding: 1rem;
     resize: none;
     outline: none;
-    overflow: auto;
+    overflow-x: auto;
     white-space: pre;
-    tab-size: 4;
 }
 
 
@@ -421,7 +399,7 @@ textarea.code-editor {
     }
 }
 
-/* ═══ Validation ═══ */
+/* --- Validation --- */
 .validation-result-panel {
     margin-top: 1rem;
     padding: 1.25rem;
@@ -1328,47 +1306,20 @@ textarea.code-editor {
     animation: fadeIn 0.2s ease;
 }
 
-
-/* ── Party Group (one agent/party section) ── */
-.party-group {
-    grid-column: 1 / -1;
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: 8px;
-    padding: 0;
-    margin: 0.2rem 0.5rem 1.2rem 5px; /* Added 5px left margin here */
-    overflow: hidden;
-}
-
-.party-group-title {
-    background: var(--bg-card-hover);
-    padding: 0.6rem 1rem;
-    font-size: 0.72rem;
-    font-weight: 800;
+.info-icon-small {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    vertical-align: middle;
     color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-bottom: 1px solid var(--border-light);
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    margin-left: 4px;
+    cursor: help;
 }
 
-.party-group-title.mandatory {
-    color: var(--accent-color);
+input[list]::-webkit-calendar-picker-indicator {
+    display: flex !important;
 }
 
-.party-grid {
-    padding: 1rem 1.5rem;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 0.8rem 1.25rem;
-}
-
-/* Ensure consistent spacing in party-grid */
-.party-grid .form-group {
-    margin-bottom: 0;
-}
 
 .left-panel, .right-panel {
     scrollbar-width: thin;

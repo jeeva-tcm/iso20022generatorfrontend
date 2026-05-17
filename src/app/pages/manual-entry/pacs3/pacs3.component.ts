@@ -430,9 +430,9 @@ export class Pacs3Component implements OnInit, OnDestroy {
     const ADDR_PATTERN = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
     const c: any = {
       fromBic: ['BBBBUS33XXX', BIC], toBic: ['CCCCGB2LXXX', BIC], bizMsgId: ['MSG-2026-B-001', [Validators.required, Validators.maxLength(35)]],
-      msgId: ['MSG-2026-B-001', Validators.required], creDtTm: [this.isoNow(), Validators.required],
-      fromMmbId: [''], fromClrSysId: [''], fromLei: [''],
-      toMmbId: [''], toClrSysId: [''], toLei: [''],
+      msgId: ['MSG-2026-B-001', [Validators.required, Validators.maxLength(35)]], creDtTm: [this.isoNow(), Validators.required],
+      fromMmbId: ['', [Validators.maxLength(35)]], fromClrSysId: ['', [Validators.maxLength(5)]], fromLei: ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
+      toMmbId: ['', [Validators.maxLength(35)]], toClrSysId: ['', [Validators.maxLength(5)]], toLei: ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
       mktPrctc: [''], regyId: ['', Validators.maxLength(35)],
       cpyDplct: [''], pssblDplct: ['false'], appHdrPrty: [''], rltd: [''], rltdCharSet: [''],
       sttlmAcctId: ['', Validators.maxLength(34)], sttlmAcctOthrId: ['', Validators.maxLength(35)],

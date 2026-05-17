@@ -197,7 +197,7 @@ export class Camt054Component implements OnInit, OnDestroy {
       bankTxnFamily: ['RDTX', [Validators.required, Validators.maxLength(4)]],
       bankTxnCode: ['PMNT', [Validators.required, Validators.maxLength(4)]],
       charges: ['', [Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],
-      uetr: [this.uetr.generate()],
+      uetr: [this.uetr.generate(), [Validators.pattern(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)]],
       endToEndId: ['E2E' + Date.now().toString().slice(-13), [Validators.maxLength(16)]],
       instructionId: ['INS' + Date.now().toString().slice(-13), [Validators.maxLength(16)]],
       dbtrNm: ['JOHN DOE SENDER', [Validators.maxLength(140)]],
@@ -598,6 +598,7 @@ export class Camt054Component implements OnInit, OnDestroy {
   }
 
   hint(f: string, maxLen: number, group?: any): string | null {
+    if (!this.showMaxLenWarning[f]) return null;
     if (this.err(f, group)) return null;
     const c = group ? group.get(f) : this.form.get(f);
     if (!c || !c.value) return null;
@@ -1049,4 +1050,8 @@ export class Camt054Component implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
   }
+  canUndoXml(): boolean { return this.xmlHistoryIdx > 0; }
+  canRedoXml(): boolean { return this.xmlHistoryIdx < this.xmlHistory.length - 1; }
+  viewXmlModal() { this.showValidationModal = false; }
+  editXmlModal() { this.showValidationModal = false; }
 }

@@ -17,16 +17,16 @@
                         </button>
                     </div>
 
-                    <!-- ═══ AppHdr ═══ -->
+                    <!-- â•â•â• AppHdr â•â•â• -->
                     <div class="section-title">Message Header (AppHdr)</div>
                     <div class="form-group"><label>CharSet</label><input formControlName="charSet" maxlength="20" placeholder="Optional">
                         <div class="validation-msg" *ngIf="err('charSet') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('charSet', 20) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
-                        <label>Sender BIC</label>
+                        <label>Sender BIC <span class="req">*</span></label>
                         <div class="uetr-control-row">
-                            <input formControlName="fromBic" maxlength="11">
+                            <input formControlName="fromBic" maxlength="11" class="auto-uppercase">
                             <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('fromBic', form)" matTooltip="Search BIC">
                                 <mat-icon>search</mat-icon>
                             </button>
@@ -42,14 +42,14 @@
                         <div class="validation-msg" *ngIf="err('fromMmbId') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('fromMmbId', 35) as h">{{h}}</div>
                     </div>
-                    <div class="form-group"><label>Sender LEI</label><input formControlName="fromLei" maxlength="20" placeholder="Optional">
+                    <div class="form-group"><label>Sender LEI</label><input formControlName="fromLei" maxlength="20" placeholder="Optional" class="auto-uppercase">
                         <div class="validation-msg" *ngIf="err('fromLei') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('fromLei', 20) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
-                        <label>Receiver BIC</label>
+                        <label>Receiver BIC <span class="req">*</span></label>
                         <div class="uetr-control-row">
-                            <input formControlName="toBic" maxlength="11">
+                            <input formControlName="toBic" maxlength="11" class="auto-uppercase">
                             <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('toBic', form)" matTooltip="Search BIC">
                                 <mat-icon>search</mat-icon>
                             </button>
@@ -69,17 +69,17 @@
                         <div class="validation-msg" *ngIf="err('toMmbId') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('toMmbId', 35) as h">{{h}}</div>
                     </div>
-                    <div class="form-group"><label>Receiver LEI</label><input formControlName="toLei" maxlength="20" placeholder="Optional">
+                    <div class="form-group"><label>Receiver LEI</label><input formControlName="toLei" maxlength="20" placeholder="Optional" class="auto-uppercase">
                         <div class="validation-msg" *ngIf="err('toLei') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('toLei', 20) as h">{{h}}</div>
                     </div>
-                    <div class="form-group intermediary-field"><label>Business Msg ID <span class="req">*</span></label><input formControlName="bizMsgId" maxlength="35">
+                    <div class="form-group intermediary-field"><label>Business Message ID <span class="req">*</span></label><input formControlName="bizMsgId" maxlength="35">
                         <div class="validation-msg" *ngIf="err('bizMsgId') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('bizMsgId', 35) as h">{{h}}</div>
                     </div>
                     <div class="form-group"><label>Message Definition ID</label><input formControlName="msgDefIdr" readonly style="background: var(--bg-card-hover);"></div>
                     <div class="validation-msg" *ngIf="err('msgDefIdr') as e">{{e}}</div>
-                    <div class="form-group"><label>Business Service</label><input formControlName="bizSvc" maxlength="35">
+                    <div class="form-group"><label>Business Service <span class="req">*</span></label><input formControlName="bizSvc" maxlength="35">
                         <div class="validation-msg" *ngIf="err('bizSvc') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('bizSvc', 35) as h">{{h}}</div>
                     </div>
@@ -107,7 +107,7 @@
                         <div class="validation-msg" *ngIf="err('prty') as e">{{e}}</div>
                     </div>
 
-                    <!-- ═══ Rltd (Related Header) ═══ -->
+                    <!-- â•â•â• Rltd (Related Header) â•â•â• -->
                     <div class="party-group">
                         <div class="party-group-title">Related Message (Rltd)</div>
                         <div class="party-grid">
@@ -116,7 +116,7 @@
                                 <div class="field-hint at-limit" *ngIf="hint('rltdCharSet', 20) as h">{{h}}</div>
                             </div>
                             <div class="form-group"><label>Fr BIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
-<input formControlName="rltdFrBic" maxlength="11" placeholder="Optional">
+<input formControlName="rltdFrBic" maxlength="11" placeholder="Optional" class="auto-uppercase">
 <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('rltdFrBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
 </div>
                                 <div class="validation-msg" *ngIf="err('rltdFrBic') as e">{{e}}</div>
@@ -130,12 +130,12 @@
                                 <div class="validation-msg" *ngIf="err('rltdFrMmbId') as e">{{e}}</div>
                                 <div class="field-hint at-limit" *ngIf="hint('rltdFrMmbId', 35) as h">{{h}}</div>
                             </div>
-                            <div class="form-group"><label>Fr LEI</label><input formControlName="rltdFrLei" maxlength="20" placeholder="Optional">
+                            <div class="form-group"><label>Fr LEI</label><input formControlName="rltdFrLei" maxlength="20" placeholder="Optional" class="auto-uppercase">
                                 <div class="validation-msg" *ngIf="err('rltdFrLei') as e">{{e}}</div>
                                 <div class="field-hint at-limit" *ngIf="hint('rltdFrLei', 20) as h">{{h}}</div>
                             </div>
                             <div class="form-group"><label>To BIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
-<input formControlName="rltdToBic" maxlength="11" placeholder="Optional">
+<input formControlName="rltdToBic" maxlength="11" placeholder="Optional" class="auto-uppercase">
 <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('rltdToBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
 </div>
                                 <div class="validation-msg" *ngIf="err('rltdToBic') as e">{{e}}</div>
@@ -149,7 +149,7 @@
                                 <div class="validation-msg" *ngIf="err('rltdToMmbId') as e">{{e}}</div>
                                 <div class="field-hint at-limit" *ngIf="hint('rltdToMmbId', 35) as h">{{h}}</div>
                             </div>
-                            <div class="form-group"><label>To LEI</label><input formControlName="rltdToLei" maxlength="20" placeholder="Optional">
+                            <div class="form-group"><label>To LEI</label><input formControlName="rltdToLei" maxlength="20" placeholder="Optional" class="auto-uppercase">
                                 <div class="validation-msg" *ngIf="err('rltdToLei') as e">{{e}}</div>
                                 <div class="field-hint at-limit" *ngIf="hint('rltdToLei', 20) as h">{{h}}</div>
                             </div>
@@ -177,7 +177,7 @@
                         </div>
                     </div>
 
-                    <!-- ═══ GrpHdr ═══ -->
+                    <!-- â•â•â• GrpHdr â•â•â• -->
                     <div class="section-title">Group Header</div>
                     <div class="form-group"><label>Message ID <span class="req">*</span></label><input formControlName="msgId" maxlength="35">
                         <div class="validation-msg" *ngIf="err('msgId') as e">{{e}}</div>
@@ -298,7 +298,7 @@
                         <div class="party-group-title">Forwarding Agent</div>
                         <div class="party-grid">
                             <div class="form-group"><label>BIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
-<input formControlName="fwdgAgtBic" maxlength="11" placeholder="Optional">
+<input formControlName="fwdgAgtBic" maxlength="11" placeholder="Optional" class="auto-uppercase">
 <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('fwdgAgtBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
 </div>
                                 <div class="validation-msg" *ngIf="err('fwdgAgtBic') as e">{{e}}</div>
@@ -312,14 +312,14 @@
                                 <div class="validation-msg" *ngIf="err('fwdgAgtMmbId') as e">{{e}}</div>
                                 <div class="field-hint at-limit" *ngIf="hint('fwdgAgtMmbId', 35) as h">{{h}}</div>
                             </div>
-                            <div class="form-group"><label>LEI</label><input formControlName="fwdgAgtLei" maxlength="20" placeholder="Optional">
+                            <div class="form-group"><label>LEI</label><input formControlName="fwdgAgtLei" maxlength="20" placeholder="Optional" class="auto-uppercase">
                                 <div class="validation-msg" *ngIf="err('fwdgAgtLei') as e">{{e}}</div>
                                 <div class="field-hint at-limit" *ngIf="hint('fwdgAgtLei', 20) as h">{{h}}</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- ═══ PmtInf ═══ -->
+                    <!-- â•â•â• PmtInf â•â•â• -->
                     <div class="section-title">Payment Information</div>
                     <div class="form-group"><label>Pmt Information ID <span class="req">*</span></label><input formControlName="pmtInfId" maxlength="35">
                         <div class="validation-msg" *ngIf="err('pmtInfId') as e">{{e}}</div>
@@ -432,7 +432,7 @@
                     <div class="party-group">
                         <div class="party-group-title mandatory">Creditor Account</div>
                         <div class="party-grid">
-                            <div class="form-group"><label>IBAN <span class="req">*</span></label><input formControlName="cdtrIban" maxlength="34">
+                            <div class="form-group"><label>IBAN <span class="req">*</span></label><input formControlName="cdtrIban" maxlength="34" class="auto-uppercase">
                                 <div class="validation-msg" *ngIf="err('cdtrIban') as e">{{e}}</div>
                                 <div class="field-hint at-limit" *ngIf="hint('cdtrIban', 34) as h">{{h}}</div>
                             </div>
@@ -459,7 +459,7 @@
                         <div class="party-group-title mandatory">Creditor Agent</div>
                         <div class="party-grid">
                             <div class="form-group"><label>BIC <span class="req">*</span></label><div class="uetr-control-row" style="display: flex; gap: 8px;">
-<input formControlName="cdtrAgtBic" maxlength="11">
+<input formControlName="cdtrAgtBic" maxlength="11" class="auto-uppercase">
 <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('cdtrAgtBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
 </div>
                                 <div class="validation-msg" *ngIf="err('cdtrAgtBic') as e">{{e}}</div>
@@ -473,7 +473,7 @@
                                 <div class="validation-msg" *ngIf="err('cdtrAgtMmbId') as e">{{e}}</div>
                                 <div class="field-hint at-limit" *ngIf="hint('cdtrAgtMmbId', 35) as h">{{h}}</div>
                             </div>
-                            <div class="form-group"><label>LEI</label><input formControlName="cdtrAgtLei" maxlength="20" placeholder="Optional">
+                            <div class="form-group"><label>LEI</label><input formControlName="cdtrAgtLei" maxlength="20" placeholder="Optional" class="auto-uppercase">
                                 <div class="validation-msg" *ngIf="err('cdtrAgtLei') as e">{{e}}</div>
                                 <div class="field-hint at-limit" *ngIf="hint('cdtrAgtLei', 20) as h">{{h}}</div>
                             </div>
@@ -487,7 +487,7 @@
                     <div class="party-group">
                         <div class="party-group-title">Creditor Agent Account</div>
                         <div class="party-grid">
-                            <div class="form-group"><label>IBAN</label><input formControlName="cdtrAgtAcctIban" maxlength="34" placeholder="Optional">
+                            <div class="form-group"><label>IBAN</label><input formControlName="cdtrAgtAcctIban" maxlength="34" placeholder="Optional" class="auto-uppercase">
                                 <div class="validation-msg" *ngIf="err('cdtrAgtAcctIban') as e">{{e}}</div>
                                 <div class="field-hint at-limit" *ngIf="hint('cdtrAgtAcctIban', 34) as h">{{h}}</div>
                             </div>
@@ -505,7 +505,7 @@
                     <div class="party-group">
                         <div class="party-group-title">Charges Account</div>
                         <div class="party-grid">
-                            <div class="form-group"><label>IBAN</label><input formControlName="chrgsAcctIban" maxlength="34" placeholder="Optional">
+                            <div class="form-group"><label>IBAN</label><input formControlName="chrgsAcctIban" maxlength="34" placeholder="Optional" class="auto-uppercase">
                                 <div class="validation-msg" *ngIf="err('chrgsAcctIban') as e">{{e}}</div>
                                 <div class="field-hint at-limit" *ngIf="hint('chrgsAcctIban', 34) as h">{{h}}</div>
                             </div>
@@ -523,8 +523,8 @@
                     <div class="party-group">
                         <div class="party-group-title">Charges Account Agent</div>
                         <div class="party-grid">
-                            <div class="form-group"><label>BIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
-<input formControlName="chrgsAcctAgtBic" maxlength="11" placeholder="Optional">
+                            <div class="form-group"><label>BIC</label><div class="uetr-control-row" style="display: flex; gap: 8px; flex: 1;">
+<input formControlName="chrgsAcctAgtBic" maxlength="11" placeholder="Optional" class="auto-uppercase" style="max-width: 200px;">
 <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('chrgsAcctAgtBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
 </div>
                                 <div class="validation-msg" *ngIf="err('chrgsAcctAgtBic') as e">{{e}}</div>
@@ -534,14 +534,14 @@
                                 <div class="validation-msg" *ngIf="err('chrgsAcctAgtMmbId') as e">{{e}}</div>
                                 <div class="field-hint at-limit" *ngIf="hint('chrgsAcctAgtMmbId', 35) as h">{{h}}</div>
                             </div>
-                            <div class="form-group"><label>LEI</label><input formControlName="chrgsAcctAgtLei" maxlength="20" placeholder="Optional">
+                            <div class="form-group"><label>LEI</label><input formControlName="chrgsAcctAgtLei" maxlength="20" placeholder="Optional" class="auto-uppercase">
                                 <div class="validation-msg" *ngIf="err('chrgsAcctAgtLei') as e">{{e}}</div>
                                 <div class="field-hint at-limit" *ngIf="hint('chrgsAcctAgtLei', 20) as h">{{h}}</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- ═══ Transactions (DrctDbtTxInf) ═══ -->
+                    <!-- â•â•â• Transactions (DrctDbtTxInf) â•â•â• -->
                     <div class="section-title">
                         <mat-icon style="font-size: 18px; width: 18px; height: 18px; color: var(--accent-color);">receipt_long</mat-icon>
                         Direct Debit Transactions ({{transactions.length}})
@@ -571,7 +571,7 @@
                                     <div class="validation-msg" *ngIf="err('endToEndId', tx) as e">{{e}}</div>
                                     <div class="field-hint at-limit" *ngIf="hint('endToEndId', 35) as h">{{h}}</div>
                                 </div>
-                                <div class="form-group"><label>UETR <span class="req">*</span></label><input formControlName="uetr" maxlength="36" placeholder="UUID Format">
+                                <div class="form-group"><label>UETR <span class="req">*</span></label><input formControlName="uetr" maxlength="36" placeholder="UUID Format" class="auto-uppercase">
                                     <div class="validation-msg" *ngIf="err('uetr', tx) as e">{{e}}</div>
                                     <div class="field-hint at-limit" *ngIf="hint('uetr', 36) as h">{{h}}</div>
                                 </div>
@@ -619,9 +619,9 @@
                                     <select formControlName="chrgBr"><option *ngFor="let cb of chargeBearers" [value]="cb">{{cb}}</option></select></div>
                                     <div class="validation-msg" *ngIf="err('chrgBr') as e">{{e}}</div>
 
-                                <!-- ── Mandate Related Info ── -->
+                                <!-- â”€â”€ Mandate Related Info â”€â”€ -->
                                 <div class="mandate-section">
-                                    <div class="mandate-section-title"><mat-icon>description</mat-icon> Mandate Related Information</div>
+                                    <div class="party-group-title"><mat-icon>description</mat-icon> Mandate Related Information</div>
                                     <div class="mandate-grid">
                                         <div class="form-group"><label>Mandate ID <span class="req">*</span></label><input formControlName="mndtId" maxlength="35">
                                             <div class="validation-msg" *ngIf="err('mndtId', tx) as e">{{e}}</div>
@@ -641,14 +641,14 @@
                                             <div class="field-hint at-limit" *ngIf="hint('orgnlCdtrSchmeIdNm', 140) as h">{{h}}</div>
                                         </div>
                                         <div class="form-group"><label>Orgnl Cdtr Scheme BIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
-<input formControlName="orgnlCdtrSchmeIdBic" maxlength="11" placeholder="Optional">
+<input formControlName="orgnlCdtrSchmeIdBic" maxlength="11" placeholder="Optional" class="auto-uppercase">
 <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('orgnlCdtrSchmeIdBic', i)" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
 </div>
                                             <div class="validation-msg" *ngIf="err('orgnlCdtrSchmeIdBic', tx) as e">{{e}}</div>
                                             <div class="field-hint at-limit" *ngIf="hint('orgnlCdtrSchmeIdBic', 11) as h">{{h}}</div>
                                         </div>
                                         <div class="form-group"><label>Orgnl Creditor Agent BIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
-<input formControlName="orgnlCdtrAgtBic" maxlength="11" placeholder="Optional">
+<input formControlName="orgnlCdtrAgtBic" maxlength="11" placeholder="Optional" class="auto-uppercase">
 <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('orgnlCdtrAgtBic', i)" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
 </div>
                                             <div class="validation-msg" *ngIf="err('orgnlCdtrAgtBic', tx) as e">{{e}}</div>
@@ -658,12 +658,12 @@
                                             <div class="validation-msg" *ngIf="err('orgnlDbtrNm', tx) as e">{{e}}</div>
                                             <div class="field-hint at-limit" *ngIf="hint('orgnlDbtrNm', 140) as h">{{h}}</div>
                                         </div>
-                                        <div class="form-group"><label>Orgnl Debtor Acct IBAN</label><input formControlName="orgnlDbtrAcctIban" maxlength="34" placeholder="Optional">
+                                        <div class="form-group"><label>Orgnl Debtor Acct IBAN</label><input formControlName="orgnlDbtrAcctIban" maxlength="34" placeholder="Optional" class="auto-uppercase">
                                             <div class="validation-msg" *ngIf="err('orgnlDbtrAcctIban', tx) as e">{{e}}</div>
                                             <div class="field-hint at-limit" *ngIf="hint('orgnlDbtrAcctIban', 34) as h">{{h}}</div>
                                         </div>
                                         <div class="form-group"><label>Orgnl Debtor Agent BIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
-<input formControlName="orgnlDbtrAgtBic" maxlength="11" placeholder="Optional">
+<input formControlName="orgnlDbtrAgtBic" maxlength="11" placeholder="Optional" class="auto-uppercase">
 <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('orgnlDbtrAgtBic', i)" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
 </div>
                                             <div class="validation-msg" *ngIf="err('orgnlDbtrAgtBic', tx) as e">{{e}}</div>
@@ -721,7 +721,7 @@
 
                                 <!-- CdtrSchmeId -->
                                 <div class="mandate-section">
-                                    <div class="mandate-section-title"><mat-icon>badge</mat-icon> Creditor Scheme Identification</div>
+                                    <div class="party-group-title"><mat-icon>badge</mat-icon> Creditor Scheme Identification</div>
                                     <div class="mandate-grid">
                                         <div class="form-group"><label>Name</label><input formControlName="cdtrSchmeIdNm" maxlength="140" placeholder="Optional">
                                             <div class="validation-msg" *ngIf="err('cdtrSchmeIdNm', tx) as e">{{e}}</div>
@@ -763,7 +763,7 @@
                                 <!-- Debtor Agent -->
                                 <div class="party-group-title mandatory" style="grid-column: 1 / -1; margin-top: 0.5rem; font-size: 0.7rem;">Debtor Agent</div>
                                 <div class="form-group"><label>BIC <span class="req">*</span></label><div class="uetr-control-row" style="display: flex; gap: 8px;">
-<input formControlName="dbtrAgtBic" maxlength="11">
+<input formControlName="dbtrAgtBic" maxlength="11" class="auto-uppercase">
 <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('dbtrAgtBic', i)" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
 </div>
                                     <div class="validation-msg" *ngIf="err('dbtrAgtBic', tx) as e">{{e}}</div></div>
@@ -775,12 +775,12 @@
                                     <div class="validation-msg" *ngIf="err('dbtrAgtMmbId', tx) as e">{{e}}</div>
                                     <div class="field-hint at-limit" *ngIf="hint('dbtrAgtMmbId', 35) as h">{{h}}</div>
                                 </div>
-                                <div class="form-group"><label>LEI</label><input formControlName="dbtrAgtLei" maxlength="20" placeholder="Optional">
+                                <div class="form-group"><label>LEI</label><input formControlName="dbtrAgtLei" maxlength="20" placeholder="Optional" class="auto-uppercase">
                                     <div class="validation-msg" *ngIf="err('dbtrAgtLei', tx) as e">{{e}}</div>
                                     <div class="field-hint at-limit" *ngIf="hint('dbtrAgtLei', 20) as h">{{h}}</div>
                                 </div>
                                 <div class="party-group-title" style="grid-column: 1 / -1; margin-top: 0.3rem; font-size: 0.65rem;">Debtor Agent Account</div>
-                                <div class="form-group"><label>IBAN</label><input formControlName="dbtrAgtAcctIban" maxlength="34" placeholder="Optional">
+                                <div class="form-group"><label>IBAN</label><input formControlName="dbtrAgtAcctIban" maxlength="34" placeholder="Optional" class="auto-uppercase">
                                     <div class="validation-msg" *ngIf="err('dbtrAgtAcctIban', tx) as e">{{e}}</div>
                                     <div class="field-hint at-limit" *ngIf="hint('dbtrAgtAcctIban', 34) as h">{{h}}</div>
                                 </div>
@@ -879,13 +879,13 @@
                                     </div>
                                 </ng-container>
                                 <div class="form-group"><label>OrgId AnyBIC</label><div class="uetr-control-row" style="display: flex; gap: 8px;">
-<input formControlName="dbtrOrgIdAnyBic" maxlength="11" placeholder="Optional">
+<input formControlName="dbtrOrgIdAnyBic" maxlength="11" placeholder="Optional" class="auto-uppercase">
 <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('dbtrOrgIdAnyBic', i)" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
 </div>
                                     <div class="validation-msg" *ngIf="err('dbtrOrgIdAnyBic', tx) as e">{{e}}</div>
                                     <div class="field-hint at-limit" *ngIf="hint('dbtrOrgIdAnyBic', 11) as h">{{h}}</div>
                                 </div>
-                                <div class="form-group"><label>OrgId LEI</label><input formControlName="dbtrOrgIdLei" maxlength="20" placeholder="Optional">
+                                <div class="form-group"><label>OrgId LEI</label><input formControlName="dbtrOrgIdLei" maxlength="20" placeholder="Optional" class="auto-uppercase">
                                     <div class="validation-msg" *ngIf="err('dbtrOrgIdLei', tx) as e">{{e}}</div>
                                     <div class="field-hint at-limit" *ngIf="hint('dbtrOrgIdLei', 20) as h">{{h}}</div>
                                 </div>
@@ -926,7 +926,7 @@
 
                                 <!-- Debtor Account -->
                                 <div class="party-group-title mandatory" style="grid-column: 1 / -1; margin-top: 0.5rem; font-size: 0.7rem;">Debtor Account</div>
-                                <div class="form-group"><label>IBAN <span class="req">*</span></label><input formControlName="dbtrIban" maxlength="34">
+                                <div class="form-group"><label>IBAN <span class="req">*</span></label><input formControlName="dbtrIban" maxlength="34" class="auto-uppercase">
                                     <div class="validation-msg" *ngIf="err('dbtrIban', tx) as e">{{e}}</div>
                                     <div class="field-hint at-limit" *ngIf="hint('dbtrIban', 34) as h">{{h}}</div>
                                 </div>
@@ -971,7 +971,7 @@
 
                                 <!-- RgltryRptg -->
                                 <div class="mandate-section">
-                                    <div class="mandate-section-title"><mat-icon>gavel</mat-icon> Regulatory Reporting</div>
+                                    <div class="party-group-title"><mat-icon>gavel</mat-icon> Regulatory Reporting</div>
                                     <div class="mandate-grid">
                                         <div class="form-group"><label>Debit/Credit Indicator</label>
                                             <select formControlName="rgltryRptgInd"><option value="">None</option><option *ngFor="let r of dbtCdtRptgInd" [value]="r">{{r}}</option></select></div>
@@ -1014,7 +1014,7 @@
 
                                 <!-- Tax -->
                                 <div class="mandate-section">
-                                    <div class="mandate-section-title"><mat-icon>receipt</mat-icon> Tax Information</div>
+                                    <div class="party-group-title"><mat-icon>receipt</mat-icon> Tax Information</div>
                                     <div class="mandate-grid">
                                         <div class="form-group"><label>Creditor Tax ID</label><input formControlName="taxCdtrTaxId" maxlength="35" placeholder="Optional">
                                             <div class="validation-msg" *ngIf="err('taxCdtrTaxId', tx) as e">{{e}}</div>
@@ -1085,7 +1085,7 @@
 
                                 <!-- RltdRmtInf -->
                                 <div class="mandate-section">
-                                    <div class="mandate-section-title"><mat-icon>link</mat-icon> Related Remittance Information</div>
+                                    <div class="party-group-title"><mat-icon>link</mat-icon> Related Remittance Information</div>
                                     <div class="mandate-grid">
                                         <div class="form-group"><label>Remittance ID</label><input formControlName="rltdRmtInfRmtId" maxlength="35" placeholder="Optional">
                                             <div class="validation-msg" *ngIf="err('rltdRmtInfRmtId', tx) as e">{{e}}</div>
@@ -1103,7 +1103,7 @@
 
                                 <!-- RmtInf -->
                                 <div class="mandate-section">
-                                    <div class="mandate-section-title"><mat-icon>note</mat-icon> Remittance Information</div>
+                                    <div class="party-group-title"><mat-icon>note</mat-icon> Remittance Information</div>
                                     <div class="mandate-grid">
                                         <div class="form-group" style="grid-column: 1 / -1;"><label>Unstructured</label><input formControlName="rmtInfUstrd" maxlength="140" placeholder="Free text (max 140)">
                                             <div class="validation-msg" *ngIf="err('rmtInfUstrd', tx) as e">{{e}}</div>
@@ -1113,7 +1113,7 @@
                                 </div>
                                 <!-- Strd > RfrdDocInf -->
                                 <div class="mandate-section">
-                                    <div class="mandate-section-title"><mat-icon>description</mat-icon> Referred Document Info (Strd)</div>
+                                    <div class="party-group-title"><mat-icon>description</mat-icon> Referred Document Info (Strd)</div>
                                     <div class="mandate-grid">
                                         <div class="form-group"><label>Doc Type Code</label>
                                             <select formControlName="rmtInfStrdRfrdDocCd"><option value="">None</option><option *ngFor="let d of rfrdDocCodes" [value]="d">{{d}}</option></select></div>
@@ -1161,7 +1161,7 @@
                                 </div>
                                 <!-- Strd > RfrdDocAmt -->
                                 <div class="mandate-section">
-                                    <div class="mandate-section-title"><mat-icon>account_balance_wallet</mat-icon> Referred Document Amount (Strd)</div>
+                                    <div class="party-group-title"><mat-icon>account_balance_wallet</mat-icon> Referred Document Amount (Strd)</div>
                                     <div class="mandate-grid">
                                         <div class="form-group"><label>Due Payable Amt</label><input formControlName="rmtInfStrdRfrdDocAmtDuePyblAmt" placeholder="0.00">
                                             <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmtDuePyblAmt', tx) as e">{{e}}</div>
@@ -1228,7 +1228,7 @@
                                 </div>
                                 <!-- Strd > CdtrRefInf -->
                                 <div class="mandate-section">
-                                    <div class="mandate-section-title"><mat-icon>credit_score</mat-icon> Creditor Reference Info (Strd)</div>
+                                    <div class="party-group-title"><mat-icon>credit_score</mat-icon> Creditor Reference Info (Strd)</div>
                                     <div class="mandate-grid">
                                         <div class="form-group"><label>Ref Type Code</label>
                                             <select formControlName="rmtInfStrdCdtrRefCd"><option value="">None</option><option *ngFor="let c of cdtrRefCodes" [value]="c">{{c}}</option></select></div>
@@ -1249,7 +1249,7 @@
                                 </div>
                                 <!-- Strd > Invcr / Invcee -->
                                 <div class="mandate-section">
-                                    <div class="mandate-section-title"><mat-icon>storefront</mat-icon> Invoicer / Invoicee (Strd)</div>
+                                    <div class="party-group-title"><mat-icon>storefront</mat-icon> Invoicer / Invoicee (Strd)</div>
                                     <div class="mandate-grid">
                                         <div class="form-group"><label>Invoicer Name</label><input formControlName="rmtInfStrdInvcrNm" maxlength="140" placeholder="Optional">
                                             <div class="validation-msg" *ngIf="err('rmtInfStrdInvcrNm', tx) as e">{{e}}</div>
@@ -1279,7 +1279,7 @@
                                 </div>
                                 <!-- Strd > TaxRmt -->
                                 <div class="mandate-section">
-                                    <div class="mandate-section-title"><mat-icon>account_balance</mat-icon> Tax Remittance (Strd)</div>
+                                    <div class="party-group-title"><mat-icon>account_balance</mat-icon> Tax Remittance (Strd)</div>
                                     <div class="mandate-grid">
                                         <div class="form-group"><label>Cdtr Tax ID</label><input formControlName="rmtInfStrdTaxRmtCdtrTaxId" maxlength="35" placeholder="Optional">
                                             <div class="validation-msg" *ngIf="err('rmtInfStrdTaxRmtCdtrTaxId', tx) as e">{{e}}</div>
@@ -1336,7 +1336,7 @@
                                 </div>
                                 <!-- Strd > GrnshmtRmt -->
                                 <div class="mandate-section">
-                                    <div class="mandate-section-title"><mat-icon>policy</mat-icon> Garnishment Remittance (Strd)</div>
+                                    <div class="party-group-title"><mat-icon>policy</mat-icon> Garnishment Remittance (Strd)</div>
                                     <div class="mandate-grid">
                                         <div class="form-group"><label>Type Code</label><input formControlName="rmtInfStrdGrnshmtTpCd" maxlength="35" placeholder="Optional">
                                             <div class="validation-msg" *ngIf="err('rmtInfStrdGrnshmtTpCd', tx) as e">{{e}}</div>
@@ -1389,94 +1389,333 @@
         </div>
 
         <div class="right-panel">
-            <div class="bottom-actions" style="margin-top: 0; margin-bottom: 1rem;">
-                <div class="down">
-                    <button type="button" class="action-btn copy-btn" (click)="copyToClipboard()"><mat-icon>content_copy</mat-icon> Copy XML</button>
-                    <button type="button" class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon> Download XML</button>
-                    <button type="button" class="action-btn validate-btn" (click)="validateMessage()"><mat-icon>verified</mat-icon> Validate Message</button>
-                </div>
-            </div>
-            <div class="content-box preview-box">
-                <div class="editor-header">
-                    <div class="up">
-                        <button type="button" class="action-btn-small" (click)="undoXml()" [disabled]="!canUndoXml()" matTooltip="Undo (Ctrl+Z)"><mat-icon>undo</mat-icon></button>
-                        <button type="button" class="action-btn-small" (click)="redoXml()" [disabled]="!canRedoXml()" matTooltip="Redo (Ctrl+Y)"><mat-icon>redo</mat-icon></button>
-                        <button type="button" class="action-btn-small" (click)="formatXml()" [disabled]="!generatedXml" matTooltip="Format XML (Ctrl+S)"><mat-icon>format_align_left</mat-icon></button>
-                    </div>
-                </div>
-                <div class="editor-wrapper">
-                    <div class="line-numbers" #lineNumbers>
-                        <div *ngFor="let idx of editorLineCount; let i = index">{{i + 1}}</div>
-                    </div>
-                    <textarea class="code-editor" [(ngModel)]="generatedXml" (ngModelChange)="onEditorChange($event)" (scroll)="syncScroll(xmlEditor, lineNumbers)" #xmlEditor spellcheck="false" wrap="off"></textarea>
-                </div>
-            </div>
-        </div>
-    </div>
+                        <!-- Top Actions -->
+                        <div class="bottom-actions" style="margin-top: 0; margin-bottom: 1rem;">
+                                <!-- Simple History Actions -->
+                                <div class="down">
+                                        <button type="button" class="action-btn copy-btn"
+                                                (click)="copyToClipboard()"><mat-icon>content_copy</mat-icon> Copy
+                                                XML</button>
+                                        <button type="button" class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon>
+                                                Download XML</button>
+                                        <button type="button" class="action-btn validate-btn" (click)="validateMessage()" [disabled]="form.invalid">
+                                                <mat-icon>verified</mat-icon> Validate Message
+                                        </button>
+                                </div>
 
-    <!-- Validation Modal -->
-    <div class="validation-overlay" *ngIf="showValidationModal" (click)="closeValidationModal()">
-        <div class="validation-modal" (click)="$event.stopPropagation()">
-            <div class="vm-header">
-                <div class="vm-title"><mat-icon>fact_check</mat-icon><span>CBPR+ SR2025 Validation Results</span></div>
-                <button class="vm-close" (click)="closeValidationModal()"><mat-icon>close</mat-icon></button>
-            </div>
-            <div class="vm-body">
-                <div class="vm-loading" *ngIf="validationStatus === 'validating'">
-                    <div class="vm-spinner"></div>
-                    <p>Scanning message for compliance...</p>
-                    <span class="vm-loading-sub">Running Layer 1-3 checks</span>
-                </div>
-                <div *ngIf="validationStatus === 'done' && validationReport">
-                    <div class="vm-status-banner" [class.pass]="validationReport.status === 'PASS'" [class.fail]="validationReport.status !== 'PASS'">
-                        <mat-icon>{{validationReport.status === 'PASS' ? 'check_circle' : 'cancel'}}</mat-icon>
-                        <div class="vm-status-text">
-                            <strong>{{validationReport.status === 'PASS' ? 'VALIDATION PASSED' : 'VALIDATION FAILED'}}</strong>
-                            <span>{{validationReport.errors || 0}} error(s), {{validationReport.warnings || 0}} warning(s) &bull; {{validationReport.total_time_ms || 0}}ms</span>
+
+
                         </div>
-                    </div>
-                    <div class="vm-layers" style="display: flex; gap: 10px; margin-top: 1rem;">
-                        <div class="vm-layer" *ngFor="let k of getValidationLayers()" [class.layer-pass]="isLayerPass(k)" [class.layer-fail]="isLayerFail(k)" [class.layer-warn]="isLayerWarn(k)">
-                            <div class="vm-layer-icon">
-                                <mat-icon *ngIf="isLayerPass(k)" style="color: #10b981; font-size: 18px;">check_circle</mat-icon>
-                                <mat-icon *ngIf="isLayerFail(k)" style="color: #ef4444; font-size: 18px;">cancel</mat-icon>
-                                <mat-icon *ngIf="isLayerWarn(k)" style="color: #f59e0b; font-size: 18px;">warning</mat-icon>
-                            </div>
-                            <div class="vm-layer-info"><strong>{{getLayerName(k)}}</strong><span class="vm-layer-time">{{getLayerTime(k)}}ms</span></div>
-                        </div>
-                    </div>
-                    <div class="vm-issues" *ngIf="getValidationIssues().length > 0" style="margin-top: 1.5rem;">
-                        <div style="display: flex; align-items: center; gap: 8px; padding: 10px; background: var(--bg-card-hover); border-bottom: 1px solid var(--border-light);">
-                            <mat-icon style="font-size: 18px; color: #ef4444;">report</mat-icon>
-                            <span>Issues Found ({{getValidationIssues().length}})</span>
-                        </div>
-                        <div>
-                            <div class="vm-issue" *ngFor="let issue of getValidationIssues()" (click)="toggleValidationIssue(issue)" [class.expanded]="validationExpandedIssue === issue" style="border-bottom: 1px solid var(--border-light); cursor: pointer;">
-                                <div style="display: flex; align-items: center; gap: 10px; padding: 10px;">
-                                    <span class="vm-issue-severity" [class.error]="issue.severity === 'ERROR'" [class.warning]="issue.severity === 'WARNING'" style="font-size: 0.6rem; font-weight: 800; padding: 2px 6px; border-radius: 4px;">{{issue.severity}}</span>
-                                    <span style="font-family: monospace; font-size: 0.7rem; color: var(--text-muted);">L{{issue.layer}}</span>
-                                    <span style="flex: 1; font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{issue.message}}</span>
-                                    <mat-icon style="font-size: 18px; color: var(--text-muted);">{{validationExpandedIssue === issue ? 'expand_less' : 'expand_more'}}</mat-icon>
+
+                        <!-- XML Preview & Actions -->
+                        <div class="content-box preview-box">
+                                <div class="up">
+                                        <button type="button" class="action-btn-small" (click)="undoXml()" [disabled]="!canUndoXml()"
+                                                matTooltip="Undo (Ctrl+Z)">
+                                                <mat-icon>undo</mat-icon>
+                                        </button>
+                                        <button type="button" class="action-btn-small" (click)="redoXml()" [disabled]="!canRedoXml()"
+                                                matTooltip="Redo (Ctrl+Y)">
+                                                <mat-icon>redo</mat-icon>
+                                        </button>
+                                        <button type="button" class="action-btn-small" (click)="formatXml()"
+                                                [disabled]="!generatedXml" matTooltip="Format XML (Ctrl+S)">
+                                                <mat-icon>format_align_left</mat-icon>
+                                        </button>
                                 </div>
-                                <div *ngIf="validationExpandedIssue === issue" style="padding: 10px 10px 15px 40px; background: var(--bg-card-hover); font-size: 0.75rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 8px;">
-                                    <div style="display: flex; gap: 10px;"><strong>Message:</strong> <span>{{issue.message}}</span></div>
-                                    <div *ngIf="issue.path" style="display: flex; gap: 10px;"><strong>Path:</strong> <code style="background: rgba(0,0,0,0.1); padding: 2px 4px; border-radius: 3px;">{{issue.path}}</code></div>
-                                    <div *ngIf="issue.fix_suggestion" style="background: rgba(16, 185, 129, 0.1); padding: 8px; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.2); display: flex; align-items: center; gap: 10px;">
-                                        <mat-icon style="color: #10b981; font-size: 18px;">lightbulb</mat-icon>
-                                        <div style="flex: 1;"><strong>Fix Suggestion:</strong> {{issue.fix_suggestion}}</div>
-                                        <button type="button" class="action-btn-small" (click)="copyFix(issue.fix_suggestion, $event)" title="Copy fix"><mat-icon>content_copy</mat-icon></button>
-                                    </div>
+                                <div class="editor-wrapper">
+                                        <div class="line-numbers" #lineNumbers>
+                                                <div *ngFor="let idx of editorLineCount; let i = index">{{i + 1}}</div>
+                                        </div>
+                                        <textarea class="code-editor" [(ngModel)]="generatedXml"
+                                                (ngModelChange)="onEditorChange($event)"
+                                                (scroll)="syncScroll(xmlEditor, lineNumbers)" #xmlEditor
+                                                spellcheck="false" wrap="off"></textarea>
                                 </div>
-                            </div>
                         </div>
-                    </div>
-                    <div class="vm-no-issues" *ngIf="getValidationIssues().length === 0" style="text-align: center; padding: 3rem;">
-                        <mat-icon style="font-size: 48px; width: 48px; height: 48px; color: #10b981; margin-bottom: 1rem;">check_circle</mat-icon>
-                        <p style="font-weight: 600;">Message is Valid!</p>
-                        <p style="color: var(--text-muted); font-size: 0.85rem;">No compliance issues detected in layers 1, 2, or 3.</p>
-                    </div>
                 </div>
-            </div>
         </div>
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+<ng-template #partyForm let-prefix="prefix" let-isAgent="isAgent" let-title="title" let-required="required" let-group="group">
+        <div [formGroup]="form" class="party-grid">
+                <!-- BIC -->
+                <div class="form-group" *ngIf="isAgent">
+                        <label>{{title}} BIC <span class="req" *ngIf="required">*</span></label>
+                        <div class="uetr-control-row">
+                                <input [formControlName]="prefix+'Bic'" maxlength="11" placeholder="e.g. NDEAFIHH" class="auto-uppercase">
+                                <button type="button" class="uetr-refresh-btn"
+                                    (click)="openBicSearchGroup(prefix+'Bic', group)"
+                                    matTooltip="Search BIC">
+                                    <mat-icon>search</mat-icon>
+                                </button>
+                        </div>
+                        <div class="validation-msg" *ngIf="err(prefix+'Bic') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint(prefix+'Bic', 11) as h">{{h}}</div>
+                </div>
+                <div class="form-group" *ngIf="!isAgent">
+                        <label>{{title}} BIC <span class="req" *ngIf="required">*</span></label>
+                        <div class="uetr-control-row">
+                                <input [formControlName]="prefix+'OrgAnyBIC'" maxlength="11" placeholder="e.g. NDEAFIHH" class="auto-uppercase">
+                                <button type="button" class="uetr-refresh-btn"
+                                    (click)="openBicSearchGroup(prefix+'OrgAnyBIC', group)"
+                                    matTooltip="Search BIC">
+                                    <mat-icon>search</mat-icon>
+                                </button>
+                        </div>
+                        <div class="validation-msg" *ngIf="err(prefix+'OrgAnyBIC') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint(prefix+'OrgAnyBIC', 11) as h">{{h}}</div>
+                </div>
+
+                <!-- Address Type -->
+                <div class="form-group">
+                        <label>{{title}} Address Type</label>
+                        <select [formControlName]="prefix+'AddrType'">
+                                <option value="none">None (BIC/ID Only)</option>
+                                <option value="hybrid">Hybrid</option>
+                                <option value="structured">Structured</option>
+                                <option value="unstructured">Unstructured</option>
+                        </select>
+                        <div class="validation-msg" *ngIf="err(prefix+'AddrType') as e">{{e}}</div>
+                </div>
+
+                <!-- Dynamic Address Fields -->
+                <ng-container *ngIf="form.get(prefix+'AddrType')?.value !== 'none'">
+                        <div class="address-subgrid">
+                                <div class="form-group"
+                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        <label>{{title}} Building Number</label>
+                                        <input [formControlName]="prefix+'BldgNb'" maxlength="16" placeholder="e.g. 11">
+                                        <div class="validation-msg" *ngIf="err(prefix+'BldgNb') as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint(prefix+'BldgNb', 16) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"
+                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        <label>{{title}} Building Name</label>
+                                        <input [formControlName]="prefix+'BldgNm'" maxlength="35">
+                                        <div class="validation-msg" *ngIf="err(prefix+'BldgNm') as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint(prefix+'BldgNm', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"
+                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        <label>{{title}} Street Name</label>
+                                        <input [formControlName]="prefix+'StrtNm'" maxlength="70" placeholder="e.g. Broadway">
+                                        <div class="validation-msg" *ngIf="err(prefix+'StrtNm') as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint(prefix+'StrtNm', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"
+                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        <label>{{title}} Post Code</label>
+                                        <input [formControlName]="prefix+'PstCd'" maxlength="16" placeholder="e.g. 10005">
+                                        <div class="validation-msg" *ngIf="err(prefix+'PstCd') as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint(prefix+'PstCd', 16) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"
+                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        <label>{{title}} City (Town Name) <span class="req">*</span></label>
+                                        <input [formControlName]="prefix+'TwnNm'" maxlength="35" placeholder="e.g. New York">
+                                        <div class="validation-msg" *ngIf="err(prefix+'TwnNm') as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint(prefix+'TwnNm', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group">
+                                        <label>{{title}} Country <span class="req">*</span></label>
+                                        <select [formControlName]="prefix + 'Ctry'">
+                                                <option value="">Select Country</option>
+                                                <option *ngFor="let c of countries" [value]="c">{{c}}</option>
+                                        </select>
+                                        <div class="validation-msg" *ngIf="err(prefix + 'Ctry') as e">{{e}}</div>
+                                        <div class="validation-msg" *ngIf="err(prefix+'Ctry') as e">{{e}}</div>
+                                </div>
+                                <ng-container
+                                        *ngIf="['unstructured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        <div class="form-group">
+                                                <label>{{title}} Address Line 1</label>
+                                                <input [formControlName]="prefix+'AdrLine1'" maxlength="70" placeholder="e.g. 123 Wall Street">
+                                                <div class="validation-msg" *ngIf="err(prefix+'AdrLine1') as e">{{e}}
+                                                </div>
+                                                <div class="field-hint at-limit" *ngIf="hint(prefix+'AdrLine1', 70) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group">
+                                                <label>{{title}} Address Line 2</label>
+                                                <input [formControlName]="prefix+'AdrLine2'" maxlength="70" placeholder="e.g. Suite 400">
+                                                <div class="validation-msg" *ngIf="err(prefix+'AdrLine2') as e">{{e}}
+                                                </div>
+                                                <div class="field-hint at-limit" *ngIf="hint(prefix+'AdrLine2', 70) as h">{{h}}</div>
+                                        </div>
+                                </ng-container>
+                        </div>
+                </ng-container>
+
+                <!-- Name -->
+                <div class="form-group">
+                        <label>{{title}} Name <span class="req" *ngIf="required">*</span></label>
+                        <input [formControlName]="prefix+'Name'" maxlength="140">
+                        <div class="validation-msg" *ngIf="err(prefix+'Name') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint(prefix+'Name', 140) as h">{{h}}</div>
+                </div>
+
+                <!-- Member ID -->
+                <div class="form-group">
+                        <label>{{title}} Member ID</label>
+                        <input [formControlName]="isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId'"
+                                maxlength="35" placeholder="Clearing Member ID">
+                        <div class="validation-msg"
+                                *ngIf="err(isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId') as e">{{e}}</div>
+                        <div class="field-hint at-limit"
+                                *ngIf="hint(isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId', 35) as h">{{h}}
+                        </div>
+                </div>
+
+                <!-- Clearing System Code -->
+                <div class="form-group">
+                        <label>{{title}} Clearing System Code</label>
+                        <input [formControlName]="isAgent ? prefix+'ClrSysCd' : prefix+'OrgClrSysCd'" maxlength="4"
+                                placeholder="e.g. USABA, CHAPS, T2">
+                        <div class="validation-msg"
+                                *ngIf="err(isAgent ? prefix+'ClrSysCd' : prefix+'OrgClrSysCd') as e">{{e}}</div>
+                        <div class="field-hint at-limit"
+                                *ngIf="hint(isAgent ? prefix+'ClrSysCd' : prefix+'OrgClrSysCd', 4) as h">{{h}}</div>
+                </div>
+
+                <!-- LEI -->
+                <div class="form-group">
+                        <label>{{title}} LEI</label>
+                        <input [formControlName]="isAgent ? prefix+'Lei' : prefix+'OrgLEI'" maxlength="20"
+                                placeholder="20-char LEI">
+                        <div class="validation-msg" *ngIf="err(isAgent ? prefix+'Lei' : prefix+'OrgLEI') as e">{{e}}
+                        </div>
+                        <div class="field-hint at-limit"
+                                *ngIf="hint(isAgent ? prefix+'Lei' : prefix+'OrgLEI', 20) as h">{{h}}</div>
+                </div>
+
+                <!-- Account Number -->
+                <div class="form-group">
+                        <label>{{title}} Account Number</label>
+                        <input [formControlName]="prefix+'Acct'" maxlength="34">
+                        <div class="validation-msg" *ngIf="err(prefix+'Acct') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint(prefix+'Acct', 34) as h">{{h}}</div>
+                </div>
+
+        </div>
+</ng-template>
+
+
+
+<!-- Validation Results Modal -->
+<div class="validation-overlay" *ngIf="showValidationModal" (click)="closeValidationModal()">
+        <div class="validation-modal" (click)="$event.stopPropagation()">
+                <!-- Modal Header -->
+                <div class="vm-header">
+                        <div class="vm-title">
+                                <mat-icon>verified</mat-icon>
+                                <span>Validation Results</span>
+                                <span class="vm-msg-type"
+                                        *ngIf="validationReport?.message">{{validationReport.message}}</span>
+                        </div>
+                        <div class="vm-header-actions" *ngIf="validationStatus === 'done'">
+                                <button class="vm-action-btn" (click)="viewXmlModal()"><mat-icon>visibility</mat-icon>
+                                        VIEW XML</button>
+                                <button class="vm-action-btn" (click)="editXmlModal()"><mat-icon>edit</mat-icon>
+                                        EDIT</button>
+                                <button class="vm-action-btn run"
+                                        (click)="runValidationModal()"><mat-icon>play_circle</mat-icon> RUN</button>
+                        </div>
+                        <button class="vm-close" (click)="closeValidationModal()"><mat-icon>close</mat-icon></button>
+                </div>
+                <!-- Loading State -->
+                <div class="vm-loading" *ngIf="validationStatus === 'validating'">
+                        <div class="vm-spinner"></div>
+                        <p>Validating your XML message...</p>
+                        <span class="vm-loading-sub">Running Layer 1-3 checks</span>
+                </div>
+                <!-- Results -->
+                <div class="vm-body" *ngIf="validationStatus === 'done' && validationReport">
+                        <div class="vm-status-banner" [class.pass]="validationReport.status === 'PASS'"
+                                [class.fail]="validationReport.status !== 'PASS'">
+                                <mat-icon>{{validationReport.status === 'PASS' ? 'check_circle' : 'cancel'}}</mat-icon>
+                                <div class="vm-status-text">
+                                        <strong>{{validationReport.status === 'PASS' ? 'VALIDATION PASSED' : 'VALIDATION
+                                                FAILED'}}</strong>
+                                        <span>{{validationReport.errors || 0}} error(s), {{validationReport.warnings ||
+                                                0}} warning(s) &bull; {{validationReport.total_time_ms || 0}}ms</span>
+                                </div>
+                        </div>
+                        <div class="vm-layers" *ngIf="getValidationLayers().length > 0">
+                                <div class="vm-layer" *ngFor="let k of getValidationLayers()"
+                                        [class.layer-pass]="isLayerPass(k)" [class.layer-fail]="isLayerFail(k)"
+                                        [class.layer-warn]="isLayerWarn(k)">
+                                        <div class="vm-layer-icon"><span *ngIf="isLayerPass(k)"><mat-icon
+                                                                style="color: #10b981; font-size: 20px;">check_circle</mat-icon></span><span
+                                                        *ngIf="isLayerFail(k)"><mat-icon
+                                                                style="color: #ef4444; font-size: 20px;">cancel</mat-icon></span><span
+                                                        *ngIf="isLayerWarn(k)"><mat-icon
+                                                                style="color: #f59e0b; font-size: 20px;">warning</mat-icon></span>
+                                        </div>
+                                        <div class="vm-layer-info"><strong>Layer {{k}}:
+                                                        {{getLayerName(k)}}</strong><span
+                                                        class="vm-layer-time">{{getLayerTime(k)}}ms</span></div>
+                                </div>
+                        </div>
+                        <div class="vm-issues" *ngIf="getValidationIssues().length > 0">
+                                <div class="vm-issues-header"><mat-icon>report</mat-icon><span>Issues
+                                                ({{getValidationIssues().length}})</span></div>
+                                <div class="vm-issue-list">
+                                        <div class="vm-issue" *ngFor="let issue of getValidationIssues()"
+                                                (click)="toggleValidationIssue(issue)"
+                                                [class.expanded]="validationExpandedIssue === issue">
+                                                <div class="vm-issue-row">
+                                                        <span class="vm-issue-severity"
+                                                                [class.error]="issue.severity === 'ERROR'"
+                                                                [class.warning]="issue.severity === 'WARNING'">
+                                                                {{issue.severity}}
+                                                        </span>
+                                                        <span class="vm-issue-layer">L{{issue.layer}}</span>
+                                                        <span class="vm-issue-msg">{{issue.message}}</span>
+                                                        <mat-icon class="vm-issue-chevron">
+                                                                {{validationExpandedIssue === issue ? 'expand_less' :
+                                                                'expand_more'}}
+                                                        </mat-icon>
+                                                </div>
+                                                <div class="vm-issue-detail" *ngIf="validationExpandedIssue === issue">
+                                                        <div class="vm-detail-row" *ngIf="issue.severity === 'ERROR'">
+                                                                <strong>Error Details:</strong>
+                                                                <span>{{issue.message}}</span>
+                                                        </div>
+                                                        <div class="vm-detail-row" *ngIf="issue.path">
+                                                                <strong>Path:</strong>
+                                                                <code>{{issue.path}}</code>
+                                                        </div>
+                                                        <div class="vm-detail-row" *ngIf="issue.code">
+                                                                <strong>Code:</strong>
+                                                                <code>{{issue.code}}</code>
+                                                        </div>
+                                                        <div class="vm-detail-row fix" *ngIf="issue.fix_suggestion">
+                                                                <strong><mat-icon
+                                                                                style="font-size: 16px; width: 16px; height: 16px; vertical-align: middle;">lightbulb</mat-icon>
+                                                                        Fix:</strong>
+                                                                <span>{{issue.fix_suggestion}}</span>
+                                                                <button class="vm-copy-btn"
+                                                                        (click)="copyFix(issue.fix_suggestion, $event)"
+                                                                        matTooltip="Copy fix suggestion">
+                                                                        <mat-icon>content_copy</mat-icon>
+                                                                </button>
+                                                        </div>
+                                                </div>
+                                        </div>
+                                </div>
+                        </div>
+                        <div class="vm-no-issues" *ngIf="getValidationIssues().length === 0">
+                                <mat-icon>celebration</mat-icon>
+                                <p>No issues found! Your message is valid.</p>
+                        </div>
+                </div>
+        </div>
 </div>

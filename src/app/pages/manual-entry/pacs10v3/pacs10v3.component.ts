@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -44,8 +44,8 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
     validationReport: any = null;
     validationExpandedIssue: any = null;
 
-    get canUndoXml() { return this.xmlHistoryIdx > 0; }
-    get canRedoXml() { return this.xmlHistoryIdx < this.xmlHistory.length - 1; }
+    canUndoXml() { return this.xmlHistoryIdx > 0; }
+    canRedoXml() { return this.xmlHistoryIdx < this.xmlHistory.length - 1; }
 
     warningTimeouts: { [key: string]: any } = {};
     showMaxLenWarning: { [key: string]: boolean } = {};
@@ -772,7 +772,7 @@ ${this.rmtInf(v)}
     }
 
     undoXml() {
-        if (this.canUndoXml) {
+        if (this.canUndoXml()) {
             this.isInternalChange = true;
             this.xmlHistoryIdx--;
             this.generatedXml = this.xmlHistory[this.xmlHistoryIdx];
@@ -782,7 +782,7 @@ ${this.rmtInf(v)}
     }
 
     redoXml() {
-        if (this.canRedoXml) {
+        if (this.canRedoXml()) {
             this.isInternalChange = true;
             this.xmlHistoryIdx++;
             this.generatedXml = this.xmlHistory[this.xmlHistoryIdx];
@@ -1083,5 +1083,13 @@ ${this.rmtInf(v)}
             }
         });
     }
-
+  openBicSearchGroup(controlName: string, group: FormGroup | any) {
+    const dialogRef = this.dialog.open(BicSearchDialogComponent, { width: '800px', disableClose: true });
+    dialogRef.afterClosed().subscribe(result => {
+        if (result && result.bic) {
+            group.get(controlName)?.patchValue(result.bic);
+            group.get(controlName)?.markAsDirty();
+        }
+    });
+  }
 }

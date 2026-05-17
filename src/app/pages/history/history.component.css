@@ -1,4 +1,4 @@
-﻿.history-container {
+.history-container {
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
@@ -362,31 +362,35 @@
 }
 
 .mat-column-validation_id {
-    width: 18%;
-}
-
-.mat-column-timestamp {
-    width: 14%;
-}
-
-.mat-column-type {
-    width: 17%;
-}
-
-.mat-column-no_of_files {
-    width: 9%;
-}
-
-.mat-column-status {
-    width: 10%;
-}
-
-.mat-column-metrics {
     width: 13%;
 }
 
+.mat-column-timestamp {
+    width: 13%;
+}
+
+.mat-column-origin {
+    width: 13%;
+}
+
+.mat-column-type {
+    width: 14%;
+}
+
+.mat-column-no_of_files {
+    width: 8%;
+}
+
+.mat-column-status {
+    width: 11%;
+}
+
+.mat-column-metrics {
+    width: 11%;
+}
+
 .mat-column-actions {
-    width: 19%;
+    width: 17%;
 }
 
 .val-id {
@@ -412,6 +416,8 @@ body.light-theme .val-id {
 }
 
 .status-badge {
+    display: inline-block;
+    white-space: nowrap;
     font-size: 11px;
     font-weight: bold;
     padding: 4px 10px;
@@ -1255,4 +1261,55 @@ mat-card {
 .header-actions button[mat-stroked-button][color="accent"] {
     color: #60a5fa;
     border-color: rgba(37, 99, 235, 0.3);
+}
+
+/* Premium origin badge styles */
+.origin-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 12px;
+    text-transform: capitalize;
+    display: inline-block;
+}
+
+.origin-badge.pasted {
+    background: rgba(139, 92, 246, 0.1);
+    color: #a78bfa;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.origin-badge.uploaded {
+    background: rgba(59, 130, 246, 0.1);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.origin-badge.generated-via-manual-entry {
+    background: rgba(16, 185, 129, 0.1);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+/* Light theme support */
+:host-context(.light-theme) .origin-badge.pasted {
+    background: rgba(109, 40, 217, 0.08);
+    color: #6d28d9;
+    border-color: rgba(109, 40, 217, 0.15);
+}
+
+:host-context(.light-theme) .origin-badge.uploaded {
+    background: rgba(29, 78, 216, 0.08);
+    color: #1d4ed8;
+    border-color: rgba(29, 78, 216, 0.15);
+}
+
+:host-context(.light-theme) .origin-badge.generated-via-manual-entry {
+    background: rgba(4, 120, 87, 0.08);
+    color: #047857;
+    border-color: rgba(4, 120, 87, 0.15);
+}
+
+.origin-filter {
+    margin-left: 8px;
 }

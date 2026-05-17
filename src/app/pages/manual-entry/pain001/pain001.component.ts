@@ -10,6 +10,7 @@ import { ConfigService } from '../../../services/config.service';
 import { FormattingService } from '../../../services/formatting.service';
 import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
 import { debounceTime } from 'rxjs/operators';
+import { getValidationErrorMessage } from '../../../utils/validation-utils';
 
 @Component({
   selector: 'app-pain001',
@@ -159,19 +160,19 @@ export class Pain001Component implements OnInit, OnDestroy {
       ctgyPurp: ['CASH', [Validators.maxLength(5)]],
       reqdExctnDt: [this.isoNowDate(), Validators.required],
       fwdgAgtBic: ['FWDGUS33XXX', [Validators.maxLength(11)]],
-      initnSrc: ['ERP-X-SYSTEM'],
+      initnSrc: ['ERP-X-SYSTEM', [Validators.maxLength(35)]],
       dbtrName: ['Holding Account One', [Validators.required, Validators.maxLength(140)]],
       dbtrIban: ['60161331926819', [Validators.required, Validators.maxLength(34)]],
       dbtrAddrType: ['structured'],
       dbtrCtry: ['US', [Validators.required, Validators.pattern(/^[A-Z]{2,2}$/)]],
       dbtrTwnNm: ['New York', [Validators.maxLength(35)]],
       dbtrBldgNb: ['270', [Validators.maxLength(16)]],
-      dbtrBldgNm: ['Chase Tower'],
+      dbtrBldgNm: ['Chase Tower', [Validators.maxLength(35)]],
       dbtrStrtNm: ['Park Avenue', [Validators.maxLength(70)]],
       dbtrPstCd: ['10017', [Validators.maxLength(16)]],
-      dbtrDept: [''],
-      dbtrSubDept: [''],
-      dbtrFlr: ['50'],
+      dbtrDept: ['', [Validators.maxLength(70)]],
+      dbtrSubDept: ['', [Validators.maxLength(70)]],
+      dbtrFlr: ['50', [Validators.maxLength(70)]],
       dbtrAdrLine1: ['270 Park Avenue', [Validators.maxLength(70)]],
       dbtrAdrLine2: ['Suite 500', [Validators.maxLength(70)]],
       dbtrAgtAcctIban: ['11112222333344', [Validators.maxLength(34)]],
@@ -179,7 +180,7 @@ export class Pain001Component implements OnInit, OnDestroy {
       dbtrAgtClrSysCd: ['USABA', [Validators.maxLength(5)]],
       dbtrAgtClrSysMmbId: ['021000021', [Validators.maxLength(35)]],
       dbtrAgtLei: ['54930068N2K3Y9N1F719', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
-      dbtrAgtName: ['JP Morgan Chase Bank N.A.'],
+      dbtrAgtName: ['JP Morgan Chase Bank N.A.', [Validators.maxLength(140)]],
       dbtrAgtAddrType: ['structured'],
       dbtrAgtCtry: ['US', [Validators.pattern(/^[A-Z]{2,2}$/)]],
       dbtrAgtTwnNm: ['New York', [Validators.maxLength(35)]],
@@ -188,17 +189,17 @@ export class Pain001Component implements OnInit, OnDestroy {
       dbtrAgtAdrLine1: ['270 Park Avenue', [Validators.maxLength(70)]],
       dbtrAgtAdrLine2: ['Floor 10', [Validators.maxLength(70)]],
       chrgBr: ['SHAR', Validators.required],
-      dbtrAgtBldgNb: ['270'],
-      dbtrAgtBldgNm: ['Chase Tower'],
+      dbtrAgtBldgNb: ['270', [Validators.maxLength(16)]],
+      dbtrAgtBldgNm: ['Chase Tower', [Validators.maxLength(35)]],
       dbtrOrgIdAnyBic: ['GBSOLUS33XX', [Validators.pattern(/^([A-Z0-9]{8}|[A-Z0-9]{11})$/)]],
       dbtrOrgIdLei: ['W22LROWBR70L5U3S5244', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
       dbtrPrvtIdBirthDt: [''],
       dbtrPrvtIdCityOfBirth: ['', [Validators.maxLength(35)]],
       dbtrPrvtIdCtryOfBirth: ['', [Validators.pattern(/^[A-Z]{2,2}$/)]],
-      ultmtDbtrName: ['Global Management LLC'],
-      relMsgId: ['REL-' + Date.now()],
-      chrgsAcctIban: ['US12345678901231'],
-      chrgsAcctAgtBic: ['CHASUS33XXX'],
+      ultmtDbtrName: ['Global Management LLC', [Validators.maxLength(140)]],
+      relMsgId: ['REL-' + Date.now(), [Validators.maxLength(35)]],
+      chrgsAcctIban: ['US12345678901231', [Validators.maxLength(34)]],
+      chrgsAcctAgtBic: ['CHASUS33XXX', [Validators.pattern(/^([A-Z0-9]{8}|[A-Z0-9]{11})$/)]],
 
       // Transactions
       transactions: this.fb.array([this.createTransactionGroup()])
@@ -218,12 +219,12 @@ export class Pain001Component implements OnInit, OnDestroy {
       currency: ['USD', Validators.required],
       xchgRate: [''],
       xchgRateTp: ['SPOT'],
-      xchgUnitCcy: [''],
-      xchgCtrctId: [''],
+      xchgUnitCcy: ['', [Validators.maxLength(3), Validators.pattern(/^[A-Z]{3}$/)]],
+      xchgCtrctId: ['', [Validators.maxLength(35)]],
       chqInstr: [''],
       chqTp: [''],
       chqMtrtyDt: [''],
-      mndtId: [''],
+      mndtId: ['', [Validators.maxLength(35)]],
       txSvcLvl: ['NURG', [Validators.maxLength(5)]],
       txLclInstrm: ['INST', [Validators.maxLength(35)]],
       txCtgyPurp: ['SALA', [Validators.maxLength(5)]],
@@ -1081,6 +1082,7 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
   }
 
   viewXmlModal() { this.showValidationModal = false; }
+  editXmlModal() { this.showValidationModal = false; }
   runValidationModal() { this.validateMessage(); }
 
   private pushHistory() {
@@ -1211,31 +1213,7 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
 
   err(f: string, group?: any): string | null {
     const c = group ? group.get(f) : this.form.get(f);
-    if (!c || c.valid) return null;
-
-    if (c.errors?.['required']) return 'Required field.';
-    if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
-    if (c.errors?.['pattern']) {
-      if (this.showMaxLenWarning[f]) {
-        const val = c.value?.toString() || '';
-        const limitError = c.errors?.['maxlength']?.requiredLength;
-        if (limitError && val.length >= limitError) return null;
-        if (f.toLowerCase().includes('bic') && val.length >= 11) return null;
-        if (f === 'uetr' && val.length >= 36) return null;
-      }
-
-      const fl = f.toLowerCase();
-      if (fl.includes('bic')) return 'Valid 8 or 11-char BIC required.';
-      if (fl.includes('iban')) return 'Valid MOD-97 IBAN required.';
-      if (fl.includes('uetr')) return 'Invalid UETR format (UUID v4).';
-      if (fl.includes('amount') || fl.includes('amt')) return 'Numbers only, up to 5 decimals.';
-      if (fl.includes('lei')) return 'Must be 20-char LEI.';
-      if (fl.includes('id') && !fl.includes('uetr')) return 'Invalid format (Alpha-numeric, max 35 chars).';
-      if (fl.includes('name') || fl.includes('nm')) return "Invalid characters. Only letters, numbers, spaces and . , ( ) ' - are allowed.";
-      
-      return 'Invalid format.';
-    }
-    return 'Invalid value.';
+    return getValidationErrorMessage(c, f);
   }
 
   syncScroll(editor: HTMLTextAreaElement, gutter: HTMLDivElement) {

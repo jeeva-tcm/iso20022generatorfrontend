@@ -40,11 +40,13 @@ import { ConfigService } from '../../services/config.service';
 })
 export class HistoryComponent implements OnInit {
     dataSource = new MatTableDataSource<any>([]);
-    displayedColumns: string[] = ['validation_id', 'timestamp', 'type', 'no_of_files', 'status', 'metrics', 'actions'];
+    displayedColumns: string[] = ['validation_id', 'timestamp', 'origin', 'type', 'no_of_files', 'status', 'metrics', 'actions'];
     isLoading: boolean = false;
     searchTerm: string = '';
     currentFilter: 'ALL' | 'PASSED' | 'FAILED' = 'ALL';
     messageTypeFilter: string = 'ALL';
+    originFilter: string = 'ALL';
+    availableOrigins: string[] = ['ALL', 'Pasted', 'Uploaded', 'Generated via Manual Entry'];
     readonly ALL_MESSAGE_TYPES: string[] = [
         'camt.052.001.08',
         'camt.053.001.08',
@@ -145,9 +147,9 @@ export class HistoryComponent implements OnInit {
                     this.dataSource.data = aggregated;
                     this.dataSource.paginator = this.paginator;
 
-                    // Custom filter to target ID, Message Type, AND Status Tab
+                    // Custom filter to target ID, Message Type, Status Tab, AND Origin
                     this.dataSource.filterPredicate = (record: any, filterValue: string) => {
-                        const [search, statusTab, msgType] = filterValue.split('|');
+                        const [search, statusTab, msgType, originVal] = filterValue.split('|');
 
                         // 1. Status Tab Filter
                         let matchStatus = false;
@@ -170,8 +172,17 @@ export class HistoryComponent implements OnInit {
                             if (!allTypes.some((t: string) => t === msgType)) return false;
                         }
 
-                        // 3. Text Search Filter
-                        const searchStr = `${record.batch_id || record.id || record.validation_id || ''} ${record.message_type || ''}`.toLowerCase();
+                        // 3. Origin Filter
+                        if (originVal && originVal !== 'ALL') {
+                            const allOrigins = [
+                                record.origin || 'Pasted',
+                                ...((record.batch_records || []).map((r: any) => r.origin || 'Pasted'))
+                            ];
+                            if (!allOrigins.some((o: string) => o === originVal)) return false;
+                        }
+
+                        // 4. Text Search Filter
+                        const searchStr = `${record.batch_id || record.id || record.validation_id || ''} ${record.message_type || ''} ${record.origin || 'Pasted'}`.toLowerCase();
                         return searchStr.includes(search.toLowerCase());
                     };
 
@@ -191,7 +202,7 @@ export class HistoryComponent implements OnInit {
             this.currentFilter = status;
         }
         // Use a combined string as the filter trigger
-        this.dataSource.filter = `${this.searchTerm.trim().toLowerCase()}|${this.currentFilter}|${this.messageTypeFilter}`;
+        this.dataSource.filter = `${this.searchTerm.trim().toLowerCase()}|${this.currentFilter}|${this.messageTypeFilter}|${this.originFilter}`;
 
         if (this.dataSource.paginator) {
             this.dataSource.paginator.firstPage();
@@ -207,6 +218,7 @@ export class HistoryComponent implements OnInit {
     toggleMsgTypeDropdown(e: Event) {
         e.stopPropagation();
         this.msgTypeDropdownOpen = !this.msgTypeDropdownOpen;
+        this.originDropdownOpen = false;
     }
 
     selectMsgType(e: Event, t: string) {
@@ -216,9 +228,25 @@ export class HistoryComponent implements OnInit {
         this.applyFilter();
     }
 
+    originDropdownOpen = false;
+
+    toggleOriginDropdown(e: Event) {
+        e.stopPropagation();
+        this.originDropdownOpen = !this.originDropdownOpen;
+        this.msgTypeDropdownOpen = false;
+    }
+
+    selectOrigin(e: Event, o: string) {
+        e.stopPropagation();
+        this.originFilter = o;
+        this.originDropdownOpen = false;
+        this.applyFilter();
+    }
+
     @HostListener('document:click')
     closeDropdown() {
         this.msgTypeDropdownOpen = false;
+        this.originDropdownOpen = false;
     }
 
     getPassedCount(): number {

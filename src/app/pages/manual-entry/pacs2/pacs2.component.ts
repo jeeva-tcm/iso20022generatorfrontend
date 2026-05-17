@@ -115,8 +115,8 @@ export class Pacs2Component implements OnInit, OnDestroy {
       fromBic: ['BBBBUS33XXX', BIC],
       toBic: ['CCCCGB2LXXX', BIC],
       bizMsgId: ['MSG-2026-FI-S-001', [Validators.required, Validators.maxLength(35)]],
-      msgDefIdr: ['pacs.002.001.10', Validators.required],
-      bizSvc: ['swift.cbprplus.02', Validators.required],
+      msgDefIdr: ['pacs.002.001.10', [Validators.required, Validators.maxLength(35)]],
+      bizSvc: ['swift.cbprplus.02', [Validators.required, Validators.maxLength(35)]],
       creDtTm: [this.isoNow(), Validators.required],
 
       // GrpHdr
@@ -124,7 +124,7 @@ export class Pacs2Component implements OnInit, OnDestroy {
 
       // OrgnlGrpInf
       orgnlMsgId: ['MSG-' + Date.now() + '-ORG', [Validators.required, Validators.maxLength(35)]],
-      orgnlMsgNmId: ['pacs.008.001.08', Validators.required],
+      orgnlMsgNmId: ['pacs.008.001.08', [Validators.required, Validators.maxLength(35)]],
       orgnlCreDtTm: [this.isoNow(), Validators.required],
 
       // TxRef
@@ -137,7 +137,7 @@ export class Pacs2Component implements OnInit, OnDestroy {
       txSts: ['ACTC', Validators.required],
 
       // StsRsnInf - Originator
-      stsRsnOrgtrName: [''],
+      stsRsnOrgtrName: ['', [Validators.maxLength(140)]],
       stsRsnOrgtrStrtNm: ['', Validators.maxLength(70)],
       stsRsnOrgtrBldgNb: ['', Validators.maxLength(16)],
       stsRsnOrgtrBldgNm: ['', Validators.maxLength(35)],
@@ -178,10 +178,10 @@ export class Pacs2Component implements OnInit, OnDestroy {
 
       // Reason
       stsRsnCd: [''],
-      stsRsnPrtry: [''],
+      stsRsnPrtry: ['', [Validators.maxLength(35)]],
 
       // AddtlInf
-      stsRsnAddtlInf: [''],
+      stsRsnAddtlInf: ['', [Validators.maxLength(105)]],
 
       // EffDt
       effDt: [''],
@@ -815,14 +815,8 @@ ${txInf.trimEnd()}
 
   closeValidationModal() { this.showValidationModal = false; }
   getValidationLayers() { return this.validationReport?.layer_status ? Object.keys(this.validationReport.layer_status) : []; }
-  isLayerPass(k: string) {
-    const s = this.getLayerStatus(k);
-    return s.includes('✅') || s === 'PASS' || s === 'SUCCESS';
-  }
-  isLayerFail(k: string) {
-    const s = this.getLayerStatus(k);
-    return s.includes('❌') || s === 'FAIL' || s === 'ERROR';
-  }
+  isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
+  isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
   isLayerWarn(k: string) {
     const s = this.getLayerStatus(k);
     return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');

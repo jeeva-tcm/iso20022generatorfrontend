@@ -1,4 +1,4 @@
-﻿.help-container {
+.help-container {
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
@@ -48,6 +48,17 @@
     box-shadow: var(--shadow-md) !important;
     overflow: hidden;
     padding: 8px;
+    transition: none !important;
+    transform: none !important;
+}
+
+.guide-card:hover,
+.faq-card:hover,
+.contact-card:hover,
+.resource-card:hover {
+    transform: none !important;
+    box-shadow: var(--shadow-md) !important;
+    transition: none !important;
 }
 
 mat-card-header {
@@ -88,7 +99,6 @@ mat-card-content {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 8px 16px rgba(37, 99, 235, 0.25);
     margin-top: 2px;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -162,7 +172,7 @@ mat-card-content {
     justify-content: center;
     position: relative;
     overflow: hidden;
-    padding: 32px 24px !important;
+    padding: 48px 24px 32px !important;
 }
 
 .contact-card::before {
@@ -183,16 +193,19 @@ mat-card-content {
 }
 
 .contact-icon {
-    font-size: 64px;
-    width: 64px;
-    height: 64px;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 48px !important;
+    width: 80px !important;
+    height: 80px !important;
     color: #fff;
     margin-bottom: 20px;
     background: rgba(255, 255, 255, 0.15);
-    padding: 18px;
     border-radius: 20px;
-    backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0 !important;
+    line-height: 1 !important;
 }
 
 .contact-card h2 {
@@ -226,7 +239,6 @@ mat-card-content {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin: 32px 0;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
     position: relative;
     z-index: 1;
@@ -234,8 +246,6 @@ mat-card-content {
 
 .btn-primary:hover {
     background: #f8fafc;
-    transform: translateY(-3px);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
 }
 
 .btn-primary mat-icon {
@@ -254,22 +264,23 @@ mat-card-content {
 
 .contact-details .label {
     font-size: 0.75rem;
-    color: #64748b;
+    color: #ffffff !important;
     font-weight: 700;
     text-transform: uppercase;
+    letter-spacing: 0.8px;
+    opacity: 1 !important;
 }
 
 .email-link {
-    color: #60a5fa;
+    color: #ffffff;
     text-decoration: none;
-    font-weight: 600;
+    font-weight: 800;
     font-size: 0.95rem;
-    transition: color 0.2s;
 }
 
 .email-link:hover {
-    color: #93c5fd;
-    text-decoration: underline;
+    color: #e0f2fe;
+    /* text-decoration: underline; */
 }
 
 /* ── Resource Links ── */
@@ -287,29 +298,27 @@ mat-card-content {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 16px;
-    background: rgba(255, 255, 255, 0.02);
+    padding: 13px 16px;
+    background: rgba(37, 99, 235, 0.06);
     border-radius: 12px;
-    color: #cbd5e1;
+    color: #60a5fa;
     text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 500;
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    transition: all 0.2s;
+    font-size: 0.92rem;
+    font-weight: 700;
+    border: 1px solid rgba(37, 99, 235, 0.15);
 }
 
 .resource-links a:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(37, 99, 235, 0.2);
-    color: #60a5fa;
-    transform: translateX(4px);
+    background: rgba(37, 99, 235, 0.12);
+    border-color: rgba(37, 99, 235, 0.35);
+    color: #93c5fd;
 }
 
 .resource-links mat-icon {
     font-size: 18px;
     width: 18px;
     height: 18px;
-    color: #64748b;
+    color: #3b82f6;
 }
 
 /* ── Mobile ── */

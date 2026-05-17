@@ -1,4 +1,4 @@
-﻿:host {
+:host {
     display: flex;
     flex-direction: column;
     height: 100vh;
@@ -399,7 +399,7 @@ textarea.code-editor {
     }
 }
 
-/* ═══ Validation ═══ */
+/* --- Validation --- */
 .validation-result-panel {
     margin-top: 1rem;
     padding: 1.25rem;
@@ -1305,6 +1305,21 @@ textarea.code-editor {
     margin-top: 3px;
     animation: fadeIn 0.2s ease;
 }
+
+.info-icon-small {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    vertical-align: middle;
+    color: var(--text-muted);
+    margin-left: 4px;
+    cursor: help;
+}
+
+input[list]::-webkit-calendar-picker-indicator {
+    display: flex !important;
+}
+
 
 .left-panel, .right-panel {
     scrollbar-width: thin;

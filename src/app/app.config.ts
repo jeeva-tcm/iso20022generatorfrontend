@@ -1,15 +1,15 @@
 import { ApplicationConfig, importProvidersFrom } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withPreloading, PreloadAllModules } from '@angular/router';
 import { routes } from './app.routes';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { HttpClientModule, provideHttpClient } from '@angular/common/http';
+import { HttpClientModule, provideHttpClient, withFetch } from '@angular/common/http';
 import { MatNativeDateModule } from '@angular/material/core';
 
 export const appConfig: ApplicationConfig = {
     providers: [
-        provideRouter(routes),
+        provideRouter(routes, withPreloading(PreloadAllModules)),
         provideAnimations(),
-        provideHttpClient(),
+        provideHttpClient(withFetch()),
         importProvidersFrom(MatNativeDateModule)
     ]
 };

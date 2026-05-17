@@ -409,6 +409,12 @@ body.light-theme .party-group-title {
     /* Ensure nothing clips children */
 }
 
+/* Ensure UETR control row doesn't take full width and wrap in party grid */
+.party-grid .uetr-control-row {
+    flex: 1;
+    width: auto !important;
+}
+
 body.light-theme .party-grid {
     background: #ffffff;
 }

@@ -212,13 +212,17 @@
                 <div class="layer-summaries-row">
                   <div class="layer-summary-pill" *ngFor="let k of getReportLayers(f.report)">
                     <div class="pill-left">
-                      <mat-icon [class.success]="!isLayerFail(f.report, k)" [class.error]="isLayerFail(f.report, k)">{{
-                        isLayerFail(f.report, k) ? 'cancel' : 'check_circle' }}</mat-icon>
+                      <mat-icon [class.success]="isLayerPass(f.report, k)" [class.error]="isLayerFail(f.report, k)" [style.color]="getLayerStatus(f.report, k).includes('SKIPPED') ? '#94a3b8' : ''">{{
+                        isLayerFail(f.report, k) ? 'cancel' : (getLayerStatus(f.report, k).includes('SKIPPED') ? 'block' : 'check_circle') }}</mat-icon>
                       <span>L{{k}} {{getLayerName(k)}}</span>
                     </div>
                     <div class="pill-right fail-text" *ngIf="isLayerFail(f.report, k)">
                       <mat-icon>close</mat-icon>
                       <span>Failed</span>
+                    </div>
+                    <div class="pill-right skipped-text" *ngIf="getLayerStatus(f.report, k).includes('SKIPPED')" style="color: #94a3b8; display: flex; align-items: center; gap: 4px; margin-left: auto;">
+                      <mat-icon style="font-size: 16px; width: 16px; height: 16px;">skip_next</mat-icon>
+                      <span>Skipped</span>
                     </div>
                   </div>
                 </div>
@@ -249,7 +253,7 @@
 
                   <div class="layer-issues" *ngIf="isLayerExpanded(f, l.name)">
                     <div class="issue-card" *ngFor="let issue of getFilteredIssues(f, l)"
-                      [class.expanded]="expandedIssue === issue"
+                      [class.expanded]="expandedIssue === issue.id"
                       [class.issue-error]="issue.severity === 'ERROR'"
                       [class.issue-warn]="issue.severity === 'WARNING'"
                       (click)="toggleIssue(issue)">
@@ -266,11 +270,11 @@
                         </div>
 
                         <div class="issue-right">
-                          <mat-icon class="issue-chevron" [class.rotated]="expandedIssue === issue">expand_more</mat-icon>
+                          <mat-icon class="issue-chevron" [class.rotated]="expandedIssue === issue.id">expand_more</mat-icon>
                         </div>
                       </div>
 
-                      <div class="issue-details-panel" *ngIf="expandedIssue === issue" (click)="$event.stopPropagation()">
+                      <div class="issue-details-panel" *ngIf="expandedIssue === issue.id" (click)="$event.stopPropagation()">
                         <div class="detail-grid">
                           <div class="detail-item">
                             <div class="di-label">OCCURRENCE PATH</div>

@@ -10,6 +10,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { UetrService } from '../../../services/uetr.service';
 import { debounceTime } from 'rxjs/operators';
+import { getValidationErrorMessage } from '../../../utils/validation-utils';
 
 @Component({
   selector: 'app-pain002',
@@ -270,16 +271,16 @@ export class Pain002Component implements OnInit, OnDestroy {
       head_rltd_enabled: [false],
       head_rltd_charSet: ['UTF-8'],
       head_rltd_fromBic: ['', BIC_OPT],
-      head_rltd_fromClrSysCd: [''],
+      head_rltd_fromClrSysCd: ['', [Validators.maxLength(5)]],
       head_rltd_fromMmbId: ['', [Validators.maxLength(35)]],
       head_rltd_fromLei: ['', LEI_PATTERN],
       head_rltd_toBic: ['', BIC_OPT],
-      head_rltd_toClrSysCd: [''],
+      head_rltd_toClrSysCd: ['', [Validators.maxLength(5)]],
       head_rltd_toMmbId: ['', [Validators.maxLength(35)]],
       head_rltd_toLei: ['', LEI_PATTERN],
       head_rltd_bizMsgIdr: ['', [Validators.maxLength(35)]],
       head_rltd_msgDefIdr: [''],
-      head_rltd_bizSvc: [''],
+      head_rltd_bizSvc: ['', [Validators.maxLength(35)]],
       head_rltd_creDt: [''],
       head_rltd_cpyDplct: [''],
       head_rltd_pssblDplct: [false],
@@ -357,12 +358,12 @@ export class Pain002Component implements OnInit, OnDestroy {
       prvtBirthDt: ['', [this.futureDateValidator]],
       prvtProv: ['', [Validators.maxLength(35)]],
       prvtCity: ['', [Validators.maxLength(35)]],
-      prvtCtry: [''],
+      prvtCtry: ['', [Validators.maxLength(2), Validators.pattern(/^[A-Z]{2}$/)]],
       prvtId: ['', [Validators.maxLength(35)]],
       prvtScheme: [''],
       prvtPrtry: ['', [Validators.maxLength(35)]],
       prvtIssr: ['', [Validators.maxLength(35)]],
-      ctryOfRes: ['']
+      ctryOfRes: ['', [Validators.maxLength(2), Validators.pattern(/^[A-Z]{2}$/)]]
     }, { validators: [this.partyIdValidator] });
   }
 
@@ -414,7 +415,7 @@ export class Pain002Component implements OnInit, OnDestroy {
       townLctn: ['', [Validators.maxLength(35)]],
       district: ['', [Validators.maxLength(35)]],
       ctrySub: ['', [Validators.maxLength(35)]],
-      ctry: [''],
+      ctry: ['', [Validators.maxLength(2), Validators.pattern(/^[A-Z]{2}$/)]],
       addrLines: this.fb.array([])
     });
   }
@@ -426,7 +427,7 @@ export class Pain002Component implements OnInit, OnDestroy {
       orgnlUetr: [this.uetrService.generate(), [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
       txSts: ['ACSC', Validators.required],
       orgtr: this.initPartyGroup(),
-      stsRsnCd: [''],
+      stsRsnCd: ['', [Validators.maxLength(4)]],
       addtlInf: this.fb.array([this.fb.control('', [Validators.maxLength(105)])])
     });
   }
@@ -694,8 +695,8 @@ ${doc.trimEnd()}
   onEditorChange(e: string) { this.generatedXml = e; this.refreshLineCount(); }
 
   validateMessage() {
-        if (this.bicSameWarning) return;
-        this.generateXml();
+    if (this.bicSameWarning) return;
+    this.generateXml();
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
@@ -721,12 +722,7 @@ ${doc.trimEnd()}
     if (this.limitMessages[path]) return this.limitMessages[path];
     if (this.leiValidationMessages[path]) return this.leiValidationMessages[path];
     const c = this.form.get(path);
-    if (!c || (c.pristine && !c.touched)) return null;
-    if (c.errors?.['required']) return 'Required';
-    if (c.errors?.['pattern']) return 'Invalid Format';
-    if (c.errors?.['maxlength']) return 'Too long';
-    if (c.errors?.['future_date']) return 'Date cannot be in future';
-    return null;
+    return getValidationErrorMessage(c, path);
   }
 
   hint(path: string, maxLen: number): string | null {
@@ -734,7 +730,7 @@ ${doc.trimEnd()}
     const c = this.form.get(path);
     if (!c || !c.value) return null;
     const len = c.value.toString().length;
-    if (len >= maxLen) return `Maximum ${maxLen} characters reached (${len}/${maxLen})`;
+    // Removed auto-showing warning when field is full by default
     return null;
   }
 
@@ -746,7 +742,10 @@ ${doc.trimEnd()}
   getLayerTime(k: string) { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
   isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
   isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
-  isLayerWarn(k: string) { const s = this.getLayerStatus(k); return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN'); }
+  isLayerWarn(k: string) {
+    const s = this.getLayerStatus(k);
+    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+  }
   getValidationIssues() { return this.validationReport?.details ?? []; }
   toggleValidationIssue(issue: any) { this.validationExpandedIssue = this.validationExpandedIssue === issue ? null : issue; }
   closeValidationModal() { this.showValidationModal = false; this.validationReport = null; this.validationStatus = 'idle'; this.validationExpandedIssue = null; }

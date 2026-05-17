@@ -23,6 +23,7 @@ export interface FileEntry {
   report: any;
   messageType: string;
   handle?: any;
+  origin?: 'Pasted' | 'Uploaded' | 'Generated via Manual Entry';
 }
 
 @Component({
@@ -350,6 +351,13 @@ export class ValidateComponent implements OnInit {
       const autoRun = params['autoRun'] === 'true';
       if (reportId) {
         this.loadValidationFromHistory(reportId, autoRun);
+        
+        // Clean query parameters from URL bar to prevent auto-loading the file again on page reload
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { reportId: null, autoRun: null },
+          queryParamsHandling: 'merge'
+        });
       }
     });
 
@@ -539,7 +547,8 @@ export class ValidateComponent implements OnInit {
             status: 'pending',
             report: null,
             messageType: '',
-            handle: (file as any).fileHandle
+            handle: (file as any).fileHandle,
+            origin: 'Uploaded'
           } as FileEntry;
         })
       );
@@ -607,9 +616,11 @@ export class ValidateComponent implements OnInit {
       status: 'pending',
       report: null,
       messageType: '',
+      origin: 'Pasted'
     };
     this.files = [...this.files, entry];
     this.selectedFile = entry;
+    this.saveWorkspace(); // PERSIST
     this.cdr.detectChanges();
     this.validateFile(entry);
   }
@@ -1020,11 +1031,22 @@ export class ValidateComponent implements OnInit {
       message_type: cleanType,
       store_in_history: true,
       batch_id: batchId || null,
-      file_id: fileId || null
+      file_id: fileId || null,
+      origin: entry.origin || 'Pasted'
     }).subscribe({
       next: (data: any) => {
+        if (data && data.details) {
+          data.details.forEach((issue: any, index: number) => {
+            issue.id = `issue_${index}`;
+          });
+        }
         entry.report = data;
         entry.messageType = data.message ?? '';
+        
+        // Rename pasted files to use the detected message type
+        if (entry.name.startsWith('pasted-') && entry.messageType && entry.messageType !== 'Unknown') {
+          entry.name = `${entry.messageType}.xml`;
+        }
         if (data.status === 'PASS') {
           entry.status = data.warnings > 0 ? 'warnings' : 'passed';
         } else {
@@ -1033,6 +1055,7 @@ export class ValidateComponent implements OnInit {
         if (!this.selectedFile || this.selectedFile === entry) {
           this.selectedFile = entry;
         }
+        this.saveWorkspace(); // PERSIST
         this.expandedIssue = null; // Reset stale expansion
       },
       error: () => {
@@ -1117,7 +1140,11 @@ export class ValidateComponent implements OnInit {
     this.http.get<any>(this.config.getApiUrl(`/history/${reportId}`)).subscribe({
       next: (data) => {
         if (data && data.original_message) {
-          const fileName = `re_run_${reportId.substring(0, 8)}.xml`;
+          let msgType = data.report?.message;
+          if (!msgType || msgType === 'Unknown') {
+            msgType = `re_run_${reportId.substring(0, 8)}`;
+          }
+          const fileName = `${msgType}.xml`;
 
           // Check if file already exists in workspace
           const existing = this.files.find(f => f.content === data.original_message);
@@ -1187,7 +1214,7 @@ export class ValidateComponent implements OnInit {
   getWarnings(report: any): any[] { return this.getIssues(report).filter(i => i.severity === 'WARNING'); }
 
   toggleIssue(issue: any) {
-    this.expandedIssue = this.expandedIssue === issue ? null : issue;
+    this.expandedIssue = this.expandedIssue === issue.id ? null : issue.id;
   }
 
   copyFix(text: string, e: MouseEvent) {
