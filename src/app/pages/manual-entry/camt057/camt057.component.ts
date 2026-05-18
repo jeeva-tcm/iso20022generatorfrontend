@@ -723,7 +723,7 @@ export class Camt057Component implements OnInit, OnDestroy {
     <Fr><FIId><FinInstnId><BICFI>${this.e(v.fromBic)}</BICFI></FinInstnId></FIId></Fr>
     <To><FIId><FinInstnId><BICFI>${this.e(v.toBic)}</BICFI></FinInstnId></FIId></To>
     <BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>
-    <MsgDefIdr>camt.057.001.08</MsgDefIdr>
+    <MsgDefIdr>camt.057.001.06</MsgDefIdr>
     <BizSvc>${this.e(v.bizSvc)}</BizSvc>
     <CreDt>${creDtTm}</CreDt>
   </AppHdr>
@@ -1211,7 +1211,7 @@ ${ntfctnPartiesXml}${itmXml}
         this.http.post(this.config.getApiUrl('/validate'), {
             xml_content: this.generatedXml,
             mode: 'Full 1-3',
-            message_type: 'camt.057.001.08',
+            message_type: 'camt.057.001.06',
             store_in_history: true
         }).subscribe({
             next: (data: any) => {
@@ -1222,7 +1222,7 @@ ${ntfctnPartiesXml}${itmXml}
             error: (err) => {
                 this.validationReport = {
                     status: 'FAIL', errors: 1, warnings: 0,
-                    message: 'camt.057.001.08', total_time_ms: 0,
+                    message: 'camt.057.001.06', total_time_ms: 0,
                     layer_status: {},
                     details: [{
                         severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
