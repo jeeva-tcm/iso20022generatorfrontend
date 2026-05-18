@@ -67,29 +67,29 @@ const MANUAL_ENTRY_MESSAGES: {
   type: string;
   bulkId: string;          // key used by the backend bulk generator
 }[] = [
-  // ── PACS Messages ──
-  { id: 'pacs.008.001.13', name: 'Customer Credit Transfer',     type: 'pacs', bulkId: 'pacs.008' },
-  { id: 'pacs.003.001.11', name: 'Customer Direct Debit',        type: 'pacs', bulkId: 'pacs.003' },
-  { id: 'pacs.009.001.12', name: 'FI Credit Transfer',           type: 'pacs', bulkId: 'pacs.009' },
-  { id: 'pacs.009.001.12_ADV', name: 'FI Credit Transfer (Adv)', type: 'pacs', bulkId: 'pacs.009.adv' },
-  { id: 'pacs.009.001.12 COV', name: 'FI Credit Transfer (Cov)', type: 'pacs', bulkId: 'pacs.009.cov' },
-  { id: 'pacs.004.001.14', name: 'Payment Return',               type: 'pacs', bulkId: 'pacs.004' },
-  { id: 'pacs.002.001.15', name: 'Payment Status Report',        type: 'pacs', bulkId: 'pacs.002' },
-  { id: 'pacs.010.001.06', name: 'Interbank Direct Debit',       type: 'pacs', bulkId: 'pacs.010' },
+  // ── PACS Messages (CBPR+ versions, aligned with manual entry / MT-to-MX) ──
+  { id: 'pacs.008.001.08', name: 'Customer Credit Transfer',     type: 'pacs', bulkId: 'pacs.008' },
+  { id: 'pacs.003.001.08', name: 'Customer Direct Debit',        type: 'pacs', bulkId: 'pacs.003' },
+  { id: 'pacs.009.001.08', name: 'FI Credit Transfer',           type: 'pacs', bulkId: 'pacs.009' },
+  { id: 'pacs.009.001.08_ADV', name: 'FI Credit Transfer (Adv)', type: 'pacs', bulkId: 'pacs.009.adv' },
+  { id: 'pacs.009.001.08 COV', name: 'FI Credit Transfer (Cov)', type: 'pacs', bulkId: 'pacs.009.cov' },
+  { id: 'pacs.004.001.09', name: 'Payment Return',               type: 'pacs', bulkId: 'pacs.004' },
+  { id: 'pacs.002.001.10', name: 'Payment Status Report',        type: 'pacs', bulkId: 'pacs.002' },
+  { id: 'pacs.010.001.03', name: 'Interbank Direct Debit',       type: 'pacs', bulkId: 'pacs.010' },
   { id: 'pacs.010.001.03', name: 'Margin Collection',            type: 'pacs', bulkId: 'pacs.010.v3' },
 
-  // ── CAMT Messages ──
-  { id: 'camt.057.001.08', name: 'Notification to Receive',              type: 'camt', bulkId: 'camt.057' },
-  { id: 'camt.052.001.13', name: 'Account Report',                       type: 'camt', bulkId: 'camt.052' },
-  { id: 'camt.053.001.13', name: 'Bank To Customer Statement',           type: 'camt', bulkId: 'camt.053' },
-  { id: 'camt.054.001.13', name: 'Debit Credit Notification',            type: 'camt', bulkId: 'camt.054' },
-  { id: 'camt.055.001.12', name: 'Customer Payment Cancellation Request',type: 'camt', bulkId: 'camt.055' },
-  { id: 'camt.056.001.11', name: 'FI To FI Payment Cancellation',        type: 'camt', bulkId: 'camt.056' },
+  // ── CAMT Messages (CBPR+ versions) ──
+  { id: 'camt.057.001.06', name: 'Notification to Receive',              type: 'camt', bulkId: 'camt.057' },
+  { id: 'camt.052.001.08', name: 'Account Report',                       type: 'camt', bulkId: 'camt.052' },
+  { id: 'camt.053.001.08', name: 'Bank To Customer Statement',           type: 'camt', bulkId: 'camt.053' },
+  { id: 'camt.054.001.08', name: 'Debit Credit Notification',            type: 'camt', bulkId: 'camt.054' },
+  { id: 'camt.055.001.08', name: 'Customer Payment Cancellation Request',type: 'camt', bulkId: 'camt.055' },
+  { id: 'camt.056.001.08', name: 'FI To FI Payment Cancellation',        type: 'camt', bulkId: 'camt.056' },
 
   // ── PAIN Messages ──
-  { id: 'pain.001.001.12', name: 'Credit Transfer Initiation',   type: 'pain', bulkId: 'pain.001' },
-  { id: 'pain.002.001.14', name: 'Payment Status Report',        type: 'pain', bulkId: 'pain.002' },
-  { id: 'pain.008.001.11', name: 'Direct Debit Initiation',      type: 'pain', bulkId: 'pain.008' },
+  { id: 'pain.001.001.09', name: 'Credit Transfer Initiation',   type: 'pain', bulkId: 'pain.001' },
+  { id: 'pain.002.001.10', name: 'Payment Status Report',        type: 'pain', bulkId: 'pain.002' },
+  { id: 'pain.008.001.08', name: 'Direct Debit Initiation',      type: 'pain', bulkId: 'pain.008' },
 ];
 
 @Component({
