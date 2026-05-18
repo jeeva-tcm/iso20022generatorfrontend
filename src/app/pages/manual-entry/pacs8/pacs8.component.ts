@@ -261,10 +261,15 @@ export class Pacs8Component implements OnInit, OnDestroy {
       const ctryCtrl = this.form.get(p + 'Ctry');
       const twnNmCtrl = this.form.get(p + 'TwnNm');
 
-      if (addrType && addrType !== 'none') {
+      // Country & Town are only mandatory when 'hybrid' is selected
+      if (addrType === 'hybrid') {
         if (!ctryCtrl?.hasValidator(Validators.required)) {
           ctryCtrl?.setValidators([Validators.required, Validators.pattern(/^[A-Z]{2,2}$/)]);
           ctryCtrl?.updateValueAndValidity({ emitEvent: false });
+        }
+        if (!twnNmCtrl?.hasValidator(Validators.required)) {
+          twnNmCtrl?.setValidators([Validators.required, Validators.maxLength(35), ADDR_PATTERN]);
+          twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
         }
       } else {
         if (ctryCtrl?.hasValidator(Validators.required)) {
@@ -272,14 +277,6 @@ export class Pacs8Component implements OnInit, OnDestroy {
           ctryCtrl?.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
           ctryCtrl?.updateValueAndValidity({ emitEvent: false });
         }
-      }
-
-      if (addrType === 'structured' || addrType === 'hybrid') {
-        if (!twnNmCtrl?.hasValidator(Validators.required)) {
-          twnNmCtrl?.setValidators([Validators.required, Validators.maxLength(35), ADDR_PATTERN]);
-          twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
-        }
-      } else {
         if (twnNmCtrl?.hasValidator(Validators.required)) {
           twnNmCtrl?.clearValidators();
           twnNmCtrl?.setValidators([Validators.maxLength(35), ADDR_PATTERN]);
