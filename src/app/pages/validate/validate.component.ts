@@ -497,12 +497,6 @@ export class ValidateComponent implements OnInit {
   }
 
   private async loadFiles(files: File[]) {
-    if (this.files.length + files.length > 100) {
-      this.snackBar.open(`Maximum 100 files allowed. You tried to add ${files.length} to ${this.files.length} existing.`, 'Dismiss', { duration: 5000 });
-      files = files.slice(0, 100 - this.files.length);
-      if (files.length === 0) return;
-    }
-
     const allowed = ['.xml', '.xsd', '.txt'];
     const validFiles = files.filter(file => {
       const isAllowed = allowed.some(ext => file.name.toLowerCase().endsWith(ext));
