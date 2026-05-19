@@ -108,8 +108,8 @@
                     <ng-container matColumnDef="origin">
                         <th mat-header-cell *matHeaderCellDef> Origin </th>
                         <td mat-cell *matCellDef="let element">
-                            <span class="origin-badge" [class]="(element.origin || 'Pasted').toLowerCase().split(' ').join('-')">
-                                {{element.origin || 'Pasted'}}
+                            <span class="origin-badge" [class]="getOriginClass(element.origin)">
+                                {{getOriginDisplay(element.origin)}}
                             </span>
                         </td>
                     </ng-container>

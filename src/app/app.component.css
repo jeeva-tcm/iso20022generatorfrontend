@@ -1,4 +1,4 @@
-﻿.header {
+.header {
     display: flex;
     align-items: center;
     padding: 0 40px;
@@ -23,6 +23,7 @@
     flex-shrink: 0;
     text-decoration: none;
     cursor: pointer;
+    margin-left: 60px;
 }
 
 .logo-mark {
@@ -603,6 +604,7 @@ body.light-theme .user-info img {
 
     .logo-container {
         font-size: 1.15rem;
+        margin-left: 20px;
     }
 
     .nav-links a {
@@ -631,6 +633,7 @@ body.light-theme .user-info img {
         font-size: 1.1rem;
         display: flex;
         align-items: center;
+        margin-left: 0;
     }
 
     .logo-container span {

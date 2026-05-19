@@ -46,7 +46,7 @@ export class HistoryComponent implements OnInit {
     currentFilter: 'ALL' | 'PASSED' | 'FAILED' = 'ALL';
     messageTypeFilter: string = 'ALL';
     originFilter: string = 'ALL';
-    availableOrigins: string[] = ['ALL', 'Pasted', 'Uploaded', 'Manual Entry', 'MT to MX'];
+    availableOrigins: string[] = ['ALL', 'Validate', 'Manual Entry', 'MT to MX'];
     readonly ALL_MESSAGE_TYPES: string[] = [
         'camt.052.001.08',
         'camt.053.001.08',
@@ -178,11 +178,15 @@ export class HistoryComponent implements OnInit {
                                 record.origin || 'Pasted',
                                 ...((record.batch_records || []).map((r: any) => r.origin || 'Pasted'))
                             ];
-                            if (!allOrigins.some((o: string) => o === originVal)) return false;
+                            if (originVal === 'Validate') {
+                                if (!allOrigins.some((o: string) => o === 'Pasted' || o === 'Uploaded')) return false;
+                            } else {
+                                if (!allOrigins.some((o: string) => o === originVal)) return false;
+                            }
                         }
 
                         // 4. Text Search Filter
-                        const searchStr = `${record.batch_id || record.id || record.validation_id || ''} ${record.message_type || ''} ${record.origin || 'Pasted'}`.toLowerCase();
+                        const searchStr = `${record.batch_id || record.id || record.validation_id || ''} ${record.message_type || ''} ${this.getOriginDisplay(record.origin)}`.toLowerCase();
                         return searchStr.includes(search.toLowerCase());
                     };
 
@@ -269,6 +273,22 @@ export class HistoryComponent implements OnInit {
 
     getStatusClass(status: string) {
         return status ? status.toLowerCase() : 'unknown';
+    }
+
+    getOriginDisplay(origin: string | undefined): string {
+        const val = origin || 'Pasted';
+        if (val === 'Pasted' || val === 'Uploaded') {
+            return 'Validate';
+        }
+        return val;
+    }
+
+    getOriginClass(origin: string | undefined): string {
+        const val = origin || 'Pasted';
+        if (val === 'Pasted' || val === 'Uploaded') {
+            return 'validate';
+        }
+        return val.toLowerCase().split(' ').join('-');
     }
 
     onViewDetails(element: any) {
