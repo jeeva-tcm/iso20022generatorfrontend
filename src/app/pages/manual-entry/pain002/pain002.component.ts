@@ -564,14 +564,14 @@ export class Pain002Component implements OnInit, OnDestroy {
     doc += this.branch('OrgnlPmtInfAndSts', orgnlPmt, 3);
     this.generatedXml = `<?xml version="1.0" encoding="UTF-8"?>
 <BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
-	<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
+  <AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
 ${bah.trimEnd()}
-	</AppHdr>
-	<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.002.001.10">
-		<CstmrPmtStsRpt>
+  </AppHdr>
+  <Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.002.001.10">
+    <CstmrPmtStsRpt>
 ${doc.trimEnd()}
-		</CstmrPmtStsRpt>
-	</Document>
+    </CstmrPmtStsRpt>
+  </Document>
 </BusMsgEnvlp>`;
     this.refreshLineCount();
   }
@@ -680,8 +680,8 @@ ${doc.trimEnd()}
     return this.branch('PstlAdr', a, ind);
   }
 
-  leaf(t: string, v: any, i: number) { return v ? `${'\t'.repeat(i)}<${t}>${v}</${t}>\n` : ''; }
-  branch(t: string, c: string, i: number) { return c.trim() ? `${'\t'.repeat(i)}<${t}>\n${c.trimEnd()}\n${'\t'.repeat(i)}</${t}>\n` : ''; }
+  leaf(t: string, v: any, i: number) { return v ? `${'  '.repeat(i)}<${t}>${v}</${t}>\n` : ''; }
+  branch(t: string, c: string, i: number) { return c.trim() ? `${'  '.repeat(i)}<${t}>\n${c.trimEnd()}\n${'  '.repeat(i)}</${t}>\n` : ''; }
 
   refreshLineCount() { this.editorLineCount = Array.from({ length: (this.generatedXml || '').split('\n').length }, (_, i) => i + 1); }
   syncScroll(e: any, g: any) { g.scrollTop = e.scrollTop; }
@@ -811,3 +811,4 @@ ${doc.trimEnd()}
     if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
   }
 }
+
