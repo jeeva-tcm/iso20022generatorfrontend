@@ -4,15 +4,14 @@ import { initializeApp } from "firebase/app";
 export const environment = {
     production: false,
     apiBaseUrl: 'http://localhost:8001',
-    firebaseConfig: {
-        
-        apiKey: "AIzaSyBfcr6vXTJW6Rm5mvkYz5FYPxsX0VQJxBU",
-  authDomain: "isovalidator-118ef.firebaseapp.com",
-  projectId: "isovalidator-118ef",
-  storageBucket: "isovalidator-118ef.firebasestorage.app",
-  messagingSenderId: "846063121477",
-  appId: "1:846063121477:web:177dd17aa6c0aeeee95f2c",
-  measurementId: "G-DLL7243BQ1"
+    firebaseConfig: { 
+  apiKey: "AIzaSyAPTEMlCYttDUBpUm9-cz0rOQGZMJgZEuQ",
+  authDomain: "isovalidatior-19may.firebaseapp.com",
+  projectId: "isovalidatior-19may",
+  storageBucket: "isovalidatior-19may.firebasestorage.app",
+  messagingSenderId: "879073355696",
+  appId: "1:879073355696:web:290f7c9e7d393b099d9875",
+  measurementId: "G-J7V5H7DG1R"
     }
 };
 const app = initializeApp(environment.firebaseConfig);

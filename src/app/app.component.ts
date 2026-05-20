@@ -8,6 +8,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { filter } from 'rxjs/operators';
 import { ThemeService } from './services/theme.service';
+import { BackendWarmupService } from './services/backend-warmup.service';
 import { ChatbotComponent } from './chatbot/chatbot.component';
 
 
@@ -40,10 +41,16 @@ export class AppComponent implements OnInit {
 
     constructor(
         private router: Router,
-        private themeService: ThemeService
+        private themeService: ThemeService,
+        private warmup: BackendWarmupService
     ) { }
 
     ngOnInit() {
+        // Fire-and-forget: wakes the Render backend immediately on app boot
+        // and keeps it warm with a periodic ping so Vercel users don't hit
+        // 30-60s cold-start latency. Also logs Firestore connectivity.
+        this.warmup.start();
+
         this.updateState(this.router.url);
 
         this.router.events.pipe(

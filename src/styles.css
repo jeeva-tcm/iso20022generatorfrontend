@@ -1300,3 +1300,9 @@ body.light-theme .draft-clear-btn {
 .cdk-overlay-container, .cdk-global-overlay-wrapper {
     z-index: 99999 !important;
 }
+
+/* Custom Code Editor Tab Size Indentation Fix */
+textarea.code-editor {
+    tab-size: 4 !important;
+    -moz-tab-size: 4 !important;
+}
