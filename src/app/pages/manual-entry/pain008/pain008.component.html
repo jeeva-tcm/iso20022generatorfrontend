@@ -17,14 +17,14 @@
                         </button>
                     </div>
 
-                    <!-- â•â•â• AppHdr â•â•â• -->
+                    <!-- ═══ AppHdr ═══ -->
                     <div class="section-title">Message Header (AppHdr)</div>
                     <div class="form-group"><label>CharSet</label><input formControlName="charSet" maxlength="20" placeholder="Optional">
                         <div class="validation-msg" *ngIf="err('charSet') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('charSet', 20) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
-                        <label>Sender BIC <span class="req">*</span></label>
+                        <label>From BIC <span class="req">*</span></label>
                         <div class="uetr-control-row">
                             <input formControlName="fromBic" maxlength="11" class="auto-uppercase">
                             <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('fromBic', form)" matTooltip="Search BIC">
@@ -47,7 +47,7 @@
                         <div class="field-hint at-limit" *ngIf="hint('fromLei', 20) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
-                        <label>Receiver BIC <span class="req">*</span></label>
+                        <label>To BIC <span class="req">*</span></label>
                         <div class="uetr-control-row">
                             <input formControlName="toBic" maxlength="11" class="auto-uppercase">
                             <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('toBic', form)" matTooltip="Search BIC">
@@ -107,7 +107,7 @@
                         <div class="validation-msg" *ngIf="err('prty') as e">{{e}}</div>
                     </div>
 
-                    <!-- â•â•â• Rltd (Related Header) â•â•â• -->
+                    <!-- ═══ Rltd (Related Header) ═══ -->
                     <div class="party-group">
                         <div class="party-group-title">Related Message (Rltd)</div>
                         <div class="party-grid">
@@ -177,7 +177,7 @@
                         </div>
                     </div>
 
-                    <!-- â•â•â• GrpHdr â•â•â• -->
+                    <!-- ═══ GrpHdr ═══ -->
                     <div class="section-title">Group Header</div>
                     <div class="form-group"><label>Message ID <span class="req">*</span></label><input formControlName="msgId" maxlength="35">
                         <div class="validation-msg" *ngIf="err('msgId') as e">{{e}}</div>
@@ -319,7 +319,7 @@
                         </div>
                     </div>
 
-                    <!-- â•â•â• PmtInf â•â•â• -->
+                    <!-- ═══ PmtInf ═══ -->
                     <div class="section-title">Payment Information</div>
                     <div class="form-group"><label>Pmt Information ID <span class="req">*</span></label><input formControlName="pmtInfId" maxlength="35">
                         <div class="validation-msg" *ngIf="err('pmtInfId') as e">{{e}}</div>
@@ -541,7 +541,7 @@
                         </div>
                     </div>
 
-                    <!-- â•â•â• Transactions (DrctDbtTxInf) â•â•â• -->
+                    <!-- ═══ Transactions (DrctDbtTxInf) ═══ -->
                     <div class="section-title">
                         <mat-icon style="font-size: 18px; width: 18px; height: 18px; color: var(--accent-color);">receipt_long</mat-icon>
                         Direct Debit Transactions ({{transactions.length}})
@@ -625,7 +625,7 @@
                                     <select formControlName="chrgBr"><option *ngFor="let cb of chargeBearers" [value]="cb">{{cb}}</option></select></div>
                                     <div class="validation-msg" *ngIf="err('chrgBr') as e">{{e}}</div>
 
-                                <!-- â”€â”€ Mandate Related Info â”€â”€ -->
+                                <!-- ── Mandate Related Info ── -->
                                 <div class="mandate-section">
                                     <div class="party-group-title"><mat-icon>description</mat-icon> Mandate Related Information</div>
                                     <div class="mandate-grid">
@@ -1404,7 +1404,7 @@
                                                 XML</button>
                                         <button type="button" class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon>
                                                 Download XML</button>
-                                        <button type="button" class="action-btn validate-btn" (click)="validateMessage()" >
+                                        <button type="button" class="action-btn validate-btn" (click)="validateMessage()" [disabled]="form.invalid">
                                                 <mat-icon>verified</mat-icon> Validate Message
                                         </button>
                                 </div>

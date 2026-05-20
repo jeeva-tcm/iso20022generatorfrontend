@@ -21,7 +21,7 @@
 
                     <div class="section-title">Message Header</div>
                     <div class="form-group">
-                        <label>Sender BIC <span class="req">*</span></label>
+                        <label>From BIC <span class="req">*</span></label>
                         <div class="uetr-control-row">
                             <input formControlName="fromBic" 
                                 pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$" 
@@ -36,7 +36,7 @@
                         <div class="field-hint at-limit" *ngIf="hint('fromBic', 11) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
-                        <label>Receiver BIC <span class="req">*</span></label>
+                        <label>To BIC <span class="req">*</span></label>
                         <div class="uetr-control-row">
                             <input formControlName="toBic" 
                                 pattern="^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$" 
@@ -145,7 +145,7 @@
                         <label>Reason Code <span class="req" *ngIf="form.get('txSts')?.value === 'RJCT' || form.get('txSts')?.value === 'PDNG'">*</span></label>
                         <select formControlName="stsRsnCd">
                             <option value="">-- Select Reason --</option>
-                            <option *ngFor="let c of currentReasonCodes" [value]="c.split(' â€“ ')[0]">{{c}}</option>
+                            <option *ngFor="let c of currentReasonCodes" [value]="c.split(' – ')[0]">{{c}}</option>
                         </select>
                         <div class="validation-msg" *ngIf="err('stsRsnCd') as e">{{e}}</div>
                     </div>
@@ -342,7 +342,7 @@
                                                 XML</button>
                                         <button type="button" class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon>
                                                 Download XML</button>
-                                        <button type="button" class="action-btn validate-btn" (click)="validateMessage()" >
+                                        <button type="button" class="action-btn validate-btn" (click)="validateMessage()" [disabled]="form.invalid">
                                                 <mat-icon>verified</mat-icon> Validate Message
                                         </button>
                                 </div>

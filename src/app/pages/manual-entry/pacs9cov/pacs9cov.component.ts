@@ -390,7 +390,7 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
             prvsInstgAgt1Acct: [''], prvsInstgAgt2Acct: [''], prvsInstgAgt3Acct: [''],
             intrmyAgt1Acct: [''], intrmyAgt2Acct: [''], intrmyAgt3Acct: [''],
 
-            // COV — UndrlygCstmrCdtTrf fields
+            // COV â€” UndrlygCstmrCdtTrf fields
             covDbtrName: ['Debtor Name', [Validators.required, Validators.maxLength(140), SAFE_NAME]],
             covDbtrAcct: ['471932901234'],
             covDbtrOrgAnyBIC: ['BBBBUS33XXX', BIC],
@@ -462,7 +462,7 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
             if (!c[p + 'Acct']) c[p + 'Acct'] = ['', [Validators.maxLength(34), Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
         });
         // Address prefixes for COV parties (Debtor / Creditor in UndrlygCstmrCdtTrf)
-        // covDbtr and covCdtr are mandatory and ship with full address data — they default to 'hybrid'.
+        // covDbtr and covCdtr are mandatory and ship with full address data â€” they default to 'hybrid'.
         this.covPartyPrefixes.forEach(p => {
             if (!c[p + 'AddrType']) {
                 c[p + 'AddrType'] = ['covDbtr', 'covCdtr'].includes(p) ? 'hybrid' : 'none';
@@ -588,7 +588,7 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
     }
 
     /**
-     * UETR Refresh — generates a new UUID v4, validates, updates form.
+     * UETR Refresh â€” generates a new UUID v4, validates, updates form.
      */
     refreshUetr(): void {
         this.uetrError = null;
@@ -778,7 +778,7 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
         const v = this.form.value;
         let creDtTm = this.fdt(v.creDtTm || this.isoNow());
 
-        // CdtTrfTxInf — pacs.009.001.08 COV element order
+        // CdtTrfTxInf â€” pacs.009.001.08 COV element order
         let tx = '';
         let pmtIdXml = this.el('InstrId', v.instrId) + this.el('EndToEndId', v.endToEndId) + this.el('UETR', v.uetr);
         if (v.clrSysRef?.trim()) pmtIdXml += this.el('ClrSysRef', v.clrSysRef);
@@ -1128,7 +1128,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 b += `\t\t\t\t<InstrForNxtAgt>\n${inner}\t\t\t\t</InstrForNxtAgt>\n`;
             }
         }
-        // RmtInf (optional — inside UndrlygCstmrCdtTrf)
+        // RmtInf (optional â€” inside UndrlygCstmrCdtTrf)
         if (v.rmtInfType === 'ustrd') {
             let ustrdContent = '';
             if (v.rmtInfUstrd?.trim()) {
@@ -1173,7 +1173,6 @@ ${tx}\t\t\t</CdtTrfTxInf>
     // Validation
     validateMessage() {
                 if (this.bicSameWarning) return;
-                this.generateXml();
         if (this.form.invalid) {
             this.form.markAllAsTouched();
             this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
@@ -1204,7 +1203,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
                     layer_status: {},
                     details: [{
                         severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
-                        path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'),
+                        path: '', message: 'Validation failed â€” ' + (err.error?.detail?.message || 'backend not reachable.'),
                         fix_suggestion: 'Ensure the validation server is running.'
                     }]
                 };
@@ -1644,11 +1643,11 @@ ${tx}\t\t\t</CdtTrfTxInf>
 
     getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
     getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
-    isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
-  isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
+    isLayerPass(k: string) { return this.getLayerStatus(k).includes('âœ…'); }
+  isLayerFail(k: string) { return this.getLayerStatus(k).includes('âŒ'); }
   isLayerWarn(k: string) {
     const s = this.getLayerStatus(k);
-    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+    return s.includes('âš ') || s.includes('WARNING') || s.includes('WARN');
   }
 
     getValidationIssues(): any[] { return this.validationReport?.details ?? []; }

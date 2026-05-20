@@ -1,4 +1,4 @@
-﻿<div class="container">
+<div class="container">
         <header>
                 <h1>Direct Debit Transfer (pacs.003) <mat-icon class="title-icon">payments</mat-icon></h1>
                 <!-- <p style="margin-top: -1rem;">Visual PACS.003 Message Builder</p> -->
@@ -30,7 +30,7 @@
                                                  <div class="validation-msg" *ngIf="err('fromLei') as e">{{e}}</div>
                                                  <div class="field-hint at-limit" *ngIf="hint('fromLei', 20) as h">{{h}}</div>
                                           </div>
-                                        <div class="form-group"><label>Sender BIC <span
+                                        <div class="form-group"><label>From BIC <span
                                                                 class="req">*</span></label>
                                                 <div class="uetr-control-row">
                                                          <input formControlName="fromBic" maxlength="11" class="auto-uppercase" required>
@@ -47,7 +47,7 @@
                                         </div><div class="form-group"><label>Related Msg CharSet</label><input formControlName="rltdCharSet">
                                                 <div class="validation-msg" *ngIf="err('rltdCharSet') as e">{{e}}</div>
                                         </div>
-                                         <div class="form-group"><label>Receiver BIC <span class="req">*</span></label>
+                                         <div class="form-group"><label>To BIC <span class="req">*</span></label>
                                                  <div class="uetr-control-row">
                                                           <input formControlName="toBic" maxlength="11" class="auto-uppercase" required>
                                                           <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('toBic', form)" title="Search BIC">
@@ -570,7 +570,7 @@
 
                                         <!-- Instructions for Creditor Agent (0..2) -->
                                         <div class="section-title">Instructions for Creditor Agent <span
-                                                        class="opt">Optional Â· max 2</span></div>
+                                                        class="opt">Optional · max 2</span></div>
                                         <div class="party-group">
                                                 <div class="party-group-title">Instr for Creditor Agent 1</div>
                                                 <div [formGroup]="form" class="party-grid">
@@ -578,13 +578,13 @@
                                                                 <label>Instruction Code</label>
                                                                 <select formControlName="instrForCdtrAgt1Cd">
                                                                         <option value="">None</option>
-                                                                        <option value="CHQB">CHQB â€“ Please pay by cheque
+                                                                        <option value="CHQB">CHQB – Please pay by cheque
                                                                         </option>
-                                                                        <option value="HOLD">HOLD â€“ Hold until advised
+                                                                        <option value="HOLD">HOLD – Hold until advised
                                                                         </option>
-                                                                        <option value="PHOB">PHOB â€“ Phone beneficiary
+                                                                        <option value="PHOB">PHOB – Phone beneficiary
                                                                                 before payment</option>
-                                                                        <option value="TELB">TELB â€“ Telecom / Other
+                                                                        <option value="TELB">TELB – Telecom / Other
                                                                                 beneficiary contact</option>
                                                                 </select>
                                                                 <div class="validation-msg" *ngIf="err('instrForCdtrAgt1Cd') as e">{{e}}</div>
@@ -606,13 +606,13 @@
                                                                 <label>Instruction Code</label>
                                                                 <select formControlName="instrForCdtrAgt2Cd">
                                                                         <option value="">None</option>
-                                                                        <option value="CHQB">CHQB â€“ Please pay by cheque
+                                                                        <option value="CHQB">CHQB – Please pay by cheque
                                                                         </option>
-                                                                        <option value="HOLD">HOLD â€“ Hold until advised
+                                                                        <option value="HOLD">HOLD – Hold until advised
                                                                         </option>
-                                                                        <option value="PHOB">PHOB â€“ Phone beneficiary
+                                                                        <option value="PHOB">PHOB – Phone beneficiary
                                                                                 before payment</option>
-                                                                        <option value="TELB">TELB â€“ Telecom / Other
+                                                                        <option value="TELB">TELB – Telecom / Other
                                                                                 beneficiary contact</option>
                                                                 </select>
                                                                 <div class="validation-msg" *ngIf="err('instrForCdtrAgt2Cd') as e">{{e}}</div>
@@ -630,7 +630,7 @@
 
                                         <!-- Instructions for Next Agent (0..6) -->
                                         <div class="section-title">Instructions for Next Agent <span
-                                                        class="opt">Optional Â· max 6</span></div>
+                                                        class="opt">Optional · max 6</span></div>
                                         <div class="party-group">
                                                 <div class="party-group-title">Instr for Next Agent 1</div>
                                                 <div [formGroup]="form" class="party-grid">
@@ -638,9 +638,9 @@
                                                                 <label>Instruction Code</label>
                                                                 <select formControlName="instrForNxtAgt1Cd">
                                                                         <option value="">None</option>
-                                                                        <option value="PHOA">PHOA â€“ Phone account owner
+                                                                        <option value="PHOA">PHOA – Phone account owner
                                                                         </option>
-                                                                        <option value="TELA">TELA â€“ Telecom account
+                                                                        <option value="TELA">TELA – Telecom account
                                                                                 owner</option>
                                                                 </select>
                                                                 <div class="validation-msg" *ngIf="err('instrForNxtAgt1Cd') as e">{{e}}</div>
@@ -660,9 +660,9 @@
                                                                 <label>Instruction Code</label>
                                                                 <select formControlName="instrForNxtAgt2Cd">
                                                                         <option value="">None</option>
-                                                                        <option value="PHOA">PHOA â€“ Phone account owner
+                                                                        <option value="PHOA">PHOA – Phone account owner
                                                                         </option>
-                                                                        <option value="TELA">TELA â€“ Telecom account
+                                                                        <option value="TELA">TELA – Telecom account
                                                                                 owner</option>
                                                                 </select>
                                                                 <div class="validation-msg" *ngIf="err('instrForNxtAgt2Cd') as e">{{e}}</div>
@@ -682,9 +682,9 @@
                                                                 <label>Instruction Code</label>
                                                                 <select formControlName="instrForNxtAgt3Cd">
                                                                         <option value="">None</option>
-                                                                        <option value="PHOA">PHOA â€“ Phone account owner
+                                                                        <option value="PHOA">PHOA – Phone account owner
                                                                         </option>
-                                                                        <option value="TELA">TELA â€“ Telecom account
+                                                                        <option value="TELA">TELA – Telecom account
                                                                                 owner</option>
                                                                 </select>
                                                                 <div class="validation-msg" *ngIf="err('instrForNxtAgt3Cd') as e">{{e}}</div>
@@ -704,9 +704,9 @@
                                                                 <label>Instruction Code</label>
                                                                 <select formControlName="instrForNxtAgt4Cd">
                                                                         <option value="">None</option>
-                                                                        <option value="PHOA">PHOA â€“ Phone account owner
+                                                                        <option value="PHOA">PHOA – Phone account owner
                                                                         </option>
-                                                                        <option value="TELA">TELA â€“ Telecom account
+                                                                        <option value="TELA">TELA – Telecom account
                                                                                 owner</option>
                                                                 </select>
                                                                 <div class="validation-msg" *ngIf="err('instrForNxtAgt4Cd') as e">{{e}}</div>
@@ -726,9 +726,9 @@
                                                                 <label>Instruction Code</label>
                                                                 <select formControlName="instrForNxtAgt5Cd">
                                                                         <option value="">None</option>
-                                                                        <option value="PHOA">PHOA â€“ Phone account owner
+                                                                        <option value="PHOA">PHOA – Phone account owner
                                                                         </option>
-                                                                        <option value="TELA">TELA â€“ Telecom account
+                                                                        <option value="TELA">TELA – Telecom account
                                                                                 owner</option>
                                                                 </select>
                                                                 <div class="validation-msg" *ngIf="err('instrForNxtAgt5Cd') as e">{{e}}</div>
@@ -748,9 +748,9 @@
                                                                 <label>Instruction Code</label>
                                                                 <select formControlName="instrForNxtAgt6Cd">
                                                                         <option value="">None</option>
-                                                                        <option value="PHOA">PHOA â€“ Phone account owner
+                                                                        <option value="PHOA">PHOA – Phone account owner
                                                                         </option>
-                                                                        <option value="TELA">TELA â€“ Telecom account
+                                                                        <option value="TELA">TELA – Telecom account
                                                                                 owner</option>
                                                                 </select>
                                                                 <div class="validation-msg" *ngIf="err('instrForNxtAgt6Cd') as e">{{e}}</div>
@@ -969,7 +969,7 @@
                                                 XML</button>
                                         <button type="button" class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon>
                                                 Download XML</button>
-                                        <button type="button" class="action-btn validate-btn" (click)="validateMessage()" >
+                                        <button type="button" class="action-btn validate-btn" (click)="validateMessage()" [disabled]="form.invalid">
                                                 <mat-icon>verified</mat-icon> Validate Message
                                         </button>
                                 </div>

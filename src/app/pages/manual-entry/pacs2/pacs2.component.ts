@@ -48,23 +48,23 @@ export class Pacs2Component implements OnInit, OnDestroy {
   statusCodes = ['ACTC', 'ACCP', 'RJCT', 'PDNG'];
   reasonCodes: { [key: string]: string[] } = {
     'RJCT': [
-      'AC01 – Incorrect Account Number',
-      'AC04 – Closed Account',
-      'AC06 – Blocked Account',
-      'AG01 – Transaction Forbidden',
-      'AG02 – Invalid Bank',
-      'AM04 – Insufficient Funds',
-      'BE01 – Invalid Beneficiary',
-      'FF01 – Fraud Suspected',
-      'RC01 – Invalid BIC'
+      'AC01 â€“ Incorrect Account Number',
+      'AC04 â€“ Closed Account',
+      'AC06 â€“ Blocked Account',
+      'AG01 â€“ Transaction Forbidden',
+      'AG02 â€“ Invalid Bank',
+      'AM04 â€“ Insufficient Funds',
+      'BE01 â€“ Invalid Beneficiary',
+      'FF01 â€“ Fraud Suspected',
+      'RC01 â€“ Invalid BIC'
     ],
     'PDNG': [
-      'PD01 – Pending Processing',
-      'PD02 – Awaiting Funds',
-      'PD03 – Awaiting Authorization'
+      'PD01 â€“ Pending Processing',
+      'PD02 â€“ Awaiting Funds',
+      'PD03 â€“ Awaiting Authorization'
     ],
-    'ACCP': ['NARR – No specific reason / informational'],
-    'ACTC': ['NARR – No specific reason / informational']
+    'ACCP': ['NARR â€“ No specific reason / informational'],
+    'ACTC': ['NARR â€“ No specific reason / informational']
   };
 
   get currentReasonCodes() {
@@ -714,7 +714,6 @@ ${txInf.trimEnd()}
 
   validateMessage() {
         if (this.bicSameWarning) return;
-        this.generateXml();
     this.form.markAllAsTouched();
     if (this.form.invalid) {
       this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
@@ -745,7 +744,7 @@ ${txInf.trimEnd()}
           layer_status: {},
           details: [{
             severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
-            path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend error.'),
+            path: '', message: 'Validation failed â€” ' + (err.error?.detail?.message || 'backend error.'),
             fix_suggestion: 'Verify your network or if the validation service is up.'
           }]
         };
@@ -818,11 +817,11 @@ ${txInf.trimEnd()}
 
   closeValidationModal() { this.showValidationModal = false; }
   getValidationLayers() { return this.validationReport?.layer_status ? Object.keys(this.validationReport.layer_status) : []; }
-  isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
-  isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
+  isLayerPass(k: string) { return this.getLayerStatus(k).includes('âœ…'); }
+  isLayerFail(k: string) { return this.getLayerStatus(k).includes('âŒ'); }
   isLayerWarn(k: string) {
     const s = this.getLayerStatus(k);
-    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+    return s.includes('âš ') || s.includes('WARNING') || s.includes('WARN');
   }
   getLayerName(k: string) { const m: any = { '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' }; return m[k] || `Layer ${k}`; }
   getLayerTime(k: string) { return this.validationReport.layer_status[k]?.time || 0; }

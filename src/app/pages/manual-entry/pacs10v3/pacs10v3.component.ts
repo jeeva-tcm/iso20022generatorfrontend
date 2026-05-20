@@ -759,10 +759,149 @@ ${this.rmtInf(v)}
         return this.tag('PstlAdr', res, tabs);
     }
 
+    parseXmlToForm(xml: string) {
+        if (!xml?.trim()) return;
+        try {
+            const cleanXml = xml.replace(/<(\/?)(?:[\w]+:)/g, '<$1');
+            const doc = new DOMParser().parseFromString(cleanXml, 'text/xml');
+            if (doc.querySelector('parsererror')) return;
+
+            const patch: any = {};
+            Object.keys(this.form.controls).forEach(k => patch[k] = '');
+
+            const tval = (el: Element | Document, tag: string) =>
+                el.getElementsByTagName(tag)[0]?.textContent?.trim() || '';
+
+            patch['fromBic'] = doc.getElementsByTagName('Fr')[0]
+                ?.getElementsByTagName('BICFI')[0]?.textContent?.trim() || '';
+            patch['toBic'] = doc.getElementsByTagName('To')[0]
+                ?.getElementsByTagName('BICFI')[0]?.textContent?.trim() || '';
+            patch['bizMsgId'] = tval(doc, 'BizMsgIdr');
+            patch['msgId'] = tval(doc, 'MsgId');
+            patch['creDtTm'] = tval(doc, 'CreDtTm') || tval(doc, 'CreDt');
+
+            const cdtInstr = doc.getElementsByTagName('CdtInstr')[0];
+            if (cdtInstr) {
+                patch['cdtId'] = tval(cdtInstr, 'CdtId');
+
+                const parseAgt = (tag: string, pfx: string) => {
+                    const node = cdtInstr.getElementsByTagName(tag)[0];
+                    if (!node) return;
+                    const fi = node.getElementsByTagName('FinInstnId')[0];
+                    if (fi) {
+                        patch[pfx + 'Bic'] = tval(fi, 'BICFI');
+                        patch[pfx + 'Name'] = tval(fi, 'Nm');
+                        patch[pfx + 'Lei'] = tval(fi, 'LEI');
+                        const clr = fi.getElementsByTagName('ClrSysMmbId')[0];
+                        if (clr) {
+                            patch[pfx + 'ClrSysMmbId'] = tval(clr, 'MmbId');
+                            patch[pfx + 'ClrSysCd'] = clr.getElementsByTagName('ClrSysId')[0]
+                                ?.getElementsByTagName('Cd')[0]?.textContent?.trim() || '';
+                        }
+                        const pstl = fi.getElementsByTagName('PstlAdr')[0];
+                        if (pstl) {
+                            patch[pfx + 'AddrType'] = 'structured';
+                            patch[pfx + 'Dept'] = tval(pstl, 'Dept');
+                            patch[pfx + 'SubDept'] = tval(pstl, 'SubDept');
+                            patch[pfx + 'StrtNm'] = tval(pstl, 'StrtNm');
+                            patch[pfx + 'BldgNb'] = tval(pstl, 'BldgNb');
+                            patch[pfx + 'BldgNm'] = tval(pstl, 'BldgNm');
+                            patch[pfx + 'Flr'] = tval(pstl, 'Flr');
+                            patch[pfx + 'PstBx'] = tval(pstl, 'PstBx');
+                            patch[pfx + 'Room'] = tval(pstl, 'Room');
+                            patch[pfx + 'PstCd'] = tval(pstl, 'PstCd');
+                            patch[pfx + 'TwnNm'] = tval(pstl, 'TwnNm');
+                            patch[pfx + 'TwnLctnNm'] = tval(pstl, 'TwnLctnNm');
+                            patch[pfx + 'Ctry'] = tval(pstl, 'Ctry');
+                            const adrLines = pstl.getElementsByTagName('AdrLine');
+                            if (adrLines.length > 0) {
+                                patch[pfx + 'AddrType'] = 'hybrid';
+                                for (let i = 0; i < Math.min(adrLines.length, 7); i++) {
+                                    patch[pfx + 'AdrLine' + (i + 1)] = adrLines[i].textContent?.trim() || '';
+                                }
+                            }
+                        }
+                    }
+                    const acctNode = cdtInstr.getElementsByTagName(tag + 'Acct')[0];
+                    if (acctNode) {
+                        patch[pfx + 'AcctIBAN'] = tval(acctNode, 'IBAN');
+                        patch[pfx + 'AcctCcy'] = tval(acctNode, 'Ccy');
+                        patch[pfx + 'AcctNm'] = tval(acctNode, 'Nm');
+                    }
+                };
+
+                parseAgt('InstgAgt', 'instgAgt');
+                parseAgt('InstdAgt', 'instdAgt');
+                parseAgt('IntrmyAgt1', 'intrmyAgt1');
+                parseAgt('IntrmyAgt2', 'intrmyAgt2');
+                parseAgt('IntrmyAgt3', 'intrmyAgt3');
+                parseAgt('CdtrAgt', 'cdtrAgt');
+                parseAgt('Cdtr', 'cdtr');
+                parseAgt('Dbtr', 'dbtr');
+                parseAgt('DbtrAgt', 'dbtrAgt');
+
+                const drctDbt = cdtInstr.getElementsByTagName('DrctDbtTxInf')[0];
+                if (drctDbt) {
+                    const pmtId = drctDbt.getElementsByTagName('PmtId')[0];
+                    if (pmtId) {
+                        patch['instrId'] = tval(pmtId, 'InstrId');
+                        patch['endToEndId'] = tval(pmtId, 'EndToEndId');
+                        patch['txId'] = tval(pmtId, 'TxId');
+                        patch['uetr'] = tval(pmtId, 'UETR');
+                    }
+                    const amtEl = drctDbt.getElementsByTagName('IntrBkSttlmAmt')[0];
+                    if (amtEl) {
+                        patch['amount'] = amtEl.textContent?.trim() || '';
+                        patch['currency'] = amtEl.getAttribute('Ccy') || '';
+                    }
+                    patch['intrBkSttlmDt'] = tval(drctDbt, 'IntrBkSttlmDt');
+                    const sttlmTmReqEl = drctDbt.getElementsByTagName('SttlmTmReq')[0];
+                    if (sttlmTmReqEl) {
+                        patch['clstTm'] = tval(sttlmTmReqEl, 'CLSTm');
+                        patch['tillTm'] = tval(sttlmTmReqEl, 'TillTm');
+                        patch['frTm'] = tval(sttlmTmReqEl, 'FrTm');
+                        patch['rjctTm'] = tval(sttlmTmReqEl, 'RjctTm');
+                    }
+                    const pmtTp = drctDbt.getElementsByTagName('PmtTpInf')[0];
+                    if (pmtTp) {
+                        patch['instrPrty'] = tval(pmtTp, 'InstrPrty');
+                        patch['svcLvlCd'] = pmtTp.getElementsByTagName('SvcLvl')[0]
+                            ?.getElementsByTagName('Cd')[0]?.textContent?.trim() || '';
+                        patch['svcLvlPrtry'] = pmtTp.getElementsByTagName('SvcLvl')[0]
+                            ?.getElementsByTagName('Prtry')[0]?.textContent?.trim() || '';
+                        patch['lclInstrmCd'] = pmtTp.getElementsByTagName('LclInstrm')[0]
+                            ?.getElementsByTagName('Cd')[0]?.textContent?.trim() || '';
+                        patch['lclInstrmPrtry'] = pmtTp.getElementsByTagName('LclInstrm')[0]
+                            ?.getElementsByTagName('Prtry')[0]?.textContent?.trim() || '';
+                        patch['ctgyPurpCd'] = pmtTp.getElementsByTagName('CtgyPurp')[0]
+                            ?.getElementsByTagName('Cd')[0]?.textContent?.trim() || '';
+                        patch['ctgyPurpPrtry'] = pmtTp.getElementsByTagName('CtgyPurp')[0]
+                            ?.getElementsByTagName('Prtry')[0]?.textContent?.trim() || '';
+                    }
+                    const purp = drctDbt.getElementsByTagName('Purp')[0];
+                    if (purp) {
+                        patch['purposeCd'] = tval(purp, 'Cd');
+                        patch['purposePrtry'] = tval(purp, 'Prtry');
+                    }
+                    patch['remittanceInfo'] = drctDbt.getElementsByTagName('RmtInf')[0]
+                        ?.getElementsByTagName('Ustrd')[0]?.textContent?.trim() || '';
+                    patch['instrForDbtrAgt'] = tval(drctDbt, 'InstrForDbtrAgt');
+                    patch['instrForCdtrAgt'] = tval(drctDbt, 'InstrForCdtrAgt');
+                }
+            }
+            this.isParsingXml = true;
+            this.form.patchValue(patch, { emitEvent: false });
+            this.isParsingXml = false;
+        } catch (e) {
+            this.isParsingXml = false;
+        }
+    }
+
     onEditorChange(newXml: string) {
         if (this.isInternalChange) return;
         this.generatedXml = newXml;
         this.refreshLineCount();
+        this.parseXmlToForm(newXml);
     }
 
     refreshLineCount() {

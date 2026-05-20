@@ -61,7 +61,7 @@
                         <div class="validation-msg" *ngIf="err('head_pssblDplct') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
-                        <label>Sender BIC <span class="req">*</span></label>
+                        <label>From BIC <span class="req">*</span></label>
                         <div class="uetr-control-row">
                             <input formControlName="head_fromBic" maxlength="11" class="auto-uppercase">
                             <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('head_fromBic', form)" matTooltip="Search BIC">
@@ -101,7 +101,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Receiver BIC <span class="req">*</span></label>
+                        <label>To BIC <span class="req">*</span></label>
                         <div class="uetr-control-row">
                             <input formControlName="head_toBic" maxlength="11" class="auto-uppercase">
                             <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('head_toBic', form)" matTooltip="Search BIC">
@@ -192,7 +192,7 @@
                     </div>
                     <div class="form-group">
                         <label>Creation DateTime <span class="req">*</span></label>
-                        <input formControlName="creDtTm" placeholder="YYYY-MM-DDThh:mm:ssÂ±hh:mm">
+                        <input formControlName="creDtTm" placeholder="YYYY-MM-DDThh:mm:ss±hh:mm">
                         <div class="validation-msg" *ngIf="err('creDtTm') as e">{{e}}</div>
                     </div>
 
@@ -204,7 +204,7 @@
                             <div class="form-group">
                                 <label>Authstn Code <span class="opt">Optional</span></label>
                                 <select formControlName="authstnCd">
-                                    <option value="">â€” Select â€”</option>
+                                    <option value="">— Select —</option>
                                     <option value="AUTH">Pre Authorised File [AUTH]</option>
                                     <option value="FDET">File Level Authorisation Details [FDET]</option>
                                     <option value="FSUM">File Level Authorisation Summary [FSUM]</option>
@@ -257,6 +257,80 @@
                                 <div class="validation-msg" *ngIf="err('initgPtyId') as e">{{e}}</div>
                                 <div class="field-hint at-limit" *ngIf="hint('initgPtyId', 35) as h">{{h}}</div>
                             </div>
+                            <div class="form-group">
+                                <label>Address Type</label>
+                                <select formControlName="initgPtyAddrType">
+                                    <option value="none">None</option>
+                                    <option value="structured">Structured</option>
+                                    <option value="unstructured">Unstructured</option>
+                                    <option value="hybrid">Hybrid</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="address-subgrid" *ngIf="form.get('initgPtyAddrType')?.value !== 'none'">
+                            <div class="form-group">
+                                <label>Country</label>
+                                <select formControlName="initgPtyCtry">
+                                    <option value="">Select Country</option>
+                                    <option *ngFor="let c of countries" [value]="c">{{c}}</option>
+                                </select>
+                                <div class="validation-msg" *ngIf="err('initgPtyCtry') as e">{{e}}</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Town Name</label>
+                                <input formControlName="initgPtyTwnNm" maxlength="35">
+                                <div class="field-hint at-limit" *ngIf="hint('initgPtyTwnNm', 35) as h">{{h}}</div>
+                            </div>
+                            <ng-container *ngIf="['structured','hybrid'].includes(form.get('initgPtyAddrType')?.value)">
+                                <div class="form-group">
+                                    <label>Street Name</label>
+                                    <input formControlName="initgPtyStrtNm" maxlength="70">
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtyStrtNm', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Building Number</label>
+                                    <input formControlName="initgPtyBldgNb" maxlength="16">
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtyBldgNb', 16) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Building Name</label>
+                                    <input formControlName="initgPtyBldgNm" maxlength="35">
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtyBldgNm', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Postal Code</label>
+                                    <input formControlName="initgPtyPstCd" maxlength="16">
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtyPstCd', 16) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Department</label>
+                                    <input formControlName="initgPtyDept" maxlength="70">
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtyDept', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Sub-Department</label>
+                                    <input formControlName="initgPtySubDept" maxlength="70">
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtySubDept', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Floor</label>
+                                    <input formControlName="initgPtyFlr" maxlength="70">
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtyFlr', 70) as h">{{h}}</div>
+                                </div>
+                            </ng-container>
+                            <ng-container *ngIf="['unstructured','hybrid'].includes(form.get('initgPtyAddrType')?.value)">
+                                <div class="form-group">
+                                    <label>Address Line 1</label>
+                                    <input formControlName="initgPtyAdrLine1" maxlength="70">
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtyAdrLine1', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Address Line 2</label>
+                                    <input formControlName="initgPtyAdrLine2" maxlength="70">
+                                    <div class="field-hint at-limit" *ngIf="hint('initgPtyAdrLine2', 70) as h">{{h}}</div>
+                                </div>
+                            </ng-container>
                         </div>
                     </div>
 
@@ -436,13 +510,72 @@
                             </div>
                         </div>
 
-                        <div class="party-grid" style="margin-top: 1rem;">
+                        <div class="party-group-title" style="margin-top: 1rem; font-size: 0.65rem;">Ultimate Debtor <span class="opt">Optional</span></div>
+                        <div class="party-grid">
                             <div class="form-group">
-                                <label>Ultimate Debtor</label>
+                                <label>Name</label>
                                 <input formControlName="ultmtDbtrName" maxlength="140" placeholder="Optional">
                                 <div class="validation-msg" *ngIf="err('ultmtDbtrName') as e">{{e}}</div>
                                 <div class="field-hint at-limit" *ngIf="hint('ultmtDbtrName', 140) as h">{{h}}</div>
                             </div>
+                            <div class="form-group">
+                                <label>Address Type</label>
+                                <select formControlName="ultmtDbtrAddrType">
+                                    <option value="none">None</option>
+                                    <option value="structured">Structured</option>
+                                    <option value="unstructured">Unstructured</option>
+                                    <option value="hybrid">Hybrid</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="address-subgrid" *ngIf="form.get('ultmtDbtrAddrType')?.value !== 'none'">
+                            <div class="form-group">
+                                <label>Country</label>
+                                <select formControlName="ultmtDbtrCtry">
+                                    <option value="">Select Country</option>
+                                    <option *ngFor="let c of countries" [value]="c">{{c}}</option>
+                                </select>
+                                <div class="validation-msg" *ngIf="err('ultmtDbtrCtry') as e">{{e}}</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Town Name</label>
+                                <input formControlName="ultmtDbtrTwnNm" maxlength="35">
+                                <div class="field-hint at-limit" *ngIf="hint('ultmtDbtrTwnNm', 35) as h">{{h}}</div>
+                            </div>
+                            <ng-container *ngIf="['structured','hybrid'].includes(form.get('ultmtDbtrAddrType')?.value)">
+                                <div class="form-group">
+                                    <label>Street Name</label>
+                                    <input formControlName="ultmtDbtrStrtNm" maxlength="70">
+                                    <div class="field-hint at-limit" *ngIf="hint('ultmtDbtrStrtNm', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Building Number</label>
+                                    <input formControlName="ultmtDbtrBldgNb" maxlength="16">
+                                    <div class="field-hint at-limit" *ngIf="hint('ultmtDbtrBldgNb', 16) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Building Name</label>
+                                    <input formControlName="ultmtDbtrBldgNm" maxlength="35">
+                                    <div class="field-hint at-limit" *ngIf="hint('ultmtDbtrBldgNm', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Postal Code</label>
+                                    <input formControlName="ultmtDbtrPstCd" maxlength="16">
+                                    <div class="field-hint at-limit" *ngIf="hint('ultmtDbtrPstCd', 16) as h">{{h}}</div>
+                                </div>
+                            </ng-container>
+                            <ng-container *ngIf="['unstructured','hybrid'].includes(form.get('ultmtDbtrAddrType')?.value)">
+                                <div class="form-group">
+                                    <label>Address Line 1</label>
+                                    <input formControlName="ultmtDbtrAdrLine1" maxlength="70">
+                                    <div class="field-hint at-limit" *ngIf="hint('ultmtDbtrAdrLine1', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Address Line 2</label>
+                                    <input formControlName="ultmtDbtrAdrLine2" maxlength="70">
+                                    <div class="field-hint at-limit" *ngIf="hint('ultmtDbtrAdrLine2', 70) as h">{{h}}</div>
+                                </div>
+                            </ng-container>
                         </div>
                     </div>
 
@@ -953,14 +1086,37 @@
                                         <div class="validation-msg" *ngIf="err('cdtrIban', tx) as e">{{e}}</div>
                                         <div class="field-hint at-limit" *ngIf="hint('cdtrIban', 34, tx) as h">{{h}}</div>
                                     </div>
-                                    <div class="form-group"><label>Ultmt Dbtr Nm</label><input formControlName="ultmtDbtrName" maxlength="140">
+                                    <div class="form-group"><label>Ultmt Dbtr Name</label><input formControlName="ultmtDbtrName" maxlength="140">
                                         <div class="validation-msg" *ngIf="err('ultmtDbtrName', tx) as e">{{e}}</div>
                                         <div class="field-hint at-limit" *ngIf="hint('ultmtDbtrName', 140, tx) as h">{{h}}</div>
                                     </div>
-                                    <div class="form-group"><label>Ultmt Cdtr Nm</label><input formControlName="ultmtCdtrName" maxlength="140">
-                                        <div class="validation-msg" *ngIf="err('ultmtCdtrName', tx) as e">{{e}}</div>
-                                        <div class="field-hint at-limit" *ngIf="hint('ultmtCdtrName', 140, tx) as h">{{h}}</div>
+                                    <div class="form-group"><label>Ultmt Dbtr Addr Type</label>
+                                        <select formControlName="ultmtDbtrAddrType">
+                                            <option value="none">None</option>
+                                            <option value="structured">Structured</option>
+                                            <option value="unstructured">Unstructured</option>
+                                            <option value="hybrid">Hybrid</option>
+                                        </select>
                                     </div>
+                                    <ng-container *ngIf="tx.get('ultmtDbtrAddrType')?.value !== 'none'">
+                                        <div class="form-group"><label>Ultmt Dbtr Country</label>
+                                            <select formControlName="ultmtDbtrCtry">
+                                                <option value="">Select</option>
+                                                <option *ngFor="let c of countries" [value]="c">{{c}}</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group"><label>Ultmt Dbtr Town</label><input formControlName="ultmtDbtrTwnNm" maxlength="35"></div>
+                                        <ng-container *ngIf="['structured','hybrid'].includes(tx.get('ultmtDbtrAddrType')?.value)">
+                                            <div class="form-group"><label>Ultmt Dbtr Street</label><input formControlName="ultmtDbtrStrtNm" maxlength="70"></div>
+                                            <div class="form-group"><label>Ultmt Dbtr Bldg Nb</label><input formControlName="ultmtDbtrBldgNb" maxlength="16"></div>
+                                            <div class="form-group"><label>Ultmt Dbtr Bldg Nm</label><input formControlName="ultmtDbtrBldgNm" maxlength="35"></div>
+                                            <div class="form-group"><label>Ultmt Dbtr Post Cd</label><input formControlName="ultmtDbtrPstCd" maxlength="16"></div>
+                                        </ng-container>
+                                        <ng-container *ngIf="['unstructured','hybrid'].includes(tx.get('ultmtDbtrAddrType')?.value)">
+                                            <div class="form-group"><label>Ultmt Dbtr Adr Ln 1</label><input formControlName="ultmtDbtrAdrLine1" maxlength="70"></div>
+                                            <div class="form-group"><label>Ultmt Dbtr Adr Ln 2</label><input formControlName="ultmtDbtrAdrLine2" maxlength="70"></div>
+                                        </ng-container>
+                                    </ng-container>
                                     <div class="form-group"><label>Remittance Inf</label><input formControlName="rmtInf" maxlength="140">
                                         <div class="validation-msg" *ngIf="err('rmtInf', tx) as e">{{e}}</div>
                                         <div class="field-hint at-limit" *ngIf="hint('rmtInf', 140, tx) as h">{{h}}</div>
@@ -1001,7 +1157,7 @@
                                                 XML</button>
                                         <button type="button" class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon>
                                                 Download XML</button>
-                                        <button type="button" class="action-btn validate-btn" (click)="validateMessage()" >
+                                        <button type="button" class="action-btn validate-btn" (click)="validateMessage()" [disabled]="form.invalid">
                                                 <mat-icon>verified</mat-icon> Validate Message
                                         </button>
                                 </div>

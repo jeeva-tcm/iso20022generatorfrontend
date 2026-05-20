@@ -476,7 +476,7 @@ export class Pacs9Component implements OnInit, OnDestroy {
     }
 
     /**
-     * UETR Refresh — generates a new UUID v4, validates, updates form.
+     * UETR Refresh â€” generates a new UUID v4, validates, updates form.
      */
     refreshUetr(): void {
         this.uetrError = null;
@@ -932,7 +932,6 @@ ${tx}\t\t\t</CdtTrfTxInf>
     // Validation
     validateMessage() {
                 if (this.bicSameWarning) return;
-                this.generateXml();
         if (this.form.invalid) {
             this.form.markAllAsTouched();
             this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
@@ -963,7 +962,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
                     layer_status: {},
                     details: [{
                         severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
-                        path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'),
+                        path: '', message: 'Validation failed â€” ' + (err.error?.detail?.message || 'backend not reachable.'),
                         fix_suggestion: 'Ensure the validation server is running.'
                     }]
                 };
@@ -1394,11 +1393,11 @@ ${tx}\t\t\t</CdtTrfTxInf>
 
     getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
     getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
-    isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
-  isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
+    isLayerPass(k: string) { return this.getLayerStatus(k).includes('âœ…'); }
+  isLayerFail(k: string) { return this.getLayerStatus(k).includes('âŒ'); }
   isLayerWarn(k: string) {
     const s = this.getLayerStatus(k);
-    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+    return s.includes('âš ') || s.includes('WARNING') || s.includes('WARN');
   }
 
     getValidationIssues(): any[] { return this.validationReport?.details ?? []; }

@@ -316,7 +316,7 @@ export class Camt057Component implements OnInit, OnDestroy {
             this.form.addControl(p + 'Name', this.fb.control('', [Validators.maxLength(140), SAFE_NAME]));
             this.form.addControl(p + 'Bic', this.fb.control('', BIC_OPT));
             this.form.addControl(p + 'Lei', this.fb.control('', Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)));
-            this.form.addControl(p + 'ClrSysCd', this.fb.control('', Validators.maxLength(5)));
+            this.form.addControl(p + 'ClrSysCd', this.fb.control('', [Validators.maxLength(5), Validators.pattern(/^[A-Z0-9]{1,5}$/)]));
             this.form.addControl(p + 'ClrSysMmbId', this.fb.control('', Validators.maxLength(35)));
             this.form.addControl(p + 'Acct', this.fb.control('', Validators.maxLength(34)));
 
@@ -377,6 +377,7 @@ export class Camt057Component implements OnInit, OnDestroy {
             if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Max 18 digits, up to 5 decimals.';
             if (f === 'bizMsgId' || f === 'msgId' || f === 'ntfctnId' || f === 'itmId' || f === 'instrId' || f === 'endToEndId') return 'Invalid Pattern.';
             if (f === 'clrSysRef') return 'Invalid Pattern (Alphanumeric only, max 35 chars).';
+            if (f.toLowerCase().endsWith('clrsyscd')) return 'Invalid clearing code. Must be 1–5 uppercase alphanumeric characters (e.g. T2, USFW, CHIPS).';
             if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Must be a valid ISO 20022 code (4 uppercase letters).';
             if (f.toLowerCase().includes('name') || f.toLowerCase().includes('nm')) return "Invalid characters. Only letters, numbers, spaces and . , ( ) ' - are allowed (no &, @, !, etc.)";
             if (f.toLowerCase().includes('ustrd') || f.toLowerCase().includes('adtlrmtinf')) return "Invalid character in remittance field. Only ISO 20022 MX allowed chars permitted.";
@@ -969,6 +970,7 @@ ${ntfctnPartiesXml}${itmXml}
                                     setVal(prefix + 'ClrSysCd', clrId.getElementsByTagName('Cd')[0]?.textContent || '');
                                 }
                             }
+                            this.mapAddrToForm(finId, prefix, patch);
                         }
                     }
                 };
@@ -1059,8 +1061,21 @@ ${ntfctnPartiesXml}${itmXml}
         const addr = p.getElementsByTagName('PstlAdr')[0];
         if (addr) {
             const aV = (t: string) => addr.getElementsByTagName(t)[0]?.textContent || '';
-            const isStructured = ['StrtNm', 'TwnNm', 'Ctry', 'PstCd'].some(t => !!aV(t));
-            if (isStructured) {
+            const hasStructured = ['StrtNm', 'TwnNm', 'Ctry', 'PstCd'].some(t => !!aV(t));
+            const adrLines = addr.getElementsByTagName('AdrLine');
+            const hasAdrLines = adrLines.length > 0;
+
+            if (hasStructured && hasAdrLines) {
+                patch[prefix + 'AddrType'] = 'hybrid';
+                ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry'].forEach(f => patch[prefix + f] = aV(f));
+                patch[prefix + 'AdrLine1'] = adrLines[0]?.textContent || '';
+                patch[prefix + 'AdrLine2'] = adrLines[1]?.textContent || '';
+                const adrTp = addr.getElementsByTagName('AdrTp')[0];
+                if (adrTp) {
+                    patch[prefix + 'AdrTpCd'] = adrTp.getElementsByTagName('Cd')[0]?.textContent || '';
+                    patch[prefix + 'AdrTpPrtry'] = adrTp.getElementsByTagName('Prtry')[0]?.textContent || '';
+                }
+            } else if (hasStructured) {
                 patch[prefix + 'AddrType'] = 'structured';
                 ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry'].forEach(f => patch[prefix + f] = aV(f));
                 const adrTp = addr.getElementsByTagName('AdrTp')[0];
@@ -1068,12 +1083,15 @@ ${ntfctnPartiesXml}${itmXml}
                     patch[prefix + 'AdrTpCd'] = adrTp.getElementsByTagName('Cd')[0]?.textContent || '';
                     patch[prefix + 'AdrTpPrtry'] = adrTp.getElementsByTagName('Prtry')[0]?.textContent || '';
                 }
-            } else if (addr.getElementsByTagName('AdrLine').length > 0) {
+            } else if (hasAdrLines) {
                 patch[prefix + 'AddrType'] = 'unstructured';
-                const lines = addr.getElementsByTagName('AdrLine');
-                patch[prefix + 'AdrLine1'] = lines[0]?.textContent || '';
-                patch[prefix + 'AdrLine2'] = lines[1]?.textContent || '';
+                patch[prefix + 'AdrLine1'] = adrLines[0]?.textContent || '';
+                patch[prefix + 'AdrLine2'] = adrLines[1]?.textContent || '';
+            } else {
+                patch[prefix + 'AddrType'] = '';
             }
+        } else {
+            patch[prefix + 'AddrType'] = '';
         }
 
         const idNode = p.getElementsByTagName('Id')[0];
@@ -1203,8 +1221,7 @@ ${ntfctnPartiesXml}${itmXml}
     }
 
     validateMessage() {
-                if (this.bicSameWarning) return;
-                this.generateXml();
+        if (this.bicSameWarning) return;
         if (this.form.invalid) {
             this.form.markAllAsTouched();
             this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });

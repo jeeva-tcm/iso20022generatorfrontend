@@ -47,7 +47,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
   purposes: string[] = [];
   sttlmMethods = ['INDA', 'INGA', 'COVE', 'CLRG'];
   chargeBearers = ['SHAR', 'DEBT', 'CRED', 'SLEV'];
-  // Duplicate import and component definition removed � kept earlier import and @Component
+  // Duplicate import and component definition removed ï¿½ kept earlier import and @Component
 
   isAddressValid = true;
 
@@ -455,22 +455,22 @@ export class Pacs8Component implements OnInit, OnDestroy {
     const SAFE_NAME = Validators.pattern(/^[a-zA-Z0-9 .,()'\-]+$/);
     // ISO 20022 MX allowed character pattern for address fields
     const ADDR_PATTERN = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);    const c: any = {
-      // ── AppHdr fields ──
+      // â”€â”€ AppHdr fields â”€â”€
       fromBic: ['SNDRBEBBXXX', BIC], toBic: ['RCVRLU2AXXX', BIC],
       bizMsgId: ['BIZM-20260515-PACS008-001', [Validators.required, Validators.maxLength(35)]],
-      // ── GrpHdr fields ──
+      // â”€â”€ GrpHdr fields â”€â”€
       msgId: ['MSGID-20260515-PACS008-001', [Validators.required, Validators.maxLength(35)]],
       creDtTm: [this.isoNow(), Validators.required],
       nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]],
       sttlmMtd: ['INDA', Validators.required],
       instgAgtBic: ['SNDRBEBBXXX', BIC], instdAgtBic: ['RCVRLU2AXXX', BIC],
-      // ── CdtTrfTxInf Identification ──
+      // â”€â”€ CdtTrfTxInf Identification â”€â”€
       instrId: ['INSTR-20260515-1', [Validators.required, Validators.maxLength(35)]],
       endToEndId: ['E2E-20260515-SALARY-001', [Validators.required, Validators.maxLength(35)]],
       txId: ['TXN-20260515-001', [Validators.required, Validators.maxLength(35)]],
       uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
       clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
-      // ── Amount and Settlement ──
+      // â”€â”€ Amount and Settlement â”€â”€
       amount: ['15000.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]],
       currency: ['EUR', Validators.required],
       sttlmDt: [new Date().toISOString().split('T')[0], [Validators.required, Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]],
@@ -495,11 +495,11 @@ export class Pacs8Component implements OnInit, OnDestroy {
       svcLvlCd: ['G001', [Validators.pattern(/^[A-Z0-9]{1,4}$/)]],
       svcLvlPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
       chrgBr: ['SHAR', Validators.required],
-      // ── Debtor ──
+      // â”€â”€ Debtor â”€â”€
       dbtrName: ['Meridian Global Trading GmbH', [Validators.required, Validators.maxLength(140), SAFE_NAME]],
       dbtrOrgAnyBIC: ['SNDRBEBBXXX', BIC],
       dbtrAgtBic: ['SNDRBEBBXXX', BIC],
-      // ── Creditor ──
+      // â”€â”€ Creditor â”€â”€
       cdtrName: ['Northwind Financial Services Ltd', [Validators.required, Validators.maxLength(140), SAFE_NAME]],
       cdtrOrgAnyBIC: ['RCVRLU2AXXX', BIC],
       cdtrAgtBic: ['RCVRLU2AXXX', BIC],
@@ -648,7 +648,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
   }
 
   /**
-   * UETR Refresh � Rule 1-8 implementation.
+   * UETR Refresh ï¿½ Rule 1-8 implementation.
    * Generates a new UUID v4, validates format, checks session uniqueness,
    * patches the form control, shows success/error feedback.
    */
@@ -679,7 +679,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
     this.form.get('uetr')?.setValue(newUetr);
     this.form.get('uetr')?.markAsTouched();
 
-    // Rule 2: Immediate UI update � success feedback (auto-clears after 3s)
+    // Rule 2: Immediate UI update ï¿½ success feedback (auto-clears after 3s)
     this.uetrSuccess = 'UETR refreshed successfully';
     this.uetrSuccessTimer = setTimeout(() => { this.uetrSuccess = null; }, 3000);
   }
@@ -990,7 +990,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
     const v = this.form.value;
     const creDtTm = this.fdt(v.creDtTm || this.isoNow());
 
-    // CdtTrfTxInf � strict XSD element order
+    // CdtTrfTxInf ï¿½ strict XSD element order
     let tx = '';
     let pmtIdXml = this.el('InstrId', v.instrId, 5) + this.el('EndToEndId', v.endToEndId, 5) + this.el('TxId', v.txId, 5) + this.el('UETR', v.uetr, 5);
     if (v.clrSysRef?.trim()) pmtIdXml += this.el('ClrSysRef', v.clrSysRef, 5);
@@ -1073,7 +1073,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
     });
 
     // ISO 20022 pacs.008.001.08 CdtTrfTxInf schema order:
-    // UltmtDbtr → InitgPty → Dbtr → DbtrAcct → DbtrAgt → DbtrAgtAcct → CdtrAgt → CdtrAgtAcct → Cdtr → CdtrAcct → UltmtCdtr
+    // UltmtDbtr â†’ InitgPty â†’ Dbtr â†’ DbtrAcct â†’ DbtrAgt â†’ DbtrAgtAcct â†’ CdtrAgt â†’ CdtrAgtAcct â†’ Cdtr â†’ CdtrAcct â†’ UltmtCdtr
     if (v.ultmtDbtrName?.trim() || (v.ultmtDbtrAddrType && v.ultmtDbtrAddrType !== 'none') || (v.ultmtDbtrIdType && v.ultmtDbtrIdType !== 'none')) {
       tx += this.tag('UltmtDbtr', this.el('Nm', v.ultmtDbtrName, 5) + this.addrXml(v, 'ultmtDbtr', 5) + this.partyIdXml(v, 'ultmtDbtr', 5), 4);
     }
@@ -1360,7 +1360,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
   /**
    * Dedicated XML builder for InitgPty in GrpHdr.
    * Renders ALL available fields from the form: Name, Address, BIC (AnyBIC),
-   * LEI, Clearing System Member ID, Other ID, Account � regardless of idType.
+   * LEI, Clearing System Member ID, Other ID, Account ï¿½ regardless of idType.
    */
   initgPtyXml(v: any, indent = 4): string {
     const p = 'initgPty';
@@ -1421,7 +1421,6 @@ ${tx}\t\t\t</CdtTrfTxInf>
 
   validateMessage() {
         if (this.bicSameWarning) return;
-        this.generateXml();
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
@@ -1452,7 +1451,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
           layer_status: {},
           details: [{
             severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
-            path: '', message: 'Validation failed � ' + (err.error?.detail?.message || 'backend not reachable.'),
+            path: '', message: 'Validation failed ï¿½ ' + (err.error?.detail?.message || 'backend not reachable.'),
             fix_suggestion: 'Ensure the validation server is running.'
           }]
         };
@@ -2014,11 +2013,11 @@ ${tx}\t\t\t</CdtTrfTxInf>
 
   getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
   getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
-  isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
-  isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
+  isLayerPass(k: string) { return this.getLayerStatus(k).includes('âœ…'); }
+  isLayerFail(k: string) { return this.getLayerStatus(k).includes('âŒ'); }
   isLayerWarn(k: string) {
     const s = this.getLayerStatus(k);
-    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+    return s.includes('âš ') || s.includes('WARNING') || s.includes('WARN');
   }
 
   getValidationIssues(): any[] { return this.validationReport?.details ?? []; }

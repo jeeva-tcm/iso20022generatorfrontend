@@ -18,7 +18,7 @@
                     </div>
 
                     <div class="section-title">Message Header</div>
-                    <div class="form-group intermediary-field"><label>Sender BIC <span class="req">*</span></label>
+                    <div class="form-group intermediary-field"><label>From BIC <span class="req">*</span></label>
                         <div class="uetr-control-row">
                             <input formControlName="fromBic" maxlength="11" class="auto-uppercase">
                             <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('fromBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
@@ -27,7 +27,7 @@
                         <div class="validation-msg" *ngIf="err('fromBic') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('fromBic', 11) as h">{{h}}</div>
                     </div>
-                    <div class="form-group intermediary-field"><label>Receiver BIC <span class="req">*</span></label>
+                    <div class="form-group intermediary-field"><label>To BIC <span class="req">*</span></label>
                         <div class="uetr-control-row">
                             <input formControlName="toBic" maxlength="11" class="auto-uppercase">
                             <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('toBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon>
@@ -48,7 +48,7 @@
                         <div class="validation-msg" *ngIf="err('msgId') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('msgId', 35) as h">{{h}}</div>
                     </div>
-                    <div class="form-group intermediary-field"><label>Creation DateTime <span class="req">*</span></label><input formControlName="creDtTm" [attr.formControlName]="'creDtTm'" placeholder="YYYY-MM-DDThh:mm:ssÂ±hh:mm">
+                    <div class="form-group intermediary-field"><label>Creation DateTime <span class="req">*</span></label><input formControlName="creDtTm" [attr.formControlName]="'creDtTm'" placeholder="YYYY-MM-DDThh:mm:ss±hh:mm">
                         <div class="validation-msg" *ngIf="err('creDtTm') as e">{{e}}</div>
                     </div>
                     <div class="form-group"><label>Number of Txns <span class="req">*</span></label><input formControlName="nbOfTxs" [attr.formControlName]="'nbOfTxs'" maxlength="15" pattern="^[1-9]\d{0,14}$" required>
@@ -92,7 +92,7 @@
                         </div>
                         <div class="validation-msg" *ngIf="uetrError">{{uetrError}}</div>
                         <div class="validation-msg" *ngIf="err('uetr') as e">{{e}}</div>
-                        <div class="uetr-success" *ngIf="uetrSuccess">âœ” {{uetrSuccess}}</div>
+                        <div class="uetr-success" *ngIf="uetrSuccess">✔ {{uetrSuccess}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('uetr', 36) as h">{{h}}</div>
                     </div>
                     <div class="form-group intermediary-field"><label>Amount <span class="req">*</span></label><input formControlName="amount" [attr.formControlName]="'amount'" type="text" maxlength="18" required>
@@ -361,7 +361,7 @@
 
 
                     <!-- COV Instructions for Creditor Agent -->
-                    <div class="section-title">COV Instructions for Creditor Agent <span class="opt">Optional Â· max 2</span></div>
+                    <div class="section-title">COV Instructions for Creditor Agent <span class="opt">Optional · max 2</span></div>
                     <div class="party-group">
                         <div class="party-group-title">COV Instr for Creditor Agent 1</div>
                         <div [formGroup]="form" class="party-grid">
@@ -408,7 +408,7 @@
                     </div>
 
                     <!-- COV Instructions for Next Agent -->
-                    <div class="section-title">COV Instructions for Next Agent <span class="opt">Optional Â· max 6</span></div>
+                    <div class="section-title">COV Instructions for Next Agent <span class="opt">Optional · max 6</span></div>
                     <div class="party-group" *ngFor="let i of [1,2,3,4,5,6]">
                         <div class="party-group-title">COV Instr for Next Agent {{i}}</div>
                         <div [formGroup]="form" class="party-grid">
@@ -519,7 +519,7 @@
                                                 XML</button>
                                         <button type="button" class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon>
                                                 Download XML</button>
-                                        <button type="button" class="action-btn validate-btn" (click)="validateMessage()" >
+                                        <button type="button" class="action-btn validate-btn" (click)="validateMessage()" [disabled]="form.invalid">
                                                 <mat-icon>verified</mat-icon> Validate Message
                                         </button>
                                 </div>
