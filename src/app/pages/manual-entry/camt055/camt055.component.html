@@ -1,4 +1,4 @@
-﻿<div class="container" *ngIf="form">
+<div class="container" *ngIf="form">
         <header>
                 <h1>Customer Payment Cancellation Request (camt.055)</h1>
 
@@ -208,7 +208,7 @@
                                                                 <label>Related From BIC</label>
                                                                 <div class="uetr-control-row">
                                                                         <input formControlName="head_rltd_fromBic"
-                                                                                maxlength="11" placeholder="Related Sender BIC">
+                                                                                maxlength="11" placeholder="Related From BIC">
                                                                         <button type="button" class="uetr-refresh-btn"
                                                                                 (click)="openBicSearch('head_rltd_fromBic')"
                                                                                 matTooltip="Search BIC">
@@ -254,7 +254,7 @@
                                                                 <label>Related To BIC</label>
                                                                 <div class="uetr-control-row">
                                                                         <input formControlName="head_rltd_toBic" maxlength="11"
-                                                                                placeholder="Related Receiver BIC">
+                                                                                placeholder="Related To BIC">
                                                                         <button type="button" class="uetr-refresh-btn"
                                                                                 (click)="openBicSearch('head_rltd_toBic')"
                                                                                 matTooltip="Search BIC">
@@ -569,7 +569,7 @@
                                                 XML</button>
                                         <button type="button" class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon>
                                                 Download XML</button>
-                                        <button type="button" class="action-btn validate-btn" (click)="validateMessage()" >
+                                        <button type="button" class="action-btn validate-btn" (click)="validateMessage()" [disabled]="form.invalid">
                                                 <mat-icon>verified</mat-icon> Validate Message
                                         </button>
                                 </div>

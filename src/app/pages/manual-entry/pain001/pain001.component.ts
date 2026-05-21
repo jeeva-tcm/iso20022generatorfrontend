@@ -139,13 +139,18 @@ export class Pain001Component implements OnInit, OnDestroy {
       initgPtyName: ['Global Solutions Corp', [Validators.required, Validators.maxLength(140)]],
       initgPtyBic: ['GBSOLUS33XX', [Validators.pattern(/^([A-Z0-9]{8}|[A-Z0-9]{11})$/)]],
       initgPtyId: ['GS-ID-9988'],
-      initgPtyCtry: ['GB'],
-      initgPtyTwnNm: ['London'],
-      initgPtyStrtNm: ['Main Street'],
-      initgPtyBldgNb: ['10'],
-      initgPtyPstCd: ['EC1A 1BB'],
-      initgPtyDept: ['Treasury'],
-      initgPtySubDept: ['Payments'],
+      initgPtyAddrType: ['none'],
+      initgPtyCtry: ['', [Validators.pattern(/^[A-Z]{2,2}$/)]],
+      initgPtyTwnNm: ['', [Validators.maxLength(35)]],
+      initgPtyStrtNm: ['', [Validators.maxLength(70)]],
+      initgPtyBldgNb: ['', [Validators.maxLength(16)]],
+      initgPtyBldgNm: ['', [Validators.maxLength(35)]],
+      initgPtyPstCd: ['', [Validators.maxLength(16)]],
+      initgPtyDept: ['', [Validators.maxLength(70)]],
+      initgPtySubDept: ['', [Validators.maxLength(70)]],
+      initgPtyFlr: ['', [Validators.maxLength(70)]],
+      initgPtyAdrLine1: ['', [Validators.maxLength(70)]],
+      initgPtyAdrLine2: ['', [Validators.maxLength(70)]],
 
       // Payment Information
       pmtInfId: ['PMT-INF-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
@@ -196,7 +201,16 @@ export class Pain001Component implements OnInit, OnDestroy {
       dbtrPrvtIdBirthDt: [''],
       dbtrPrvtIdCityOfBirth: ['', [Validators.maxLength(35)]],
       dbtrPrvtIdCtryOfBirth: ['', [Validators.pattern(/^[A-Z]{2,2}$/)]],
-      ultmtDbtrName: ['Global Management LLC', [Validators.maxLength(140)]],
+      ultmtDbtrName: ['', [Validators.maxLength(140)]],
+      ultmtDbtrAddrType: ['none'],
+      ultmtDbtrCtry: ['', [Validators.pattern(/^[A-Z]{2,2}$/)]],
+      ultmtDbtrTwnNm: ['', [Validators.maxLength(35)]],
+      ultmtDbtrStrtNm: ['', [Validators.maxLength(70)]],
+      ultmtDbtrBldgNb: ['', [Validators.maxLength(16)]],
+      ultmtDbtrBldgNm: ['', [Validators.maxLength(35)]],
+      ultmtDbtrPstCd: ['', [Validators.maxLength(16)]],
+      ultmtDbtrAdrLine1: ['', [Validators.maxLength(70)]],
+      ultmtDbtrAdrLine2: ['', [Validators.maxLength(70)]],
       relMsgId: ['REL-' + Date.now(), [Validators.maxLength(35)]],
       chrgsAcctIban: ['US12345678901231', [Validators.maxLength(34)]],
       chrgsAcctAgtBic: ['CHASUS33XXX', [Validators.pattern(/^([A-Z0-9]{8}|[A-Z0-9]{11})$/)]],
@@ -277,8 +291,16 @@ export class Pain001Component implements OnInit, OnDestroy {
       cdtrDept: [''],
       cdtrSubDept: [''],
       cdtrFlr: [''],
-      ultmtDbtrName: ['Sub-Group Treasury'],
-      ultmtCdtrName: ['Final Vendor Corp'],
+      ultmtDbtrName: ['', Validators.maxLength(140)],
+      ultmtDbtrAddrType: ['none'],
+      ultmtDbtrCtry: ['', [Validators.pattern(/^[A-Z]{2,2}$/)]],
+      ultmtDbtrTwnNm: ['', [Validators.maxLength(35)]],
+      ultmtDbtrStrtNm: ['', [Validators.maxLength(70)]],
+      ultmtDbtrBldgNb: ['', [Validators.maxLength(16)]],
+      ultmtDbtrBldgNm: ['', [Validators.maxLength(35)]],
+      ultmtDbtrPstCd: ['', [Validators.maxLength(16)]],
+      ultmtDbtrAdrLine1: ['', [Validators.maxLength(70)]],
+      ultmtDbtrAdrLine2: ['', [Validators.maxLength(70)]],
       purpCd: ['SALA'],
       taxId: [''],
       taxAmt: [''],
@@ -477,7 +499,6 @@ export class Pain001Component implements OnInit, OnDestroy {
       txContent += this.agtXml('CdtrAgt', 'cdtrAgt', tx, 5);
       txContent += this.partyXml('Cdtr', 'cdtr', tx, 5);
       if (tx.cdtrIban) txContent += this.tag('CdtrAcct', this.acctXml(tx.cdtrIban, 6), 5);
-      txContent += this.partyXml('UltmtCdtr', 'ultmtCdtr', tx, 6);
       if (tx.purpCd) txContent += this.tag('Purp', this.el('Cd', tx.purpCd, 7), 6);
       
       if (tx.taxAmt || tx.taxId) {
@@ -534,10 +555,19 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
         setV('Flr', 'Flr');
         setV('PstBx', 'PstBx');
         setV('Room', 'Room');
-        const lines = Array.from(pstl.getElementsByTagName('AdrLine'));
-        if (lines.length > 0) patch[prefix + 'AdrLine1'] = lines[0].textContent?.trim() || '';
-        if (lines.length > 1) patch[prefix + 'AdrLine2'] = lines[1].textContent?.trim() || '';
-        patch[prefix + 'AddrType'] = lines.length > 0 ? 'unstructured' : 'structured';
+        const adrLines = Array.from(pstl.getElementsByTagName('AdrLine'));
+        const hasStructured = !!(getV('StrtNm') || getV('TwnNm') || getV('Ctry') || getV('PstCd'));
+        const hasAdrLines = adrLines.length > 0;
+        if (hasAdrLines) {
+          patch[prefix + 'AdrLine1'] = adrLines[0].textContent?.trim() || '';
+          if (adrLines.length > 1) patch[prefix + 'AdrLine2'] = adrLines[1].textContent?.trim() || '';
+        }
+        if (hasStructured && hasAdrLines) patch[prefix + 'AddrType'] = 'hybrid';
+        else if (hasStructured) patch[prefix + 'AddrType'] = 'structured';
+        else if (hasAdrLines) patch[prefix + 'AddrType'] = 'unstructured';
+        else patch[prefix + 'AddrType'] = '';
+      } else {
+        patch[prefix + 'AddrType'] = '';
       }
 
       const id = ptyNode.getElementsByTagName('Id')[0];
@@ -579,12 +609,35 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
       const clr = finNode.getElementsByTagName('ClrSysMmbId')[0];
       if (clr) {
         const mid = clr.getElementsByTagName('MmbId')[0]?.textContent?.trim();
-        if (mid) patch[prefix + 'ClrSysMmbId'] = mid;
+        if (mid) {
+          if (prefix.startsWith('head_')) patch[prefix + 'MmbId'] = mid;
+          else patch[prefix + 'ClrSysMmbId'] = mid;
+        }
         const cid = clr.getElementsByTagName('Cd')[0]?.textContent?.trim() || clr.getElementsByTagName('Prtry')[0]?.textContent?.trim();
         if (cid) {
           if (prefix.startsWith('head_')) patch[prefix + 'ClrSysId'] = cid;
           else patch[prefix + 'ClrSysCd'] = cid;
         }
+      }
+      const pstl = finNode.getElementsByTagName('PstlAdr')[0];
+      if (pstl) {
+        const gv = (t: string) => pstl.getElementsByTagName(t)[0]?.textContent?.trim();
+        const sv2 = (f: string, t: string) => { const v = gv(t); if (v) patch[prefix + f] = v; };
+        sv2('Ctry', 'Ctry'); sv2('TwnNm', 'TwnNm'); sv2('StrtNm', 'StrtNm');
+        sv2('BldgNb', 'BldgNb'); sv2('BldgNm', 'BldgNm'); sv2('PstCd', 'PstCd');
+        const adrLines2 = Array.from(pstl.getElementsByTagName('AdrLine'));
+        const hasStr2 = !!(gv('StrtNm') || gv('TwnNm') || gv('Ctry') || gv('PstCd'));
+        const hasLn2 = adrLines2.length > 0;
+        if (hasLn2) {
+          patch[prefix + 'AdrLine1'] = adrLines2[0].textContent?.trim() || '';
+          if (adrLines2.length > 1) patch[prefix + 'AdrLine2'] = adrLines2[1].textContent?.trim() || '';
+        }
+        if (hasStr2 && hasLn2) patch[prefix + 'AddrType'] = 'hybrid';
+        else if (hasStr2) patch[prefix + 'AddrType'] = 'structured';
+        else if (hasLn2) patch[prefix + 'AddrType'] = 'unstructured';
+        else patch[prefix + 'AddrType'] = '';
+      } else {
+        patch[prefix + 'AddrType'] = '';
       }
     }
   }
@@ -648,7 +701,7 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
     if (!nm && !idXml && !this.hasAddr(v, p)) return '';
     
     let content = this.el('Nm', nm || 'DEFAULT NAME', indent + 1);
-    content += this.addrXml(v, p, indent + 1);
+    if (this.hasAddr(v, p)) content += this.addrXml(v, p, indent + 1);
     content += idXml;
     return this.tag(tag, content, indent);
   }
@@ -659,7 +712,8 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
 
   addrXml(v: any, p: string, indent = 4): string {
     let type = v[p + 'AddrType'];
-    if (!type || type === 'none') type = 'structured';
+    if (type === 'none') return '';
+    if (!type) type = 'structured';
     const t = this.tabs(indent + 1);
     let lines: string[] = [];
     const isStrd = ['structured', 'hybrid'].includes(type);
@@ -691,9 +745,10 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
 
   partyIdXml(v: any, p: string, indent = 4): string {
     let idContent = '';
-    if (v[p + 'OrgIdAnyBic'] || v[p + 'OrgIdLei'] || v[p + 'Id']) {
+    const anyBic = v[p + 'OrgIdAnyBic'] || v[p + 'Bic'];
+    if (anyBic || v[p + 'OrgIdLei'] || v[p + 'Id']) {
       let orgId = '';
-      if (v[p + 'OrgIdAnyBic']) orgId += this.el('AnyBIC', v[p + 'OrgIdAnyBic'], indent + 3);
+      if (anyBic) orgId += this.el('AnyBIC', anyBic, indent + 3);
       if (v[p + 'OrgIdLei']) orgId += this.el('LEI', v[p + 'OrgIdLei'], indent + 3);
       if (v[p + 'Id']) orgId += this.tag('Othr', this.el('Id', v[p + 'Id'], indent + 5), indent + 3);
       idContent = this.tag('OrgId', orgId, indent + 2);
@@ -893,7 +948,6 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
               const cdtrAcct = getT('CdtrAcct', t);
               if (cdtrAcct) sv('cdtrIban', tval('Id', getT('Othr', getT('Id', cdtrAcct) || cdtrAcct) || (getT('Id', cdtrAcct) || cdtrAcct)));
 
-              this.mapAddrToForm(getT('UltmtCdtr', t), 'ultmtCdtr', tp);
               sv('purpCd', tv('Cd', getT('Purp', t) || t));
               const tax = getT('Tax', t);
               if (tax) {

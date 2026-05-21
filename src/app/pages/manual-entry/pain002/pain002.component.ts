@@ -692,13 +692,202 @@ ${doc.trimEnd()}
   canRedoXml() { return this.xmlHistoryIdx < this.xmlHistory.length - 1; }
   copyToClipboard() { navigator.clipboard.writeText(this.generatedXml); this.snackBar.open('XML Copied!', 'Close', { duration: 2000 }); }
   downloadXml() { const blob = new Blob([this.generatedXml], { type: 'application/xml' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `pain002-${Date.now()}.xml`; a.click(); }
-  onEditorChange(e: string) { this.generatedXml = e; this.refreshLineCount(); }
+  onEditorChange(e: string) {
+    this.generatedXml = e;
+    this.refreshLineCount();
+    this.parseXmlToForm(e);
+  }
+
+  parseXmlToForm(xml: string) {
+    if (!xml || xml.length < 50) return;
+    if (this.isParsingXml) return;
+    try {
+      this.isParsingXml = true;
+      const cleanXml = xml.replace(/<(\/?)(?:[\w]+:)/g, '<$1');
+      const doc = new DOMParser().parseFromString(cleanXml, 'text/xml');
+      if (doc.querySelector('parsererror')) { this.isParsingXml = false; return; }
+
+      const getT = (t: string, p: any = doc): Element | null => {
+        const els = p.getElementsByTagName(t);
+        if (els.length > 0) return els[0];
+        const all = p.getElementsByTagName('*');
+        for (let i = 0; i < all.length; i++) {
+          if (all[i].localName === t) return all[i];
+        }
+        return null;
+      };
+      const tval = (t: string, p: any = doc) => getT(t, p)?.textContent?.trim() || '';
+      const patch: any = {};
+      Object.keys(this.form.controls).forEach(k => patch[k] = '');
+
+      // AppHdr
+      const head = getT('AppHdr');
+      if (head) {
+        const parseFI = (tag: string, pfx: string) => {
+          const node = getT(tag, head);
+          if (!node) return;
+          patch[pfx + 'Bic'] = tval('BICFI', node);
+          const clr = getT('ClrSysMmbId', node);
+          if (clr) {
+            patch[pfx + 'ClrSysCd'] = tval('Cd', getT('ClrSysId', clr) || clr);
+            patch[pfx + 'MmbId'] = tval('MmbId', clr);
+          }
+          patch[pfx + 'Lei'] = tval('LEI', node);
+        };
+        parseFI('Fr', 'head_from');
+        parseFI('To', 'head_to');
+        patch['head_bizMsgIdr'] = tval('BizMsgIdr', head);
+        patch['head_bizSvc'] = tval('BizSvc', head);
+        patch['head_creDt'] = (tval('CreDt', head) || tval('CreDtTm', head)).substring(0, 25);
+        patch['head_cpyDplct'] = tval('CpyDplct', head);
+        patch['head_pssblDplct'] = tval('PssblDplct', head) === 'true';
+        patch['head_prty'] = tval('Prty', head);
+        const mkt = getT('MktPrctc', head);
+        if (mkt) { patch['head_mktPrctcRegy'] = tval('Regy', mkt); patch['head_mktPrctcId'] = tval('Id', mkt); }
+        const rltd = getT('Rltd', head);
+        if (rltd) {
+          patch['head_rltd_enabled'] = true;
+          parseFI('Fr', 'head_rltd_from');
+          parseFI('To', 'head_rltd_to');
+          patch['head_rltd_bizMsgIdr'] = tval('BizMsgIdr', rltd);
+          patch['head_rltd_bizSvc'] = tval('BizSvc', rltd);
+          patch['head_rltd_creDt'] = tval('CreDt', rltd);
+          patch['head_rltd_cpyDplct'] = tval('CpyDplct', rltd);
+          patch['head_rltd_pssblDplct'] = tval('PssblDplct', rltd) === 'true';
+          patch['head_rltd_prty'] = tval('Prty', rltd);
+        }
+      }
+
+      // GrpHdr
+      const grpHdr = getT('GrpHdr');
+      if (grpHdr) {
+        patch['grpHdr_msgId'] = tval('MsgId', grpHdr);
+        patch['grpHdr_creDtTm'] = tval('CreDtTm', grpHdr);
+        const initgPty = getT('InitgPty', grpHdr);
+        if (initgPty) this.parsePartyGroup(initgPty, 'initgPty', patch, getT, tval);
+        const fwdgAgt = getT('FwdgAgt', grpHdr);
+        if (fwdgAgt) {
+          const fi = getT('FinInstnId', fwdgAgt);
+          if (fi) {
+            (this.form.get('fwdgAgt') as any)?.patchValue({
+              bic: tval('BICFI', fi),
+              lei: tval('LEI', fi),
+              clrSys: fi.getElementsByTagName('ClrSysId')[0]?.getElementsByTagName('Cd')[0]?.textContent?.trim() || '',
+              mmbId: tval('MmbId', getT('ClrSysMmbId', fi) || fi)
+            }, { emitEvent: false });
+          }
+        }
+      }
+
+      // OrgnlGrpInfAndSts
+      const orgnlGrp = getT('OrgnlGrpInfAndSts');
+      if (orgnlGrp) {
+        patch['orgnlMsgId'] = tval('OrgnlMsgId', orgnlGrp);
+        patch['orgnlMsgNmId'] = tval('OrgnlMsgNmId', orgnlGrp);
+        patch['orgnlCreDtTm'] = tval('OrgnlCreDtTm', orgnlGrp);
+      }
+
+      // OrgnlPmtInfAndSts / transactions
+      const orgnlPmt = getT('OrgnlPmtInfAndSts');
+      if (orgnlPmt) {
+        patch['orgnlPmtInfId'] = tval('OrgnlPmtInfId', orgnlPmt);
+        const txEls = orgnlPmt.getElementsByTagName('TxInfAndSts');
+        if (txEls.length > 0) {
+          while (this.transactions.length > txEls.length) this.transactions.removeAt(this.transactions.length - 1);
+          while (this.transactions.length < txEls.length) this.transactions.push(this.initTransaction());
+          Array.from(txEls).forEach((tx, idx) => {
+            const g = this.transactions.at(idx);
+            const tp: any = {};
+            tp['orgnlInstrId'] = tval('OrgnlInstrId', tx);
+            tp['orgnlEndToEndId'] = tval('OrgnlEndToEndId', tx);
+            tp['orgnlUetr'] = tval('OrgnlUETR', tx);
+            tp['txSts'] = tval('TxSts', tx);
+            const rsnInf = getT('StsRsnInf', tx);
+            if (rsnInf) {
+              const rsn = getT('Rsn', rsnInf);
+              if (rsn) tp['stsRsnCd'] = tval('Cd', rsn);
+              const orgtr = getT('Orgtr', rsnInf);
+              if (orgtr) this.parsePartyGroup(orgtr, 'orgtr', tp, getT, tval);
+              const addtlInfs = rsnInf.getElementsByTagName('AddtlInf');
+              const txAddtlArr = g.get('addtlInf') as any;
+              if (addtlInfs.length > 0) {
+                while (txAddtlArr.length > addtlInfs.length) txAddtlArr.removeAt(txAddtlArr.length - 1);
+                while (txAddtlArr.length < addtlInfs.length) txAddtlArr.push(this.fb.control(''));
+                Array.from(addtlInfs).forEach((el: any, i: number) => txAddtlArr.at(i).setValue(el.textContent?.trim() || ''));
+              }
+            }
+            g.patchValue(tp, { emitEvent: false });
+          });
+        }
+      }
+
+      this.form.patchValue(patch, { emitEvent: false });
+    } catch (e) {
+      console.warn('pain002 XML parse failed', e);
+    } finally {
+      this.isParsingXml = false;
+    }
+  }
+
+  private parsePartyGroup(node: Element, prefix: string, patch: any, getT: any, tval: any) {
+    if (!node) return;
+    patch[prefix + '.name'] = patch[prefix + '_name'] = tval('Nm', node);
+    const pstl = getT('PstlAdr', node);
+    if (pstl) {
+      const adrLines = pstl.getElementsByTagName('AdrLine');
+      const strtNm = tval('StrtNm', pstl);
+      const addrType = adrLines.length > 0 ? (strtNm ? 'hybrid' : 'unstructured') : 'structured';
+      const postalPatch = {
+        addrType,
+        dept: tval('Dept', pstl), subDept: tval('SubDept', pstl),
+        street: tval('StrtNm', pstl), bldgNb: tval('BldgNb', pstl),
+        bldgNm: tval('BldgNm', pstl), floor: tval('Flr', pstl),
+        pstBx: tval('PstBx', pstl), room: tval('Room', pstl),
+        pstCd: tval('PstCd', pstl), town: tval('TwnNm', pstl),
+        townLctn: tval('TwnLctnNm', pstl), district: tval('DstrctNm', pstl),
+        ctrySub: tval('CtrySubDvsn', pstl), ctry: tval('Ctry', pstl)
+      };
+      try { (this.form.get(prefix) as any)?.get('postal')?.patchValue(postalPatch, { emitEvent: false }); } catch (_) {}
+    }
+    const id = getT('Id', node);
+    if (id) {
+      const org = getT('OrgId', id);
+      if (org) {
+        patch[prefix + '.idType'] = 'org';
+        patch[prefix + '.orgAnyBic'] = tval('AnyBIC', org);
+        patch[prefix + '.orgLei'] = tval('LEI', org);
+        const othr = getT('Othr', org);
+        if (othr) {
+          patch[prefix + '.orgId'] = tval('Id', othr);
+          const sch = getT('SchmeNm', othr);
+          if (sch) { patch[prefix + '.orgScheme'] = tval('Cd', sch); patch[prefix + '.orgPrtry'] = tval('Prtry', sch); }
+          patch[prefix + '.orgIssr'] = tval('Issr', othr);
+        }
+      }
+      const prvt = getT('PrvtId', id);
+      if (prvt) {
+        patch[prefix + '.idType'] = 'prvt';
+        const dob = getT('DtAndPlcOfBirth', prvt);
+        if (dob) {
+          patch[prefix + '.prvtBirthDt'] = tval('BirthDt', dob);
+          patch[prefix + '.prvtProv'] = tval('PrvcOfBirth', dob);
+          patch[prefix + '.prvtCity'] = tval('CityOfBirth', dob);
+          patch[prefix + '.prvtCtry'] = tval('CtryOfBirth', dob);
+        }
+        const othr = getT('Othr', prvt);
+        if (othr) {
+          patch[prefix + '.prvtId'] = tval('Id', othr);
+          const sch = getT('SchmeNm', othr);
+          if (sch) { patch[prefix + '.prvtScheme'] = tval('Cd', sch); patch[prefix + '.prvtPrtry'] = tval('Prtry', sch); }
+          patch[prefix + '.prvtIssr'] = tval('Issr', othr);
+        }
+      }
+    }
+    patch[prefix + '.ctryOfRes'] = tval('CtryOfRes', node);
+  }
 
   validateMessage() {
     if (this.bicSameWarning) return;
-    // Do NOT regenerate XML here: generatedXml is already kept in sync with the editor via
-    // ngModel, and parseXmlToForm is not wired up for this message, so calling generateXml()
-    // would silently restore any tag the user just deleted (causing validation to falsely pass).
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });

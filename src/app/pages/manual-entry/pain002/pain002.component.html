@@ -90,7 +90,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>Sender BIC</label>
+                            <label>From BIC</label>
                             <div class="uetr-control-row">
                                 <input formControlName="head_fromBic" maxlength="11" class="auto-uppercase" (input)="handleInput($event, 'head_fromBic', 'BICFI')">
                                 <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('head_fromBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
@@ -127,7 +127,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Receiver BIC</label>
+                            <label>To BIC</label>
                             <div class="uetr-control-row">
                                 <input formControlName="head_toBic" maxlength="11" class="auto-uppercase" (input)="handleInput($event, 'head_toBic', 'BICFI')">
                                 <button type="button" class="uetr-refresh-btn" (click)="openBicSearch('head_toBic')" title="Search Global BIC Directory"><mat-icon style="font-size: 16px; width: 16px; height: 16px;">search</mat-icon></button>
@@ -457,7 +457,7 @@
                                                 XML</button>
                                         <button type="button" class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon>
                                                 Download XML</button>
-                                        <button type="button" class="action-btn validate-btn" (click)="validateMessage()" >
+                                        <button type="button" class="action-btn validate-btn" (click)="validateMessage()" [disabled]="form.invalid">
                                                 <mat-icon>verified</mat-icon> Validate Message
                                         </button>
                                 </div>
@@ -537,7 +537,7 @@
 
         <!-- Organisation Fields -->
         <ng-container *ngIf="group.get('idType')?.value === 'org'">
-            <div class="form-group">
+            <div class="form-group" [class.full-width]="title === 'Initiating Party'">
                 <label>BICFI / AnyBIC</label>
                 <div class="uetr-control-row">
                     <input formControlName="orgAnyBic" class="auto-uppercase" maxlength="11" placeholder="8 or 11 characters">
@@ -547,7 +547,7 @@
                 <div class="field-hint at-limit" *ngIf="hint(prefix + '.orgAnyBic', 11) as h">{{h}}</div>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" [class.full-width]="title === 'Initiating Party'">
                 <label>LEI</label>
                 <input formControlName="orgLei" class="auto-uppercase" maxlength="20" placeholder="20-character LEI" (blur)="checkLei($event, prefix + '.orgLei')">
                 <div class="validation-msg" *ngIf="err(prefix + '.orgLei') as e">{{e}}</div>

@@ -76,7 +76,7 @@ const MANUAL_ENTRY_MESSAGES: {
   { id: 'pacs.004.001.09', name: 'Payment Return',               type: 'pacs', bulkId: 'pacs.004' },
   { id: 'pacs.002.001.10', name: 'Payment Status Report',        type: 'pacs', bulkId: 'pacs.002' },
   { id: 'pacs.010.001.03', name: 'Interbank Direct Debit',       type: 'pacs', bulkId: 'pacs.010' },
-  { id: 'pacs.010.001.03', name: 'Margin Collection',            type: 'pacs', bulkId: 'pacs.010.v3' },
+  { id: 'pacs.010.001.03.v3', name: 'Margin Collection',            type: 'pacs', bulkId: 'pacs.010.v3' },
 
   // ── CAMT Messages (CBPR+ versions) ──
   { id: 'camt.057.001.06', name: 'Notification to Receive',              type: 'camt', bulkId: 'camt.057' },

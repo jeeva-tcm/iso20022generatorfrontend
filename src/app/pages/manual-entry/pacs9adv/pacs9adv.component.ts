@@ -43,7 +43,7 @@ export class Pacs9AdvComponent implements OnInit, OnDestroy {
     countries: string[] = [];
     categoryPurposes: string[] = [];
     purposes: string[] = [];
-    sttlmMethods = ['COVE', 'INDA', 'INGA', 'CLRG'];
+    sttlmMethods = ['COVE'];
 
     agentPrefixes = ['instgAgt', 'instdAgt', 'dbtrFi', 'cdtrFi', 'dbtrAgt', 'cdtrAgt',
         'prvsInstgAgt1', 'prvsInstgAgt2', 'prvsInstgAgt3',
@@ -400,7 +400,7 @@ export class Pacs9AdvComponent implements OnInit, OnDestroy {
             if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Must be a valid ISO 20022 code (4 uppercase letters).';
             if (f === 'instrPrty') return 'Invalid Priority. Must be HIGH or NORM.';
             if (f === 'sttlmPrty') return 'Invalid Settlement Priority. Must be HIGH or NORM.';
-            if (f === 'sttlmMtd') return "Settlement Method must be one of the standard codes (e.g., COVE, INDA, INGA, CLRG). Note: 'COVE' is required for pacs.009 Advice.";
+            if (f === 'sttlmMtd') return "Settlement Method for pacs.009 ADV must be COVE.";
             if (f === 'clrChanl') return 'Invalid Clearing Channel. Must be BOOK, MPNS, RTGS, or RTNS.';
             if (f === 'svcLvlCd') return 'Invalid Service Level Code. Must be 1-4 alphanumeric characters.';
             if (f === 'svcLvlPrtry') return 'Invalid Proprietary Service Level. Up to 35 characters allowed.';
@@ -425,7 +425,7 @@ export class Pacs9AdvComponent implements OnInit, OnDestroy {
     }
 
     /**
-     * UETR Refresh — generates a new UUID v4, validates, updates form.
+     * UETR Refresh â€” generates a new UUID v4, validates, updates form.
      */
     refreshUetr(): void {
         this.uetrError = null;
@@ -605,7 +605,7 @@ export class Pacs9AdvComponent implements OnInit, OnDestroy {
         const v = this.form.value;
         let creDtTm = this.fdt(v.creDtTm || this.isoNow());
 
-        // CdtTrfTxInf — pacs.009.001.08 CBPR+ element order
+        // CdtTrfTxInf â€” pacs.009.001.08 CBPR+ element order
         let tx = '';
         let pmtIdXml = this.el('InstrId', v.instrId, 5) + this.el('EndToEndId', v.endToEndId, 5) + this.el('TxId', v.txId, 5) + this.el('UETR', v.uetr, 5);
         if (v.clrSysRef?.trim()) pmtIdXml += this.el('ClrSysRef', v.clrSysRef, 5);
@@ -728,7 +728,7 @@ export class Pacs9AdvComponent implements OnInit, OnDestroy {
 \t\t\t</FIId>
 \t\t</To>
 \t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>
-\t\t<MsgDefIdr>pacs.009.001.08_ADV</MsgDefIdr>
+\t\t<MsgDefIdr>pacs.009.001.08</MsgDefIdr>
 \t\t<BizSvc>swift.cbprplus.02</BizSvc>
 \t\t<CreDt>${creDtTm}</CreDt>${v.appHdrPriority?.trim() ? `\n\t\t<Prty>${v.appHdrPriority}</Prty>` : ''}
 \t</AppHdr>
@@ -906,7 +906,6 @@ ${tx}\t\t\t</CdtTrfTxInf>
     // Validation
     validateMessage() {
                 if (this.bicSameWarning) return;
-                this.generateXml();
         if (this.form.invalid) {
             this.form.markAllAsTouched();
             this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
@@ -941,7 +940,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
                     layer_status: {},
                     details: [{
                         severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
-                        path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'),
+                        path: '', message: 'Validation failed â€” ' + (err.error?.detail?.message || 'backend not reachable.'),
                         fix_suggestion: 'Ensure the validation server is running.'
                     }]
                 };
@@ -1313,11 +1312,11 @@ ${tx}\t\t\t</CdtTrfTxInf>
 
     getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
     getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
-    isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
-  isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
+    isLayerPass(k: string) { return this.getLayerStatus(k).includes('âœ…'); }
+  isLayerFail(k: string) { return this.getLayerStatus(k).includes('âŒ'); }
   isLayerWarn(k: string) {
     const s = this.getLayerStatus(k);
-    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+    return s.includes('âš ') || s.includes('WARNING') || s.includes('WARN');
   }
 
     getValidationIssues(): any[] { return this.validationReport?.details ?? []; }

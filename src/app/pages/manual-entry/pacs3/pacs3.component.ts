@@ -46,7 +46,7 @@ export class Pacs3Component implements OnInit, OnDestroy {
   purposes: string[] = [];
   sttlmMethods = ['INDA', 'INGA'];
   chargeBearers = ['SHAR', 'DEBT', 'CRED', 'SLEV'];
-  // Duplicate import and component definition removed – kept earlier import and @Component
+  // Duplicate import and component definition removed â€“ kept earlier import and @Component
 
   isAddressValid = true;
 
@@ -545,7 +545,7 @@ export class Pacs3Component implements OnInit, OnDestroy {
       // Common fields for all agents and parties (used in partyForm template)
       // Only the mandatory parties that ship with full address data default to 'hybrid'.
       // Everyone else defaults to 'none' so the address section is hidden until the user
-      // explicitly opts in — avoids spurious "Town/Country required" errors on unused agents.
+      // explicitly opts in â€” avoids spurious "Town/Country required" errors on unused agents.
       if (!c[p + 'AddrType']) {
         c[p + 'AddrType'] = ['dbtr', 'cdtr', 'dbtrAgt', 'cdtrAgt'].includes(p) ? 'hybrid' : 'none';
       }
@@ -628,7 +628,7 @@ export class Pacs3Component implements OnInit, OnDestroy {
   }
 
   /**
-   * UETR Refresh — Rule 1-8 implementation.
+   * UETR Refresh â€” Rule 1-8 implementation.
    * Generates a new UUID v4, validates format, checks session uniqueness,
    * patches the form control, shows success/error feedback.
    */
@@ -659,7 +659,7 @@ export class Pacs3Component implements OnInit, OnDestroy {
     this.form.get('uetr')?.setValue(newUetr);
     this.form.get('uetr')?.markAsTouched();
 
-    // Rule 2: Immediate UI update — success feedback (auto-clears after 3s)
+    // Rule 2: Immediate UI update â€” success feedback (auto-clears after 3s)
     this.uetrSuccess = 'UETR refreshed successfully';
     this.uetrSuccessTimer = setTimeout(() => { this.uetrSuccess = null; }, 3000);
   }
@@ -952,7 +952,7 @@ export class Pacs3Component implements OnInit, OnDestroy {
     const v = this.form.value;
     const creDtTm = this.fdt(v.creDtTm || this.isoNow());
 
-    // DrctDbtTxInf — strict XSD element order for pacs.003.001.08
+    // DrctDbtTxInf â€” strict XSD element order for pacs.003.001.08
     let tx = '';
     let pmtIdXml = this.el('InstrId', v.instrId, 5) + this.el('EndToEndId', v.endToEndId, 5) + this.el('TxId', v.txId, 5) + this.el('UETR', v.uetr, 5);
     if (v.clrSysRef?.trim()) pmtIdXml += this.el('ClrSysRef', v.clrSysRef, 5);
@@ -1415,7 +1415,7 @@ ${tx}\t\t\t</DrctDbtTxInf>
   /**
    * Generic XML builder for any party block (InitgPty, InstgPty, etc.).
    * Renders ALL available identifiers: Name, Address, AnyBIC, LEI,
-   * Clearing System Member ID, Other ID, Account — regardless of idType.
+   * Clearing System Member ID, Other ID, Account â€” regardless of idType.
    */
   initgPtyXml(v: any, p: string, indent = 4): string {
     let content = '';
@@ -1479,7 +1479,6 @@ ${tx}\t\t\t</DrctDbtTxInf>
 
   validateMessage() {
         if (this.bicSameWarning) return;
-        this.generateXml();
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
@@ -1510,7 +1509,7 @@ ${tx}\t\t\t</DrctDbtTxInf>
           layer_status: {},
           details: [{
             severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
-            path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'),
+            path: '', message: 'Validation failed â€” ' + (err.error?.detail?.message || 'backend not reachable.'),
             fix_suggestion: 'Ensure the validation server is running.'
           }]
         };
@@ -1936,11 +1935,11 @@ ${tx}\t\t\t</DrctDbtTxInf>
 
   getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
   getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
-  isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
-  isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
+  isLayerPass(k: string) { return this.getLayerStatus(k).includes('âœ…'); }
+  isLayerFail(k: string) { return this.getLayerStatus(k).includes('âŒ'); }
   isLayerWarn(k: string) {
     const s = this.getLayerStatus(k);
-    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+    return s.includes('âš ') || s.includes('WARNING') || s.includes('WARN');
   }
 
   getValidationIssues(): any[] { return this.validationReport?.details ?? []; }

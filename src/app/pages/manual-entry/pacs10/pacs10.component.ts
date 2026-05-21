@@ -660,7 +660,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
 
         let appHdr = `\t\t<Fr><FIId><FinInstnId><BICFI>${this.e(v.fromBic)}</BICFI></FinInstnId></FIId></Fr>\n`;
         appHdr += `\t\t<To><FIId><FinInstnId><BICFI>${this.e(v.toBic)}</BICFI></FinInstnId></FIId></To>\n`;
-        appHdr += `\t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>\n\t\t<MsgDefIdr>pacs.010.001.03</MsgDefIdr>\n\t\t<BizSvc>swift.cbprplus.02</BizSvc>\n`;
+        appHdr += `\t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>\n\t\t<MsgDefIdr>pacs.010.001.10</MsgDefIdr>\n\t\t<BizSvc>swift.cbprplus.02</BizSvc>\n`;
         
         appHdr += `\t\t<CreDt>${creDtTm}</CreDt>\n`;
         if (v.copyDplct) appHdr += this.el('CpyDplct', v.copyDplct, 2);
@@ -673,7 +673,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
 <BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
 \t<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
 ${appHdr}\t</AppHdr>
-\t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.010.001.03">
+\t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.010.001.10">
 \t\t<FIDrctDbt>
 \t\t\t<GrpHdr>
 \t\t\t\t<MsgId>${this.e(v.msgId)}</MsgId>
@@ -694,8 +694,7 @@ ${this.el('InstrId', v.instrId, 6)}${this.el('EndToEndId', v.endToEndId, 6)}${th
 \t\t\t\t\t</PmtId>
 ${this.pmtTpInf(v)}
 \t\t\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${this.formatAmount(v.amount)}</IntrBkSttlmAmt>
-\t\t\t\t\t<IntrBkSttlmDt>${this.e(v.intrBkSttlmDt)}</IntrBkSttlmDt>
-${this.sttlmTmReq(v)}${this.agt('Dbtr', 'dbtr', v, 5)}
+${v.intrBkSttlmDt ? `\t\t\t\t\t<IntrBkSttlmDt>${this.e(v.intrBkSttlmDt)}</IntrBkSttlmDt>\n` : ""}${this.sttlmTmReq(v)}${this.agt('Dbtr', 'dbtr', v, 5)}
 ${this.fullAcct('DbtrAcct', 'dbtr', v, 5)}
 ${this.agt('DbtrAgt', 'dbtrAgt', v, 5)}
 ${this.fullAcct('DbtrAgtAcct', 'dbtrAgt', v, 5)}
@@ -1072,7 +1071,111 @@ ${this.rmtInf(v)}
         }, 0);
     }
 
-    parseXmlToForm(xml: string) { }
+    parseXmlToForm(xml: string) {
+        if (!xml?.trim()) return;
+        try {
+            const cleanXml = xml.replace(/<(\/?)(?:[\w]+:)/g, '<$1');
+            const doc = new DOMParser().parseFromString(cleanXml, 'text/xml');
+            if (doc.querySelector('parsererror')) return;
+
+            const patch: any = {};
+            Object.keys(this.form.controls).forEach(k => patch[k] = '');
+
+            const tval = (el: Element | Document, tag: string) =>
+                el.getElementsByTagName(tag)[0]?.textContent?.trim() || '';
+
+            patch['fromBic'] = doc.getElementsByTagName('Fr')[0]
+                ?.getElementsByTagName('BICFI')[0]?.textContent?.trim() || '';
+            patch['toBic'] = doc.getElementsByTagName('To')[0]
+                ?.getElementsByTagName('BICFI')[0]?.textContent?.trim() || '';
+            patch['bizMsgId'] = tval(doc, 'BizMsgIdr');
+            patch['msgId'] = tval(doc, 'MsgId');
+            patch['creDtTm'] = tval(doc, 'CreDtTm') || tval(doc, 'CreDt');
+
+            const cdtInstr = doc.getElementsByTagName('CdtInstr')[0];
+            if (cdtInstr) {
+                patch['cdtId'] = tval(cdtInstr, 'CdtId');
+
+                const parseAgt = (tag: string, pfx: string) => {
+                    const node = cdtInstr.getElementsByTagName(tag)[0];
+                    if (!node) return;
+                    const fi = node.getElementsByTagName('FinInstnId')[0];
+                    if (fi) {
+                        patch[pfx + 'Bic'] = tval(fi, 'BICFI');
+                        patch[pfx + 'Name'] = tval(fi, 'Nm');
+                        patch[pfx + 'Lei'] = tval(fi, 'LEI');
+                        const clr = fi.getElementsByTagName('ClrSysMmbId')[0];
+                        if (clr) {
+                            patch[pfx + 'ClrSysMmbId'] = tval(clr, 'MmbId');
+                            patch[pfx + 'ClrSysCd'] = clr.getElementsByTagName('ClrSysId')[0]
+                                ?.getElementsByTagName('Cd')[0]?.textContent?.trim() || '';
+                        }
+                    }
+                };
+                parseAgt('InstgAgt', 'instgAgt');
+                parseAgt('InstdAgt', 'instdAgt');
+                parseAgt('CdtrAgt', 'cdtrAgt');
+                parseAgt('Cdtr', 'cdtr');
+                parseAgt('Dbtr', 'dbtr');
+                parseAgt('DbtrAgt', 'dbtrAgt');
+
+                const drctDbt = cdtInstr.getElementsByTagName('DrctDbtTxInf')[0];
+                if (drctDbt) {
+                    const pmtId = drctDbt.getElementsByTagName('PmtId')[0];
+                    if (pmtId) {
+                        patch['instrId'] = tval(pmtId, 'InstrId');
+                        patch['endToEndId'] = tval(pmtId, 'EndToEndId');
+                        patch['txId'] = tval(pmtId, 'TxId');
+                        patch['uetr'] = tval(pmtId, 'UETR');
+                        patch['clrSysRef'] = tval(pmtId, 'ClrSysRef');
+                    }
+                    const amtEl = drctDbt.getElementsByTagName('IntrBkSttlmAmt')[0];
+                    if (amtEl) {
+                        patch['amount'] = amtEl.textContent?.trim() || '';
+                        patch['currency'] = amtEl.getAttribute('Ccy') || '';
+                    }
+                    patch['intrBkSttlmDt'] = tval(drctDbt, 'IntrBkSttlmDt');
+                    const sttlmTmReqEl = drctDbt.getElementsByTagName('SttlmTmReq')[0];
+                    if (sttlmTmReqEl) {
+                        patch['clstTm'] = tval(sttlmTmReqEl, 'CLSTm');
+                        patch['tillTm'] = tval(sttlmTmReqEl, 'TillTm');
+                        patch['frTm'] = tval(sttlmTmReqEl, 'FrTm');
+                        patch['rjctTm'] = tval(sttlmTmReqEl, 'RjctTm');
+                    }
+                    const pmtTp = drctDbt.getElementsByTagName('PmtTpInf')[0];
+                    if (pmtTp) {
+                        patch['instrPrty'] = tval(pmtTp, 'InstrPrty');
+                        patch['svcLvlCd'] = pmtTp.getElementsByTagName('SvcLvl')[0]
+                            ?.getElementsByTagName('Cd')[0]?.textContent?.trim() || '';
+                        patch['svcLvlPrtry'] = pmtTp.getElementsByTagName('SvcLvl')[0]
+                            ?.getElementsByTagName('Prtry')[0]?.textContent?.trim() || '';
+                        patch['lclInstrmCd'] = pmtTp.getElementsByTagName('LclInstrm')[0]
+                            ?.getElementsByTagName('Cd')[0]?.textContent?.trim() || '';
+                        patch['lclInstrmPrtry'] = pmtTp.getElementsByTagName('LclInstrm')[0]
+                            ?.getElementsByTagName('Prtry')[0]?.textContent?.trim() || '';
+                        patch['ctgyPurpCd'] = pmtTp.getElementsByTagName('CtgyPurp')[0]
+                            ?.getElementsByTagName('Cd')[0]?.textContent?.trim() || '';
+                        patch['ctgyPurpPrtry'] = pmtTp.getElementsByTagName('CtgyPurp')[0]
+                            ?.getElementsByTagName('Prtry')[0]?.textContent?.trim() || '';
+                    }
+                    const purp = drctDbt.getElementsByTagName('Purp')[0];
+                    if (purp) {
+                        patch['purposeCd'] = tval(purp, 'Cd');
+                        patch['purposePrtry'] = tval(purp, 'Prtry');
+                    }
+                    patch['instrForDbtrAgt'] = tval(drctDbt, 'InstrForDbtrAgt');
+                    patch['remittanceInfo'] = drctDbt.getElementsByTagName('RmtInf')[0]
+                        ?.getElementsByTagName('Ustrd')[0]?.textContent?.trim() || '';
+                }
+            }
+
+            this.isParsingXml = true;
+            this.form.patchValue(patch, { emitEvent: false });
+            this.isParsingXml = false;
+        } catch (e) {
+            this.isParsingXml = false;
+        }
+    }
 
     switchToPreview() {
         this.generateXml();
@@ -1099,7 +1202,7 @@ ${this.rmtInf(v)}
         this.http.post(this.config.getApiUrl('/validate'), {
             xml_content: this.generatedXml,
             mode: 'Full 1-3',
-            message_type: 'pacs.010.001.03',
+            message_type: 'pacs.010.001.10',
             store_in_history: true
         }).subscribe({
             next: (data: any) => {
@@ -1110,11 +1213,11 @@ ${this.rmtInf(v)}
             error: (err) => {
                 this.validationReport = {
                     status: 'FAIL', errors: 1, warnings: 0,
-                    message: 'pacs.010.001.03', total_time_ms: 0,
+                    message: 'pacs.010.001.10', total_time_ms: 0,
                     layer_status: {},
                     details: [{
                         severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
-                        path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'),
+                        path: '', message: 'Validation failed â€” ' + (err.error?.detail?.message || 'backend not reachable.'),
                         fix_suggestion: 'Ensure the validation server is running.'
                     }]
                 };
@@ -1142,11 +1245,11 @@ ${this.rmtInf(v)}
 
     getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
     getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
-    isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
-  isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
+    isLayerPass(k: string) { return this.getLayerStatus(k).includes('âœ…'); }
+  isLayerFail(k: string) { return this.getLayerStatus(k).includes('âŒ'); }
   isLayerWarn(k: string) {
     const s = this.getLayerStatus(k);
-    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+    return s.includes('âš ') || s.includes('WARNING') || s.includes('WARN');
   }
 
     getValidationIssues(): any[] { return this.validationReport?.details ?? []; }

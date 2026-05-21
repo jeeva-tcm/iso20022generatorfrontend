@@ -19,7 +19,7 @@
 
                     <div class="section-title">Message Header</div>
                     <div class="form-group">
-                        <label>Sender BIC <span class="req">*</span></label>
+                        <label>From BIC <span class="req">*</span></label>
                         <div class="uetr-control-row">
                             <input formControlName="fromBic" maxlength="11" class="auto-uppercase">
                             <button type="button" class="uetr-refresh-btn"
@@ -31,7 +31,7 @@
                         <div class="validation-msg" *ngIf="err('fromBic') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
-                        <label>Receiver BIC <span class="req">*</span></label>
+                        <label>To BIC <span class="req">*</span></label>
                         <div class="uetr-control-row">
                             <input formControlName="toBic" maxlength="11" class="auto-uppercase">
                             <button type="button" class="uetr-refresh-btn"
@@ -127,7 +127,7 @@
                                                 XML</button>
                                         <button type="button" class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon>
                                                 Download XML</button>
-                                        <button type="button" class="action-btn validate-btn" (click)="validateMessage()" >
+                                        <button type="button" class="action-btn validate-btn" (click)="validateMessage()" [disabled]="form.invalid">
                                                 <mat-icon>verified</mat-icon> Validate Message
                                         </button>
                                 </div>
