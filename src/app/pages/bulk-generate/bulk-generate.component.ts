@@ -407,6 +407,22 @@ export class BulkGenerateComponent implements OnInit {
     }
   }
 
+  goToSelectStep() {
+    this.view = 'select';
+  }
+
+  goToConfigStep() {
+    if (this.selectedConfigs.length > 0) {
+      this.goToConfig();
+    }
+  }
+
+  goToResultsStep() {
+    if (this.generatedMessages.length > 0) {
+      this.view = 'results';
+    }
+  }
+
   goToConfig() {
     if (this.selectedConfigs.length === 0) return;
     this.view = 'config';
@@ -684,8 +700,8 @@ export class BulkGenerateComponent implements OnInit {
   async generate() {
     if (!this.canGenerate) return;
 
-    // Strict state-machine transition: only config -> results is allowed here.
-    if (this.view !== 'config') return;
+    // Allow generation transition from config or results view
+    if (this.view !== 'config' && this.view !== 'results') return;
 
     this.isGenerating = true;
     this.generatedMessages = [];
@@ -1013,6 +1029,11 @@ export class BulkGenerateComponent implements OnInit {
 
   getLineCount(xml: string): number {
     return xml.split('\n').length;
+  }
+
+  getXmlLines(xml: string): string[] {
+    if (!xml) return [];
+    return xml.trim().split('\n');
   }
 
   trackByIndex(_i: number, msg: GeneratedMessage) {

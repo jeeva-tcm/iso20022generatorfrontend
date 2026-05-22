@@ -20,17 +20,17 @@
 
   <!-- ══════════════════ STEP PROGRESS BAR ══════════════════ -->
   <div class="steps-bar">
-    <div class="step" [class.active]="view === 'select'" [class.done]="view !== 'select'">
+    <div class="step" [class.active]="view === 'select'" [class.done]="view !== 'select'" [class.clickable]="view !== 'select'" (click)="goToSelectStep()">
       <div class="step-num">1</div>
       <span>Select Message Type(s)</span>
     </div>
     <div class="step-sep"></div>
-    <div class="step" [class.active]="view === 'config'" [class.done]="view === 'results'">
+    <div class="step" [class.active]="view === 'config'" [class.done]="view === 'results'" [class.clickable]="selectedConfigs.length > 0 && view !== 'config'" (click)="goToConfigStep()">
       <div class="step-num">2</div>
       <span>Configure &amp; Select Blocks</span>
     </div>
     <div class="step-sep"></div>
-    <div class="step" [class.active]="view === 'results'">
+    <div class="step" [class.active]="view === 'results'" [class.clickable]="generatedMessages.length > 0 && view !== 'results'" (click)="goToResultsStep()">
       <div class="step-num">3</div>
       <span>Download Results</span>
     </div>
@@ -138,7 +138,7 @@
     </div>
 
     <!-- Multi-select Footer -->
-    <div class="selection-footer" *ngIf="selectedConfigs.length > 0" style="margin-top: 2rem; display: flex; align-items: center; justify-content: space-between; padding: 1.5rem; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color);">
+    <div class="selection-footer" *ngIf="selectedConfigs.length > 0" style="margin-top: 2rem; display: flex; align-items: center; justify-content: space-between; padding: 1.5rem; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-light);">
       <div class="selection-summary" style="font-size: 1.1rem; color: var(--text-primary);">
         <strong>{{ selectedConfigs.length }}</strong> message type(s) selected
       </div>
@@ -347,10 +347,6 @@
           <span class="counter-label">Produced</span>
           <span class="counter-value">{{ generationStats.produced }} / {{ generationStats.requested }}</span>
         </div>
-        <div class="counter-item">
-          <span class="counter-label">Attempts</span>
-          <span class="counter-value">{{ generationStats.totalAttempts || generationStats.produced }}</span>
-        </div>
         <div class="counter-item" *ngIf="liveFailureTop.length > 0">
           <span class="counter-label">Retries this batch</span>
           <span class="counter-value warn">{{ liveFailureTop[0].count }}+</span>
@@ -462,20 +458,20 @@
         </div>
 
         <!-- Expanded XML Preview with Tabs -->
-        <div class="result-xml" *ngIf="group.expanded" style="margin: 16px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <div class="result-xml" *ngIf="group.expanded" style="margin: 16px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-light); box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
           
           <!-- Tab Bar & Toolbar -->
-          <div class="editor-header" style="display: flex; justify-content: space-between; align-items: flex-end; background: var(--bg-card); padding: 8px 16px 0; border-bottom: 1px solid var(--border-color);">
-            <div class="msg-tabs" style="display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;">
+          <div class="editor-header" style="display: flex; justify-content: space-between; align-items: flex-end; background: var(--bg-card); padding: 8px 16px 0; border-bottom: 1px solid var(--border-light);">
+            <div class="msg-tabs">
               <div 
                 *ngFor="let m of group.messages; let i = index"
                 class="msg-tab"
                 (click)="group.activeMessageIndex = i"
                 style="padding: 10px 20px; cursor: pointer; font-size: 13px; font-weight: 600; border-radius: 8px 8px 0 0; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: all 0.2s;"
-                [style.background]="group.activeMessageIndex === i ? 'var(--bg-body)' : 'transparent'"
+                [style.background]="group.activeMessageIndex === i ? 'var(--editor-bg)' : 'transparent'"
                 [style.color]="group.activeMessageIndex === i ? 'var(--primary-color)' : 'var(--text-muted)'"
-                [style.border]="group.activeMessageIndex === i ? '1px solid var(--border-color)' : '1px solid transparent'"
-                [style.border-bottom-color]="group.activeMessageIndex === i ? 'var(--bg-body)' : 'transparent'"
+                [style.border]="group.activeMessageIndex === i ? '1px solid var(--border-light)' : '1px solid transparent'"
+                [style.border-bottom-color]="group.activeMessageIndex === i ? 'var(--editor-bg)' : 'transparent'"
                 [style.margin-bottom]="group.activeMessageIndex === i ? '-1px' : '0'"
               >
                 <mat-icon style="font-size: 16px; width: 16px; height: 16px;">{{ m.status === 'error' ? 'error' : 'code' }}</mat-icon>
@@ -484,19 +480,29 @@
               </div>
             </div>
             
-            <div *ngIf="group.messages[group.activeMessageIndex] as activeMsg" class="xml-actions" style="display: flex; gap: 8px; padding-bottom: 8px; align-items: center;">
-              <button class="icon-btn" (click)="copyXml(activeMsg)" matTooltip="Copy XML" style="background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;">
+            <div *ngIf="group.messages[group.activeMessageIndex] as activeMsg" class="xml-actions" style="display: flex; gap: 8px; padding-bottom: 8px; align-items: center; flex-shrink: 0;">
+              <button class="icon-btn" (click)="copyXml(activeMsg)" matTooltip="Copy XML" style="background: var(--bg-card-hover); border: 1px solid var(--border-light); color: var(--text-main); width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;">
                 <mat-icon style="font-size: 18px; width: 18px; height: 18px;">content_copy</mat-icon>
               </button>
-              <button class="icon-btn" (click)="downloadXml(activeMsg)" matTooltip="Download XML" style="background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;">
+              <button class="icon-btn" (click)="downloadXml(activeMsg)" matTooltip="Download XML" style="background: var(--bg-card-hover); border: 1px solid var(--border-light); color: var(--text-main); width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;">
                 <mat-icon style="font-size: 18px; width: 18px; height: 18px;">download</mat-icon>
               </button>
             </div>
           </div>
 
           <!-- Code Content -->
-          <div *ngIf="group.messages[group.activeMessageIndex] as activeMsg" style="background: var(--bg-body); position: relative;">
-            <pre class="xml-content" style="margin: 0; max-height: 400px; overflow-y: auto; overflow-x: auto; font-family: 'Consolas', 'JetBrains Mono', 'Fira Code', monospace; font-size: 13px; line-height: 1.6; padding: 20px; color: var(--text-main); tab-size: 2;">{{ activeMsg.xml }}</pre>
+          <div *ngIf="group.messages[group.activeMessageIndex] as activeMsg" class="xml-editor-container" style="background: var(--editor-bg); max-height: 450px; overflow: auto; border-radius: 0 0 12px 12px; border: 1px solid var(--border-light); border-top: none; position: relative;">
+            <div style="display: flex; min-height: 100%; align-items: stretch; position: relative;">
+              <!-- Line Numbers Column (Sticky left, scrolls vertically with container) -->
+              <div class="line-numbers-sidebar" style="padding: 16px 10px; border-right: 1px solid var(--border-light); text-align: right; color: var(--editor-gutter-text); user-select: none; background: var(--editor-gutter); min-width: 44px; display: flex; flex-direction: column; font-family: 'Consolas', 'JetBrains Mono', 'Fira Code', monospace; font-size: 12.5px; line-height: 1.6; flex-shrink: 0; position: sticky; left: 0; z-index: 10;">
+                <span *ngFor="let line of getXmlLines(activeMsg.xml); let idx = index" style="line-height: 1.6; height: 1.6em; display: block;">
+                  {{ idx + 1 }}
+                </span>
+              </div>
+
+              <!-- Code Panel (Scrolling horizontally within container) -->
+              <pre class="xml-code-pane" style="margin: 0; padding: 16px 20px; color: var(--editor-text); tab-size: 2; flex: 1; min-width: 0; overflow: visible; white-space: pre; background: transparent; border: none; font-family: 'Consolas', 'JetBrains Mono', 'Fira Code', monospace; font-size: 12.5px; line-height: 1.6; outline: none; display: block;">{{ activeMsg.xml.trim() }}</pre>
+            </div>
           </div>
         </div>
       </div>

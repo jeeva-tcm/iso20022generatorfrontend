@@ -384,7 +384,7 @@ export class Pacs9AdvComponent implements OnInit, OnDestroy {
               if (f.toLowerCase().includes('bic') && val.length >= 11) return null;
               if (f === 'uetr' && val.length >= 36) return null;
             }
-            if (f.toLowerCase().includes('bic')) return 'Valid 8 or 11-char BIC required.';
+            if (f.toLowerCase().includes('bic')) return 'Valid 8 or 11 character BIC is required.';
             if (f.toLowerCase().includes('iban')) return 'Valid 34-char IBAN required.';
             if (f.toLowerCase().includes('uetr')) return 'Invalid UETR format';
             if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) {

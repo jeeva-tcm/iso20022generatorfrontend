@@ -771,7 +771,7 @@ ${txInf.trimEnd()}
 
     if (c.errors?.['required']) return 'Required field.';
     if (c.errors?.['pattern']) {
-      if (f.toLowerCase().includes('bic')) return '8 or 11-char BIC required.';
+      if (f.toLowerCase().includes('bic')) return 'Valid 8 or 11 character BIC is required.';
       if (f.toLowerCase().includes('uetr')) return 'Valid RFC 4122 v4 UUID expected.';
       return 'Invalid format.';
     }

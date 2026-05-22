@@ -1330,7 +1330,7 @@ ${this.rmtInf(v)}
         if (ctrl!.errors?.['maxlength']) return `Max ${ctrl!.errors!['maxlength'].requiredLength} chars.`;
 
         if (ctrl!.errors?.['pattern']) {
-            if (cl.includes('bic')) return 'Valid 8 or 11-char BIC required.';
+            if (cl.includes('bic')) return 'Valid 8 or 11 character BIC is required.';
             if (cl.includes('iban')) return 'Valid 34-char IBAN required.';
             if (cl.includes('lei')) return 'Must be 20-char LEI.';
             if (cl.includes('ctry') || cl.includes('country')) return '2-letter ISO code required.';

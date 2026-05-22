@@ -743,7 +743,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
       }
 
       const fl = f.toLowerCase();
-      if (fl.includes('bic')) return 'Valid 8 or 11-char BIC required.';
+      if (fl.includes('bic')) return 'Valid 8 or 11 character BIC is required.';
       if (fl.includes('iban')) return 'Valid 34-char IBAN required.';
       if (fl.includes('uetr')) return 'Invalid UETR format';
       if (fl.includes('amount') || fl.includes('amt')) return 'Max 18 digits, up to 5 decimals.';
