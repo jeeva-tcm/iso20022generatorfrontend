@@ -225,7 +225,7 @@ export class Camt055Component implements OnInit, OnDestroy {
       assgnmt_creDtTm: [this.isoNow(), Validators.required],
 
       // Underlying - OrgnlPmtInfAndCxl
-      orgnlPmtInfId: ['', [Validators.maxLength(35), Validators.pattern(/^(?!\s+$).*/)]],
+      orgnlPmtInfId: ['PMTINFID-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^(?!\s+$).*/)]],
       orgnlMsgId: ['MSG-ORG-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
       orgnlMsgNmId: ['pacs.008.001.08', Validators.required],
       orgnlCreDtTm: [this.isoNow(), Validators.required],
@@ -637,7 +637,7 @@ ${assgnmt.trimEnd()}
 \t\t\t</Assgnmt>
 \t\t\t<Undrlyg>
 \t\t\t\t<OrgnlPmtInfAndCxl>
-\t\t\t\t\t<OrgnlPmtInfId>${this.esc(v.orgnlPmtInfId || '')}</OrgnlPmtInfId>
+${this.leaf('OrgnlPmtInfId', v.orgnlPmtInfId, 5).trimEnd()}
 \t\t\t\t\t<OrgnlGrpInf>
 ${orgnlGrpInf.trimEnd()}
 \t\t\t\t\t</OrgnlGrpInf>
