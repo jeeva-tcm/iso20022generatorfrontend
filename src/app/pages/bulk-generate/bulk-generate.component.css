@@ -2090,7 +2090,7 @@ body.light-theme .config-tab.active {
 
 .custom-count-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   gap: 16px;
 }
 
@@ -2102,35 +2102,30 @@ body.light-theme .config-tab.active {
   border-radius: 14px;
   background: var(--bg-card);
   border: 1.5px solid var(--border-light);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
   box-shadow: var(--shadow-sm);
   position: relative;
 }
 
 .custom-count-card:hover {
-  transform: translateY(-2px);
   background: var(--bg-card-hover);
-  box-shadow: var(--shadow-md);
 }
 
 /* Family Specific Card Border Accents */
 .custom-count-card.card-family-pacs:hover {
   border-color: rgba(99, 102, 241, 0.5);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.08);
 }
 .custom-count-card.card-family-camt:hover {
   border-color: rgba(14, 165, 233, 0.5);
-  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.08);
 }
 .custom-count-card.card-family-pain:hover {
   border-color: rgba(236, 72, 153, 0.5);
-  box-shadow: 0 6px 20px rgba(236, 72, 153, 0.08);
 }
 
 .card-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   min-width: 0;
   flex: 1;
 }
@@ -2236,10 +2231,9 @@ body.light-theme .cfg-tag.msg-tag-pain { color: #be185d; }
 .cfg-desc {
   font-size: 0.72rem;
   color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 180px;
+  white-space: normal;
+  word-wrap: break-word;
+  line-height: 1.3;
 }
 
 .card-right {
@@ -2247,7 +2241,8 @@ body.light-theme .cfg-tag.msg-tag-pain { color: #be185d; }
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
-  margin-left: 12px;
+  margin-left: 16px;
+  flex-shrink: 0;
 }
 
 .qty-error-badge {

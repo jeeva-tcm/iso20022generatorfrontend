@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -1108,20 +1108,41 @@ ${txInf.trimEnd()}
 
   formatXml(showToast = true) {
     if (!this.generatedXml?.trim()) return;
+    this.pushHistory();
+
     try {
+      const tab = '    ';
       let formatted = '';
       let indent = '';
-      const tab = '    ';
-      this.generatedXml.split(/>\s*</).forEach(node => {
-        if (node.match(/^\/\w/)) indent = indent.substring(tab.length);
-        formatted += indent + '<' + node + '>\r\n';
-        if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith('?')) indent += tab;
+      // Normalize XML
+      let xml = this.generatedXml.replace(/>\s+</g, '><').trim();
+      
+      // Intelligent regex to split Tags and Comments
+      const reg = /(<[^/!?][^>]*>[^<]*<\/[^>]+>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
+      const nodes = xml.match(reg) || [];
+
+      nodes.forEach(node => {
+        const trimmed = node.trim();
+        if (!trimmed) return;
+
+        if (trimmed.startsWith('</')) {
+          if (indent.length >= tab.length) indent = indent.substring(tab.length);
+          formatted += indent + trimmed + '\r\n';
+        } else if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
+          formatted += indent + trimmed + '\r\n';
+        } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
+          formatted += indent + trimmed + '\r\n';
+          indent += tab;
+        } else {
+          formatted += indent + trimmed + '\r\n';
+        }
       });
+      
       this.generatedXml = formatted.trim();
       this.refreshLineCount();
-      this.pushHistory();
+      if (showToast) { this.snackBar.open('XML Formatted', '', { duration: 1500 }); }
     } catch (e) {
-      this.snackBar.open('Error formatting XML', 'Close', { duration: 2000 });
+      this.snackBar.open('Unable to format XML', '', { duration: 3000 });
     }
   }
 

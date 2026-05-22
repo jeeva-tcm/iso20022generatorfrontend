@@ -611,7 +611,16 @@ export class MtToMxComponent implements OnInit {
 \t\t\t\t</PmtId>
 \t\t\t\t<IntrBkSttlmAmt Ccy="${this.esc(ccy)}">${amount}</IntrBkSttlmAmt>
 \t\t\t\t<IntrBkSttlmDt>${sttlmDt}</IntrBkSttlmDt>
+\t\t\t\t<InstdAmt Ccy="${this.esc(ccy)}">${amount}</InstdAmt>
 \t\t\t\t<ChrgBr>${chrgBr}</ChrgBr>
+\t\t\t\t<ChrgsInf>
+\t\t\t\t\t<Amt Ccy="${this.esc(ccy)}">0.00</Amt>
+\t\t\t\t\t<Agt>
+\t\t\t\t\t\t<FinInstnId>
+\t\t\t\t\t\t\t<BICFI>${this.esc(instgAgt)}</BICFI>
+\t\t\t\t\t\t</FinInstnId>
+\t\t\t\t\t</Agt>
+\t\t\t\t</ChrgsInf>
 \t\t\t\t<InstgAgt>
 \t\t\t\t\t<FinInstnId>
 \t\t\t\t\t\t<BICFI>${this.esc(instgAgt)}</BICFI>
