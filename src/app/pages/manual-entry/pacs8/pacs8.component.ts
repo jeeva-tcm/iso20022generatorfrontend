@@ -1,4 +1,4 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -98,6 +98,24 @@ export class Pacs8Component implements OnInit, OnDestroy {
       this.updateClearingSystemValidation();
     });
 
+    // Auto-sync instdAmt and instdAmtCcy with primary amount/currency until dirty
+    this.form.get('amount')?.valueChanges.subscribe(v => {
+      const ctrl = this.form.get('instdAmt');
+      if (ctrl && !ctrl.dirty) {
+        ctrl.setValue(v, { emitEvent: false });
+      }
+    });
+    this.form.get('currency')?.valueChanges.subscribe(v => {
+      const ctrl = this.form.get('instdAmtCcy');
+      if (ctrl && !ctrl.dirty) {
+        ctrl.setValue(v, { emitEvent: false });
+        this.updateInstdAmtValidator();
+      }
+    });
+    this.form.get('instdAmtCcy')?.valueChanges.subscribe(() => {
+      this.updateInstdAmtValidator();
+    });
+
     // Load draft before valueChanges subscription to avoid recursive save
     const hadDraft = this.loadDraft();
     if (hadDraft) {
@@ -114,6 +132,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
     // Init history
     this.pushHistory();
     this.updateAmountValidator();
+    this.updateInstdAmtValidator();
 
     // Enforce XOR logic for Payment Type Information choices
     const choiceFields = ['svcLvl', 'lclInstrm', 'ctgyPurp'];
@@ -448,6 +467,19 @@ export class Pacs8Component implements OnInit, OnDestroy {
     amountCtrl?.updateValueAndValidity({ emitEvent: false });
   }
 
+  private updateInstdAmtValidator() {
+    const ccy = this.form.get('instdAmtCcy')?.value;
+    const precision = this.currencyPrecision[ccy] ?? 2;
+    const instdAmtCtrl = this.form.get('instdAmt');
+    
+    const pattern = precision > 0 
+      ? new RegExp(`^\\d{1,13}(\\.\\d{1,${precision}})?$`)
+      : new RegExp(`^\\d{1,13}$`);
+    
+    instdAmtCtrl?.setValidators([Validators.pattern(pattern)]);
+    instdAmtCtrl?.updateValueAndValidity({ emitEvent: false });
+  }
+
   private buildForm() {
     const BIC = [Validators.required, Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
     const BIC_OPT = [Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
@@ -481,10 +513,13 @@ export class Pacs8Component implements OnInit, OnDestroy {
       rltd: [''], rltdCharSet: [''],
       sttlmPrty: [''],
 
-      instdAmt: [''], instdAmtCcy: [''],
+      instdAmt: ['15000.00', [Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]],
+      instdAmtCcy: ['EUR'],
       xchgRate: [''],
       dbtDtTm: [this.isoNow()], cdtDtTm: [this.isoNow()],
-      chrgsInfAmt: [''], chrgsInfCcy: [''], chrgsInfAgtBic: [''],
+      chrgsInfAmt: ['0.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]],
+      chrgsInfCcy: ['EUR', Validators.required],
+      chrgsInfAgtBic: ['SNDRBEBBXXX', [Validators.required, Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]],
       rgltryRptg1Code: [''], rgltryRptg1Inf: [''],
       rgltryRptg2Code: [''], rgltryRptg2Inf: [''],
       rgltryRptg3Code: [''], rgltryRptg3Inf: [''],
@@ -732,6 +767,11 @@ export class Pacs8Component implements OnInit, OnDestroy {
         const p = this.currencyPrecision[ccy] ?? 2;
         return `Value must be a number with max ${p} decimals for ${ccy}.`;
       }
+      if (f === 'instdAmt') {
+        const ccy = this.form.get('instdAmtCcy')?.value;
+        const p = this.currencyPrecision[ccy] ?? 2;
+        return `Value must be a number with max ${p} decimals for ${ccy}.`;
+      }
       // Precedence: If we're at the limit and pattern is invalid, let the limit hint take precedence
       if (this.showMaxLenWarning[f]) {
         const val = c.value?.toString() || '';
@@ -743,7 +783,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
       }
 
       const fl = f.toLowerCase();
-      if (fl.includes('bic')) return 'Valid 8 or 11-char BIC required.';
+      if (fl.includes('bic')) return 'Valid 8 or 11 character BIC is required.';
       if (fl.includes('iban')) return 'Valid 34-char IBAN required.';
       if (fl.includes('uetr')) return 'Invalid UETR format';
       if (fl.includes('amount') || fl.includes('amt')) return 'Max 18 digits, up to 5 decimals.';
@@ -1027,7 +1067,24 @@ export class Pacs8Component implements OnInit, OnDestroy {
         if (v.cdtDtTm) stind += this.el('CdtDtTm', this.fdt(v.cdtDtTm), 5);
         tx += this.tag('SttlmTmIndctn', stind, 4);
     }
-    if (v.sttlmPrty?.trim()) tx += this.el('SttlmPrty', v.sttlmPrty, 4);
+    let instdAmtVal = v.instdAmt;
+    let instdAmtCcyVal = v.instdAmtCcy;
+    const hasCharges = !!(v.chrgsInfAmt && v.chrgsInfCcy);
+    if (hasCharges) {
+      if (instdAmtVal === null || instdAmtVal === undefined || instdAmtVal === '') {
+        instdAmtVal = v.amount;
+      }
+      if (instdAmtCcyVal === null || instdAmtCcyVal === undefined || instdAmtCcyVal === '') {
+        instdAmtCcyVal = v.currency;
+      }
+    }
+    if (instdAmtVal !== null && instdAmtVal !== undefined && instdAmtVal !== '' &&
+        instdAmtCcyVal !== null && instdAmtCcyVal !== undefined && instdAmtCcyVal !== '') {
+        const formattedInstdAmt = this.formatting.formatAmount(instdAmtVal, instdAmtCcyVal);
+        tx += `\t\t\t\t<InstdAmt Ccy="${this.e(instdAmtCcyVal)}">${formattedInstdAmt}</InstdAmt>\n`;
+    }
+    if (v.xchgRate) tx += this.el('XchgRate', v.xchgRate, 4);
+
     if (v.chrgBr?.trim()) tx += this.el('ChrgBr', v.chrgBr, 4);
 
     // Charges Information (0..n)
@@ -1038,12 +1095,6 @@ export class Pacs8Component implements OnInit, OnDestroy {
         }
         tx += this.tag('ChrgsInf', chrgs, 4);
     }
-    
-    if (v.instdAmt && v.instdAmtCcy) {
-        const formattedInstdAmt = this.formatting.formatAmount(v.instdAmt, v.instdAmtCcy);
-        tx += `\t\t\t\t<InstdAmt Ccy="${this.e(v.instdAmtCcy)}">${formattedInstdAmt}</InstdAmt>\n`;
-    }
-    if (v.xchgRate) tx += this.el('XchgRate', v.xchgRate, 4);
     
     const formatAcct = (val: string, tabs: number) => {
       if (!val) return '';

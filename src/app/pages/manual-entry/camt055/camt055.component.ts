@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -225,7 +225,7 @@ export class Camt055Component implements OnInit, OnDestroy {
       assgnmt_creDtTm: [this.isoNow(), Validators.required],
 
       // Underlying - OrgnlPmtInfAndCxl
-      orgnlPmtInfId: ['', [Validators.maxLength(35), Validators.pattern(/^(?!\s+$).*/)]],
+      orgnlPmtInfId: ['PMTINFID-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^(?!\s+$).*/)]],
       orgnlMsgId: ['MSG-ORG-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
       orgnlMsgNmId: ['pacs.008.001.08', Validators.required],
       orgnlCreDtTm: [this.isoNow(), Validators.required],
@@ -637,7 +637,7 @@ ${assgnmt.trimEnd()}
 \t\t\t</Assgnmt>
 \t\t\t<Undrlyg>
 \t\t\t\t<OrgnlPmtInfAndCxl>
-\t\t\t\t\t<OrgnlPmtInfId>${this.esc(v.orgnlPmtInfId || '')}</OrgnlPmtInfId>
+${this.leaf('OrgnlPmtInfId', v.orgnlPmtInfId, 5).trimEnd()}
 \t\t\t\t\t<OrgnlGrpInf>
 ${orgnlGrpInf.trimEnd()}
 \t\t\t\t\t</OrgnlGrpInf>
@@ -1108,20 +1108,41 @@ ${txInf.trimEnd()}
 
   formatXml(showToast = true) {
     if (!this.generatedXml?.trim()) return;
+    this.pushHistory();
+
     try {
+      const tab = '    ';
       let formatted = '';
       let indent = '';
-      const tab = '    ';
-      this.generatedXml.split(/>\s*</).forEach(node => {
-        if (node.match(/^\/\w/)) indent = indent.substring(tab.length);
-        formatted += indent + '<' + node + '>\r\n';
-        if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith('?')) indent += tab;
+      // Normalize XML
+      let xml = this.generatedXml.replace(/>\s+</g, '><').trim();
+      
+      // Intelligent regex to split Tags and Comments
+      const reg = /(<[^/!?][^>]*>[^<]*<\/[^>]+>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
+      const nodes = xml.match(reg) || [];
+
+      nodes.forEach(node => {
+        const trimmed = node.trim();
+        if (!trimmed) return;
+
+        if (trimmed.startsWith('</')) {
+          if (indent.length >= tab.length) indent = indent.substring(tab.length);
+          formatted += indent + trimmed + '\r\n';
+        } else if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
+          formatted += indent + trimmed + '\r\n';
+        } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
+          formatted += indent + trimmed + '\r\n';
+          indent += tab;
+        } else {
+          formatted += indent + trimmed + '\r\n';
+        }
       });
+      
       this.generatedXml = formatted.trim();
       this.refreshLineCount();
-      this.pushHistory();
+      if (showToast) { this.snackBar.open('XML Formatted', '', { duration: 1500 }); }
     } catch (e) {
-      this.snackBar.open('Error formatting XML', 'Close', { duration: 2000 });
+      this.snackBar.open('Unable to format XML', '', { duration: 3000 });
     }
   }
 
@@ -1170,7 +1191,7 @@ ${txInf.trimEnd()}
     if (c.errors?.['future_date']) return 'Date cannot be in the future.';
     if (c.errors?.['pattern']) {
       const fl = f.toLowerCase();
-      if (fl.includes('bic')) return 'Valid 8 or 11-char BIC required.';
+      if (fl.includes('bic')) return 'Valid 8 or 11 character BIC is required.';
       if (fl.includes('iban')) return 'Valid 34-char IBAN required.';
       if (fl.includes('uetr')) return 'Invalid UETR format.';
       if (fl.includes('lei')) return 'Must be 20-char LEI.';

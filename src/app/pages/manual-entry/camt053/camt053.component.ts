@@ -454,7 +454,7 @@ export class Camt053Component implements OnInit, OnDestroy {
                 const p = this.currencyPrecision[ccy] ?? 2;
                 return 'Value must be a number with max ' + p + ' decimals for ' + ccy + '.';
             }
-            if (f.toLowerCase().includes('bic')) return 'Valid 8 or 11-char BIC required.';
+            if (f.toLowerCase().includes('bic')) return 'Valid 8 or 11 character BIC is required.';
             if (f.includes('nbOf') || f.includes('SeqNb')) return 'Must be numeric.';
             return 'Invalid value.';
         }

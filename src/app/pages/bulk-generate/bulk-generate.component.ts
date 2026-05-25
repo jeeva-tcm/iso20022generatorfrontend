@@ -76,6 +76,8 @@ export class BulkGenerateComponent implements OnInit {
 
   messageCount: number = 1;
   messageCountError: string = '';
+  customCounts: Record<string, number> = {};
+  customCountsError: Record<string, string> = {};
 
   // block selection: configId -> blockId -> boolean
   blockChecked: Record<string, Record<string, boolean>> = {};
@@ -371,6 +373,22 @@ export class BulkGenerateComponent implements OnInit {
     }
   }
 
+  goToSelectStep() {
+    this.view = 'select';
+  }
+
+  goToConfigStep() {
+    if (this.selectedConfigs.length > 0) {
+      this.goToConfig();
+    }
+  }
+
+  goToResultsStep() {
+    if (this.generatedMessages.length > 0) {
+      this.view = 'results';
+    }
+  }
+
   goToConfig() {
     if (this.selectedConfigs.length === 0) return;
     this.view = 'config';
@@ -383,6 +401,10 @@ export class BulkGenerateComponent implements OnInit {
       if (!this.blockChecked[cfg.id]) {
         this.blockChecked[cfg.id] = {};
         this.dependencyWarnings[cfg.id] = [];
+      }
+      if (this.customCounts[cfg.id] === undefined) {
+        this.customCounts[cfg.id] = this.messageCount;
+        this.customCountsError[cfg.id] = '';
       }
       if (cfg.blocks.length === 0) {
         this.loadBlocksFromBackend(cfg);
@@ -530,8 +552,6 @@ export class BulkGenerateComponent implements OnInit {
     this.dependencyWarnings[cfg.id] = warnings;
   }
 
-  // ── Count Validation ───────────────────────────────────────────────────────
-
   onCountChange() {
     const v = this.messageCount;
     if (!v || v < 1) {
@@ -542,7 +562,62 @@ export class BulkGenerateComponent implements OnInit {
       this.messageCountError = 'Must be a whole number.';
     } else {
       this.messageCountError = '';
+      // Update all custom counts to match the new global count
+      this.selectedConfigs.forEach(cfg => {
+        this.customCounts[cfg.id] = v;
+        this.customCountsError[cfg.id] = '';
+      });
     }
+  }
+
+  onCustomCountChange(cfgId: string) {
+    const v = this.customCounts[cfgId];
+    if (v === null || v === undefined || v < 1) {
+      this.customCountsError[cfgId] = 'Min is 1.';
+    } else if (v > 500) {
+      this.customCountsError[cfgId] = 'Max is 500.';
+    } else if (!Number.isInteger(v)) {
+      this.customCountsError[cfgId] = 'Must be whole.';
+    } else {
+      this.customCountsError[cfgId] = '';
+    }
+  }
+
+  incrementCount(cfgId: string) {
+    const v = this.customCounts[cfgId] || 0;
+    if (v < 500) {
+      this.customCounts[cfgId] = v + 1;
+      this.onCustomCountChange(cfgId);
+    }
+  }
+
+  decrementCount(cfgId: string) {
+    const v = this.customCounts[cfgId] || 1;
+    if (v > 1) {
+      this.customCounts[cfgId] = v - 1;
+      this.onCustomCountChange(cfgId);
+    }
+  }
+
+  incrementGlobalCount() {
+    if (this.messageCount < 500) {
+      this.messageCount++;
+      this.onCountChange();
+    }
+  }
+
+  decrementGlobalCount() {
+    if (this.messageCount > 1) {
+      this.messageCount--;
+      this.onCountChange();
+    }
+  }
+
+  getTotalMessagesCount(): number {
+    return this.selectedConfigs.reduce((sum, cfg) => {
+      const count = this.customCounts[cfg.id] !== undefined ? this.customCounts[cfg.id] : this.messageCount;
+      return sum + (count || 0);
+    }, 0);
   }
 
   // ── Selected Blocks List ───────────────────────────────────────────────────
@@ -625,9 +700,16 @@ export class BulkGenerateComponent implements OnInit {
 
   get canGenerate(): boolean {
     if (this.selectedConfigs.length === 0) return false;
-    if (this.messageCountError || this.messageCount < 1) return false;
-
+    
+    // Validate individual counts
     for (const cfg of this.selectedConfigs) {
+      const count = this.customCounts[cfg.id];
+      if (count === undefined || count < 1 || count > 500 || !Number.isInteger(count)) {
+        return false;
+      }
+      if (this.customCountsError[cfg.id]) {
+        return false;
+      }
       if ((this.dependencyWarnings[cfg.id]?.length || 0) > 0) return false;
       if (this.getSelectedBlocks(cfg.id).length === 0) return false;
     }
@@ -648,8 +730,8 @@ export class BulkGenerateComponent implements OnInit {
   async generate() {
     if (!this.canGenerate) return;
 
-    // Strict state-machine transition: only config -> results is allowed here.
-    if (this.view !== 'config') return;
+    // Allow generation transition from config or results view
+    if (this.view !== 'config' && this.view !== 'results') return;
 
     this.isGenerating = true;
     this.generatedMessages = [];
@@ -657,7 +739,7 @@ export class BulkGenerateComponent implements OnInit {
     this.liveFailureTop = [];
     this.currentStreamingType = null;
     this.generationStats = {
-      requested: this.messageCount * this.selectedConfigs.length,
+      requested: this.getTotalMessagesCount(),
       produced: 0,
       totalAttempts: 0,
     };
@@ -717,7 +799,7 @@ export class BulkGenerateComponent implements OnInit {
   private streamMessageType(cfg: MessageTypeConfig, startIndex: number): Promise<number> {
     const payload = {
       message_type: cfg.bulkId,
-      count: this.messageCount,
+      count: this.customCounts[cfg.id] !== undefined ? this.customCounts[cfg.id] : this.messageCount,
       selected_blocks: this.getSelectedBlocks(cfg.id),
     };
 
@@ -977,6 +1059,11 @@ export class BulkGenerateComponent implements OnInit {
 
   getLineCount(xml: string): number {
     return xml.split('\n').length;
+  }
+
+  getXmlLines(xml: string): string[] {
+    if (!xml) return [];
+    return xml.trim().split('\n');
   }
 
   trackByIndex(_i: number, msg: GeneratedMessage) {

@@ -611,7 +611,7 @@ export class Camt054Component implements OnInit, OnDestroy {
     if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
     if (c.errors?.['pattern']) {
       const fl = f.toLowerCase();
-      if (fl.includes('bic')) return 'Valid 8 or 11-char BIC required.';
+      if (fl.includes('bic')) return 'Valid 8 or 11 character BIC is required.';
       if (fl.includes('iban')) return 'Valid 34-char IBAN required.';
       if (fl.includes('uetr')) return 'Invalid UETR format';
       if (fl.includes('lei')) return 'Must be 20-char LEI.';
