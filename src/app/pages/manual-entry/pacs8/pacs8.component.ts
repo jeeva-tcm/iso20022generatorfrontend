@@ -1186,6 +1186,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
         }
     }
 
+    if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 4), 3);
 
     let rmtInf = '';
     if (v.rmtInfType === 'ustrd' && v.rmtInfUstrd) {
@@ -1774,6 +1775,9 @@ ${tx}\t\t\t</CdtTrfTxInf>
             setVal('ctgyPurpPrtry', tval('Prtry', ctgyPurp));
           }
         }
+
+        const purp = getT('Purp', tx);
+        if (purp) setVal('purpCd', tval('Cd', purp));
 
         const amtEl = getT('IntrBkSttlmAmt', tx);
         if (amtEl) {
