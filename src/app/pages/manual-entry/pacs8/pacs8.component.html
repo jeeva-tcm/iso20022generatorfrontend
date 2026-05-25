@@ -1199,6 +1199,9 @@
                         </div>
                         <div class="validation-msg" *ngIf="err(prefix+'OrgAnyBIC') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint(prefix+'OrgAnyBIC', 11) as h">{{h}}</div>
+                        <div class="field-hint" *ngIf="group.get(prefix+'OrgAnyBIC')?.value?.trim()">
+                            AnyBIC present — Name and Postal Address will be omitted (CBPR+ rule).
+                        </div>
                 </div>
 
                 <!-- Address Type -->

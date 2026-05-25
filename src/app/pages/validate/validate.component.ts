@@ -73,7 +73,7 @@ export class ValidateComponent implements OnInit {
   // ── XML Editor state ─────────────────────────────────────────────────────────────
   editingEntry: FileEntry | null = null;
   originalContent: string = '';
-  editorLineCount: number[] = [1];
+  editorLineCount: number[] = [];
   private xmlHistory: string[] = [];
   private xmlHistoryIdx: number = -1;
   private maxHistory = 200;
@@ -957,7 +957,7 @@ export class ValidateComponent implements OnInit {
   updateEditorLines(content: string) {
     const lines = (content || '').split('\n').length;
     if (this.editorLineCount.length !== lines) {
-      this.editorLineCount = new Array(lines);
+      this.editorLineCount = Array.from({ length: lines }, (_, i) => i + 1);
     }
   }
 
@@ -1407,18 +1407,20 @@ export class ValidateComponent implements OnInit {
     this.editingEntry = f;
     this.originalContent = f.content;
     this.updateEditorLines(f.content);
-    
+
     // Initialize history
     this.xmlHistory = [f.content];
     this.xmlHistoryIdx = 0;
 
+    // Force *ngIf to render the editor before scrolling
+    this.cdr.detectChanges();
     this.scrollToLine(lineNum);
   }
 
   scrollToLine(lineNum: number) {
     setTimeout(() => {
       const textarea = document.querySelector('.editor-textarea') as HTMLTextAreaElement;
-      if (!textarea) return;
+      if (!textarea) { setTimeout(() => this.scrollToLine(lineNum), 150); return; }
       
       const lines = textarea.value.split('\n');
       let charPos = 0;
@@ -1428,10 +1430,15 @@ export class ValidateComponent implements OnInit {
       
       textarea.focus();
       textarea.setSelectionRange(charPos, charPos + (lines[lineNum - 1] || '').length);
-      
-      // Calculate scroll position (each line is approx 20px in height)
-      const lineHeight = 20;
-      textarea.scrollTop = Math.max(0, (lineNum - 5) * lineHeight);
+
+      // Calculate scroll position — measure actual line height if possible
+      const lineHeight = textarea.scrollHeight / Math.max(lines.length, 1);
+      const scrollTop = Math.max(0, (lineNum - 5) * lineHeight);
+      textarea.scrollTop = scrollTop;
+
+      // Sync gutter
+      const gutter = document.querySelector('.editor-line-numbers') as HTMLElement;
+      if (gutter) gutter.scrollTop = scrollTop;
     }, 100);
   }
 }

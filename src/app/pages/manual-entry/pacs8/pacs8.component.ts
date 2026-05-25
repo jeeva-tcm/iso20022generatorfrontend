@@ -554,11 +554,11 @@ export class Pacs8Component implements OnInit, OnDestroy {
       chrgBr: ['SHAR', Validators.required],
       // â”€â”€ Debtor â”€â”€
       dbtrName: ['Meridian Global Trading GmbH', [Validators.required, Validators.maxLength(140), SAFE_NAME]],
-      dbtrOrgAnyBIC: ['SNDRBEBBXXX', BIC],
+      dbtrOrgAnyBIC: ['', BIC_OPT],
       dbtrAgtBic: ['SNDRBEBBXXX', BIC],
       // â”€â”€ Creditor â”€â”€
       cdtrName: ['Northwind Financial Services Ltd', [Validators.required, Validators.maxLength(140), SAFE_NAME]],
-      cdtrOrgAnyBIC: ['RCVRLU2AXXX', BIC],
+      cdtrOrgAnyBIC: ['', BIC_OPT],
       cdtrAgtBic: ['RCVRLU2AXXX', BIC],
       ultmtDbtrName: ['', [Validators.maxLength(140), SAFE_NAME]],
       ultmtCdtrName: ['', [Validators.maxLength(140), SAFE_NAME]],
@@ -1377,9 +1377,12 @@ ${tx}\t\t\t</CdtTrfTxInf>
   partyAgentXml(tag: string, prefix: string, v: any, indent = 4) {
     let content = '';
     const name = v[prefix + 'Name'];
-    if (name) content += `${this.tabs(indent + 1)}<Nm>${this.e(name)}</Nm>\n`;
-    
-    content += this.addrXml(v, prefix, indent + 1);
+    const hasAnyBic = !!(v[prefix + 'OrgAnyBIC']?.trim());
+    // CBPR+ rule: when AnyBIC is present, Nm and PstlAdr must NOT appear
+    if (!hasAnyBic) {
+      if (name) content += `${this.tabs(indent + 1)}<Nm>${this.e(name)}</Nm>\n`;
+      content += this.addrXml(v, prefix, indent + 1);
+    }
     content += this.partyIdXml(v, prefix, indent + 1);
 
     if (!content.trim()) return '';
