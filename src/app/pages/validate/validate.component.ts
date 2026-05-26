@@ -386,7 +386,7 @@ export class ValidateComponent implements OnInit {
       const autoRun = params['autoRun'] === 'true';
       if (reportId) {
         this.loadValidationFromHistory(reportId, autoRun);
-        
+
         // Clean query parameters from URL bar to prevent auto-loading the file again on page reload
         this.router.navigate([], {
           relativeTo: this.route,
@@ -819,7 +819,7 @@ export class ValidateComponent implements OnInit {
     this.editingEntry = f;
     this.originalContent = f.content;
     this.updateEditorLines(f.content);
-    
+
     // Initialize history
     this.xmlHistory = [f.content];
     this.xmlHistoryIdx = 0;
@@ -923,7 +923,7 @@ export class ValidateComponent implements OnInit {
 
   toggleComment() {
     if (!this.editingEntry) return;
-    
+
     const textarea = document.querySelector('.editor-textarea') as HTMLTextAreaElement;
     if (!textarea) return;
 
@@ -945,7 +945,7 @@ export class ValidateComponent implements OnInit {
 
     let newResult = '';
     const trimmed = selection.trim();
-    
+
     if (trimmed.startsWith('<!--') && trimmed.endsWith('-->')) {
       // Uncomment
       newResult = selection.replace('<!--', '').replace('-->', '');
@@ -967,7 +967,7 @@ export class ValidateComponent implements OnInit {
   updateEditorLines(content: string) {
     const lines = (content || '').split('\n').length;
     if (this.editorLineCount.length !== lines) {
-      this.editorLineCount = new Array(lines);
+      this.editorLineCount = Array.from({ length: lines }, (_, i) => i + 1);
     }
   }
 
@@ -1207,7 +1207,7 @@ export class ValidateComponent implements OnInit {
         }
         entry.report = data;
         entry.messageType = data.message ?? '';
-        
+
         // Rename pasted files to use the detected message type
         if (entry.name.startsWith('pasted-') && entry.messageType && entry.messageType !== 'Unknown') {
           entry.name = `${entry.messageType}.xml`;
@@ -1432,19 +1432,19 @@ export class ValidateComponent implements OnInit {
       event.preventDefault();
     }
     if (!lineNum) return;
-    
+
     try {
       this.editingEntry = f;
       this.originalContent = f.content;
       this.targetLine = Number(lineNum);
       this.updateEditorLines(f.content || '');
-      
+
       // Initialize history
       this.xmlHistory = [f.content || ''];
       this.xmlHistoryIdx = 0;
 
-      this.cdr.detectChanges(); 
-      
+      this.cdr.detectChanges();
+
       // Give DOM time to paint before attempting scroll
       setTimeout(() => this.scrollToLine(Number(lineNum)), 50);
     } catch (err: any) {
@@ -1460,9 +1460,9 @@ export class ValidateComponent implements OnInit {
           if (attempts < 30) setTimeout(() => tryScroll(attempts + 1), 50);
           return;
         }
-        
+
         const content = this.editingEntry?.content || '';
-        
+
         // Force populate if empty or too small
         if (!textarea.value || textarea.value.length < content.length * 0.5) {
           textarea.value = content;
@@ -1472,18 +1472,18 @@ export class ValidateComponent implements OnInit {
         let charPos = 0;
         const targetL = lineNum - 1;
         const maxLines = Math.min(targetL, lines.length);
-        
+
         for (let i = 0; i < maxLines; i++) {
           charPos += lines[i].length + 1; // +1 for the newline character
         }
-        
+
         textarea.focus();
         textarea.setSelectionRange(charPos, charPos + (lines[targetL] || '').length);
-        
+
         // Calculate scroll position (font-size 13px * line-height 1.5 = 19.5px)
         const lineHeight = 19.5;
         textarea.scrollTop = Math.max(0, (lineNum - 5) * lineHeight);
-        
+
         const lineNumbers = document.querySelector('.editor-line-numbers') as HTMLDivElement;
         if (lineNumbers) {
           this.syncScroll(textarea, lineNumbers);
@@ -1493,7 +1493,7 @@ export class ValidateComponent implements OnInit {
         if (attempts < 30) setTimeout(() => tryScroll(attempts + 1), 50);
       }
     };
-    
+
     tryScroll(0);
   }
 }
