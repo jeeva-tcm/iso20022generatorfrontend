@@ -116,14 +116,42 @@ export class AddressValidatorService {
             }
         }
 
-        // ---------- ADR-03: Mixing structured + unstructured ----------
-        if (hasStructured && hasAdrLine) {
+        // ---------- ADR-03: Hybrid mode — TwnNm + Ctry + AdrLine is valid and preferred.
+        //   Only DETAIL structured fields (StrtNm, BldgNb, PstCd etc.) must not coexist with AdrLine. ----------
+        const HYBRID_OK_FIELDS = ['TwnNm', 'Ctry'];
+        const DETAIL_STRUCTURED_FIELDS = ['StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd',
+            'Dept', 'SubDept', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn'];
+        const hasDetailStructured = DETAIL_STRUCTURED_FIELDS.some(f =>
+            address && address[f] !== undefined && this.trim(address[f]).length > 0
+        );
+        if (hasDetailStructured && hasAdrLine) {
             issues.push({
                 ruleId: 'ADR-03',
-                severity: 'WARN',
+                severity: 'FAIL',
                 field: '',
-                message: 'Both structured address fields and AdrLine elements are present; prefer one style.',
+                message: 'Detail structured fields (StrtNm, BldgNb, PstCd etc.) must not coexist with AdrLine. Use hybrid (TwnNm + Ctry + AdrLine) or pure structured (no AdrLine).',
             });
+        }
+        // Hybrid mode validation: when AdrLine is present, TwnNm and Ctry are mandatory
+        if (hasAdrLine) {
+            const hasTwnNm = address && address['TwnNm'] !== undefined && this.trim(address['TwnNm']).length > 0;
+            const hasCtry = address && address['Ctry'] !== undefined && this.trim(address['Ctry']).length > 0;
+            if (!hasTwnNm) {
+                issues.push({
+                    ruleId: 'ADR-03-HYBRID',
+                    severity: 'FAIL',
+                    field: 'TwnNm',
+                    message: 'Hybrid address mode: TwnNm (Town Name) is mandatory when AdrLine is present.',
+                });
+            }
+            if (!hasCtry) {
+                issues.push({
+                    ruleId: 'ADR-03-HYBRID',
+                    severity: 'FAIL',
+                    field: 'Ctry',
+                    message: 'Hybrid address mode: Ctry (Country) is mandatory when AdrLine is present.',
+                });
+            }
         }
 
         // ---------- ADR-04: Control characters ----------

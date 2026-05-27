@@ -1,4 +1,4 @@
-﻿import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
+import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -145,6 +145,27 @@ export class Pain002Component implements OnInit, OnDestroy {
   ngOnInit() {
     this.fetchCountries();
     this.buildForm();
+        const bizMsgIdCtrl = this.form.get('head_bizMsgIdr');
+        const msgIdCtrl = this.form.get('grpHdr_msgId');
+        if (bizMsgIdCtrl && msgIdCtrl) {
+            if (msgIdCtrl.value !== bizMsgIdCtrl.value) {
+                msgIdCtrl.setValue(bizMsgIdCtrl.value, {emitEvent: false});
+                this.generateXml();
+            }
+            bizMsgIdCtrl.valueChanges.subscribe(v => {
+                if (msgIdCtrl.value !== v) {
+                    msgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+            msgIdCtrl.valueChanges.subscribe(v => {
+                if (bizMsgIdCtrl.value !== v) {
+                    bizMsgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+        }
+
     const hadDraft = this.loadDraft();
     if (hadDraft) {
       this.showDraftBanner = true;
@@ -260,6 +281,7 @@ export class Pain002Component implements OnInit, OnDestroy {
   };
 
   buildForm() {
+    const sharedId = 'MSGID-' + this.dateStamp() + '-' + this.randomId();
     const BIC_OPT = [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
     const LEI_PATTERN = [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)];
     const CLEARING_CODE_PATTERN = [Validators.minLength(1), Validators.maxLength(5)];
@@ -278,7 +300,7 @@ export class Pain002Component implements OnInit, OnDestroy {
       head_toClrSysCd: ['', CLEARING_CODE_PATTERN],
       head_toMmbId: ['', MMB_ID_PATTERN],
       head_toLei: ['', LEI_PATTERN],
-      head_bizMsgIdr: ['MSGID-' + this.dateStamp() + '-' + this.randomId(), [...NON_EMPTY, Validators.maxLength(35)]],
+      head_bizMsgIdr: [sharedId, [...NON_EMPTY, Validators.maxLength(35)]],
       head_msgDefIdr: [{ value: 'pain.002.001.10', disabled: true }],
       head_bizSvc: ['swift.cbprplus.02', [...NON_EMPTY, Validators.maxLength(35)]],
       head_mktPrctcRegy: ['', [Validators.maxLength(350)]],
@@ -306,7 +328,7 @@ export class Pain002Component implements OnInit, OnDestroy {
       head_rltd_pssblDplct: [false],
       head_rltd_prty: [''],
 
-      grpHdr_msgId: ['PAIN002-' + this.dateStamp() + '-' + this.randomId(), [...NON_EMPTY, Validators.maxLength(35)]],
+      grpHdr_msgId: [sharedId, [...NON_EMPTY, Validators.maxLength(35)]],
       grpHdr_creDtTm: [this.isoNow(), [Validators.required, ISO_DT]],
       initgPty: this.initPartyGroup(),
       fwdgAgt: this.initAgentGroup(),
@@ -457,7 +479,7 @@ export class Pain002Component implements OnInit, OnDestroy {
   initTransaction() {
     return this.fb.group({
       orgnlInstrId: ['', [Validators.maxLength(35)]],
-      orgnlEndToEndId: ['E2E-' + this.dateStamp() + '-' + this.randomId(), [Validators.required, Validators.maxLength(35)]],
+      orgnlEndToEndId: ['E2E-' + this.dateStamp() + '-' + this.randomId(), [Validators.maxLength(35)]],
       orgnlUetr: [this.uetrService.generate(), [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
       txSts: ['ACSC', Validators.required],
       orgtr: this.initPartyGroup(),
@@ -752,7 +774,8 @@ ${doc.trimEnd()}
     if (!pa || pa.addrType === 'none') return '';
     let a = '';
     const t = ind + 1;
-    if (['structured', 'hybrid'].includes(pa.addrType)) {
+    // Detail structured fields — pure structured mode only (must not coexist with <AdrLine>).
+    if (pa.addrType === 'structured') {
       if (pa.dept) a += this.leaf('Dept', pa.dept, t);
       if (pa.subDept) a += this.leaf('SubDept', pa.subDept, t);
       if (pa.street) a += this.leaf('StrtNm', pa.street, t);
@@ -763,12 +786,19 @@ ${doc.trimEnd()}
       if (pa.room) a += this.leaf('Room', pa.room, t);
       if (pa.pstCd) a += this.leaf('PstCd', pa.pstCd, t);
     }
-    if (pa.town) a += this.leaf('TwnNm', pa.town, t);
-    if (pa.townLctn) a += this.leaf('TwnLctnNm', pa.townLctn, t);
-    if (pa.district) a += this.leaf('DstrctNm', pa.district, t);
-    if (pa.ctrySub) a += this.leaf('CtrySubDvsn', pa.ctrySub, t);
-    if (pa.ctry) a += this.leaf('Ctry', pa.ctry, t);
-    if (['unstructured', 'hybrid'].includes(pa.addrType)) {
+    // TwnNm + Ctry — emitted in structured and hybrid (hybrid = TwnNm + Ctry + AdrLine).
+    if ((pa.addrType === 'structured' || pa.addrType === 'hybrid') && pa.town) {
+      a += this.leaf('TwnNm', pa.town, t);
+    }
+    if (pa.addrType === 'structured') {
+      if (pa.townLctn) a += this.leaf('TwnLctnNm', pa.townLctn, t);
+      if (pa.district) a += this.leaf('DstrctNm', pa.district, t);
+      if (pa.ctrySub) a += this.leaf('CtrySubDvsn', pa.ctrySub, t);
+    }
+    if ((pa.addrType === 'structured' || pa.addrType === 'hybrid') && pa.ctry) {
+      a += this.leaf('Ctry', pa.ctry, t);
+    }
+    if (pa.addrType === 'unstructured' || pa.addrType === 'hybrid') {
       if (pa.addrLines) pa.addrLines.forEach((l: string) => { if (l) a += this.leaf('AdrLine', l, t); });
     }
     return this.branch('PstlAdr', a, ind);
@@ -951,13 +981,13 @@ ${doc.trimEnd()}
     const pstl = getT('PstlAdr', node);
     if (pstl) {
       const adrLines = pstl.getElementsByTagName('AdrLine');
-      const strtNm = tval('StrtNm', pstl);
-      const addrType = adrLines.length > 0 ? (strtNm ? 'hybrid' : 'unstructured') : 'structured';
+
+      const addrType = adrLines.length > 0 ? 'hybrid' : (tval('StrtNm', pstl) ? 'structured' : 'hybrid');
       const postalPatch: any = { addrType };
-      const sp = (k: string, t: string) => { const v = tval(t, pstl); if (v) postalPatch[k] = v; };
+      if (addrType === 'hybrid') { postalPatch['street'] = ''; postalPatch['town'] = tval('TwnNm', pstl); postalPatch['ctry'] = tval('Ctry', pstl); }
+      const sp = (k: string, t: string) => { const v = tval(t, pstl); if (v && addrType === 'structured') postalPatch[k] = v; };
       sp('dept', 'Dept'); sp('subDept', 'SubDept'); sp('street', 'StrtNm');
       sp('bldgNb', 'BldgNb'); sp('bldgNm', 'BldgNm'); sp('floor', 'Flr');
-      sp('pstBx', 'PstBx'); sp('room', 'Room'); sp('pstCd', 'PstCd');
       sp('town', 'TwnNm'); sp('townLctn', 'TwnLctnNm'); sp('district', 'DstrctNm');
       sp('ctrySub', 'CtrySubDvsn'); sp('ctry', 'Ctry');
 

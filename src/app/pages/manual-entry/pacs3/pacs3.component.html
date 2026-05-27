@@ -114,8 +114,18 @@
                                         <div class="form-group"><label>AppHdr Registry</label><input formControlName="regyId" placeholder="e.g. SWIFT">
                                                 <div class="validation-msg" *ngIf="err('regyId') as e">{{e}}</div>
                                         </div>
+                                        <div class="form-group"><label>Character Set <span class="opt">Optional</span></label><input formControlName="charSet" maxlength="35" placeholder="e.g. UTF-8">
+                                                <div class="validation-msg" *ngIf="err('charSet') as e">{{e}}</div>
+                                        </div>
                                         <div class="form-group"><label>Copy/Duplicate</label><select formControlName="cpyDplct"><option value="">None</option><option value="COPY">COPY</option><option value="DUPL">DUPL</option></select>
                                                 <div class="validation-msg" *ngIf="err('cpyDplct') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>Possible Duplicate <span class="opt">Optional</span></label>
+                                            <select formControlName="pssblDplct">
+                                                <option value="false">False</option>
+                                                <option value="true">True</option>
+                                            </select>
+                                            <div class="validation-msg" *ngIf="err('pssblDplct') as e">{{e}}</div>
                                         </div>
                                          <div class="form-group"><label>AppHdr Priority</label><input formControlName="appHdrPrty" placeholder="e.g. HIGH">
                                                 <div class="validation-msg" *ngIf="err('appHdrPrty') as e">{{e}}</div>
@@ -383,7 +393,7 @@
 
 
                                         <div class="section-title">Direct Debit Mandate <span class="req">*</span></div>
-                                        <div class="form-group intermediary-field"><label>Required Collection Date <span class="req">*</span></label>
+                                        <div class="form-group intermediary-field"><label>Required Collection Date</label>
                                                 <input formControlName="reqdColltnDt" required type="date" min="0001-01-01" max="9999-12-31">
                                                 <div class="validation-msg" *ngIf="err('reqdColltnDt') as e">{{e}}</div>
                                         </div>
@@ -425,12 +435,26 @@
                                                 <div class="party-group-title mandatory">Instructing Agent</div>
                                                 <ng-container
                                                         *ngTemplateOutlet="partyForm; context:{prefix:'instgAgt',isAgent:true, title:'Instructing Agent', group: form}"></ng-container>
+                                                <div [formGroup]="form" class="party-grid" style="padding: 0.5rem 1rem;">
+                                                    <div class="form-group intermediary-field">
+                                                        <label>Instructing Agent Account <span class="opt">Optional</span></label>
+                                                        <input formControlName="instgAgtAcct" maxlength="34" placeholder="IBAN or account ID">
+                                                        <div class="validation-msg" *ngIf="err('instgAgtAcct') as e">{{e}}</div>
+                                                    </div>
+                                                </div>
                                         </div>
 
                                         <div class="party-group">
                                                 <div class="party-group-title mandatory">Instructed Agent</div>
                                                 <ng-container
                                                         *ngTemplateOutlet="partyForm; context:{prefix:'instdAgt',isAgent:true, title:'Instructed Agent', group: form}"></ng-container>
+                                                <div [formGroup]="form" class="party-grid" style="padding: 0.5rem 1rem;">
+                                                    <div class="form-group intermediary-field">
+                                                        <label>Instructed Agent Account <span class="opt">Optional</span></label>
+                                                        <input formControlName="instdAgtAcct" maxlength="34" placeholder="IBAN or account ID">
+                                                        <div class="validation-msg" *ngIf="err('instdAgtAcct') as e">{{e}}</div>
+                                                    </div>
+                                                </div>
                                         </div>
 
                                                                                  <div class="party-group"><div class="party-group-title">Instructing Party</div><ng-container *ngTemplateOutlet="partyForm; context:{prefix:'instgPty',isAgent:false, title:'Instructing Party', group: form}"></ng-container></div>
@@ -1051,7 +1075,7 @@
                         <label>{{title}} Address Type</label>
                         <select [formControlName]="prefix+'AddrType'">
                                 <option value="none">None (BIC/ID Only)</option>
-                                <option value="hybrid">Hybrid</option>
+                                <option value="hybrid">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
                                 <option value="structured">Structured</option>
                                 <option value="unstructured">Unstructured</option>
                         </select>
@@ -1062,28 +1086,28 @@
                 <ng-container *ngIf="form.get(prefix+'AddrType')?.value !== 'none'">
                         <div class="address-subgrid">
                                 <div class="form-group"
-                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
                                         <label>{{title}} Building Number</label>
                                         <input [formControlName]="prefix+'BldgNb'" maxlength="16" placeholder="e.g. 11">
                                         <div class="validation-msg" *ngIf="err(prefix+'BldgNb') as e">{{e}}</div>
                                         <div class="field-hint at-limit" *ngIf="hint(prefix+'BldgNb', 16) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group"
-                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
                                         <label>{{title}} Building Name</label>
                                         <input [formControlName]="prefix+'BldgNm'" maxlength="35">
                                         <div class="validation-msg" *ngIf="err(prefix+'BldgNm') as e">{{e}}</div>
                                         <div class="field-hint at-limit" *ngIf="hint(prefix+'BldgNm', 35) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group"
-                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
                                         <label>{{title}} Street Name</label>
                                         <input [formControlName]="prefix+'StrtNm'" maxlength="70" placeholder="e.g. Broadway">
                                         <div class="validation-msg" *ngIf="err(prefix+'StrtNm') as e">{{e}}</div>
                                         <div class="field-hint at-limit" *ngIf="hint(prefix+'StrtNm', 70) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group"
-                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
                                         <label>{{title}} Post Code</label>
                                         <input [formControlName]="prefix+'PstCd'" maxlength="16" placeholder="e.g. 10005">
                                         <div class="validation-msg" *ngIf="err(prefix+'PstCd') as e">{{e}}</div>
@@ -1091,13 +1115,13 @@
                                 </div>
                                 <div class="form-group"
                                         *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
-                                        <label>{{title}} City (Town Name) <span class="req">*</span></label>
+                                        <label>{{title}} City (Town Name)</label>
                                         <input [formControlName]="prefix+'TwnNm'" maxlength="35" placeholder="e.g. New York">
                                         <div class="validation-msg" *ngIf="err(prefix+'TwnNm') as e">{{e}}</div>
                                         <div class="field-hint at-limit" *ngIf="hint(prefix+'TwnNm', 35) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
-                                        <label>{{title}} Country <span class="req">*</span></label>
+                                        <label>{{title}} Country</label>
                                         <select [formControlName]="prefix + 'Ctry'">
                                                 <option value="">Select Country</option>
                                                 <option *ngFor="let c of countries" [value]="c">{{c}}</option>

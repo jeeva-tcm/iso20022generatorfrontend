@@ -62,6 +62,11 @@
                                     Possible Duplicate
                                 </label>
                             </div>
+                            <div class="form-group" style="margin-top:0.5rem;">
+                                <label>Character Set <span class="opt">Optional</span></label>
+                                <input formControlName="head_charSet" maxlength="35" placeholder="e.g. UTF-8">
+                                <div class="validation-msg" *ngIf="err('head_charSet') as e">{{e}}</div>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Business Service (BizSvc)</label>
@@ -292,6 +297,16 @@
                                         <label>Related Biz Service</label>
                                         <input formControlName="head_rltd_bizSvc" maxlength="35" (input)="handleInput($event, 'head_rltd_bizSvc', 'BizSvc')">
                                         <div class="validation-msg" *ngIf="err('head_rltd_bizSvc') as e">{{e}}</div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Related Msg Definition ID <span class="opt">Optional</span></label>
+                                        <input formControlName="head_rltd_msgDefIdr" maxlength="35" placeholder="e.g. pain.002.001.10">
+                                        <div class="validation-msg" *ngIf="err('head_rltd_msgDefIdr') as e">{{e}}</div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Related Character Set <span class="opt">Optional</span></label>
+                                        <input formControlName="head_rltd_charSet" maxlength="35" placeholder="e.g. UTF-8">
+                                        <div class="validation-msg" *ngIf="err('head_rltd_charSet') as e">{{e}}</div>
                                     </div>
                                 </div>
                             </div>
@@ -703,7 +718,7 @@
                         <label>Address Type</label>
                         <select formControlName="addrType" (change)="onAddrTypeChange(group)">
                             <option value="none">None (No Address Elements)</option>
-                            <option value="hybrid">Hybrid</option>
+                            <option value="hybrid">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
                             <option value="structured">Structured</option>
                             <option value="unstructured">Unstructured</option>
                         </select>
@@ -711,8 +726,8 @@
                     </div>
 
                     <ng-container *ngIf="group.get('postal.addrType')?.value !== 'none'">
-                        <!-- Structured/Hybrid Fields -->
-                        <ng-container *ngIf="['structured', 'hybrid'].includes(group.get('postal.addrType')?.value)">
+                        <!-- Structured-only Detail Fields -->
+                        <ng-container *ngIf="group.get('postal.addrType')?.value === 'structured'">
                             <div class="form-group">
                                 <label>Department</label>
                                 <input formControlName="dept" maxlength="70" placeholder="e.g. Treasury">
@@ -759,11 +774,6 @@
                                 <div class="validation-msg" *ngIf="err(prefix + '.postal.pstCd') as e">{{e}}</div>
                             </div>
                             <div class="form-group">
-                                <label>Town (City) <span class="req">*</span></label>
-                                <input formControlName="town" maxlength="35" placeholder="e.g. New York">
-                                <div class="validation-msg" *ngIf="err(prefix + '.postal.town') as e">{{e}}</div>
-                            </div>
-                            <div class="form-group">
                                 <label>Town Location Name</label>
                                 <input formControlName="townLctn" maxlength="35">
                                 <div class="validation-msg" *ngIf="err(prefix + '.postal.townLctn') as e">{{e}}</div>
@@ -779,10 +789,16 @@
                                 <div class="validation-msg" *ngIf="err(prefix + '.postal.ctrySub') as e">{{e}}</div>
                             </div>
                         </ng-container>
+                        <!-- Town Name (Structured + Hybrid) -->
+                        <div class="form-group" *ngIf="['structured', 'hybrid'].includes(group.get('postal.addrType')?.value)">
+                            <label>Town (City) </label>
+                            <input formControlName="town" maxlength="35" placeholder="e.g. New York">
+                            <div class="validation-msg" *ngIf="err(prefix + '.postal.town') as e">{{e}}</div>
+                        </div>
 
                         <!-- Common Country Field -->
                         <div class="form-group">
-                            <label>Country <span class="req">*</span></label>
+                            <label>Country </label>
                             <select formControlName="ctry">
                                 <option value="">Select Country...</option>
                                 <option *ngFor="let c of countries" [value]="c">{{c}}</option>

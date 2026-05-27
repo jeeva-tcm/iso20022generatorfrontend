@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 :host {
     display: flex;
     flex-direction: column;
@@ -11,7 +12,7 @@
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 
 * {
     margin: 0;

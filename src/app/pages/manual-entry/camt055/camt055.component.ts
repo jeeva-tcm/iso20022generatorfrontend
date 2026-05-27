@@ -134,6 +134,27 @@ export class Camt055Component implements OnInit, OnDestroy {
   ngOnInit() {
     this.fetchCountries();
     this.buildForm();
+        const bizMsgIdCtrl = this.form.get('bizMsgId');
+        const msgIdCtrl = this.form.get('msgId');
+        if (bizMsgIdCtrl && msgIdCtrl) {
+            if (msgIdCtrl.value !== bizMsgIdCtrl.value) {
+                msgIdCtrl.setValue(bizMsgIdCtrl.value, {emitEvent: false});
+                this.generateXml();
+            }
+            bizMsgIdCtrl.valueChanges.subscribe(v => {
+                if (msgIdCtrl.value !== v) {
+                    msgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+            msgIdCtrl.valueChanges.subscribe(v => {
+                if (bizMsgIdCtrl.value !== v) {
+                    bizMsgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+        }
+
     const hadDraft = this.loadDraft();
     if (hadDraft) {
       this.showDraftBanner = true;
@@ -146,25 +167,43 @@ export class Camt055Component implements OnInit, OnDestroy {
 
   private updateConditionalValidators() {
     const ADDR_PAT = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
+    const STRUCTURED_DETAIL_FIELDS = ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn'];
+    const ADRLINE_FIELDS = ['AdrLine1', 'AdrLine2'];
     [...this.agentPrefixes, ...this.partyPrefixes].forEach(p => {
       const addrType = this.form.get(p + 'AddrType')?.value;
       const ctry = this.form.get(p + 'Ctry');
       const twnNm = this.form.get(p + 'TwnNm');
+      const adrLine1 = this.form.get(p + 'AdrLine1');
       if (!ctry || !twnNm) return;
 
-      if (addrType && addrType !== 'none') {
+      ctry.clearValidators();
+      twnNm.clearValidators();
+      adrLine1?.clearValidators();
+
+      if (addrType === 'hybrid') {
         ctry.setValidators([Validators.required, Validators.pattern(/^[A-Z]{2,2}$/)]);
+        twnNm.setValidators([Validators.required, Validators.maxLength(35), ADDR_PAT]);
+        adrLine1?.setValidators([Validators.required, Validators.maxLength(70), ADDR_PAT]);
+        STRUCTURED_DETAIL_FIELDS.forEach(f => { const ctrl = this.form.get(p + f); if (ctrl && ctrl.value) ctrl.setValue('', { emitEvent: false }); });
+      } else if (addrType === 'unstructured') {
+        ctry.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
+        twnNm.setValidators([Validators.maxLength(35), ADDR_PAT]);
+        adrLine1?.setValidators([Validators.maxLength(70), ADDR_PAT]);
+        STRUCTURED_DETAIL_FIELDS.forEach(f => { const ctrl = this.form.get(p + f); if (ctrl && ctrl.value) ctrl.setValue('', { emitEvent: false }); });
+      } else if (addrType === 'structured') {
+        ctry.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
+        twnNm.setValidators([Validators.maxLength(35), ADDR_PAT]);
+        adrLine1?.setValidators([Validators.maxLength(70), ADDR_PAT]);
+        ADRLINE_FIELDS.forEach(f => { const ctrl = this.form.get(p + f); if (ctrl && ctrl.value) ctrl.setValue('', { emitEvent: false }); });
       } else {
         ctry.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
-      }
-      ctry.updateValueAndValidity({ emitEvent: false });
-
-      if (addrType === 'structured' || addrType === 'hybrid') {
-        twnNm.setValidators([Validators.required, Validators.maxLength(35), ADDR_PAT]);
-      } else {
         twnNm.setValidators([Validators.maxLength(35), ADDR_PAT]);
+        adrLine1?.setValidators([Validators.maxLength(70), ADDR_PAT]);
       }
+
+      ctry.updateValueAndValidity({ emitEvent: false });
       twnNm.updateValueAndValidity({ emitEvent: false });
+      adrLine1?.updateValueAndValidity({ emitEvent: false });
     });
   }
 
@@ -194,7 +233,7 @@ export class Camt055Component implements OnInit, OnDestroy {
       head_toClrSysId: ['', [Validators.maxLength(5)]],
       head_toMmbId: ['', [Validators.maxLength(35)]],
       head_toLei: ['', [Validators.pattern(/^[A-Z0-9]{20}$/)]],
-      head_bizMsgIdr: ['CXL-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
+      head_bizMsgIdr: ['CXL-' + Date.now(), [Validators.maxLength(35)]],
       head_msgDefIdr: ['camt.055.001.08', Validators.required],
       head_bizSvc: ['swift.cbprplus.02', Validators.required],
       head_mktPrctcRegy: ['', [Validators.maxLength(35)]],
@@ -221,22 +260,23 @@ export class Camt055Component implements OnInit, OnDestroy {
       head_rltd: [''], // Hidden control for backwards compatibility if needed elsewhere
 
       // Document - Assgnmt
-      assgnmt_id: ['ASGN-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
+      assgnmt_id: ['ASGN-' + Date.now(), [Validators.maxLength(35)]],
       assgnmt_creDtTm: [this.isoNow(), Validators.required],
 
       // Underlying - OrgnlPmtInfAndCxl
-      orgnlPmtInfId: ['PMTINFID-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^(?!\s+$).*/)]],
-      orgnlMsgId: ['MSG-ORG-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
+      orgnlPmtInfId: ['PMTINFID-001', [Validators.maxLength(35), Validators.pattern(/^(?!\s+$).*/)]],
+
+      orgnlMsgId: ['MSG-ORG-' + Date.now(), [Validators.maxLength(35)]],
       orgnlMsgNmId: ['pacs.008.001.08', Validators.required],
       orgnlCreDtTm: [this.isoNow(), Validators.required],
 
       // TxInf
-      cxlId: ['CXLID-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
+      cxlId: ['CXLID-' + Date.now(), [Validators.maxLength(35)]],
       case_id: ['CASE-' + Date.now().toString().slice(-10), [Validators.required, Validators.maxLength(16)]],
 
       // Original References (OrgnlEndToEndId required before OrgnlUETR per schema)
       orgnlInstrId: ['', Validators.maxLength(35)],
-      orgnlEndToEndId: ['E2E-' + Date.now().toString().slice(-10), [Validators.required, Validators.maxLength(35)]],
+      orgnlEndToEndId: ['E2E-' + Date.now().toString().slice(-10), [Validators.maxLength(35)]],
       orgnlUETR: [this.uetrService.generate(), UETR_PATTERN],
 
       // Amount (OrgnlInstdAmt required before OrgnlReqdExctnDt per schema)
@@ -790,15 +830,18 @@ ${txInf.trimEnd()}
     if (type === 'none') return '';
 
     let content = `${this.tabs(indent)}<PstlAdr>\n`;
-    if (type === 'structured' || type === 'hybrid') {
+    // Structured-only fields — not emitted in hybrid
+    if (type === 'structured') {
       content += this.leaf('StrtNm', v[prefix + 'StrtNm'], indent + 1);
       content += this.leaf('BldgNb', v[prefix + 'BldgNb'], indent + 1);
       content += this.leaf('BldgNm', v[prefix + 'BldgNm'], indent + 1);
       content += this.leaf('PstCd', v[prefix + 'PstCd'], indent + 1);
-      content += this.leaf('TwnNm', v[prefix + 'TwnNm'], indent + 1);
     }
+    // TwnNm + Ctry in all modes
+    content += this.leaf('TwnNm', v[prefix + 'TwnNm'], indent + 1);
     content += this.leaf('Ctry', v[prefix + 'Ctry'], indent + 1);
-    if (type === 'unstructured' || type === 'hybrid') {
+    // AdrLine — hybrid: TwnNm + Ctry + AdrLines (SR2026: unstructured deprecated)
+    if (type === 'hybrid' || type === 'unstructured') {
       if (v[prefix + 'AdrLine1']) content += this.leaf('AdrLine', v[prefix + 'AdrLine1'], indent + 1);
       if (v[prefix + 'AdrLine2']) content += this.leaf('AdrLine', v[prefix + 'AdrLine2'], indent + 1);
       if (v[prefix + 'AdrLine3']) content += this.leaf('AdrLine', v[prefix + 'AdrLine3'], indent + 1);
@@ -978,18 +1021,19 @@ ${txInf.trimEnd()}
       if (addr) {
         patch[prefix + 'Ctry'] = addr.getElementsByTagName('Ctry')[0]?.textContent?.trim() || '';
         const lines = Array.from(addr.getElementsByTagName('AdrLine'));
+        patch[prefix + 'TwnNm'] = addr.getElementsByTagName('TwnNm')[0]?.textContent?.trim() || '';
         if (lines.length > 0) {
-          patch[prefix + 'AddrType'] = lines.length > 1 ? 'hybrid' : 'unstructured';
+          patch[prefix + 'AddrType'] = 'hybrid';
           for (let i = 0; i < Math.min(lines.length, 3); i++) {
             patch[prefix + 'AdrLine' + (i + 1)] = lines[i]?.textContent?.trim() || '';
           }
+          patch[prefix + 'StrtNm'] = ''; patch[prefix + 'BldgNb'] = ''; patch[prefix + 'BldgNm'] = ''; patch[prefix + 'PstCd'] = '';
         } else {
-          patch[prefix + 'AddrType'] = 'structured';
           patch[prefix + 'StrtNm'] = addr.getElementsByTagName('StrtNm')[0]?.textContent?.trim() || '';
           patch[prefix + 'BldgNb'] = addr.getElementsByTagName('BldgNb')[0]?.textContent?.trim() || '';
           patch[prefix + 'BldgNm'] = addr.getElementsByTagName('BldgNm')[0]?.textContent?.trim() || '';
           patch[prefix + 'PstCd'] = addr.getElementsByTagName('PstCd')[0]?.textContent?.trim() || '';
-          patch[prefix + 'TwnNm'] = addr.getElementsByTagName('TwnNm')[0]?.textContent?.trim() || '';
+          patch[prefix + 'AddrType'] = patch[prefix + 'StrtNm'] ? 'structured' : 'hybrid';
         }
       }
       

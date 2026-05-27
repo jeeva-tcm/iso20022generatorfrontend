@@ -65,6 +65,27 @@ export class Pain001Component implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.buildForm();
+        const bizMsgIdCtrl = this.form.get('head_bizMsgIdr');
+        const msgIdCtrl = this.form.get('msgId');
+        if (bizMsgIdCtrl && msgIdCtrl) {
+            if (msgIdCtrl.value !== bizMsgIdCtrl.value) {
+                msgIdCtrl.setValue(bizMsgIdCtrl.value, {emitEvent: false});
+                this.generateXml();
+            }
+            bizMsgIdCtrl.valueChanges.subscribe(v => {
+                if (msgIdCtrl.value !== v) {
+                    msgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+            msgIdCtrl.valueChanges.subscribe(v => {
+                if (bizMsgIdCtrl.value !== v) {
+                    bizMsgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+        }
+
     const hadDraft = this.loadDraft();
     if (hadDraft) {
       this.showDraftBanner = true;
@@ -84,29 +105,48 @@ export class Pain001Component implements OnInit, OnDestroy {
 
   private updateConditionalValidators() {
     const ADDR_PAT = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
+    const STRUCTURED_DETAIL_FIELDS = ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn'];
+    const ADRLINE_FIELDS = ['AdrLine1', 'AdrLine2'];
     ['dbtr', 'dbtrAgt', 'cdtrAgt', 'cdtr'].forEach(p => {
       const addrType = this.form.get(p + 'AddrType')?.value;
       const ctry = this.form.get(p + 'Ctry');
       const twnNm = this.form.get(p + 'TwnNm');
+      const adrLine1 = this.form.get(p + 'AdrLine1');
       if (!ctry || !twnNm) return;
 
-      if (addrType && addrType !== 'none') {
+      ctry.clearValidators();
+      twnNm.clearValidators();
+      adrLine1?.clearValidators();
+
+      if (addrType === 'hybrid') {
         ctry.setValidators([Validators.required, Validators.pattern(/^[A-Z]{2,2}$/)]);
+        twnNm.setValidators([Validators.required, Validators.maxLength(35), ADDR_PAT]);
+        adrLine1?.setValidators([Validators.required, Validators.maxLength(70), ADDR_PAT]);
+        STRUCTURED_DETAIL_FIELDS.forEach(f => { const ctrl = this.form.get(p + f); if (ctrl && ctrl.value) ctrl.setValue('', { emitEvent: false }); });
+      } else if (addrType === 'unstructured') {
+        ctry.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
+        twnNm.setValidators([Validators.maxLength(35), ADDR_PAT]);
+        adrLine1?.setValidators([Validators.maxLength(70), ADDR_PAT]);
+        STRUCTURED_DETAIL_FIELDS.forEach(f => { const ctrl = this.form.get(p + f); if (ctrl && ctrl.value) ctrl.setValue('', { emitEvent: false }); });
+      } else if (addrType === 'structured') {
+        ctry.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
+        twnNm.setValidators([Validators.maxLength(35), ADDR_PAT]);
+        adrLine1?.setValidators([Validators.maxLength(70), ADDR_PAT]);
+        ADRLINE_FIELDS.forEach(f => { const ctrl = this.form.get(p + f); if (ctrl && ctrl.value) ctrl.setValue('', { emitEvent: false }); });
       } else {
         ctry.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
-      }
-      ctry.updateValueAndValidity({ emitEvent: false });
-
-      if (addrType === 'structured' || addrType === 'hybrid') {
-        twnNm.setValidators([Validators.required, Validators.maxLength(35), ADDR_PAT]);
-      } else {
         twnNm.setValidators([Validators.maxLength(35), ADDR_PAT]);
+        adrLine1?.setValidators([Validators.maxLength(70), ADDR_PAT]);
       }
+
+      ctry.updateValueAndValidity({ emitEvent: false });
       twnNm.updateValueAndValidity({ emitEvent: false });
+      adrLine1?.updateValueAndValidity({ emitEvent: false });
     });
   }
 
   private buildForm() {
+    const sharedMsgId = 'BMS-' + Date.now();
     this.form = this.fb.group({
       // BAH (head.001.001.02)
       head_charSet: ['UTF-8', [Validators.maxLength(2048)]],
@@ -118,7 +158,7 @@ export class Pain001Component implements OnInit, OnDestroy {
       head_toClrSysId: ['GBFPS', [Validators.maxLength(5)]],
       head_toMmbId: ['200000', [Validators.maxLength(35)]],
       head_toLei: ['EBMRY7N10NRY5NCY5Y71', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
-      head_bizMsgIdr: ['BMS-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
+      head_bizMsgIdr: [sharedMsgId, [Validators.maxLength(35)]],
       head_msgDefIdr: ['pain.001.001.09', [Validators.required]],
       head_bizSvc: ['swift.cbprplus.03', Validators.required],
       head_creDt: [this.isoNow(), Validators.required],
@@ -130,7 +170,7 @@ export class Pain001Component implements OnInit, OnDestroy {
       head_rltdBizMsgIdr: ['', [Validators.maxLength(35)]],
       
       // Group Header (pain.001.001.09)
-      msgId: ['PAIN001-MSG-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
+      msgId: [sharedMsgId, [Validators.maxLength(35)]],
       creDtTm: [this.isoNow(), Validators.required],
       authstnCd: ['AUTH'],
       authstnPrtry: ['File pre-authorised at origin'],
@@ -153,7 +193,7 @@ export class Pain001Component implements OnInit, OnDestroy {
       initgPtyAdrLine2: ['', [Validators.maxLength(70)]],
 
       // Payment Information
-      pmtInfId: ['PMT-INF-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
+      pmtInfId: ['PMT-INF-' + Date.now(), [Validators.maxLength(35)]],
       pmtMtd: ['TRF', Validators.required],
       btchBookg: [false],
       pmtNbOfTxs: ['1', [Validators.required]],
@@ -168,31 +208,31 @@ export class Pain001Component implements OnInit, OnDestroy {
       initnSrc: ['ERP-X-SYSTEM', [Validators.maxLength(35)]],
       dbtrName: ['Holding Account One', [Validators.required, Validators.maxLength(140)]],
       dbtrIban: ['60161331926819', [Validators.required, Validators.maxLength(34)]],
-      dbtrAddrType: ['structured'],
-      dbtrCtry: ['US', [Validators.required, Validators.pattern(/^[A-Z]{2,2}$/)]],
+      dbtrAddrType: ['hybrid'],
+      dbtrCtry: ['US', [Validators.pattern(/^[A-Z]{2,2}$/)]],
       dbtrTwnNm: ['New York', [Validators.maxLength(35)]],
-      dbtrBldgNb: ['270', [Validators.maxLength(16)]],
-      dbtrBldgNm: ['Chase Tower', [Validators.maxLength(35)]],
-      dbtrStrtNm: ['Park Avenue', [Validators.maxLength(70)]],
-      dbtrPstCd: ['10017', [Validators.maxLength(16)]],
+      dbtrBldgNb: ['', [Validators.maxLength(16)]],
+      dbtrBldgNm: ['', [Validators.maxLength(35)]],
+      dbtrStrtNm: ['', [Validators.maxLength(70)]],
+      dbtrPstCd: ['', [Validators.maxLength(16)]],
       dbtrDept: ['', [Validators.maxLength(70)]],
       dbtrSubDept: ['', [Validators.maxLength(70)]],
-      dbtrFlr: ['50', [Validators.maxLength(70)]],
+      dbtrFlr: ['', [Validators.maxLength(70)]],
       dbtrAdrLine1: ['270 Park Avenue', [Validators.maxLength(70)]],
-      dbtrAdrLine2: ['Suite 500', [Validators.maxLength(70)]],
+      dbtrAdrLine2: ['', [Validators.maxLength(70)]],
       dbtrAgtAcctIban: ['11112222333344', [Validators.maxLength(34)]],
       dbtrAgtBic: ['CHASUS33XXX', [Validators.maxLength(11)]],
       dbtrAgtClrSysCd: ['USABA', [Validators.maxLength(5)]],
       dbtrAgtClrSysMmbId: ['021000021', [Validators.maxLength(35)]],
       dbtrAgtLei: ['54930068N2K3Y9N1F719', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
-      dbtrAgtName: ['JP Morgan Chase Bank N.A.', [Validators.maxLength(140)]],
-      dbtrAgtAddrType: ['structured'],
-      dbtrAgtCtry: ['US', [Validators.pattern(/^[A-Z]{2,2}$/)]],
-      dbtrAgtTwnNm: ['New York', [Validators.maxLength(35)]],
-      dbtrAgtStrtNm: ['Park Avenue', [Validators.maxLength(70)]],
-      dbtrAgtPstCd: ['10017', [Validators.maxLength(16)]],
-      dbtrAgtAdrLine1: ['270 Park Avenue', [Validators.maxLength(70)]],
-      dbtrAgtAdrLine2: ['Floor 10', [Validators.maxLength(70)]],
+      dbtrAgtName: ['', [Validators.maxLength(140)]],
+      dbtrAgtAddrType: ['none'],
+      dbtrAgtCtry: ['', [Validators.pattern(/^[A-Z]{2,2}$/)]],
+      dbtrAgtTwnNm: ['', [Validators.maxLength(35)]],
+      dbtrAgtStrtNm: ['', [Validators.maxLength(70)]],
+      dbtrAgtPstCd: ['', [Validators.maxLength(16)]],
+      dbtrAgtAdrLine1: ['', [Validators.maxLength(70)]],
+      dbtrAgtAdrLine2: ['', [Validators.maxLength(70)]],
       chrgBr: ['SHAR', Validators.required],
       dbtrAgtBldgNb: ['270', [Validators.maxLength(16)]],
       dbtrAgtBldgNm: ['Chase Tower', [Validators.maxLength(35)]],
@@ -226,8 +266,8 @@ export class Pain001Component implements OnInit, OnDestroy {
     const LEI = [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)];
 
     return this.fb.group({
-      instrId: ['INSTR-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
-      endToEndId: ['E2E-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
+      instrId: ['INSTR-' + Date.now(), [Validators.maxLength(35)]],
+      endToEndId: ['E2E-' + Date.now(), [Validators.maxLength(35)]],
       uetr: [crypto.randomUUID ? crypto.randomUUID() : '550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)]],
       amount: ['12500.00', [Validators.required, Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],
       currency: ['USD', Validators.required],
@@ -272,22 +312,23 @@ export class Pain001Component implements OnInit, OnDestroy {
 
       cdtrAgtBic: ['BANCGB2LXXX', [Validators.maxLength(11)]],
       cdtrAgtLei: ['', LEI],
-      cdtrAgtName: ['Barclays Bank UK PLC', Validators.maxLength(140)],
-      cdtrAgtCtry: ['GB', [Validators.pattern(/^[A-Z]{2,2}$/)]],
-      cdtrAgtTwnNm: ['London', [Validators.maxLength(35)]],
-      cdtrAgtStrtNm: ['Churchill Place', [Validators.maxLength(70)]],
-      cdtrAgtPstCd: ['E14 5HP', [Validators.maxLength(16)]],
-      cdtrAgtAddrType: ['structured'],
+      cdtrAgtName: ['', Validators.maxLength(140)],
+      cdtrAgtCtry: ['', [Validators.pattern(/^[A-Z]{2,2}$/)]],
+      cdtrAgtTwnNm: ['', [Validators.maxLength(35)]],
+      cdtrAgtStrtNm: ['', [Validators.maxLength(70)]],
+      cdtrAgtPstCd: ['', [Validators.maxLength(16)]],
+      cdtrAgtAddrType: ['none'],
       cdtrAgtClrSysCd: ['', Validators.maxLength(5)],
       cdtrAgtClrSysMmbId: ['', Validators.maxLength(35)],
       cdtrAgtAcct: ['GB73BARC20000012345678'],
       cdtrName: ['Precision Engineering Ltd', [Validators.required, Validators.maxLength(140)]],
       cdtrIban: ['GB73BARC20000012345678', [Validators.required, Validators.maxLength(34)]],
-      cdtrAddrType: ['structured'],
-      cdtrCtry: ['GB', [Validators.required, Validators.pattern(/^[A-Z]{2,2}$/)]],
+      cdtrAddrType: ['hybrid'],
+      cdtrCtry: ['GB', [Validators.pattern(/^[A-Z]{2,2}$/)]],
       cdtrTwnNm: ['Manchester', [Validators.maxLength(135)]],
+      cdtrStrtNm: ['', [Validators.maxLength(70)]],
       cdtrAdrLine1: ['10 Industrial Way', [Validators.maxLength(70)]],
-      cdtrAdrLine2: ['Block B', [Validators.maxLength(70)]],
+      cdtrAdrLine2: ['', [Validators.maxLength(70)]],
       cdtrDept: [''],
       cdtrSubDept: [''],
       cdtrFlr: [''],
@@ -572,9 +613,10 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
           patch[prefix + 'AdrLine1'] = adrLines[0].textContent?.trim() || '';
           if (adrLines.length > 1) patch[prefix + 'AdrLine2'] = adrLines[1].textContent?.trim() || '';
         }
-        if (hasStructured && hasAdrLines) patch[prefix + 'AddrType'] = 'hybrid';
-        else if (hasStructured) patch[prefix + 'AddrType'] = 'structured';
-        else if (hasAdrLines) patch[prefix + 'AddrType'] = 'unstructured';
+        if (hasAdrLines) {
+          patch[prefix + 'AddrType'] = 'hybrid';
+          patch[prefix + 'StrtNm'] = ''; patch[prefix + 'BldgNb'] = ''; patch[prefix + 'PstCd'] = ''; patch[prefix + 'BldgNm'] = '';
+        } else if (hasStructured) patch[prefix + 'AddrType'] = 'structured';
         else patch[prefix + 'AddrType'] = '';
       } else {
         patch[prefix + 'AddrType'] = '';
@@ -652,9 +694,10 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
           patch[prefix + 'AdrLine1'] = adrLines2[0].textContent?.trim() || '';
           if (adrLines2.length > 1) patch[prefix + 'AdrLine2'] = adrLines2[1].textContent?.trim() || '';
         }
-        if (hasStr2 && hasLn2) patch[prefix + 'AddrType'] = 'hybrid';
-        else if (hasStr2) patch[prefix + 'AddrType'] = 'structured';
-        else if (hasLn2) patch[prefix + 'AddrType'] = 'unstructured';
+        if (hasLn2) {
+          patch[prefix + 'AddrType'] = 'hybrid';
+          patch[prefix + 'StrtNm'] = ''; patch[prefix + 'BldgNb'] = ''; patch[prefix + 'PstCd'] = ''; patch[prefix + 'BldgNm'] = '';
+        } else if (hasStr2) patch[prefix + 'AddrType'] = 'structured';
         else patch[prefix + 'AddrType'] = '';
       } else {
         patch[prefix + 'AddrType'] = '';
@@ -684,16 +727,12 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
       fiId += this.tag('ClrSysMmbId', clrMmbContent, indent + 3);
     }
     if (lei) fiId += this.el('LEI', lei, indent + 3);
-    if (nm) {
-      fiId += this.el('Nm', nm, indent + 3);
-      // CBPR+ rule: Name and Address must always be present together.
-      // Only emit Nm if there is actual address data to accompany it.
+    // CBPR_COM_R9: If BICFI is present, Nm and PstlAdr must NOT appear in FinInstnId
+    if (!bic && nm) {
       const hasAddress = this.hasAddr(v, pref);
       if (hasAddress) {
+        fiId += this.el('Nm', nm, indent + 3);
         fiId += this.addrXml(v, pref, indent + 3);
-      } else {
-        // Skip Nm too — emitting name without address violates L3 rule.
-        fiId = fiId.replace(this.el('Nm', nm, indent + 3), '');
       }
     }
     
@@ -760,10 +799,8 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
     if (!type) type = 'structured';
     const t = this.tabs(indent + 1);
     let lines: string[] = [];
-    const isStrd = ['structured', 'hybrid'].includes(type);
-    const isUstrd = ['unstructured', 'hybrid'].includes(type);
-
-    if (isStrd) {
+    // Structured-only fields — not emitted in hybrid
+    if (type === 'structured') {
       if (v[p + 'Dept']) lines.push(`${t}<Dept>${this.e(v[p + 'Dept'])}</Dept>`);
       if (v[p + 'SubDept']) lines.push(`${t}<SubDept>${this.e(v[p + 'SubDept'])}</SubDept>`);
       if (v[p + 'StrtNm']) lines.push(`${t}<StrtNm>${this.e(v[p + 'StrtNm'])}</StrtNm>`);
@@ -773,17 +810,13 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
       if (v[p + 'PstBx']) lines.push(`${t}<PstBx>${this.e(v[p + 'PstBx'])}</PstBx>`);
       if (v[p + 'Room']) lines.push(`${t}<Room>${this.e(v[p + 'Room'])}</Room>`);
       if (v[p + 'PstCd']) lines.push(`${t}<PstCd>${this.e(v[p + 'PstCd'])}</PstCd>`);
-      // Mirror the form value exactly — no silent default overrides. If the
-      // user cleared TwnNm/Ctry, the XML should reflect that so the round-trip
-      // stays predictable. CBPR+ rule violations are reported by the validator
-      // separately.
-      if (v[p + 'TwnNm']) lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'])}</TwnNm>`);
-      if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
-    } else if (v[p + 'Ctry']) {
-      lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
     }
+    // TwnNm + Ctry emitted in all modes
+    if (v[p + 'TwnNm']) lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'])}</TwnNm>`);
+    if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
 
-    if (isUstrd) {
+    // AdrLine — hybrid: TwnNm + Ctry + AdrLines (SR2026: unstructured deprecated)
+    if (type === 'hybrid' || type === 'unstructured') {
       if (v[p + 'AdrLine1']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine1'])}</AdrLine>`);
       if (v[p + 'AdrLine2']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine2'])}</AdrLine>`);
     }

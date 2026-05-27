@@ -71,6 +71,27 @@ export class Pain008Component implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.buildForm();
+        const bizMsgIdCtrl = this.form.get('bizMsgId');
+        const msgIdCtrl = this.form.get('msgId');
+        if (bizMsgIdCtrl && msgIdCtrl) {
+            if (msgIdCtrl.value !== bizMsgIdCtrl.value) {
+                msgIdCtrl.setValue(bizMsgIdCtrl.value, {emitEvent: false});
+                this.generateXml();
+            }
+            bizMsgIdCtrl.valueChanges.subscribe(v => {
+                if (msgIdCtrl.value !== v) {
+                    msgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+            msgIdCtrl.valueChanges.subscribe(v => {
+                if (bizMsgIdCtrl.value !== v) {
+                    bizMsgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+        }
+
     const hadDraft = this.loadDraft();
     if (hadDraft) {
       this.showDraftBanner = true;
@@ -84,29 +105,48 @@ export class Pain008Component implements OnInit, OnDestroy {
 
   private updateConditionalValidators() {
     const ADDR_PAT = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
+    const STRUCTURED_DETAIL_FIELDS = ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn'];
+    const ADRLINE_FIELDS = ['AdrLine1', 'AdrLine2'];
     ['initgPty', 'cdtr', 'dbtr'].forEach(p => {
       const addrType = this.form.get(p + 'AddrType')?.value;
       const ctry = this.form.get(p + 'Ctry');
       const twnNm = this.form.get(p + 'TwnNm');
+      const adrLine1 = this.form.get(p + 'AdrLine1');
       if (!ctry || !twnNm) return;
 
-      if (addrType && addrType !== 'none') {
+      ctry.clearValidators();
+      twnNm.clearValidators();
+      adrLine1?.clearValidators();
+
+      if (addrType === 'hybrid') {
         ctry.setValidators([Validators.required, Validators.pattern(/^[A-Z]{2,2}$/)]);
+        twnNm.setValidators([Validators.required, Validators.maxLength(35), ADDR_PAT]);
+        adrLine1?.setValidators([Validators.required, Validators.maxLength(70), ADDR_PAT]);
+        STRUCTURED_DETAIL_FIELDS.forEach(f => { const ctrl = this.form.get(p + f); if (ctrl && ctrl.value) ctrl.setValue('', { emitEvent: false }); });
+      } else if (addrType === 'unstructured') {
+        ctry.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
+        twnNm.setValidators([Validators.maxLength(35), ADDR_PAT]);
+        adrLine1?.setValidators([Validators.maxLength(70), ADDR_PAT]);
+        STRUCTURED_DETAIL_FIELDS.forEach(f => { const ctrl = this.form.get(p + f); if (ctrl && ctrl.value) ctrl.setValue('', { emitEvent: false }); });
+      } else if (addrType === 'structured') {
+        ctry.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
+        twnNm.setValidators([Validators.maxLength(35), ADDR_PAT]);
+        adrLine1?.setValidators([Validators.maxLength(70), ADDR_PAT]);
+        ADRLINE_FIELDS.forEach(f => { const ctrl = this.form.get(p + f); if (ctrl && ctrl.value) ctrl.setValue('', { emitEvent: false }); });
       } else {
         ctry.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
-      }
-      ctry.updateValueAndValidity({ emitEvent: false });
-
-      if (addrType === 'structured' || addrType === 'hybrid') {
-        twnNm.setValidators([Validators.required, Validators.maxLength(35), ADDR_PAT]);
-      } else {
         twnNm.setValidators([Validators.maxLength(35), ADDR_PAT]);
+        adrLine1?.setValidators([Validators.maxLength(70), ADDR_PAT]);
       }
+
+      ctry.updateValueAndValidity({ emitEvent: false });
       twnNm.updateValueAndValidity({ emitEvent: false });
+      adrLine1?.updateValueAndValidity({ emitEvent: false });
     });
   }
 
   private buildForm() {
+    const sharedMsgId = 'BMS-' + Date.now();
     this.form = this.fb.group({
       // === AppHdr ===
       fromBic: ['BANCGB2LXXX', [Validators.required, Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]],
@@ -117,7 +157,7 @@ export class Pain008Component implements OnInit, OnDestroy {
       toClrSysCd: [''],
       toMmbId: [''],
       toLei: [''],
-      bizMsgId: ['BMS-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
+      bizMsgId: [sharedMsgId, [Validators.maxLength(35)]],
       msgDefIdr: ['pain.008.001.08'],
       bizSvc: ['swift.cbprplus.03'],
       mktPrctcRegy: [''],
@@ -145,7 +185,7 @@ export class Pain008Component implements OnInit, OnDestroy {
       rltdPrty: ['NORM'],
 
       // === GrpHdr ===
-      msgId: ['PAIN008-MSG-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
+      msgId: [sharedMsgId, [Validators.maxLength(35)]],
       creDtTm: [this.isoNow(), Validators.required],
       authsnCd: ['AUTH'],
       authsnPrtry: [''],
@@ -153,22 +193,22 @@ export class Pain008Component implements OnInit, OnDestroy {
       initgPtyName: ['Initiating Party', [Validators.required, Validators.maxLength(140)]],
       initgPtyId: ['', [Validators.maxLength(35)]],
       initgPtyCtryOfRes: ['US'],
-      initgPtyAddrType: ['structured'],
-      initgPtyDept: ['Treasury'],
-      initgPtySubDept: ['Payments'],
-      initgPtyStrtNm: ['Main Street'],
-      initgPtyBldgNb: ['100'],
+      initgPtyAddrType: ['hybrid'],
+      initgPtyDept: [''],
+      initgPtySubDept: [''],
+      initgPtyStrtNm: [''],
+      initgPtyBldgNb: [''],
       initgPtyBldgNm: [''],
       initgPtyFlr: [''],
       initgPtyPstBx: [''],
       initgPtyRoom: [''],
-      initgPtyPstCd: ['10001'],
+      initgPtyPstCd: [''],
       initgPtyTwnNm: ['New York'],
       initgPtyTwnLctnNm: [''],
       initgPtyDstrctNm: [''],
       initgPtyCtrySubDvsn: [''],
       initgPtyCtry: ['US'],
-      initgPtyAdrLine1: [''],
+      initgPtyAdrLine1: ['100 Main Street'],
       initgPtyAdrLine2: [''],
       fwdgAgtBic: ['FWDGUS33XXX'],
       fwdgAgtClrSysCd: [''],
@@ -176,7 +216,7 @@ export class Pain008Component implements OnInit, OnDestroy {
       fwdgAgtLei: [''],
 
       // === PmtInf ===
-      pmtInfId: ['PMTINF-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
+      pmtInfId: ['PMTINF-' + Date.now(), [Validators.maxLength(35)]],
       pmtMtd: ['DD'],
       btchBookg: ['true'],
       reqdColltnDt: [this.isoNowDate(), Validators.required],
@@ -187,20 +227,20 @@ export class Pain008Component implements OnInit, OnDestroy {
       cdtrAddrType: ['hybrid'],
       cdtrDept: [''],
       cdtrSubDept: [''],
-      cdtrStrtNm: ['Market Street'],
-      cdtrBldgNb: ['200'],
+      cdtrStrtNm: [''],
+      cdtrBldgNb: [''],
       cdtrBldgNm: [''],
       cdtrFlr: [''],
       cdtrPstBx: [''],
       cdtrRoom: [''],
-      cdtrPstCd: ['94105'],
+      cdtrPstCd: [''],
       cdtrTwnNm: ['San Francisco'],
       cdtrTwnLctnNm: [''],
       cdtrDstrctNm: [''],
       cdtrCtrySubDvsn: [''],
       cdtrCtry: ['US'],
-      cdtrAdrLine1: ['Floor 5'],
-      cdtrAdrLine2: ['Suite 500'],
+      cdtrAdrLine1: ['200 Market Street'],
+      cdtrAdrLine2: [''],
       cdtrIban: ['GB82WEST12345698765432', [Validators.required, Validators.maxLength(34)]],
       cdtrAcctOthrId: [''],
       cdtrAcctCcy: [''],
@@ -236,8 +276,8 @@ export class Pain008Component implements OnInit, OnDestroy {
   private createTxGroup(): FormGroup {
     return this.fb.group({
       // PmtId
-      instrId: ['INSTR-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
-      endToEndId: ['E2E-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
+      instrId: ['INSTR-' + Date.now(), [Validators.maxLength(35)]],
+      endToEndId: ['E2E-' + Date.now(), [Validators.maxLength(35)]],
       uetr: [crypto.randomUUID ? crypto.randomUUID() : '550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
 
       // PmtTpInf
@@ -258,7 +298,7 @@ export class Pain008Component implements OnInit, OnDestroy {
       chrgBr: ['SHAR'],
 
       // DrctDbtTx / MndtRltdInf
-      mndtId: ['MNDT-001', [Validators.required, Validators.maxLength(35)]],
+      mndtId: ['MNDT-001', [Validators.maxLength(35)]],
       dtOfSgntr: [this.isoNowDate()],
       amdmntInd: ['true'],
       orgnlMndtId: ['MNDT-ORG-001'],
@@ -310,10 +350,10 @@ export class Pain008Component implements OnInit, OnDestroy {
       // Debtor
       dbtrName: ['Debtor Name', [Validators.required, Validators.maxLength(140)]],
       dbtrCtryOfRes: ['GB'],
-      dbtrAddrType: ['unstructured'],
+      dbtrAddrType: ['hybrid'],
       dbtrDept: [''],
       dbtrSubDept: [''],
-      dbtrStrtNm: [''],
+      dbtrStrtNm: ['10 Downing Street'],
       dbtrBldgNb: [''],
       dbtrBldgNm: [''],
       dbtrFlr: [''],
@@ -325,8 +365,8 @@ export class Pain008Component implements OnInit, OnDestroy {
       dbtrDstrctNm: [''],
       dbtrCtrySubDvsn: [''],
       dbtrCtry: ['GB'],
-      dbtrAdrLine1: ['10 Downing Street'],
-      dbtrAdrLine2: ['Westminster'],
+      dbtrAdrLine1: [''],
+      dbtrAdrLine2: [''],
       dbtrOrgIdAnyBic: ['DEUTDEFFXXX'],
       dbtrOrgIdLei: ['12345678901234567892'],
       dbtrOrgIdOthrId: ['ORG-ID-001'],
@@ -822,7 +862,8 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
   private buildAddr(v: any, prefix: string, indent: number): string {
     const type = v[prefix + 'AddrType']; if (!type || type === 'none') return '';
     const lines: string[] = []; const t = this.tabs(indent + 1);
-    if (type === 'structured' || type === 'hybrid') {
+    // Structured-only fields — not emitted in hybrid
+    if (type === 'structured') {
       if (v[prefix + 'Dept']) lines.push(`${t}<Dept>${this.e(v[prefix + 'Dept'])}</Dept>`);
       if (v[prefix + 'SubDept']) lines.push(`${t}<SubDept>${this.e(v[prefix + 'SubDept'])}</SubDept>`);
       if (v[prefix + 'StrtNm']) lines.push(`${t}<StrtNm>${this.e(v[prefix + 'StrtNm'])}</StrtNm>`);
@@ -836,9 +877,11 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
       if (v[prefix + 'DstrctNm']) lines.push(`${t}<DstrctNm>${this.e(v[prefix + 'DstrctNm'])}</DstrctNm>`);
       if (v[prefix + 'CtrySubDvsn']) lines.push(`${t}<CtrySubDvsn>${this.e(v[prefix + 'CtrySubDvsn'])}</CtrySubDvsn>`);
     }
+    // TwnNm + Ctry emitted in all modes
     if (v[prefix + 'TwnNm']) lines.push(`${t}<TwnNm>${this.e(v[prefix + 'TwnNm'])}</TwnNm>`);
     if (v[prefix + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[prefix + 'Ctry'])}</Ctry>`);
-    if (type === 'unstructured' || type === 'hybrid') {
+    // AdrLine — hybrid: TwnNm + Ctry + AdrLines (SR2026: unstructured deprecated)
+    if (type === 'hybrid' || type === 'unstructured') {
       if (v[prefix + 'AdrLine1']) lines.push(`${t}<AdrLine>${this.e(v[prefix + 'AdrLine1'])}</AdrLine>`);
       if (v[prefix + 'AdrLine2']) lines.push(`${t}<AdrLine>${this.e(v[prefix + 'AdrLine2'])}</AdrLine>`);
     }
@@ -892,9 +935,9 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
     if (adrLines[0]) patch[prefix + 'AdrLine1'] = adrLines[0].textContent?.trim() || '';
     if (adrLines[1]) patch[prefix + 'AdrLine2'] = adrLines[1].textContent?.trim() || '';
     const hasStructured = !!(getV('StrtNm') || getV('TwnNm') || getV('Ctry') || getV('PstCd') || getV('BldgNb'));
-    if (hasStructured && adrLines.length) patch[prefix + 'AddrType'] = 'hybrid';
+    if (adrLines.length) { patch[prefix + 'AddrType'] = 'hybrid'; patch[prefix + 'StrtNm'] = ''; }
     else if (hasStructured) patch[prefix + 'AddrType'] = 'structured';
-    else if (adrLines.length) patch[prefix + 'AddrType'] = 'unstructured';
+    else patch[prefix + 'AddrType'] = 'hybrid';
   }
 
   private parseXmlToForm(xml: string) {

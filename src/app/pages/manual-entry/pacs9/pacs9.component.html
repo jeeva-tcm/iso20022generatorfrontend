@@ -29,6 +29,18 @@
                                                 <div class="validation-msg" *ngIf="err('fromBic') as e">{{e}}</div>
                                                 <div class="field-hint at-limit" *ngIf="hint('fromBic', 11) as h">{{h}}</div>
                                         </div>
+                                        <div class="form-group"><label>From Member ID <span class="opt">Optional</span></label>
+                                                <input formControlName="fromMmbId" maxlength="35" placeholder="Member ID">
+                                                <div class="validation-msg" *ngIf="err('fromMmbId') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>From Clearing System ID <span class="opt">Optional</span></label>
+                                                <input formControlName="fromClrSysId" maxlength="5" placeholder="e.g. CHQB">
+                                                <div class="validation-msg" *ngIf="err('fromClrSysId') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>From LEI <span class="opt">Optional</span></label>
+                                                <input formControlName="fromLei" maxlength="20" class="auto-uppercase" placeholder="20-char LEI">
+                                                <div class="validation-msg" *ngIf="err('fromLei') as e">{{e}}</div>
+                                        </div>
                                         <div class="form-group"><label>To BIC <span
                                                                 class="req">*</span></label>
                                                 <div class="uetr-control-row">
@@ -39,6 +51,18 @@
                                                 </div>
                                                 <div class="validation-msg" *ngIf="err('toBic') as e">{{e}}</div>
                                                 <div class="field-hint at-limit" *ngIf="hint('toBic', 11) as h">{{h}}</div>
+                                        </div>
+                                        <div class="form-group"><label>To Member ID <span class="opt">Optional</span></label>
+                                                <input formControlName="toMmbId" maxlength="35" placeholder="Member ID">
+                                                <div class="validation-msg" *ngIf="err('toMmbId') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>To Clearing System ID <span class="opt">Optional</span></label>
+                                                <input formControlName="toClrSysId" maxlength="5" placeholder="e.g. CHQB">
+                                                <div class="validation-msg" *ngIf="err('toClrSysId') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group"><label>To LEI <span class="opt">Optional</span></label>
+                                                <input formControlName="toLei" maxlength="20" class="auto-uppercase" placeholder="20-char LEI">
+                                                <div class="validation-msg" *ngIf="err('toLei') as e">{{e}}</div>
                                         </div>
                                         <div class="bic-same-warning" *ngIf="bicSameWarning">
                                           <mat-icon>warning_amber</mat-icon>
@@ -160,7 +184,24 @@
                                                         <option value="NORM">NORM</option>
                                                 </select>
                                                 <div class="validation-msg" *ngIf="err('sttlmPrty') as e">{{e}}</div>
-                                        </div>v>
+                                        </div>
+                                        <div class="form-group intermediary-field">
+                                            <label>Instructed Amount <span class="opt">Optional</span></label>
+                                            <input formControlName="instdAmt" type="text" pattern="^\d{1,18}(\.\d{1,5})?$" placeholder="e.g. 1000.00">
+                                            <div class="validation-msg" *ngIf="err('instdAmt') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group intermediary-field">
+                                            <label>Instructed Amount Currency <span class="opt">Optional</span></label>
+                                            <select formControlName="instdAmtCcy">
+                                                <option value=""></option>
+                                                <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group intermediary-field">
+                                            <label>Exchange Rate <span class="opt">Optional</span></label>
+                                            <input formControlName="xchgRate" type="text" placeholder="e.g. 1.08">
+                                            <div class="validation-msg" *ngIf="err('xchgRate') as e">{{e}}</div>
+                                        </div>
 
                                         <!-- Main Agents -->
                                         
@@ -520,6 +561,17 @@
                                                 </div>
                                         </div>
 
+                                        <div class="form-group intermediary-field">
+                                            <label>Purpose Code <span class="opt">Optional</span></label>
+                                            <input formControlName="purpCd" maxlength="35" placeholder="e.g. SALA, SUPP">
+                                            <div class="validation-msg" *ngIf="err('purpCd') as e">{{e}}</div>
+                                        </div>
+                                        <div class="form-group intermediary-field">
+                                            <label>Related Business Msg ID (Rltd) <span class="opt">Optional</span></label>
+                                            <input formControlName="rltd" maxlength="35" placeholder="Business Msg Identifier">
+                                            <div class="validation-msg" *ngIf="err('rltd') as e">{{e}}</div>
+                                        </div>
+
                                         <div class="section-title">Remittance Information <span class="opt">Optional</span></div>
                                         <div class="party-group">
                                                 <div [formGroup]="form" class="party-grid">
@@ -687,7 +739,7 @@
                         <label>{{title}} Address Type</label>
                         <select [formControlName]="prefix+'AddrType'">
                                 <option value="none">None (BIC/ID Only)</option>
-                                <option value="hybrid">Hybrid</option>
+                                <option value="hybrid">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
                                 <option value="structured">Structured</option>
                                 <option value="unstructured">Unstructured</option>
                         </select>
@@ -698,28 +750,28 @@
                 <ng-container *ngIf="form.get(prefix+'AddrType')?.value !== 'none'">
                         <div class="address-subgrid">
                                 <div class="form-group"
-                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
                                         <label>{{title}} Building Number</label>
                                         <input [formControlName]="prefix+'BldgNb'" maxlength="16" placeholder="e.g. 11">
                                         <div class="validation-msg" *ngIf="err(prefix+'BldgNb') as e">{{e}}</div>
                                         <div class="field-hint at-limit" *ngIf="hint(prefix+'BldgNb', 16) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group"
-                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
                                         <label>{{title}} Building Name</label>
                                         <input [formControlName]="prefix+'BldgNm'" maxlength="35">
                                         <div class="validation-msg" *ngIf="err(prefix+'BldgNm') as e">{{e}}</div>
                                         <div class="field-hint at-limit" *ngIf="hint(prefix+'BldgNm', 35) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group"
-                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
                                         <label>{{title}} Street Name</label>
                                         <input [formControlName]="prefix+'StrtNm'" maxlength="70" placeholder="e.g. Broadway">
                                         <div class="validation-msg" *ngIf="err(prefix+'StrtNm') as e">{{e}}</div>
                                         <div class="field-hint at-limit" *ngIf="hint(prefix+'StrtNm', 70) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group"
-                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
                                         <label>{{title}} Post Code</label>
                                         <input [formControlName]="prefix+'PstCd'" maxlength="16" placeholder="e.g. 10005">
                                         <div class="validation-msg" *ngIf="err(prefix+'PstCd') as e">{{e}}</div>
@@ -727,13 +779,13 @@
                                 </div>
                                 <div class="form-group"
                                         *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
-                                        <label>{{title}} City (Town Name) <span class="req">*</span></label>
+                                        <label>{{title}} City (Town Name)</label>
                                         <input [formControlName]="prefix+'TwnNm'" maxlength="35" placeholder="e.g. New York">
                                         <div class="validation-msg" *ngIf="err(prefix+'TwnNm') as e">{{e}}</div>
                                         <div class="field-hint at-limit" *ngIf="hint(prefix+'TwnNm', 35) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
-                                        <label>{{title}} Country <span class="req">*</span></label>
+                                        <label>{{title}} Country</label>
                                         <select [formControlName]="prefix + 'Ctry'">
                                                 <option value="">Select Country</option>
                                                 <option *ngFor="let c of countries" [value]="c">{{c}}</option>
