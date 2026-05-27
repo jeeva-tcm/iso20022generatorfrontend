@@ -44,7 +44,7 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
     countries: string[] = [];
     categoryPurposes: string[] = [];
     purposes: string[] = [];
-    sttlmMethods = ['COVE'];
+    sttlmMethods = ['INDA', 'INGA'];
 
     agentPrefixes = ['instgAgt', 'instdAgt', 'dbtrFi', 'cdtrFi', 'dbtrAgt', 'cdtrAgt',
         'prvsInstgAgt1', 'prvsInstgAgt2', 'prvsInstgAgt3',
@@ -396,7 +396,7 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
             fromBic: ['RBOSGB2L', BIC], toBic: ['NDEAFIHH', BIC], bizMsgId: ['pacs9bizmsgidr01', Validators.required],
             msgId: ['pacs9bizmsgidr01', Validators.required], creDtTm: [this.isoNow(), Validators.required],
             sttlmPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
-            nbOfTxs: ['1', [Validators.required, Validators.maxLength(15), Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['COVE', Validators.required],
+            nbOfTxs: ['1', [Validators.required, Validators.maxLength(15), Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['INDA', Validators.required],
             sttlmAcct: ['', [Validators.maxLength(34), Validators.pattern(/^[A-Z0-9]{5,34}$/)]],
             instgAgtBic: ['RBOSGB2L', BIC], instdAgtBic: ['NDEAFIHH', BIC],
             instrId: ['pacs9bizmsgidr01', Validators.required], endToEndId: ['pacs8bizmsgidr01', Validators.required],
@@ -909,7 +909,7 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
 				<CreDtTm>${creDtTm}</CreDtTm>
 				<NbOfTxs>${v.nbOfTxs}</NbOfTxs>
 				<SttlmInf>
-					<SttlmMtd>${this.e(v.sttlmMtd)}</SttlmMtd>${v.sttlmAcct?.trim() ? `\n\t\t\t\t\t<SttlmAcct><Id><IBAN>${this.e(v.sttlmAcct)}</IBAN></Id></SttlmAcct>` : ''}${v.instgRmbrsmntAgtBic?.trim() ? `\n\t\t\t\t\t<InstgRmbrsmntAgt>\n\t\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t\t<BICFI>${this.e(v.instgRmbrsmntAgtBic)}</BICFI>\n\t\t\t\t\t\t</FinInstnId>\n\t\t\t\t\t</InstgRmbrsmntAgt>` : ''}${v.instdRmbrsmntAgtBic?.trim() ? `\n\t\t\t\t\t<InstdRmbrsmntAgt>\n\t\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t\t<BICFI>${this.e(v.instdRmbrsmntAgtBic)}</BICFI>\n\t\t\t\t\t\t</FinInstnId>\n\t\t\t\t\t</InstdRmbrsmntAgt>` : ''}
+					<SttlmMtd>${this.e(v.sttlmMtd)}</SttlmMtd>${v.sttlmAcct?.trim() ? `\n\t\t\t\t\t<SttlmAcct><Id><IBAN>${this.e(v.sttlmAcct)}</IBAN></Id></SttlmAcct>` : ''}
 				</SttlmInf>
 			</GrpHdr>
 			<CdtTrfTxInf>

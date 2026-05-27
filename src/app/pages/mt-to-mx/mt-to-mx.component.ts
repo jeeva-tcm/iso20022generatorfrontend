@@ -694,7 +694,7 @@ export class MtToMxComponent implements OnInit {
 
         const dbtrBic = this.parseBicField(f['52A'] || f['52D'] || '', senderBic);
         const cdtrBic = this.parseBicField(f['58A'] || f['58D'] || '', receiverBic);
-        const sttlmMtd = isCov ? 'COVE' : 'INDA';
+        const sttlmMtd = 'INDA';
 
         this.addLog('INFO', `Sender: ${senderBic}, Receiver: ${receiverBic}`);
         this.addLog('INFO', `Amount: ${amount} ${ccy}, COV: ${isCov}`);
