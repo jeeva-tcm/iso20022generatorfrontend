@@ -73,6 +73,27 @@ export class Camt056Component implements OnInit, OnDestroy {
   ngOnInit() {
     this.fetchCodelists();
     this.buildForm();
+        const bizMsgIdCtrl = this.form.get('bizMsgId');
+        const msgIdCtrl = this.form.get('msgId');
+        if (bizMsgIdCtrl && msgIdCtrl) {
+            if (msgIdCtrl.value !== bizMsgIdCtrl.value) {
+                msgIdCtrl.setValue(bizMsgIdCtrl.value, {emitEvent: false});
+                this.generateXml();
+            }
+            bizMsgIdCtrl.valueChanges.subscribe(v => {
+                if (msgIdCtrl.value !== v) {
+                    msgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+            msgIdCtrl.valueChanges.subscribe(v => {
+                if (bizMsgIdCtrl.value !== v) {
+                    bizMsgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+        }
+
     const hadDraft = this.loadDraft();
     if (hadDraft) {
       this.showDraftBanner = true;
@@ -116,7 +137,7 @@ export class Camt056Component implements OnInit, OnDestroy {
       fromLEI: ['', [Validators.pattern(LEI_REG)]],
       toBIC: ['RCVRBEBBXXX', [Validators.required, Validators.pattern(BIC_REG)]],
       toLEI: ['', [Validators.pattern(LEI_REG)]],
-      businessMsgId: ['B' + Date.now().toString().slice(-13), [Validators.required, Validators.maxLength(35)]],
+      businessMsgId: ['B' + Date.now().toString().slice(-13), [Validators.maxLength(35)]],
       msgDefId: ['camt.056.001.08', [Validators.required]],
       bizSvc: ['swift.cbprplus.02', [Validators.required]],
       creationDate: [this.isoNowWithTZ(), [Validators.required]],
@@ -195,13 +216,13 @@ export class Camt056Component implements OnInit, OnDestroy {
         caseCretrPtyAdrLine2: [''],
         
         // Original Group Info (Required)
-        orgnlMsgId: ['MSG' + Date.now().toString().slice(-13), [Validators.required, Validators.maxLength(35)]],
-        orgnlMsgNmId: ['pacs.008.001.08', [Validators.required, Validators.maxLength(35)]],
+        orgnlMsgId: ['MSG' + Date.now().toString().slice(-13), [Validators.maxLength(35)]],
+        orgnlMsgNmId: ['pacs.008.001.08', [Validators.maxLength(35)]],
         orgnlCreDtTm: [this.isoNowWithTZ()],
         
         // Transaction Reference
         orgnlInstrId: ['', [Validators.maxLength(35)]],
-        orgnlEndToEndId: ['E2E' + Date.now().toString().slice(-13), [Validators.required, Validators.maxLength(35)]],
+        orgnlEndToEndId: ['E2E' + Date.now().toString().slice(-13), [Validators.maxLength(35)]],
         orgnlTxId: ['', [Validators.maxLength(35)]],
         orgnlUetr: [this.uetr.generate(), [Validators.required, Validators.pattern(UETR_REG)]],
         orgnlClrSysRef: ['', [Validators.maxLength(35)]],

@@ -70,6 +70,27 @@ export class Camt057Component implements OnInit, OnDestroy {
     ngOnInit() {
         this.fetchCodelists();
         this.buildForm();
+        const bizMsgIdCtrl = this.form.get('bizMsgId');
+        const msgIdCtrl = this.form.get('msgId');
+        if (bizMsgIdCtrl && msgIdCtrl) {
+            if (msgIdCtrl.value !== bizMsgIdCtrl.value) {
+                msgIdCtrl.setValue(bizMsgIdCtrl.value, {emitEvent: false});
+                this.generateXml();
+            }
+            bizMsgIdCtrl.valueChanges.subscribe(v => {
+                if (msgIdCtrl.value !== v) {
+                    msgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+            msgIdCtrl.valueChanges.subscribe(v => {
+                if (bizMsgIdCtrl.value !== v) {
+                    bizMsgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+        }
+
         const hadDraft = this.loadDraft();
         if (hadDraft) {
           this.showDraftBanner = true;
@@ -164,36 +185,42 @@ export class Camt057Component implements OnInit, OnDestroy {
 
     private updateConditionalValidators() {
         const ADDR_PATTERN = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
+        const STRUCTURED_DETAIL_FIELDS = ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn'];
+        const ADRLINE_FIELDS = ['AdrLine1', 'AdrLine2'];
         this.agentPrefixes.forEach(p => {
             const addrType = this.form.get(p + 'AddrType')?.value;
             const ctryCtrl = this.form.get(p + 'Ctry');
             const twnNmCtrl = this.form.get(p + 'TwnNm');
+            const adrLine1Ctrl = this.form.get(p + 'AdrLine1');
 
-            if (addrType && addrType !== 'none') {
-                if (!ctryCtrl?.hasValidator(Validators.required)) {
-                    ctryCtrl?.setValidators([Validators.required, Validators.pattern(/^[A-Z]{2,2}$/)]);
-                    ctryCtrl?.updateValueAndValidity({ emitEvent: false });
-                }
+            ctryCtrl?.clearValidators();
+            twnNmCtrl?.clearValidators();
+            adrLine1Ctrl?.clearValidators();
+
+            if (addrType === 'hybrid') {
+                ctryCtrl?.setValidators([Validators.required, Validators.pattern(/^[A-Z]{2,2}$/)]);
+                twnNmCtrl?.setValidators([Validators.required, Validators.maxLength(35), ADDR_PATTERN]);
+                adrLine1Ctrl?.setValidators([Validators.required, Validators.maxLength(70), ADDR_PATTERN]);
+                STRUCTURED_DETAIL_FIELDS.forEach(f => { const ctrl = this.form.get(p + f); if (ctrl && ctrl.value) ctrl.setValue('', { emitEvent: false }); });
+            } else if (addrType === 'unstructured') {
+                ctryCtrl?.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
+                twnNmCtrl?.setValidators([Validators.maxLength(35), ADDR_PATTERN]);
+                adrLine1Ctrl?.setValidators([Validators.maxLength(70), ADDR_PATTERN]);
+                STRUCTURED_DETAIL_FIELDS.forEach(f => { const ctrl = this.form.get(p + f); if (ctrl && ctrl.value) ctrl.setValue('', { emitEvent: false }); });
+            } else if (addrType === 'structured') {
+                ctryCtrl?.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
+                twnNmCtrl?.setValidators([Validators.maxLength(35), ADDR_PATTERN]);
+                adrLine1Ctrl?.setValidators([Validators.maxLength(70), ADDR_PATTERN]);
+                ADRLINE_FIELDS.forEach(f => { const ctrl = this.form.get(p + f); if (ctrl && ctrl.value) ctrl.setValue('', { emitEvent: false }); });
             } else {
-                if (ctryCtrl?.hasValidator(Validators.required)) {
-                    ctryCtrl?.clearValidators();
-                    ctryCtrl?.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
-                    ctryCtrl?.updateValueAndValidity({ emitEvent: false });
-                }
+                ctryCtrl?.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
+                twnNmCtrl?.setValidators([Validators.maxLength(35), ADDR_PATTERN]);
+                adrLine1Ctrl?.setValidators([Validators.maxLength(70), ADDR_PATTERN]);
             }
 
-            if (addrType === 'structured' || addrType === 'hybrid') {
-                if (!twnNmCtrl?.hasValidator(Validators.required)) {
-                    twnNmCtrl?.setValidators([Validators.required, Validators.maxLength(35), ADDR_PATTERN]);
-                    twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
-                }
-            } else {
-                if (twnNmCtrl?.hasValidator(Validators.required)) {
-                    twnNmCtrl?.clearValidators();
-                    twnNmCtrl?.setValidators([Validators.maxLength(35), ADDR_PATTERN]);
-                    twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
-                }
-            }
+            ctryCtrl?.updateValueAndValidity({ emitEvent: false });
+            twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
+            adrLine1Ctrl?.updateValueAndValidity({ emitEvent: false });
         });
     }
 
@@ -290,14 +317,14 @@ export class Camt057Component implements OnInit, OnDestroy {
 
             fromBic: ['RECVUS33XXX', BIC_REQ],
             toBic: ['SENDGB2LXXX', BIC_REQ],
-            bizMsgId: ['B-2026-N-001', [Validators.required, Validators.maxLength(35)]],
-            msgId: ['NTF-2026-001', [Validators.required, Validators.maxLength(35)]],
-            bizSvc: ['swift.cbprplus.01', [Validators.required, Validators.maxLength(35)]],
+            bizMsgId: ['NTF-2026-001', [Validators.maxLength(35)]],
+            msgId: ['NTF-2026-001', [Validators.maxLength(35)]],
+            bizSvc: ['swift.cbprplus.03', [Validators.maxLength(35)]],
             creDtTm: [this.isoNow(), Validators.required],
 
-            ntfctnId: ['ID-057-001', [Validators.required, Validators.maxLength(35)]],
+            ntfctnId: ['ID-057-001', [Validators.maxLength(35)]],
 
-            itmId: ['ITEM-001', [Validators.required, Validators.maxLength(35)]],
+            itmId: ['ITEM-001', [Validators.maxLength(35)]],
             amount: ['5000.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]],
             currency: ['USD', Validators.required],
             valDt: [new Date().toISOString().split('T')[0], [Validators.required, Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]],
@@ -343,14 +370,15 @@ export class Camt057Component implements OnInit, OnDestroy {
             this.form.addControl(p + 'AdrLine2', this.fb.control('', [Validators.maxLength(70), ADDR_PATTERN]));
         });
 
-        // Set Default Dbtr with hybrid address (Nm + PstlAdr must always be present together)
+        // Hybrid mode (TwnNm + Ctry + AdrLine) is valid and preferred.
         this.form.patchValue({
             dbtrName: 'Debtor Bank FI',
             dbtrAddrType: 'hybrid',
-            dbtrStrtNm: '123 Business Street',
+            dbtrStrtNm: '',
+            dbtrBldgNb: '',
             dbtrTwnNm: 'New York',
             dbtrCtry: 'US',
-            dbtrAdrLine1: '123 Business Street, New York'
+            dbtrAdrLine1: 'Business Street 123'
         });
     }
 
@@ -1074,11 +1102,12 @@ ${ntfctnPartiesXml}${itmXml}
             const adrLines = addr.getElementsByTagName('AdrLine');
             const hasAdrLines = adrLines.length > 0;
 
-            if (hasStructured && hasAdrLines) {
+            ['TwnNm', 'Ctry', 'CtrySubDvsn'].forEach(f => patch[prefix + f] = aV(f));
+            if (hasAdrLines) {
                 patch[prefix + 'AddrType'] = 'hybrid';
-                ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry'].forEach(f => patch[prefix + f] = aV(f));
                 patch[prefix + 'AdrLine1'] = adrLines[0]?.textContent || '';
                 patch[prefix + 'AdrLine2'] = adrLines[1]?.textContent || '';
+                ['StrtNm','BldgNb','BldgNm','Flr','PstBx','Room','PstCd','Dept','SubDept'].forEach(f => { patch[prefix + f] = ''; });
                 const adrTp = addr.getElementsByTagName('AdrTp')[0];
                 if (adrTp) {
                     patch[prefix + 'AdrTpCd'] = adrTp.getElementsByTagName('Cd')[0]?.textContent || '';
@@ -1086,18 +1115,14 @@ ${ntfctnPartiesXml}${itmXml}
                 }
             } else if (hasStructured) {
                 patch[prefix + 'AddrType'] = 'structured';
-                ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry'].forEach(f => patch[prefix + f] = aV(f));
+                ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnLctnNm', 'DstrctNm'].forEach(f => patch[prefix + f] = aV(f));
                 const adrTp = addr.getElementsByTagName('AdrTp')[0];
                 if (adrTp) {
                     patch[prefix + 'AdrTpCd'] = adrTp.getElementsByTagName('Cd')[0]?.textContent || '';
                     patch[prefix + 'AdrTpPrtry'] = adrTp.getElementsByTagName('Prtry')[0]?.textContent || '';
                 }
-            } else if (hasAdrLines) {
-                patch[prefix + 'AddrType'] = 'unstructured';
-                patch[prefix + 'AdrLine1'] = adrLines[0]?.textContent || '';
-                patch[prefix + 'AdrLine2'] = adrLines[1]?.textContent || '';
             } else {
-                patch[prefix + 'AddrType'] = '';
+                patch[prefix + 'AddrType'] = 'hybrid';
             }
         } else {
             patch[prefix + 'AddrType'] = '';
@@ -1210,8 +1235,8 @@ ${ntfctnPartiesXml}${itmXml}
     addrXml(v: any, p: string, indent = 4): string {
         const type = v[p + 'AddrType']; if (!type || type === 'none') return '';
         const lines: string[] = []; const t = this.tabs(indent + 1);
-        // Structured-only fields
-        if (type === 'structured' || type === 'hybrid') {
+        // Structured-only fields — not emitted in hybrid
+        if (type === 'structured') {
             if (v[p + 'Dept']) lines.push(`${t}<Dept>${this.e(v[p + 'Dept'])}</Dept>`);
             if (v[p + 'SubDept']) lines.push(`${t}<SubDept>${this.e(v[p + 'SubDept'])}</SubDept>`);
             if (v[p + 'StrtNm']) lines.push(`${t}<StrtNm>${this.e(v[p + 'StrtNm'])}</StrtNm>`);
@@ -1221,14 +1246,13 @@ ${ntfctnPartiesXml}${itmXml}
             if (v[p + 'PstBx']) lines.push(`${t}<PstBx>${this.e(v[p + 'PstBx'])}</PstBx>`);
             if (v[p + 'Room']) lines.push(`${t}<Room>${this.e(v[p + 'Room'])}</Room>`);
             if (v[p + 'PstCd']) lines.push(`${t}<PstCd>${this.e(v[p + 'PstCd'])}</PstCd>`);
+            if (v[p + 'CtrySubDvsn']) lines.push(`${t}<CtrySubDvsn>${this.e(v[p + 'CtrySubDvsn'])}</CtrySubDvsn>`);
         }
-        // Geographic fields are valid in ALL modes (including unstructured) per ISO 20022.
-        // Emit them outside the structured-only branch so TwnNm/CtrySubDvsn aren't lost
-        // when the user picks 'unstructured'.
+        // TwnNm + Ctry in all modes
         if (v[p + 'TwnNm']) lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'])}</TwnNm>`);
-        if (v[p + 'CtrySubDvsn']) lines.push(`${t}<CtrySubDvsn>${this.e(v[p + 'CtrySubDvsn'])}</CtrySubDvsn>`);
         if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
-        if (type === 'unstructured' || type === 'hybrid') {
+        // AdrLine — hybrid: TwnNm + Ctry + AdrLines (SR2026: unstructured deprecated)
+        if (type === 'hybrid' || type === 'unstructured') {
             if (v[p + 'AdrLine1']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine1'])}</AdrLine>`);
             if (v[p + 'AdrLine2']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine2'])}</AdrLine>`);
         }

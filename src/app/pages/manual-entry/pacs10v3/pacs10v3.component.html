@@ -66,10 +66,36 @@
                         <div class="validation-msg" *ngIf="err('creDtTm') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
+                        <label>Number of Transactions <span class="req">*</span></label>
+                        <input formControlName="nbOfTxs" type="number" min="1" maxlength="15" placeholder="1">
+                        <div class="validation-msg" *ngIf="err('nbOfTxs') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group">
                         <label>Credit Identification (CdtId) <span class="req">*</span></label>
                         <input formControlName="cdtId" maxlength="35" placeholder="Collection ID">
                         <div class="validation-msg" *ngIf="err('cdtId') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('cdtId', 35) as h">{{h}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Copy/Duplicate <span class="opt">Optional</span></label>
+                        <input formControlName="copyDplct" maxlength="4" class="auto-uppercase" placeholder="e.g. COPY">
+                        <div class="validation-msg" *ngIf="err('copyDplct') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Possible Duplicate <span class="opt">Optional</span></label>
+                        <select formControlName="pssblDplct">
+                            <option value="">None</option>
+                            <option value="true">True</option>
+                            <option value="false">False</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>AppHdr Priority <span class="opt">Optional</span></label>
+                        <select formControlName="prty">
+                            <option value="">None</option>
+                            <option value="HIGH">HIGH</option>
+                            <option value="NORM">NORM</option>
+                        </select>
                     </div>
 
                     <div class="section-title">Instructing Agent</div>
@@ -146,6 +172,12 @@
                         <div class="field-hint at-limit" *ngIf="hint('endToEndId', 35) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
+                        <label>Transaction ID <span class="opt">Optional</span></label>
+                        <input formControlName="txId" maxlength="35">
+                        <div class="validation-msg" *ngIf="err('txId') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('txId', 35) as h">{{h}}</div>
+                    </div>
+                    <div class="form-group">
                         <label>UETR <span class="req">*</span></label>
                         <div class="uetr-control-row">
                             <input formControlName="uetr" maxlength="36" placeholder="xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx" (blur)="validateManualUetr()" (paste)="onUetrPaste($event)">
@@ -188,6 +220,31 @@
                             <option *ngFor="let p of categoryPurposes" [value]="p">{{p}}</option>
                         </select>
                         <div class="validation-msg" *ngIf="err('ctgyPurpCd') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Service Level Proprietary <span class="opt">Optional</span></label>
+                        <input formControlName="svcLvlPrtry" maxlength="35" placeholder="Proprietary service level">
+                        <div class="validation-msg" *ngIf="err('svcLvlPrtry') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Local Instrument Proprietary <span class="opt">Optional</span></label>
+                        <input formControlName="lclInstrmPrtry" maxlength="35" placeholder="Proprietary local instrument">
+                        <div class="validation-msg" *ngIf="err('lclInstrmPrtry') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Category Purpose Proprietary <span class="opt">Optional</span></label>
+                        <input formControlName="ctgyPurpPrtry" maxlength="35" placeholder="Proprietary category purpose">
+                        <div class="validation-msg" *ngIf="err('ctgyPurpPrtry') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Purpose Code <span class="opt">Optional</span></label>
+                        <input formControlName="purposeCd" maxlength="4" class="auto-uppercase" placeholder="e.g. INTC">
+                        <div class="validation-msg" *ngIf="err('purposeCd') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Purpose Proprietary <span class="opt">Optional</span></label>
+                        <input formControlName="purposePrtry" maxlength="35" placeholder="Proprietary purpose">
+                        <div class="validation-msg" *ngIf="err('purposePrtry') as e">{{e}}</div>
                     </div>
 
                     <div class="section-title">Interbank Settlement Amount</div>
@@ -356,7 +413,7 @@
                         <label>{{title}} Address Type</label>
                         <select [formControlName]="prefix+'AddrType'">
                                 <option value="none">None (BIC/ID Only)</option>
-                                <option value="hybrid">Hybrid</option>
+                                <option value="hybrid">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
                                 <option value="structured">Structured</option>
                                 <option value="unstructured">Unstructured</option>
                         </select>
@@ -367,28 +424,28 @@
                 <ng-container *ngIf="form.get(prefix+'AddrType')?.value !== 'none'">
                         <div class="address-subgrid">
                                 <div class="form-group"
-                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
                                         <label>{{title}} Building Number</label>
                                         <input [formControlName]="prefix+'BldgNb'" maxlength="16" placeholder="e.g. 11">
                                         <div class="validation-msg" *ngIf="err(prefix+'BldgNb') as e">{{e}}</div>
                                         <div class="field-hint at-limit" *ngIf="hint(prefix+'BldgNb', 16) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group"
-                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
                                         <label>{{title}} Building Name</label>
                                         <input [formControlName]="prefix+'BldgNm'" maxlength="35">
                                         <div class="validation-msg" *ngIf="err(prefix+'BldgNm') as e">{{e}}</div>
                                         <div class="field-hint at-limit" *ngIf="hint(prefix+'BldgNm', 35) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group"
-                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
                                         <label>{{title}} Street Name</label>
                                         <input [formControlName]="prefix+'StrtNm'" maxlength="70" placeholder="e.g. Broadway">
                                         <div class="validation-msg" *ngIf="err(prefix+'StrtNm') as e">{{e}}</div>
                                         <div class="field-hint at-limit" *ngIf="hint(prefix+'StrtNm', 70) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group"
-                                        *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
+                                        *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
                                         <label>{{title}} Post Code</label>
                                         <input [formControlName]="prefix+'PstCd'" maxlength="16" placeholder="e.g. 10005">
                                         <div class="validation-msg" *ngIf="err(prefix+'PstCd') as e">{{e}}</div>
@@ -396,13 +453,13 @@
                                 </div>
                                 <div class="form-group"
                                         *ngIf="['structured','hybrid'].includes(form.get(prefix+'AddrType')?.value)">
-                                        <label>{{title}} City (Town Name) <span class="req">*</span></label>
+                                        <label>{{title}} City (Town Name)</label>
                                         <input [formControlName]="prefix+'TwnNm'" maxlength="35" placeholder="e.g. New York">
                                         <div class="validation-msg" *ngIf="err(prefix+'TwnNm') as e">{{e}}</div>
                                         <div class="field-hint at-limit" *ngIf="hint(prefix+'TwnNm', 35) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
-                                        <label>{{title}} Country <span class="req">*</span></label>
+                                        <label>{{title}} Country</label>
                                         <select [formControlName]="prefix + 'Ctry'">
                                                 <option value="">Select Country</option>
                                                 <option *ngFor="let c of countries" [value]="c">{{c}}</option>

@@ -78,6 +78,27 @@ export class Pacs4Component implements OnInit, OnDestroy {
     ngOnInit() {
         this.fetchCodelists();
         this.buildForm();
+        const bizMsgIdCtrl = this.form.get('bizMsgId');
+        const msgIdCtrl = this.form.get('msgId');
+        if (bizMsgIdCtrl && msgIdCtrl) {
+            if (msgIdCtrl.value !== bizMsgIdCtrl.value) {
+                msgIdCtrl.setValue(bizMsgIdCtrl.value, {emitEvent: false});
+                this.generateXml();
+            }
+            bizMsgIdCtrl.valueChanges.subscribe(v => {
+                if (msgIdCtrl.value !== v) {
+                    msgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+            msgIdCtrl.valueChanges.subscribe(v => {
+                if (bizMsgIdCtrl.value !== v) {
+                    bizMsgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+        }
+
         this.generateXml();
         
         // Auto-sync AppHdr BICs (bidirectional)
@@ -113,25 +134,43 @@ export class Pacs4Component implements OnInit, OnDestroy {
 
     private updateConditionalValidators() {
         const ADDR_PAT = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
+        const STRUCTURED_DETAIL_FIELDS = ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn'];
+        const ADRLINE_FIELDS = ['AdrLine1', 'AdrLine2'];
         this.agentPrefixes.forEach(p => {
             const addrType = this.form.get(p + 'AddrType')?.value;
             const ctry = this.form.get(p + 'Ctry');
             const twnNm = this.form.get(p + 'TwnNm');
+            const adrLine1 = this.form.get(p + 'AdrLine1');
             if (!ctry || !twnNm) return;
 
-            if (addrType && addrType !== 'none') {
+            ctry.clearValidators();
+            twnNm.clearValidators();
+            adrLine1?.clearValidators();
+
+            if (addrType === 'hybrid') {
                 ctry.setValidators([Validators.required, Validators.pattern(/^[A-Z]{2,2}$/)]);
+                twnNm.setValidators([Validators.required, Validators.maxLength(35), ADDR_PAT]);
+                adrLine1?.setValidators([Validators.required, Validators.maxLength(70), ADDR_PAT]);
+                STRUCTURED_DETAIL_FIELDS.forEach(f => { const ctrl = this.form.get(p + f); if (ctrl && ctrl.value) ctrl.setValue('', { emitEvent: false }); });
+            } else if (addrType === 'unstructured') {
+                ctry.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
+                twnNm.setValidators([Validators.maxLength(35), ADDR_PAT]);
+                adrLine1?.setValidators([Validators.maxLength(70), ADDR_PAT]);
+                STRUCTURED_DETAIL_FIELDS.forEach(f => { const ctrl = this.form.get(p + f); if (ctrl && ctrl.value) ctrl.setValue('', { emitEvent: false }); });
+            } else if (addrType === 'structured') {
+                ctry.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
+                twnNm.setValidators([Validators.maxLength(35), ADDR_PAT]);
+                adrLine1?.setValidators([Validators.maxLength(70), ADDR_PAT]);
+                ADRLINE_FIELDS.forEach(f => { const ctrl = this.form.get(p + f); if (ctrl && ctrl.value) ctrl.setValue('', { emitEvent: false }); });
             } else {
                 ctry.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
-            }
-            ctry.updateValueAndValidity({ emitEvent: false });
-
-            if (addrType === 'structured' || addrType === 'hybrid') {
-                twnNm.setValidators([Validators.required, Validators.maxLength(35), ADDR_PAT]);
-            } else {
                 twnNm.setValidators([Validators.maxLength(35), ADDR_PAT]);
+                adrLine1?.setValidators([Validators.maxLength(70), ADDR_PAT]);
             }
+
+            ctry.updateValueAndValidity({ emitEvent: false });
             twnNm.updateValueAndValidity({ emitEvent: false });
+            adrLine1?.updateValueAndValidity({ emitEvent: false });
         });
     }
 
@@ -228,16 +267,16 @@ export class Pacs4Component implements OnInit, OnDestroy {
         const c: any = {
             fromBic: ['BBBBUS33XXX', BIC_REQ],
             toBic: ['CCCCGB2LXXX', BIC_REQ],
-            bizMsgId: ['RTR-2026-FI-001', [Validators.required, Validators.maxLength(35)]],
-            msgId: ['RTR-2026-FI-001', [Validators.required, Validators.maxLength(35)]],
+            bizMsgId: ['RTR-2026-FI-001', [Validators.maxLength(35)]],
+            msgId: ['RTR-2026-FI-001', [Validators.maxLength(35)]],
             creDtTm: [this.isoNow(), Validators.required],
             nbOfTxs: ['1', [Validators.required, Validators.pattern(/^1$/)]],
             sttlmMtd: ['INDA', Validators.required],
 
-            rtrId: ['RTR-TX-001', [Validators.required, Validators.maxLength(35)]],
-            orgnlInstrId: ['INSTR-ORIG-001', [Validators.required, Validators.maxLength(35)]],
-            orgnlEndToEndId: ['E2E-ORIG-001', [Validators.required, Validators.maxLength(35)]],
-            orgnlTxId: ['TX-ORIG-001', [Validators.required, Validators.maxLength(35)]],
+            rtrId: ['RTR-TX-001', [Validators.maxLength(35)]],
+            orgnlInstrId: ['INSTR-ORIG-001', [Validators.maxLength(35)]],
+            orgnlEndToEndId: ['E2E-ORIG-001', [Validators.maxLength(35)]],
+            orgnlTxId: ['TX-ORIG-001', [Validators.maxLength(35)]],
             orgnlUETR: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
 
             amount: ['50000.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]],
@@ -249,8 +288,9 @@ export class Pacs4Component implements OnInit, OnDestroy {
             orgnlCurrency: ['USD', Validators.required],
             orgnlSttlmDt: [new Date().toISOString().split('T')[0], [Validators.required, Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]],
 
-            orgnlMsgId: ['ORIG-REF-001', [Validators.required, Validators.maxLength(35)]],
+            orgnlMsgId: ['ORIG-REF-001', [Validators.maxLength(35)]],
             orgnlMsgNmId: ['pacs.008.001.08', [Validators.required, Validators.pattern(/^pacs\.\d{3}\.\d{3}\.\d{2}$/)]],
+            orgnlCreDtTm: [''],
 
             rtrRsnCd: ['MS03', [Validators.required, Validators.maxLength(4)]],
             rtrRsnAddtlInf: ['', [Validators.maxLength(105), ADDR_PATTERN]],
@@ -273,7 +313,7 @@ export class Pacs4Component implements OnInit, OnDestroy {
                 c[p + 'Ctry'] = [isDbtr ? 'US' : 'GB', Validators.pattern(/^[A-Z]{2,2}$/)];
                 c[p + 'TwnNm'] = [isDbtr ? 'New York' : 'London', [Validators.maxLength(35), ADDR_PATTERN]];
                 c[p + 'StrtNm'] = [isDbtr ? '123 Business Street' : '456 Commerce Avenue', [Validators.maxLength(70), ADDR_PATTERN]];
-                c[p + 'AdrLine1'] = [isDbtr ? '123 Business Street, New York' : '456 Commerce Avenue, London', [Validators.maxLength(70), ADDR_PATTERN]];
+                c[p + 'AdrLine1'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
                 c[p + 'AdrLine2'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
             } else {
                 c[p + 'AddrType'] = ['none'];
@@ -437,7 +477,7 @@ export class Pacs4Component implements OnInit, OnDestroy {
 \t\t\t<GrpHdr>
 \t\t\t\t<MsgId>${this.e(v.msgId)}</MsgId>
 \t\t\t\t<CreDtTm>${creDtTm}</CreDtTm>
-\t\t\t\t<NbOfTxs>1</NbOfTxs>
+\t\t\t\t<NbOfTxs>${this.e(v.nbOfTxs || '1')}</NbOfTxs>
 \t\t\t\t<SttlmInf>
 \t\t\t\t\t<SttlmMtd>${this.e(v.sttlmMtd)}</SttlmMtd>
 \t\t\t\t</SttlmInf>
@@ -508,15 +548,18 @@ ${tx}\t\t\t</TxInf>
         if (!type || type === 'none') return '';
         
         let content = '';
-        if (['structured', 'hybrid'].includes(type)) {
+        // Structured-only fields — not emitted in hybrid
+        if (type === 'structured') {
             if (v[p + 'StrtNm']) content += this.el('StrtNm', v[p + 'StrtNm'], indent + 1);
             if (v[p + 'BldgNb']) content += this.el('BldgNb', v[p + 'BldgNb'], indent + 1);
             if (v[p + 'BldgNm']) content += this.el('BldgNm', v[p + 'BldgNm'], indent + 1);
             if (v[p + 'PstCd']) content += this.el('PstCd', v[p + 'PstCd'], indent + 1);
         }
+        // TwnNm + Ctry in all modes
         if (v[p + 'TwnNm']) content += this.el('TwnNm', v[p + 'TwnNm'], indent + 1);
         if (v[p + 'Ctry']) content += this.el('Ctry', v[p + 'Ctry'], indent + 1);
-        if (['unstructured', 'hybrid'].includes(type)) {
+        // AdrLine — hybrid: TwnNm + Ctry + AdrLines (SR2026: unstructured deprecated)
+        if (type === 'hybrid' || type === 'unstructured') {
             if (v[p + 'AdrLine1']) content += this.el('AdrLine', v[p + 'AdrLine1'], indent + 1);
             if (v[p + 'AdrLine2']) content += this.el('AdrLine', v[p + 'AdrLine2'], indent + 1);
         }
@@ -659,19 +702,19 @@ ${tx}\t\t\t</TxInf>
                     patch[p + 'Name'] = tval('Nm', el);
                     const pstl = getT('PstlAdr', el);
                     if (pstl) {
-                        patch[p + 'AddrType'] = 'hybrid';
                         const lines = pstl.querySelectorAll(':scope > AdrLine');
+                        patch[p + 'TwnNm'] = tval('TwnNm', pstl);
+                        patch[p + 'Ctry'] = tval('Ctry', pstl);
                         if (lines.length > 0) {
                             patch[p + 'AdrLine1'] = lines[0].textContent || '';
                             if (lines.length > 1) patch[p + 'AdrLine2'] = lines[1].textContent || '';
                             patch[p + 'AddrType'] = 'hybrid';
+                            patch[p + 'StrtNm'] = ''; patch[p + 'BldgNb'] = ''; patch[p + 'PstCd'] = '';
                         } else {
-                            patch[p + 'Ctry'] = tval('Ctry', pstl);
-                            patch[p + 'TwnNm'] = tval('TwnNm', pstl);
                             patch[p + 'StrtNm'] = tval('StrtNm', pstl);
                             patch[p + 'BldgNb'] = tval('BldgNb', pstl);
                             patch[p + 'PstCd'] = tval('PstCd', pstl);
-                            patch[p + 'AddrType'] = 'structured';
+                            patch[p + 'AddrType'] = tval('StrtNm', pstl) ? 'structured' : 'hybrid';
                         }
                     }
                 };

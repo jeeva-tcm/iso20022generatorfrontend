@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, AbstractControl, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -75,6 +75,27 @@ export class Camt054Component implements OnInit, OnDestroy {
   ngOnInit() {
     this.fetchCodelists();
     this.buildForm();
+        const bizMsgIdCtrl = this.form.get('businessMsgId');
+        const msgIdCtrl = this.form.get('msgId');
+        if (bizMsgIdCtrl && msgIdCtrl) {
+            if (msgIdCtrl.value !== bizMsgIdCtrl.value) {
+                msgIdCtrl.setValue(bizMsgIdCtrl.value, {emitEvent: false});
+                this.generateXml();
+            }
+            bizMsgIdCtrl.valueChanges.subscribe(v => {
+                if (msgIdCtrl.value !== v) {
+                    msgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+            msgIdCtrl.valueChanges.subscribe(v => {
+                if (bizMsgIdCtrl.value !== v) {
+                    bizMsgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+        }
+
     this.generateXml();
     this.pushHistory();
 
@@ -133,7 +154,7 @@ export class Camt054Component implements OnInit, OnDestroy {
       marketPracticeId: [''],
 
       // 4. GROUP HEADER
-      msgId: ['MSG' + Date.now().toString().slice(-13), [Validators.required, Validators.maxLength(16)]],
+      msgId: ['B' + Date.now().toString().slice(-13), [Validators.required, Validators.maxLength(16)]],
       creationDateTime: [this.isoNow(), [Validators.required]],
       originalBusinessQuery: ['', [Validators.maxLength(35)]],
       additionalInformation: ['', [Validators.maxLength(500)]],
@@ -202,17 +223,17 @@ export class Camt054Component implements OnInit, OnDestroy {
       instructionId: ['INS' + Date.now().toString().slice(-13), [Validators.maxLength(16)]],
       dbtrNm: ['JOHN DOE SENDER', [Validators.maxLength(140)]],
       dbtrAddrType: ['hybrid'],
-      dbtrStrtNm: ['123 Business Street', [Validators.maxLength(70)]],
+      dbtrStrtNm: ['', [Validators.maxLength(70)]],
       dbtrTwnNm: ['New York', [Validators.maxLength(35)]],
       dbtrCtry: ['US', [Validators.pattern(/^[A-Z]{2}$/)]],
-      dbtrAdrLine1: ['123 Business Street, New York', [Validators.maxLength(70)]],
+      dbtrAdrLine1: ['123 Business Street', [Validators.maxLength(70)]],
       dbtrAgtBic: ['SNDRBEBBXXX', [Validators.pattern(/^[A-Z0-9]{8,11}$/)]],
       cdtrNm: ['JANE DOE RECEIVER', [Validators.maxLength(140)]],
       cdtrAddrType: ['hybrid'],
-      cdtrStrtNm: ['456 Commerce Avenue', [Validators.maxLength(70)]],
+      cdtrStrtNm: ['', [Validators.maxLength(70)]],
       cdtrTwnNm: ['London', [Validators.maxLength(35)]],
       cdtrCtry: ['GB', [Validators.pattern(/^[A-Z]{2}$/)]],
-      cdtrAdrLine1: ['456 Commerce Avenue, London', [Validators.maxLength(70)]],
+      cdtrAdrLine1: ['456 Commerce Avenue', [Validators.maxLength(70)]],
       cdtrAgtBic: ['RCVRBEBBXXX', [Validators.pattern(/^[A-Z0-9]{8,11}$/)]],
       ultmtDbtrNm: ['', [Validators.maxLength(140)]],
       ultmtCdtrNm: ['', [Validators.maxLength(140)]],
@@ -442,7 +463,7 @@ export class Camt054Component implements OnInit, OnDestroy {
       xml += t(6) + `<Sum>${this.formatting.formatAmount(v.totalCreditEntries || '0', v.currency)}</Sum>\n`;
       xml += t(5) + `</TtlNtries>\n`;
       xml += t(5) + `<TtlCdtNtries>\n` + t(6) + `<NbOfNtries>${this.entries.length}</NbOfNtries>\n` + t(6) + `<Sum>${this.formatting.formatAmount(v.totalCreditEntries || '0', v.currency)}</Sum>\n` + t(5) + `</TtlCdtNtries>\n`;
-      xml += t(5) + `<TtlDbtNtries>\n` + t(6) + `<NbOfNtries>0</NbOfNtries>\n` + t(6) + `<Sum>0.00</Sum>\n` + t(5) + `</TtlDbtNtries>\n`;
+      xml += t(5) + `<TtlDbtNtries>\n` + t(6) + `<NbOfNtries>0</NbOfNtries>\n` + t(6) + `<Sum>${this.formatting.formatAmount(v.totalDebitEntries || '0', v.currency)}</Sum>\n` + t(5) + `</TtlDbtNtries>\n`;
       xml += t(4) + `</TxsSummry>\n`;
     }
 
@@ -499,10 +520,12 @@ export class Camt054Component implements OnInit, OnDestroy {
         const buildPtyAddr = (addrType: string, strtNm: string, twnNm: string, ctry: string, adrLine1: string, ind: number) => {
           if (!addrType || addrType === 'none' || (!strtNm && !twnNm && !ctry && !adrLine1)) return '';
           let a = t(ind) + `<PstlAdr>\n`;
-          if ((addrType === 'structured' || addrType === 'hybrid') && strtNm) a += t(ind+1) + `<StrtNm>${this.e(strtNm)}</StrtNm>\n`;
-          if ((addrType === 'structured' || addrType === 'hybrid') && twnNm) a += t(ind+1) + `<TwnNm>${this.e(twnNm)}</TwnNm>\n`;
+          if (addrType === 'structured') {
+            if (strtNm) a += t(ind+1) + `<StrtNm>${this.e(strtNm)}</StrtNm>\n`;
+          }
+          if (twnNm) a += t(ind+1) + `<TwnNm>${this.e(twnNm)}</TwnNm>\n`;
           if (ctry) a += t(ind+1) + `<Ctry>${this.e(ctry)}</Ctry>\n`;
-          if ((addrType === 'unstructured' || addrType === 'hybrid') && adrLine1) a += t(ind+1) + `<AdrLine>${this.e(adrLine1)}</AdrLine>\n`;
+          if ((addrType === 'hybrid' || addrType === 'unstructured') && adrLine1) a += t(ind+1) + `<AdrLine>${this.e(adrLine1)}</AdrLine>\n`;
           return a + t(ind) + `</PstlAdr>\n`;
         };
         xml += t(7) + `<RltdPties>\n`;

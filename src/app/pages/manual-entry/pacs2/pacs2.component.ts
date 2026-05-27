@@ -85,6 +85,27 @@ export class Pacs2Component implements OnInit, OnDestroy {
   ngOnInit() {
     this.fetchCountries();
     this.buildForm();
+        const bizMsgIdCtrl = this.form.get('bizMsgId');
+        const msgIdCtrl = this.form.get('msgId');
+        if (bizMsgIdCtrl && msgIdCtrl) {
+            if (msgIdCtrl.value !== bizMsgIdCtrl.value) {
+                msgIdCtrl.setValue(bizMsgIdCtrl.value, {emitEvent: false});
+                this.generateXml();
+            }
+            bizMsgIdCtrl.valueChanges.subscribe(v => {
+                if (msgIdCtrl.value !== v) {
+                    msgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+            msgIdCtrl.valueChanges.subscribe(v => {
+                if (bizMsgIdCtrl.value !== v) {
+                    bizMsgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+        }
+
     // Auto-sync AppHdr BICs with TxInfAndSts InstgAgt/InstdAgt BICs (bidirectional)
     this.form.get('fromBic')?.valueChanges.subscribe(v => this.form.patchValue({ instgAgtBic: v }, { emitEvent: false }));
     this.form.get('toBic')?.valueChanges.subscribe(v => this.form.patchValue({ instdAgtBic: v }, { emitEvent: false }));
@@ -116,23 +137,23 @@ export class Pacs2Component implements OnInit, OnDestroy {
       // AppHdr
       fromBic: ['BBBBUS33XXX', BIC],
       toBic: ['CCCCGB2LXXX', BIC],
-      bizMsgId: ['MSG-2026-FI-S-001', [Validators.required, Validators.maxLength(35)]],
-      msgDefIdr: ['pacs.002.001.10', [Validators.required, Validators.maxLength(35)]],
-      bizSvc: ['swift.cbprplus.02', [Validators.required, Validators.maxLength(35)]],
+      bizMsgId: ['MSG-2026-FI-S-001', [Validators.maxLength(35)]],
+      msgDefIdr: ['pacs.002.001.10', [Validators.maxLength(35)]],
+      bizSvc: ['swift.cbprplus.02', [Validators.maxLength(35)]],
       creDtTm: [this.isoNow(), Validators.required],
 
       // GrpHdr
-      msgId: ['MSG-2026-FI-S-001-GH', [Validators.required, Validators.maxLength(35)]],
+      msgId: ['MSG-2026-FI-S-001-GH', [Validators.maxLength(35)]],
 
       // OrgnlGrpInf
-      orgnlMsgId: ['MSG-' + Date.now() + '-ORG', [Validators.required, Validators.maxLength(35)]],
-      orgnlMsgNmId: ['pacs.008.001.08', [Validators.required, Validators.maxLength(35)]],
+      orgnlMsgId: ['MSG-' + Date.now() + '-ORG', [Validators.maxLength(35)]],
+      orgnlMsgNmId: ['pacs.008.001.08', [Validators.maxLength(35)]],
       orgnlCreDtTm: [this.isoNow(), Validators.required],
 
       // TxRef
-      orgnlInstrId: ['INSTR-STATUS-001', [Validators.required, Validators.maxLength(35)]],
+      orgnlInstrId: ['INSTR-STATUS-001', [Validators.maxLength(35)]],
       orgnlEndToEndId: ['E2E-STATUS-001', Validators.maxLength(35)],
-      orgnlTxId: ['TX-STATUS-001', [Validators.required, Validators.maxLength(35)]],
+      orgnlTxId: ['TX-STATUS-001', [Validators.maxLength(35)]],
       orgnlUETR: [this.uetrService.generate(), UETR_PATTERN],
 
       // TxSts
@@ -438,12 +459,30 @@ ${txInf.trimEnd()}
   addrXml(v: any, p: string, indent = 4): string {
     const lines: string[] = []; const t = '\t'.repeat(indent + 1);
     const val = (f: string) => v[p + f]?.trim();
+    const rawType = v[p + 'AddrType'];
+    const structuredFieldsList = ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn'];
+    const hasStructured = structuredFieldsList.some(f => val(f));
+    const hasAdrLine = val('AdrLine1') || val('AdrLine2');
+    // CBPR_R23: structured fields and <AdrLine> are mutually exclusive.
+    // If form has explicit AddrType, honor it; otherwise prefer structured (more granular data) over unstructured.
+    const type = (rawType && rawType !== 'none') ? rawType : (hasStructured ? 'structured' : (hasAdrLine ? 'unstructured' : 'structured'));
 
-    ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry'].forEach(f => {
-      if (val(f)) lines.push(`${t}<${f}>${this.esc(val(f))}</${f}>`);
-    });
-    if (val('AdrLine1')) lines.push(`${t}<AdrLine>${this.esc(val('AdrLine1'))}</AdrLine>`);
-    if (val('AdrLine2')) lines.push(`${t}<AdrLine>${this.esc(val('AdrLine2'))}</AdrLine>`);
+    if (type === 'structured') {
+      ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd'].forEach(f => {
+        if (val(f)) lines.push(`${t}<${f}>${this.esc(val(f))}</${f}>`);
+      });
+    }
+    if (val('TwnNm')) lines.push(`${t}<TwnNm>${this.esc(val('TwnNm'))}</TwnNm>`);
+    if (type === 'structured') {
+      ['TwnLctnNm', 'DstrctNm', 'CtrySubDvsn'].forEach(f => {
+        if (val(f)) lines.push(`${t}<${f}>${this.esc(val(f))}</${f}>`);
+      });
+    }
+    if (val('Ctry')) lines.push(`${t}<Ctry>${this.esc(val('Ctry'))}</Ctry>`);
+    if (type === 'hybrid' || type === 'unstructured') {
+      if (val('AdrLine1')) lines.push(`${t}<AdrLine>${this.esc(val('AdrLine1'))}</AdrLine>`);
+      if (val('AdrLine2')) lines.push(`${t}<AdrLine>${this.esc(val('AdrLine2'))}</AdrLine>`);
+    }
 
     return lines.length ? `${'\t'.repeat(indent)}<PstlAdr>\n${lines.join('\n')}\n${'\t'.repeat(indent)}</PstlAdr>\n` : '';
   }

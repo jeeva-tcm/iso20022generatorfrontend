@@ -1,4 +1,4 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -149,27 +149,57 @@ export class Camt052Component implements OnInit, OnDestroy {
     }
 
     private buildPostalAddr(prefix: string, v: any, t: (i: number) => string, indent: number) {
-        // Any address field should keep the PstlAdr block alive — including BldgNm,
-        // Dept, SubDept, Flr, PstBx, Room, CtrySubDvsn, AdrLine2. Previously this
-        // dropped the entire <PstlAdr> when only those secondary fields were set.
-        const addrFields = [
-            'StrtNm', 'BldgNb', 'BldgNm', 'PstCd', 'TwnNm', 'Ctry',
-            'Dept', 'SubDept', 'Flr', 'PstBx', 'Room',
-            'CtrySubDvsn', 'TwnLctnNm', 'DstrctNm', 'AdrTp',
-            'AdrLine1', 'AdrLine2',
-        ];
-        const hasAddr = addrFields.some(f => v[prefix + f]?.toString().trim());
+        // CBPR+ modes: hybrid = TwnNm + Ctry + AdrLine. Detail structured fields (StrtNm,
+        // BldgNb, …) must NOT coexist with <AdrLine>.
+        const get = (f: string) => v[prefix + f]?.toString().trim();
+        const detailStructured = ['StrtNm', 'BldgNb', 'BldgNm', 'PstCd', 'Dept', 'SubDept', 'Flr', 'PstBx', 'Room', 'CtrySubDvsn', 'TwnLctnNm', 'DstrctNm'];
+        const hasDetailStructured = detailStructured.some(f => get(f));
+        const hasAdrLine = get('AdrLine1') || get('AdrLine2');
+        const hasTwnOrCtry = get('TwnNm') || get('Ctry');
+        const hasAddr = hasDetailStructured || hasAdrLine || hasTwnOrCtry || get('AdrTp');
         if (!hasAddr) return '';
+
+        const rawType = get('AddrType');
+        let type: 'structured' | 'hybrid' | 'unstructured';
+        if (rawType === 'structured' || rawType === 'hybrid' || rawType === 'unstructured') {
+            type = rawType;
+        } else {
+            // No explicit AddrType: prefer structured if detail fields present, hybrid if AdrLine+TwnNm/Ctry,
+            // else fall back to unstructured (AdrLine alone) or structured (default).
+            if (hasDetailStructured) type = 'structured';
+            else if (hasAdrLine && hasTwnOrCtry) type = 'hybrid';
+            else if (hasAdrLine) type = 'unstructured';
+            else type = 'structured';
+        }
+
         let xml = t(indent) + '<PstlAdr>\n';
-        if (v[prefix + 'AdrTp']?.trim()) xml += t(indent + 1) + '<AdrTp><Cd>' + this.e(v[prefix + 'AdrTp']) + '</Cd></AdrTp>\n';
-        if (v[prefix + 'StrtNm']?.trim()) xml += t(indent + 1) + '<StrtNm>' + this.e(v[prefix + 'StrtNm']) + '</StrtNm>\n';
-        if (v[prefix + 'BldgNb']?.trim()) xml += t(indent + 1) + '<BldgNb>' + this.e(v[prefix + 'BldgNb']) + '</BldgNb>\n';
-        if (v[prefix + 'PstCd']?.trim()) xml += t(indent + 1) + '<PstCd>' + this.e(v[prefix + 'PstCd']) + '</PstCd>\n';
-        if (v[prefix + 'TwnNm']?.trim()) xml += t(indent + 1) + '<TwnNm>' + this.e(v[prefix + 'TwnNm']) + '</TwnNm>\n';
-        if (v[prefix + 'CtrySubDvsn']?.trim()) xml += t(indent + 1) + '<CtrySubDvsn>' + this.e(v[prefix + 'CtrySubDvsn']) + '</CtrySubDvsn>\n';
-        if (v[prefix + 'Ctry']?.trim()) xml += t(indent + 1) + '<Ctry>' + this.e(v[prefix + 'Ctry']) + '</Ctry>\n';
-        if (v[prefix + 'AdrLine1']?.trim()) xml += t(indent + 1) + '<AdrLine>' + this.e(v[prefix + 'AdrLine1']) + '</AdrLine>\n';
-        if (v[prefix + 'AdrLine2']?.trim()) xml += t(indent + 1) + '<AdrLine>' + this.e(v[prefix + 'AdrLine2']) + '</AdrLine>\n';
+        if (get('AdrTp')) xml += t(indent + 1) + '<AdrTp><Cd>' + this.e(get('AdrTp')) + '</Cd></AdrTp>\n';
+        if (type === 'structured') {
+            if (get('Dept')) xml += t(indent + 1) + '<Dept>' + this.e(get('Dept')) + '</Dept>\n';
+            if (get('SubDept')) xml += t(indent + 1) + '<SubDept>' + this.e(get('SubDept')) + '</SubDept>\n';
+            if (get('StrtNm')) xml += t(indent + 1) + '<StrtNm>' + this.e(get('StrtNm')) + '</StrtNm>\n';
+            if (get('BldgNb')) xml += t(indent + 1) + '<BldgNb>' + this.e(get('BldgNb')) + '</BldgNb>\n';
+            if (get('BldgNm')) xml += t(indent + 1) + '<BldgNm>' + this.e(get('BldgNm')) + '</BldgNm>\n';
+            if (get('Flr')) xml += t(indent + 1) + '<Flr>' + this.e(get('Flr')) + '</Flr>\n';
+            if (get('PstBx')) xml += t(indent + 1) + '<PstBx>' + this.e(get('PstBx')) + '</PstBx>\n';
+            if (get('Room')) xml += t(indent + 1) + '<Room>' + this.e(get('Room')) + '</Room>\n';
+            if (get('PstCd')) xml += t(indent + 1) + '<PstCd>' + this.e(get('PstCd')) + '</PstCd>\n';
+        }
+        if ((type === 'structured' || type === 'hybrid') && get('TwnNm')) {
+            xml += t(indent + 1) + '<TwnNm>' + this.e(get('TwnNm')) + '</TwnNm>\n';
+        }
+        if (type === 'structured') {
+            if (get('TwnLctnNm')) xml += t(indent + 1) + '<TwnLctnNm>' + this.e(get('TwnLctnNm')) + '</TwnLctnNm>\n';
+            if (get('DstrctNm')) xml += t(indent + 1) + '<DstrctNm>' + this.e(get('DstrctNm')) + '</DstrctNm>\n';
+            if (get('CtrySubDvsn')) xml += t(indent + 1) + '<CtrySubDvsn>' + this.e(get('CtrySubDvsn')) + '</CtrySubDvsn>\n';
+        }
+        if ((type === 'structured' || type === 'hybrid') && get('Ctry')) {
+            xml += t(indent + 1) + '<Ctry>' + this.e(get('Ctry')) + '</Ctry>\n';
+        }
+        if (type === 'hybrid' || type === 'unstructured') {
+            if (get('AdrLine1')) xml += t(indent + 1) + '<AdrLine>' + this.e(get('AdrLine1')) + '</AdrLine>\n';
+            if (get('AdrLine2')) xml += t(indent + 1) + '<AdrLine>' + this.e(get('AdrLine2')) + '</AdrLine>\n';
+        }
         xml += t(indent) + '</PstlAdr>\n';
         return xml;
     }
@@ -181,6 +211,27 @@ export class Camt052Component implements OnInit, OnDestroy {
     ngOnInit() {
         this.fetchCodelists();
         this.buildForm();
+        const bizMsgIdCtrl = this.form.get('bizMsgId');
+        const msgIdCtrl = this.form.get('msgId');
+        if (bizMsgIdCtrl && msgIdCtrl) {
+            if (msgIdCtrl.value !== bizMsgIdCtrl.value) {
+                msgIdCtrl.setValue(bizMsgIdCtrl.value, {emitEvent: false});
+                this.generateXml();
+            }
+            bizMsgIdCtrl.valueChanges.subscribe(v => {
+                if (msgIdCtrl.value !== v) {
+                    msgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+            msgIdCtrl.valueChanges.subscribe(v => {
+                if (bizMsgIdCtrl.value !== v) {
+                    bizMsgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+        }
+
         this.generateXml();
         this.onEditorChange(this.generatedXml, true);
         this.form.get('currency')?.valueChanges.subscribe(() => {
@@ -245,16 +296,17 @@ export class Camt052Component implements OnInit, OnDestroy {
     }
 
     private buildForm() {
+        const sharedMsgId = 'B' + Date.now().toString().slice(-13);
         const BIC = [Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
         const BIC_REQ = [Validators.required, ...BIC];
         const NUM15 = [Validators.pattern(/^\d{1,15}$/)];
 
         this.form = this.fb.group({
             // Header Mandatory IDs
-            bizMsgId: ['B2026032500001', [Validators.required, Validators.maxLength(35)]],
-            bizSvc: ['swift.cbprplus.02', [Validators.required, Validators.maxLength(35)]],
+            bizMsgId: [sharedMsgId, [Validators.maxLength(35)]],
+            bizSvc: ['swift.cbprplus.02', [Validators.maxLength(35)]],
             creDtTm: [new Date().toISOString(), [Validators.required]],
-            msgId: ['MSG2026032500001', [Validators.required, Validators.maxLength(35)]],
+            msgId: [sharedMsgId, [Validators.maxLength(35)]],
 
             // AppHdr Expanded - Shared Party structure for From and To
             ...this.createPartyFields('from'),
@@ -286,7 +338,7 @@ export class Camt052Component implements OnInit, OnDestroy {
             acctTp: [''], // CACC, SVGS, etc.
 
             // Report (Rpt)
-            rptId: ['RPT2026032500001', [Validators.required, Validators.maxLength(35)]],
+            rptId: ['RPT2026032500001', [Validators.maxLength(35)]],
             elctrncSeqNb: ['', [Validators.pattern(/^\d+$/)]],
             lglSeqNb: ['', [Validators.pattern(/^\d+$/)]],
             rptgSeq: ['', [Validators.pattern(/^\d+$/)]],
@@ -817,8 +869,7 @@ export class Camt052Component implements OnInit, OnDestroy {
 
         this.generatedXml += t(3) + '</GrpHdr>\n'
             + t(3) + '<Rpt>\n'
-            + t(4) + '<Id>' + this.e(v.rptId) + '</Id>\n'
-            + pgnXml;
+            + t(4) + '<Id>' + this.e(v.rptId) + '</Id>\n';
 
         if (v.elctrncSeqNb?.trim()) this.generatedXml += t(4) + '<ElctrncSeqNb>' + this.e(v.elctrncSeqNb) + '</ElctrncSeqNb>\n';
 
@@ -838,6 +889,7 @@ export class Camt052Component implements OnInit, OnDestroy {
             + txsSummryXml
             + ntryXml
             + addtlRptInfXml
+            + pgnXml
             + t(3) + '</Rpt>\n'
             + t(2) + '</BkToCstmrAcctRpt>\n'
             + t(1) + '</Document>\n'
