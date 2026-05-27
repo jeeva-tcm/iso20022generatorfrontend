@@ -130,7 +130,6 @@ export class MtToMxComponent implements OnInit {
     private mtToMxMap: Record<string, { mx: string; desc: string }> = {
         'MT103': { mx: 'pacs.008.001.08', desc: 'FI to FI Customer Credit Transfer' },
         'MT103+': { mx: 'pacs.008.001.08', desc: 'FI to FI Customer Credit Transfer (STP)' },
-        'MT103 REMIT': { mx: 'pacs.008.001.08', desc: 'FI to FI Customer Credit Transfer (Remit)' },
         'MT202': { mx: 'pacs.009.001.08', desc: 'FI to FI Institution Credit Transfer' },
         'MT202COV': { mx: 'pacs.009.001.08', desc: 'FI to FI Institution Credit Transfer (COV)' },
         'MT200': { mx: 'pacs.009.001.08', desc: 'Financial Institution Transfer' },
@@ -366,7 +365,7 @@ export class MtToMxComponent implements OnInit {
     }
 
     detectMtType(mt: string): string {
-        if (!mt?.trim()) return '';
+        if (!mt) return '';
 
         // 1. Check for explicit SWIFT headers first (most reliable)
         const appMatch = mt.match(/\{2:[IO](\d{3})/);
@@ -375,7 +374,6 @@ export class MtToMxComponent implements OnInit {
             // Check for subtypes in Block 3 or Body
             if (type === 'MT202' && (mt.includes('{119:COV}') || mt.includes(':119:COV'))) return 'MT202COV';
             if (type === 'MT103' && (mt.includes('{119:STP}') || mt.includes(':119:STP'))) return 'MT103+';
-            if (type === 'MT103' && (mt.includes('{119:REMIT}') || mt.includes(':119:REMIT') || mt.includes(':77T:'))) return 'MT103 REMIT';
             return type;
         }
 
@@ -391,7 +389,10 @@ export class MtToMxComponent implements OnInit {
                     if (mt.includes(':28C:')) return 'MT940';
                     return 'MT950';
                 }
-                if (mt.includes(':32A:')) return 'MT900'; // Debit
+                if (mt.includes(':32A:')) {
+                    if (mt.includes(':50A:') || mt.includes(':50K:') || mt.includes(':50F:')) return 'MT910';
+                    return 'MT900'; 
+                }
             }
 
             // Transaction types
@@ -1167,7 +1168,6 @@ export class MtToMxComponent implements OnInit {
             case 'MT103': this.mtInput = this.getSampleMT103(); break;
             case 'MT101': this.mtInput = this.getSampleMT101(); break;
             case 'MT103+': this.mtInput = this.getSampleMT103Plus(); break;
-            case 'MT103 REMIT': this.mtInput = this.getSampleMT103Remit(); break;
             case 'MT202': this.mtInput = this.getSampleMT202(); break;
             case 'MT202COV': this.mtInput = this.getSampleMT202COV(); break;
             case 'MT200': this.mtInput = this.getSampleMT200(); break;
@@ -1718,5 +1718,34 @@ AND CONFIRM.
 
     runValidationModal() {
         this.validateMx();
+    }
+
+    getFixSuggestionText(suggestion: string): string {
+        if (!suggestion) return '';
+        const exIndex = suggestion.indexOf('Ex:');
+        if (exIndex !== -1) {
+            return suggestion.substring(0, exIndex).trim();
+        }
+        return suggestion;
+    }
+
+    getFixSuggestionExample(suggestion: string): string[] {
+        if (!suggestion) return [];
+        const exIndex = suggestion.indexOf('Ex:');
+        if (exIndex !== -1) {
+            const exStr = suggestion.substring(exIndex + 3).trim();
+            // Try to parse if it's an array string like ['A', 'B']
+            if (exStr.startsWith('[') && exStr.endsWith(']')) {
+                try {
+                    // Replace single quotes with double quotes for JSON parsing
+                    const jsonStr = exStr.replace(/'/g, '"');
+                    return JSON.parse(jsonStr);
+                } catch(e) {
+                    return [exStr];
+                }
+            }
+            return [exStr];
+        }
+        return [];
     }
 }
