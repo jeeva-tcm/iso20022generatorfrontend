@@ -30,14 +30,6 @@
                             </div>
                         </div>
                     </mat-option>
-                    <mat-option value="MT103 REMIT">
-                        <div class="opt-layout">
-                            <div class="opt-text">
-                                <span class="opt-title">MT103 REMIT (pacs.008-Remit)</span>
-                                <span class="opt-sub">Customer Credit Transfer (Remit)</span>
-                            </div>
-                        </div>
-                    </mat-option>
                     <mat-option value="MT202">
                         <div class="opt-layout">
                             <div class="opt-text">
@@ -502,7 +494,15 @@
                                 </div>
                                 <div class="vm-detail-row fix" *ngIf="issue.fix_suggestion">
                                     <strong>💡 Fix:</strong>
-                                    <span>{{issue.fix_suggestion}}</span>
+                                    <span>{{getFixSuggestionText(issue.fix_suggestion)}}</span>
+                                    
+                                    <!-- Formatted Examples -->
+                                    <div class="vm-examples" *ngIf="getFixSuggestionExample(issue.fix_suggestion).length > 0">
+                                        <div class="vm-example-chip" *ngFor="let ex of getFixSuggestionExample(issue.fix_suggestion)">
+                                            {{ex}}
+                                        </div>
+                                    </div>
+                                    
                                     <button class="vm-copy-btn" (click)="copyFix(issue.fix_suggestion, $event)"
                                         matTooltip="Copy fix suggestion">
                                         <mat-icon>content_copy</mat-icon>
@@ -515,7 +515,7 @@
 
                 <!-- No Issues -->
                 <div class="vm-no-issues" *ngIf="getValidationIssues().length === 0">
-                    <mat-icon>celebration</mat-icon>
+                    <mat-icon>check_circle</mat-icon>
                     <p>No issues found! Your MX message is valid.</p>
                 </div>
             </div>

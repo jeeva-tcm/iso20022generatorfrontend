@@ -264,7 +264,7 @@ header p {
 }
 
 .spin-icon {
-    animation: spin 1s linear infinite;
+    
     font-size: 16px;
     width: 16px;
     height: 16px;
@@ -684,7 +684,7 @@ header p {
     border-radius: 10px;
     padding: 1rem 1.25rem;
     margin-bottom: 1rem;
-    animation: slideDown 0.3s ease;
+    
     flex-wrap: wrap;
 }
 
@@ -1062,7 +1062,7 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     border-radius: 10px;
     display: flex;
     flex-direction: column;
-    animation: slideInRight 0.3s ease;
+    
 }
 
 @keyframes slideInRight {
@@ -1170,7 +1170,7 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     border-bottom: 1px solid var(--border-light);
     align-items: center;
     flex-wrap: wrap;
-    animation: fadeIn 0.3s ease;
+    
 }
 
 .av-layer {
@@ -1263,7 +1263,7 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     justify-content: center;
     z-index: 5000;
     cursor: pointer;
-    animation: fadeIn 0.2s ease;
+    
 }
 
 @keyframes fadeIn {
@@ -1345,7 +1345,7 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     display: flex;
     flex-direction: column;
     box-shadow: 0 30px 100px rgba(0, 0, 0, 0.5);
-    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    
     overflow: hidden;
     position: relative;
     z-index: 5001;
@@ -1429,7 +1429,7 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     border: 3px solid var(--border-light);
     border-top-color: #2563eb;
     border-radius: 50%;
-    animation: spin 0.8s linear infinite;
+    
 }
 
 @keyframes spin {
@@ -1699,7 +1699,7 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    animation: fadeIn 0.15s ease;
+    
 }
 
 .vm-detail-row {
@@ -1778,3 +1778,6 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     color: var(--text-muted);
     font-weight: 500;
 }
+
+.vm-examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; } 
+.vm-example-chip { background-color: #f3f4f6; color: #374151; font-family: monospace; font-size: 12px; padding: 4px 8px; border-radius: 4px; border: 1px solid #e5e7eb; }

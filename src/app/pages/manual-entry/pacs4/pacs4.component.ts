@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
@@ -72,7 +72,8 @@ export class Pacs4Component implements OnInit, OnDestroy {
         private router: Router,
         private uetrService: UetrService,
         private formatting: FormattingService,
-        private dialog: MatDialog
+        private dialog: MatDialog,
+        private cdr: ChangeDetectorRef
     ) { }
 
     ngOnInit() {
@@ -252,10 +253,16 @@ export class Pacs4Component implements OnInit, OnDestroy {
                     this.currencyPrecision = res.currencies || {};
                     this.updateAmountValidator('amount', 'currency');
                     this.updateAmountValidator('orgnlAmount', 'orgnlCurrency');
+                    this.cdr.detectChanges();
                 }
+            },
+            error: (err) => {
+                console.error('Failed to load currencies', err);
+                this.currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'HKD', 'SGD'];
+                this.cdr.detectChanges();
             }
         });
-        this.http.get<any>(this.config.getApiUrl('/codelists/country')).subscribe({ next: (res) => { if (res?.codes) this.countries = res.codes; } });
+        this.http.get<any>(this.config.getApiUrl('/codelists/country')).subscribe({ next: (res) => { if (res?.codes) { this.countries = res.codes; this.cdr.detectChanges(); } } });
     }
 
     private buildForm() {
@@ -267,8 +274,8 @@ export class Pacs4Component implements OnInit, OnDestroy {
         const c: any = {
             fromBic: ['BBBBUS33XXX', BIC_REQ],
             toBic: ['CCCCGB2LXXX', BIC_REQ],
-            bizMsgId: ['RTR-2026-FI-001', [Validators.maxLength(35)]],
-            msgId: ['RTR-2026-FI-001', [Validators.maxLength(35)]],
+            bizMsgId: ['RTR-2026-FI-001', [Validators.required, Validators.maxLength(35)]],
+            msgId: ['RTR-2026-FI-001', [Validators.required, Validators.maxLength(35)]],
             creDtTm: [this.isoNow(), Validators.required],
             nbOfTxs: ['1', [Validators.required, Validators.pattern(/^1$/)]],
             sttlmMtd: ['INDA', Validators.required],
@@ -312,8 +319,8 @@ export class Pacs4Component implements OnInit, OnDestroy {
                 c[p + 'AddrType'] = ['hybrid'];
                 c[p + 'Ctry'] = [isDbtr ? 'US' : 'GB', Validators.pattern(/^[A-Z]{2,2}$/)];
                 c[p + 'TwnNm'] = [isDbtr ? 'New York' : 'London', [Validators.maxLength(35), ADDR_PATTERN]];
-                c[p + 'StrtNm'] = [isDbtr ? '123 Business Street' : '456 Commerce Avenue', [Validators.maxLength(70), ADDR_PATTERN]];
-                c[p + 'AdrLine1'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+                c[p + 'StrtNm'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
+                c[p + 'AdrLine1'] = [isDbtr ? '123 Business Street' : '456 Commerce Avenue', [Validators.maxLength(70), ADDR_PATTERN]];
                 c[p + 'AdrLine2'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
             } else {
                 c[p + 'AddrType'] = ['none'];
@@ -529,11 +536,13 @@ ${tx}\t\t\t</TxInf>
         if (!bic && !name && !lei && (v[prefix + 'AddrType'] === 'none' || !v[prefix + 'AddrType'])) return '';
 
         let pty = '';
-        if (name) pty += this.el('Nm', name, indent + 2);
-        pty += this.addrXml(v, prefix, indent + 2);
-
-        if (bic) pty += this.tag('Id', this.tag('OrgId', this.el('AnyBIC', bic, indent + 5), indent + 4), indent + 2);
-        else if (lei) pty += this.tag('Id', this.tag('OrgId', this.el('LEI', lei, indent + 5), indent + 4), indent + 2);
+        if (bic) {
+            pty += this.tag('Id', this.tag('OrgId', this.el('AnyBIC', bic, indent + 5), indent + 4), indent + 2);
+        } else {
+            if (name) pty += this.el('Nm', name, indent + 2);
+            pty += this.addrXml(v, prefix, indent + 2);
+            if (lei) pty += this.tag('Id', this.tag('OrgId', this.el('LEI', lei, indent + 5), indent + 4), indent + 2);
+        }
 
         let res = this.tag(tag, this.tag('Pty', pty, indent + 1), indent);
         if (v[prefix + 'Acct']) {

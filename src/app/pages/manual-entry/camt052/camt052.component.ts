@@ -303,10 +303,10 @@ export class Camt052Component implements OnInit, OnDestroy {
 
         this.form = this.fb.group({
             // Header Mandatory IDs
-            bizMsgId: [sharedMsgId, [Validators.maxLength(35)]],
+            bizMsgId: [sharedMsgId, [Validators.required, Validators.maxLength(35)]],
             bizSvc: ['swift.cbprplus.02', [Validators.maxLength(35)]],
             creDtTm: [new Date().toISOString(), [Validators.required]],
-            msgId: [sharedMsgId, [Validators.maxLength(35)]],
+            msgId: [sharedMsgId, [Validators.required, Validators.maxLength(35)]],
 
             // AppHdr Expanded - Shared Party structure for From and To
             ...this.createPartyFields('from'),
@@ -869,7 +869,8 @@ export class Camt052Component implements OnInit, OnDestroy {
 
         this.generatedXml += t(3) + '</GrpHdr>\n'
             + t(3) + '<Rpt>\n'
-            + t(4) + '<Id>' + this.e(v.rptId) + '</Id>\n';
+            + t(4) + '<Id>' + this.e(v.rptId) + '</Id>\n'
+            + pgnXml;
 
         if (v.elctrncSeqNb?.trim()) this.generatedXml += t(4) + '<ElctrncSeqNb>' + this.e(v.elctrncSeqNb) + '</ElctrncSeqNb>\n';
 
@@ -879,8 +880,7 @@ export class Camt052Component implements OnInit, OnDestroy {
 
         if (v.lglSeqNb?.trim()) this.generatedXml += t(4) + '<LglSeqNb>' + this.e(v.lglSeqNb) + '</LglSeqNb>\n';
 
-        this.generatedXml += t(4) + '<CreDtTm>' + creDtTm + '</CreDtTm>\n'
-            + frToDtXml
+        this.generatedXml += frToDtXml
             + cpyDplctXml
             + rptgSrcXml
             + acctBlock
@@ -889,7 +889,6 @@ export class Camt052Component implements OnInit, OnDestroy {
             + txsSummryXml
             + ntryXml
             + addtlRptInfXml
-            + pgnXml
             + t(3) + '</Rpt>\n'
             + t(2) + '</BkToCstmrAcctRpt>\n'
             + t(1) + '</Document>\n'

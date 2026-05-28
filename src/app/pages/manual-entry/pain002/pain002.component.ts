@@ -301,7 +301,7 @@ export class Pain002Component implements OnInit, OnDestroy {
       head_toMmbId: ['', MMB_ID_PATTERN],
       head_toLei: ['', LEI_PATTERN],
       head_bizMsgIdr: [sharedId, [...NON_EMPTY, Validators.maxLength(35)]],
-      head_msgDefIdr: [{ value: 'pain.002.001.10', disabled: true }],
+      head_msgDefIdr: [{ value: 'pain.002.001.10', disabled: true }, [Validators.required]],
       head_bizSvc: ['swift.cbprplus.02', [...NON_EMPTY, Validators.maxLength(35)]],
       head_mktPrctcRegy: ['', [Validators.maxLength(350)]],
       head_mktPrctcId: ['', [Validators.maxLength(2048)]],

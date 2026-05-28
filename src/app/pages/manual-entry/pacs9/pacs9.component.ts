@@ -335,7 +335,7 @@ export class Pacs9Component implements OnInit, OnDestroy {
             msgId: ['MSG-2026-FI-001', [Validators.maxLength(35)]], creDtTm: [this.isoNow(), Validators.required],
             nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['INDA', Validators.required],
             instgAgtBic: ['BBBBUS33XXX', BIC], instdAgtBic: ['CCCCGB2LXXX', BIC],
-            instrId: ['INSTR-FI-001', [Validators.maxLength(35)]], endToEndId: ['E2E-FI-001', [Validators.maxLength(35)]],
+            instrId: ['INSTR-FI-001', [Validators.required, Validators.maxLength(35)]], endToEndId: ['E2E-FI-001', [Validators.required, Validators.maxLength(35)]],
             txId: ['TX-FI-001', [Validators.maxLength(35)]],
             uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
             appHdrPriority: [''],

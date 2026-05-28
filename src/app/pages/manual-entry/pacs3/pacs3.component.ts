@@ -468,7 +468,7 @@ export class Pacs3Component implements OnInit, OnDestroy {
       nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['INDA', Validators.required],
       instgAgtBic: ['BBBBUS33XXX', BIC], instdAgtBic: ['CCCCGB2LXXX', BIC],
       instgAgtAcct: [''], instdAgtAcct: [''],
-      instrId: ['INSTR-001', [Validators.maxLength(35)]], endToEndId: ['E2E-001', [Validators.maxLength(35)]],
+      instrId: ['INSTR-001', [Validators.required, Validators.maxLength(35)]], endToEndId: ['E2E-001', [Validators.required, Validators.maxLength(35)]],
       txId: ['TX-001', [Validators.maxLength(35)]],
       uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
       clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],

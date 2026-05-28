@@ -1,4 +1,4 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -473,8 +473,8 @@ export class Pacs10Component implements OnInit, OnDestroy {
         const c: any = {
             fromBic: ['BOFAUS3NXXX', BIC], 
             toBic: ['CITIUS33XXX', BIC], 
-            bizMsgId: ['BMD-2026-PAC010-001', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
-            msgId: ['MSGID-2026-PAC010-001', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]], 
+            bizMsgId: ['BMD-2026-PAC010-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
+            msgId: ['MSGID-2026-PAC010-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]], 
             creDtTm: [this.isoNow(), Validators.required],
             nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]],
             cdtId: ['CDT-FI-2026-001', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
@@ -483,7 +483,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
             cdtrAgtBic: ['CHASUS33XXX', BIC_OPT],
             cdtrAgtName: ['JPMORGAN CHASE BANK', [Validators.maxLength(140), SAFE_NAME]],
             cdtrAgtLei: ['7H6LDXLRUQGFU57RNE97', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
-            cdtrAgtClrSysCd: ['USFW', Validators.maxLength(5)],
+            cdtrAgtClrSysCd: ['USABA', Validators.maxLength(5)],
             cdtrAgtClrSysMmbId: ['MEM-CAGT-01', Validators.maxLength(35)],
             cdtrAgtAddrType: ['none'],
             
@@ -491,13 +491,13 @@ export class Pacs10Component implements OnInit, OnDestroy {
             cdtrBic: ['CITIUS33XXX', BIC],
             cdtrName: ['CITIBANK NA', [Validators.maxLength(140), SAFE_NAME]],
             cdtrLei: ['E57ODZWZ7FF32TWEFS77', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
-            cdtrClrSysCd: ['USFW', Validators.maxLength(5)],
+            cdtrClrSysCd: ['USABA', Validators.maxLength(5)],
             cdtrClrSysMmbId: ['MEM-CDTR-01', Validators.maxLength(35)],
             cdtrAddrType: ['none'],
             
             // Payment IDs
-            instrId: ['INSTR-2026-PAC010-001', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
-            endToEndId: ['E2E-2026-PAC010-001', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
+            instrId: ['INSTR-2026-PAC010-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
+            endToEndId: ['E2E-2026-PAC010-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
             txId: ['TXID-2026-PAC010-001', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
             uetr: ['6bbef0a5-218b-42dc-8bce-9684f59847cd', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
             clrSysRef: ['', [Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/), Validators.maxLength(35)]],
@@ -530,7 +530,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
             dbtrBic: ['BOFAUS3NXXX', BIC],
             dbtrName: ['BANK OF AMERICA NA', [Validators.maxLength(140), SAFE_NAME]],
             dbtrLei: ['5493001KJTIIGC8Y1R12', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
-            dbtrClrSysCd: ['USFW', Validators.maxLength(5)],
+            dbtrClrSysCd: ['USABA', Validators.maxLength(5)],
             dbtrClrSysMmbId: ['MEM-DBTR-01', Validators.maxLength(35)],
             dbtrAddrType: ['none'],
             
@@ -538,7 +538,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
             dbtrAgtBic: ['WFBIUS6SXXX', BIC_OPT],
             dbtrAgtName: ['WELLS FARGO BANK NA', [Validators.maxLength(140), SAFE_NAME]],
             dbtrAgtLei: ['724500PMK2A2M1SQQ228', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
-            dbtrAgtClrSysCd: ['USFW', Validators.maxLength(5)],
+            dbtrAgtClrSysCd: ['USABA', Validators.maxLength(5)],
             dbtrAgtClrSysMmbId: ['MEM-DAGT-01', Validators.maxLength(35)],
             dbtrAgtAddrType: ['none'],
             
@@ -581,7 +581,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
             const pName = p.replace(/([A-Z])/g, ' $1').toUpperCase();
             if (!c[p + 'Name']) c[p + 'Name'] = [pName + ' INSTITUTION', [Validators.maxLength(140), SAFE_NAME]];
             if (!c[p + 'Lei']) c[p + 'Lei'] = ['54930084UKLVMY22DS16', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
-            if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['USAB', Validators.maxLength(5)];
+            if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['USABA', Validators.maxLength(5)];
             if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['MEM-' + p.toUpperCase().substring(0, 5) + '-01', Validators.maxLength(35)];
             
             if (!c[p + 'AcctIBAN']) {
@@ -614,7 +614,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
                 if (!c[p + 'IdType']) c[p + 'IdType'] = ['org'];
                 if (!c[p + 'OrgAnyBIC']) c[p + 'OrgAnyBIC'] = [c[p + 'Bic'] ? c[p + 'Bic'][0] : 'BOFAUS3NXXX', BIC_OPT];
                 if (!c[p + 'OrgLEI']) c[p + 'OrgLEI'] = [c[p + 'Lei'] ? c[p + 'Lei'][0] : '54930084UKLVMY22DS16', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
-                if (!c[p + 'OrgClrSysCd']) c[p + 'OrgClrSysCd'] = ['USFW', Validators.maxLength(5)];
+                if (!c[p + 'OrgClrSysCd']) c[p + 'OrgClrSysCd'] = ['USABA', Validators.maxLength(5)];
                 if (!c[p + 'OrgClrSysMmbId']) c[p + 'OrgClrSysMmbId'] = ['ORG-' + p.toUpperCase().substring(0, 5), Validators.maxLength(35)];
                 if (!c[p + 'OrgOthrId']) c[p + 'OrgOthrId'] = ['OTH-' + p.toUpperCase().substring(0, 5), [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]];
                 if (!c[p + 'OrgOthrSchmeNmCd']) c[p + 'OrgOthrSchmeNmCd'] = ['BANK', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{1,4}$/)]];
@@ -780,7 +780,7 @@ ${this.rmtInf(v)}
 
         if (lei) finInstnId += this.el('LEI', lei, indent + 2);
         
-        if (!onlyBic) {
+        if (!onlyBic && !bic) {
             const addr = this.addrXml(v, prefix, indent + 2);
             // ISO 20022 rule: Name and Address must always be together or both absent for Financial Institutions
             if (name && addr) {

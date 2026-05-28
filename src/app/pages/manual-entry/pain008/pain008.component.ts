@@ -157,7 +157,7 @@ export class Pain008Component implements OnInit, OnDestroy {
       toClrSysCd: [''],
       toMmbId: [''],
       toLei: [''],
-      bizMsgId: [sharedMsgId, [Validators.maxLength(35)]],
+      bizMsgId: [sharedMsgId, [Validators.required, Validators.maxLength(35)]],
       msgDefIdr: ['pain.008.001.08'],
       bizSvc: ['swift.cbprplus.03'],
       mktPrctcRegy: [''],
@@ -185,11 +185,11 @@ export class Pain008Component implements OnInit, OnDestroy {
       rltdPrty: ['NORM'],
 
       // === GrpHdr ===
-      msgId: [sharedMsgId, [Validators.maxLength(35)]],
+      msgId: [sharedMsgId, [Validators.required, Validators.maxLength(35)]],
       creDtTm: [this.isoNow(), Validators.required],
       authsnCd: ['AUTH'],
       authsnPrtry: [''],
-      nbOfTxs: ['1'],
+      nbOfTxs: ['1', [Validators.required]],
       initgPtyName: ['Initiating Party', [Validators.required, Validators.maxLength(140)]],
       initgPtyId: ['', [Validators.maxLength(35)]],
       initgPtyCtryOfRes: ['US'],
@@ -276,8 +276,8 @@ export class Pain008Component implements OnInit, OnDestroy {
   private createTxGroup(): FormGroup {
     return this.fb.group({
       // PmtId
-      instrId: ['INSTR-' + Date.now(), [Validators.maxLength(35)]],
-      endToEndId: ['E2E-' + Date.now(), [Validators.maxLength(35)]],
+      instrId: ['INSTR-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
+      endToEndId: ['E2E-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
       uetr: [crypto.randomUUID ? crypto.randomUUID() : '550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
 
       // PmtTpInf
