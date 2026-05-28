@@ -529,11 +529,13 @@ body.light-theme .qa-item {
 .qa-history  { background: rgba(14, 165, 233, 0.09); color: #7dd3fc; }
 .qa-generate { background: rgba(5, 150, 105, 0.09);  color: #34d399; }
 .qa-help     { background: rgba(217, 119, 6, 0.09);  color: #fbbf24; }
+.qa-tools    { background: rgba(139, 92, 246, 0.10); color: #a78bfa; }
 
 body.light-theme .qa-validate { background: rgba(29, 78, 216, 0.08);  color: #1d4ed8; }
 body.light-theme .qa-history  { background: rgba(2, 132, 199, 0.07);  color: #0369a1; }
 body.light-theme .qa-generate { background: rgba(4, 120, 87, 0.07);   color: #047857; }
 body.light-theme .qa-help     { background: rgba(161, 98, 7, 0.07);   color: #a16207; }
+body.light-theme .qa-tools    { background: rgba(109, 40, 217, 0.07); color: #6d28d9; }
 
 /* Standards list */
 .standards-list { display: flex; flex-direction: column; gap: 8px; }

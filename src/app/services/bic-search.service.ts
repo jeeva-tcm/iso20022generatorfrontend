@@ -20,11 +20,14 @@ export class BicSearchService {
     private config: ConfigService
   ) {}
 
-  search(query: string): Observable<BicRecord[]> {
+  search(query: string, limit?: number): Observable<BicRecord[]> {
     if (!query || query.length < 2) {
       return of([]);
     }
-    const url = `${this.config.getApiUrl('/bics/search')}?query=${encodeURIComponent(query)}`;
+    let url = `${this.config.getApiUrl('/bics/search')}?query=${encodeURIComponent(query)}`;
+    if (limit && limit > 0) {
+      url += `&limit=${limit}`;
+    }
     return this.http.get<BicRecord[]>(url).pipe(
       catchError(err => {
         console.error('BIC search failed:', err);

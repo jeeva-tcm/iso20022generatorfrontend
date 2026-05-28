@@ -48,7 +48,7 @@ import { BicSearchService, BicRecord } from '../../../services/bic-search.servic
                 </div>
 
                 <!-- List Output -->
-                <div class="bic-list" *ngIf="results.length > 0">
+                <div class="bic-list" *ngIf="results.length > 0 && !selectedDetail">
                     <div class="bic-item" *ngFor="let item of results" (click)="select(item)">
                         <div class="country-badge">{{item.country}}</div>
                         <div class="bic-main">
@@ -57,6 +57,73 @@ import { BicSearchService, BicRecord } from '../../../services/bic-search.servic
                         </div>
                         <div class="bic-code">
                             <code>{{item.bic}}</code>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detail View (browse mode) -->
+                <div class="bic-detail" *ngIf="selectedDetail">
+                    <button class="back-btn" (click)="backToResults()">
+                        <mat-icon>arrow_back</mat-icon>
+                        Back to results
+                    </button>
+
+                    <div class="detail-card">
+                        <!-- Hero: BIC + Copy as the headline -->
+                        <div class="detail-hero">
+                            <div class="hero-left">
+                                <div class="hero-eyebrow">
+                                    <mat-icon>verified</mat-icon>
+                                    <span>SWIFT / BIC Code</span>
+                                </div>
+                                <div class="hero-bic">{{selectedDetail.bic}}</div>
+                                <div class="hero-bank">{{selectedDetail.name}}</div>
+                            </div>
+                            <button class="copy-btn-lg" (click)="copyBic(selectedDetail.bic)" [class.copied]="copied">
+                                <mat-icon>{{copied ? 'check_circle' : 'content_copy'}}</mat-icon>
+                                <span>{{copied ? 'Copied' : 'Copy BIC'}}</span>
+                            </button>
+                        </div>
+
+                        <!-- Info grid -->
+                        <div class="detail-grid">
+                            <div class="info-tile">
+                                <div class="info-icon"><mat-icon>public</mat-icon></div>
+                                <div class="info-body">
+                                    <div class="info-label">Country</div>
+                                    <div class="info-value">{{selectedDetail.country || '—'}}</div>
+                                </div>
+                            </div>
+                            <div class="info-tile">
+                                <div class="info-icon"><mat-icon>tag</mat-icon></div>
+                                <div class="info-body">
+                                    <div class="info-label">Institution Code</div>
+                                    <div class="info-value mono">{{selectedDetail.bic.substring(0, 4)}}</div>
+                                </div>
+                            </div>
+                            <div class="info-tile">
+                                <div class="info-icon"><mat-icon>place</mat-icon></div>
+                                <div class="info-body">
+                                    <div class="info-label">Location Code</div>
+                                    <div class="info-value mono">{{selectedDetail.bic.substring(4, 8) || '—'}}</div>
+                                </div>
+                            </div>
+                            <div class="info-tile" *ngIf="selectedDetail.bic.length >= 11">
+                                <div class="info-icon"><mat-icon>account_tree</mat-icon></div>
+                                <div class="info-body">
+                                    <div class="info-label">Branch Code</div>
+                                    <div class="info-value mono">{{selectedDetail.bic.substring(8, 11)}}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Address (full width) -->
+                        <div class="info-tile full">
+                            <div class="info-icon"><mat-icon>location_on</mat-icon></div>
+                            <div class="info-body">
+                                <div class="info-label">Registered Address</div>
+                                <div class="info-value">{{selectedDetail.address || 'Not available'}}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -69,8 +136,10 @@ import { BicSearchService, BicRecord } from '../../../services/bic-search.servic
         display: flex;
         flex-direction: column;
         max-height: 90vh;
+        height: 90vh;
         width: 100%;
         color: var(--text-main);
+        min-height: 0;
     }
 
     .bic-search-container .dialog-title {
@@ -113,6 +182,9 @@ import { BicSearchService, BicRecord } from '../../../services/bic-search.servic
         flex-direction: column;
         overflow: hidden;
         background: transparent !important;
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none !important;
     }
 
     .bic-search-container .search-input-wrapper {
@@ -158,10 +230,9 @@ import { BicSearchService, BicRecord } from '../../../services/bic-search.servic
     }
 
     .bic-search-container .results-scroller {
-        flex: 1;
+        flex: 1 1 auto;
         overflow-y: auto;
-        min-height: 380px;
-        max-height: 520px;
+        min-height: 0;
         padding-right: 4px;
     }
 
@@ -333,6 +404,200 @@ import { BicSearchService, BicRecord } from '../../../services/bic-search.servic
         border-color: var(--accent-color) !important;
     }
 
+    .bic-search-container .bic-detail {
+        animation: bicFadeIn 0.25s ease-out;
+        padding-top: 4px;
+    }
+
+    .bic-search-container .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: transparent;
+        border: 1px solid var(--border-light);
+        color: var(--text-main) !important;
+        padding: 7px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin-bottom: 16px;
+        transition: all 0.2s;
+    }
+
+    .bic-search-container .back-btn:hover {
+        border-color: var(--accent-color) !important;
+        color: var(--accent-text) !important;
+        background: var(--accent-light) !important;
+    }
+
+    .bic-search-container .back-btn mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+    }
+
+    .bic-search-container .detail-card {
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border-light) !important;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+    }
+
+    /* Hero header */
+    .bic-search-container .detail-hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px 20px;
+        background: linear-gradient(135deg, rgba(59,130,246,0.10) 0%, rgba(139,92,246,0.06) 100%);
+        border-bottom: 1px solid var(--border-light);
+        flex-wrap: wrap;
+    }
+
+    body.light-theme .bic-search-container .detail-hero {
+        background: linear-gradient(135deg, rgba(37,99,235,0.07) 0%, rgba(109,40,217,0.04) 100%);
+    }
+
+    .bic-search-container .hero-left { flex: 1; min-width: 220px; }
+
+    .bic-search-container .hero-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--accent-text) !important;
+        opacity: 0.85;
+        margin-bottom: 4px;
+    }
+
+    .bic-search-container .hero-eyebrow mat-icon {
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
+        color: #10b981 !important;
+    }
+
+    .bic-search-container .hero-bic {
+        font-family: 'JetBrains Mono', 'Courier New', monospace;
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        color: var(--text-main) !important;
+        line-height: 1.1;
+        margin-bottom: 4px;
+    }
+
+    .bic-search-container .hero-bank {
+        font-size: 0.85rem;
+        color: var(--text-muted) !important;
+        font-weight: 500;
+        line-height: 1.35;
+    }
+
+    .bic-search-container .copy-btn-lg {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--accent-color, #3b82f6) !important;
+        color: #ffffff !important;
+        border: none;
+        padding: 9px 16px;
+        border-radius: 9px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.85rem;
+        box-shadow: 0 4px 12px rgba(59,130,246,0.25);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        white-space: nowrap;
+    }
+
+    .bic-search-container .copy-btn-lg:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(59,130,246,0.35);
+        filter: brightness(1.08);
+    }
+
+    .bic-search-container .copy-btn-lg.copied {
+        background: #10b981 !important;
+        box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+    }
+
+    .bic-search-container .copy-btn-lg mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+    }
+
+    /* Info grid */
+    .bic-search-container .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1px;
+        background: var(--border-light);
+    }
+
+    .bic-search-container .info-tile {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 16px;
+        background: var(--bg-card) !important;
+    }
+
+    .bic-search-container .info-tile.full {
+        border-top: 1px solid var(--border-light);
+    }
+
+    .bic-search-container .info-icon {
+        width: 30px;
+        height: 30px;
+        flex-shrink: 0;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--accent-light) !important;
+        color: var(--accent-text) !important;
+    }
+
+    .bic-search-container .info-icon mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+    }
+
+    .bic-search-container .info-body { flex: 1; min-width: 0; }
+
+    .bic-search-container .info-label {
+        font-size: 0.68rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.7px;
+        color: var(--text-muted) !important;
+        margin-bottom: 2px;
+    }
+
+    .bic-search-container .info-value {
+        font-size: 0.88rem;
+        font-weight: 500;
+        color: var(--text-main) !important;
+        line-height: 1.4;
+        word-break: break-word;
+    }
+
+    .bic-search-container .info-value.mono {
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 600;
+        letter-spacing: 1px;
+        color: var(--accent-text) !important;
+    }
+
     @keyframes bicFadeIn {
         from { opacity: 0; transform: translateY(8px); }
         to   { opacity: 1; transform: translateY(0); }
@@ -343,13 +608,19 @@ export class BicSearchDialogComponent {
   searchQuery = '';
   results: BicRecord[] = [];
   loading = false;
+  selectedDetail: BicRecord | null = null;
+  copied = false;
+  browseMode = false;
   private searchTimeout: any;
+  private copyTimeout: any;
 
   constructor(
     private bicSearch: BicSearchService,
     private dialogRef: MatDialogRef<BicSearchDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
-  ) {}
+  ) {
+    this.browseMode = !!(data && data.browseMode);
+  }
 
   onSearch() {
     clearTimeout(this.searchTimeout);
@@ -361,7 +632,7 @@ export class BicSearchDialogComponent {
 
     this.loading = true;
     this.searchTimeout = setTimeout(() => {
-      this.bicSearch.search(this.searchQuery).subscribe((res: BicRecord[]) => {
+      this.bicSearch.search(this.searchQuery, 1000).subscribe((res: BicRecord[]) => {
         this.results = res;
         this.loading = false;
       });
@@ -369,7 +640,41 @@ export class BicSearchDialogComponent {
   }
 
   select(record: BicRecord) {
-    this.dialogRef.close(record);
+    if (this.browseMode) {
+      this.selectedDetail = record;
+      this.copied = false;
+    } else {
+      this.dialogRef.close(record);
+    }
+  }
+
+  backToResults() {
+    this.selectedDetail = null;
+    this.copied = false;
+  }
+
+  copyBic(bic: string) {
+    const done = () => {
+      this.copied = true;
+      clearTimeout(this.copyTimeout);
+      this.copyTimeout = setTimeout(() => this.copied = false, 1800);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(bic).then(done, () => this.fallbackCopy(bic, done));
+    } else {
+      this.fallbackCopy(bic, done);
+    }
+  }
+
+  private fallbackCopy(text: string, done: () => void) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); done(); } catch {}
+    document.body.removeChild(ta);
   }
 
   close() {

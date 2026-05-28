@@ -7,11 +7,13 @@ import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { ConfigService } from '../../services/config.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { BicSearchDialogComponent } from '../manual-entry/bic-search-dialog/bic-search-dialog.component';
 
 @Component({
     selector: 'app-dashboard',
     standalone: true,
-    imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, RouterModule, MatSnackBarModule],
+    imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, RouterModule, MatSnackBarModule, MatDialogModule],
     templateUrl: './dashboard.component.html',
     styleUrls: ['./dashboard.component.css']
 })
@@ -25,8 +27,17 @@ export class DashboardComponent implements OnInit {
     constructor(
         private http: HttpClient,
         private config: ConfigService,
-        private snackBar: MatSnackBar
+        private snackBar: MatSnackBar,
+        private dialog: MatDialog
     ) {}
+
+    openBicDirectory() {
+        this.dialog.open(BicSearchDialogComponent, {
+            width: '800px',
+            disableClose: false,
+            data: { browseMode: true }
+        });
+    }
 
     ngOnInit() {
         // Try to load cached values from localStorage for instant display on page load/redirect
