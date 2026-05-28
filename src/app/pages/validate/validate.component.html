@@ -225,6 +225,16 @@
             <div class="row-details" *ngIf="expandedFile === f" (click)="$event.stopPropagation()">
               <div class="details-inner" *ngIf="f.report; else noReport">
 
+                <!-- Fix All button (shown when there are errors) -->
+                <div class="fix-all-row" *ngIf="f.report?.details?.length > 0">
+                  <button class="btn-fix-all"
+                    (click)="openFixAll(f, $event)"
+                    title="Let AI fix all issues in this message at once">
+                    <mat-icon>auto_fix_high</mat-icon>
+                    AI Fix All ({{ f.report.details.length }} issue{{ f.report.details.length !== 1 ? 's' : '' }})
+                  </button>
+                </div>
+
                 <!-- Layer Summary (L1, L2, L3) at the top -->
                 <div class="layer-summaries-row">
                   <div class="layer-summary-pill" *ngFor="let k of getReportLayers(f.report)">
@@ -249,11 +259,12 @@
 
                 <!-- Issues details grouping below -->
                 <div class="layer-detail-item" *ngFor="let l of getGroupedIssues(f.report)">
-                  <div class="layer-title" (click)="toggleLayer(f, l.name, $event)"
-                    [class.layer-expanded]="isLayerExpanded(f, l.name)">
-                    <mat-icon class="layer-chevron"
-                      [style.transform]="isLayerExpanded(f, l.name) ? 'rotate(90deg)' : 'rotate(0deg)'">chevron_right</mat-icon>
-                    <span class="layer-label">L{{l.layer}} - {{l.name}}</span>
+                  <div class="layer-title" [class.layer-expanded]="isLayerExpanded(f, l.name)">
+                    <div class="layer-toggle" (click)="toggleLayer(f, l.name, $event)" style="display: flex; align-items: center; gap: 12px; cursor: pointer; flex: 1;">
+                      <mat-icon class="layer-chevron"
+                        [style.transform]="isLayerExpanded(f, l.name) ? 'rotate(90deg)' : 'rotate(0deg)'">chevron_right</mat-icon>
+                      <span class="layer-label">L{{l.layer}} - {{l.name}}</span>
+                    </div>
 
                     <div class="layer-stats-pills" style="margin-left: auto; display: flex; gap: 12px;">
                       <span class="layer-stat-pill all-pill" (click)="setIssueFilter(f, l.name, 'ALL', $event)"
@@ -325,6 +336,16 @@
                               <mat-icon>content_copy</mat-icon>
                             </button>
                           </div>
+                        </div>
+
+                        <!-- AI Fix button -->
+                        <div class="df-ai-fix-row">
+                          <button class="df-ai-fix-btn"
+                            (click)="openFix(issue, f, $event)"
+                            title="Let AI generate and apply a fix for this issue">
+                            <mat-icon>auto_fix_high</mat-icon>
+                            AI Fix
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -445,6 +466,17 @@
     </div>
   </div>
 </div>
+
+<!-- ── AI Fix Suggester Modal ── -->
+<app-fix-suggester
+  *ngIf="fixSuggesterOpen && fixTarget"
+  [xml]="fixTarget.content"
+  [issue]="activeFixIssue"
+  [issues]="activeFixIssues"
+  [mode]="fixMode"
+  (applied)="onFixApplied(fixTarget, $event)"
+  (dismissed)="closeFix()">
+</app-fix-suggester>
 
 <!-- Modal: Paste XML -->
 <div class="custom-modal-overlay" *ngIf="showPasteModal" (click)="closePasteModal()">

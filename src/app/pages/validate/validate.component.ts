@@ -13,6 +13,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { ConfigService } from '../../services/config.service';
+import { FixSuggesterComponent } from '../../components/fix-suggester/fix-suggester.component';
+import { IssueRef } from '../../services/fix-suggester.service';
 
 export interface FileEntry {
   id: string;
@@ -40,6 +42,7 @@ export interface FileEntry {
     MatAutocompleteModule,
     MatFormFieldModule,
     MatInputModule,
+    FixSuggesterComponent,
   ],
   templateUrl: './validate.component.html',
   styleUrls: ['./validate.component.css']
@@ -96,6 +99,53 @@ export class ValidateComponent implements OnInit {
 
   // ── Selected issue (detail view) ───────────────────────────────────────────
   expandedIssue: any = null;
+
+  toggleIssue(issue: any) {
+    if (this.expandedIssue === issue.id) {
+      this.expandedIssue = null;
+    } else {
+      this.expandedIssue = issue.id;
+    }
+  }
+
+  // ── Inline Fix Suggester state ──────────────────────────────────────────────
+  fixSuggesterOpen = false;
+  fixTarget: FileEntry | null = null;
+  activeFixIssue: IssueRef | undefined = undefined;
+  activeFixIssues: IssueRef[] | undefined = undefined;
+  fixMode: 'single' | 'batch' = 'single';
+
+  openFix(issue: any, entry: FileEntry, event: Event) {
+    event.stopPropagation();
+    this.fixTarget = entry;
+    this.activeFixIssue = issue as IssueRef;
+    this.activeFixIssues = undefined;
+    this.fixMode = 'single';
+    this.fixSuggesterOpen = true;
+  }
+
+  openFixAll(entry: FileEntry, event: Event) {
+    event.stopPropagation();
+    this.fixTarget = entry;
+    this.activeFixIssues = (entry.report?.details ?? []) as IssueRef[];
+    this.activeFixIssue = undefined;
+    this.fixMode = 'batch';
+    this.fixSuggesterOpen = true;
+  }
+
+  onFixApplied(entry: FileEntry, newXml: string) {
+    entry.content = newXml;
+    this.fixSuggesterOpen = false;
+    this.fixTarget = null;
+    this.saveWorkspace();
+    this.validateFile(entry);
+    this.snackBar.open('Fix applied — re-validating…', '', { duration: 2500 });
+  }
+
+  closeFix() {
+    this.fixSuggesterOpen = false;
+    this.fixTarget = null;
+  }
 
   // ── Summary computed from all files ────────────────────────────────────────
   get summary() {

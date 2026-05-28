@@ -1,0 +1,117 @@
+<div class="fs-overlay" (click)="dismiss()">
+  <div class="fs-modal" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="fs-header">
+      <div class="fs-header-left">
+        <mat-icon class="fs-header-icon">auto_fix_high</mat-icon>
+        <span class="fs-title">
+          {{ mode === 'batch' ? 'AI Fix All Issues' : 'AI Fix Suggestion' }}
+        </span>
+        <span *ngIf="mode === 'batch' && batchItems.length > 0" class="fs-badge">
+          {{ batchItems.length }} issue{{ batchItems.length !== 1 ? 's' : '' }}
+        </span>
+      </div>
+      <button class="fs-close-btn" (click)="dismiss()" matTooltip="Close">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <!-- Loading state -->
+    <div class="fs-loading" *ngIf="loading">
+      <mat-icon class="spin">sync</mat-icon>
+      <span>Generating AI fix{{ mode === 'batch' ? 's' : '' }}…</span>
+    </div>
+
+    <!-- Error banner (non-fatal — shown above content when partial) -->
+    <div class="fs-error-banner" *ngIf="errorMsg && !loading">
+      <mat-icon>warning_amber</mat-icon>
+      <span>{{ errorMsg }}</span>
+    </div>
+
+    <!-- ── SINGLE mode body ── -->
+    <ng-container *ngIf="!loading && mode === 'single' && suggestion">
+
+      <div class="fs-issue-info">
+        <span class="fs-rule-badge">{{ suggestion.issue_code }}</span>
+        <span class="fs-issue-msg">{{ suggestion.issue_message }}</span>
+        <span class="fs-conf-badge" [class]="confidenceClass(suggestion.confidence)">
+          {{ confidenceLabel(suggestion.confidence) }}
+        </span>
+      </div>
+
+      <div class="fs-diff-wrap" *ngIf="suggestion.confidence !== 'unavailable'">
+        <div class="fs-diff-header">
+          <span class="diff-label removed-label"><span class="dot dot-red"></span> Original</span>
+          <span class="diff-label added-label"><span class="dot dot-green"></span> Proposed fix</span>
+        </div>
+        <pre class="fs-diff-body"><ng-container *ngFor="let line of singleDiff"><span
+            [class.diff-removed]="line.type === 'removed'"
+            [class.diff-added]="line.type === 'added'"
+            [class.diff-unchanged]="line.type === 'unchanged'">{{ line.type === 'removed' ? '− ' : line.type === 'added' ? '+ ' : '  ' }}{{ line.text }}
+</span></ng-container></pre>
+        <div class="fs-no-changes" *ngIf="!singleHasChanges">
+          <mat-icon>info</mat-icon> No changes — the AI returned the same element.
+        </div>
+      </div>
+
+    </ng-container>
+
+    <!-- ── BATCH mode body ── -->
+    <ng-container *ngIf="!loading && mode === 'batch' && batchItems.length > 0">
+      <div class="fs-batch-list">
+        <div class="fs-batch-item" *ngFor="let item of batchItems; let i = index"
+             [class.unavailable]="item.suggestion.confidence === 'unavailable'"
+             [class.selected]="item.selected">
+
+          <div class="fs-batch-item-header" (click)="toggleBatchItem(item)">
+            <input type="checkbox" [checked]="item.selected"
+                   [disabled]="item.suggestion.confidence === 'unavailable'"
+                   (click)="$event.stopPropagation(); toggleBatchItem(item)">
+            <span class="fs-rule-badge">{{ item.suggestion.issue_code }}</span>
+            <span class="fs-batch-msg">{{ item.suggestion.issue_message }}</span>
+            <span class="fs-conf-badge" [class]="confidenceClass(item.suggestion.confidence)">
+              {{ confidenceLabel(item.suggestion.confidence) }}
+            </span>
+          </div>
+
+          <div class="fs-diff-wrap" *ngIf="item.selected && item.suggestion.confidence !== 'unavailable'">
+            <pre class="fs-diff-body fs-diff-compact"><ng-container *ngFor="let line of item.diffLines"><span
+                [class.diff-removed]="line.type === 'removed'"
+                [class.diff-added]="line.type === 'added'"
+                [class.diff-unchanged]="line.type === 'unchanged'">{{ line.type === 'removed' ? '− ' : line.type === 'added' ? '+ ' : '  ' }}{{ line.text }}
+</span></ng-container></pre>
+            <div class="fs-no-changes" *ngIf="!item.hasChanges">
+              <mat-icon>info</mat-icon> No changes proposed for this issue.
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Footer -->
+    <div class="fs-footer" *ngIf="!loading">
+      <button class="fs-btn-cancel" (click)="dismiss()">Cancel</button>
+
+      <!-- Single accept -->
+      <button class="fs-btn-accept" *ngIf="mode === 'single'"
+              [disabled]="!suggestion || suggestion.confidence === 'unavailable' || !singleHasChanges || applying"
+              (click)="acceptSingle()">
+        <mat-icon *ngIf="!applying">check_circle</mat-icon>
+        <mat-icon *ngIf="applying" class="spin">sync</mat-icon>
+        {{ applying ? 'Applying…' : 'Accept Fix' }}
+      </button>
+
+      <!-- Batch accept -->
+      <button class="fs-btn-accept" *ngIf="mode === 'batch'"
+              [disabled]="selectedCount === 0 || applying"
+              (click)="acceptSelected()">
+        <mat-icon *ngIf="!applying">check_circle</mat-icon>
+        <mat-icon *ngIf="applying" class="spin">sync</mat-icon>
+        {{ applying ? 'Applying…' : 'Accept ' + selectedCount + ' Fix' + (selectedCount !== 1 ? 'es' : '') }}
+      </button>
+    </div>
+
+  </div>
+</div>
