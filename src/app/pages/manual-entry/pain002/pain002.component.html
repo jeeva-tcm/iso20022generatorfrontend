@@ -69,7 +69,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>Business Service (BizSvc)</label>
+                            <label>Business Service (BizSvc) <span class="req">*</span></label>
                             <input formControlName="head_bizSvc" maxlength="35" (input)="handleInput($event, 'head_bizSvc', 'BizSvc')">
                             <div class="validation-msg" *ngIf="err('head_bizSvc') as e">{{e}}</div>
                         </div>

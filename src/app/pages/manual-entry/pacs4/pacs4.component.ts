@@ -267,8 +267,8 @@ export class Pacs4Component implements OnInit, OnDestroy {
         const c: any = {
             fromBic: ['BBBBUS33XXX', BIC_REQ],
             toBic: ['CCCCGB2LXXX', BIC_REQ],
-            bizMsgId: ['RTR-2026-FI-001', [Validators.maxLength(35)]],
-            msgId: ['RTR-2026-FI-001', [Validators.maxLength(35)]],
+            bizMsgId: ['RTR-2026-FI-001', [Validators.required, Validators.maxLength(35)]],
+            msgId: ['RTR-2026-FI-001', [Validators.required, Validators.maxLength(35)]],
             creDtTm: [this.isoNow(), Validators.required],
             nbOfTxs: ['1', [Validators.required, Validators.pattern(/^1$/)]],
             sttlmMtd: ['INDA', Validators.required],

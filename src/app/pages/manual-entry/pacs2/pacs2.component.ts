@@ -137,13 +137,13 @@ export class Pacs2Component implements OnInit, OnDestroy {
       // AppHdr
       fromBic: ['BBBBUS33XXX', BIC],
       toBic: ['CCCCGB2LXXX', BIC],
-      bizMsgId: ['MSG-2026-FI-S-001', [Validators.maxLength(35)]],
+      bizMsgId: ['MSG-2026-FI-S-001', [Validators.required, Validators.maxLength(35)]],
       msgDefIdr: ['pacs.002.001.10', [Validators.maxLength(35)]],
       bizSvc: ['swift.cbprplus.02', [Validators.maxLength(35)]],
       creDtTm: [this.isoNow(), Validators.required],
 
       // GrpHdr
-      msgId: ['MSG-2026-FI-S-001-GH', [Validators.maxLength(35)]],
+      msgId: ['MSG-2026-FI-S-001-GH', [Validators.required, Validators.maxLength(35)]],
 
       // OrgnlGrpInf
       orgnlMsgId: ['MSG-' + Date.now() + '-ORG', [Validators.maxLength(35)]],

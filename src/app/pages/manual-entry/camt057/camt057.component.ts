@@ -317,8 +317,8 @@ export class Camt057Component implements OnInit, OnDestroy {
 
             fromBic: ['RECVUS33XXX', BIC_REQ],
             toBic: ['SENDGB2LXXX', BIC_REQ],
-            bizMsgId: ['NTF-2026-001', [Validators.maxLength(35)]],
-            msgId: ['NTF-2026-001', [Validators.maxLength(35)]],
+            bizMsgId: ['NTF-2026-001', [Validators.required, Validators.maxLength(35)]],
+            msgId: ['NTF-2026-001', [Validators.required, Validators.maxLength(35)]],
             bizSvc: ['swift.cbprplus.03', [Validators.maxLength(35)]],
             creDtTm: [this.isoNow(), Validators.required],
 
@@ -331,7 +331,7 @@ export class Camt057Component implements OnInit, OnDestroy {
 
             // Optional but commonly used
             instrId: ['', [Validators.maxLength(35), Validators.pattern(/^[A-Za-z0-9\-\/]{1,35}$/)]],
-            endToEndId: ['E2E-057-001', Validators.maxLength(35)],
+            endToEndId: ['E2E-057-001', [Validators.required, Validators.maxLength(35)]],
             uetr: ['550e8400-e29b-41d4-a716-446655440001', [Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
             clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
             appHdrPriority: ['NORM'],

@@ -303,10 +303,10 @@ export class Camt052Component implements OnInit, OnDestroy {
 
         this.form = this.fb.group({
             // Header Mandatory IDs
-            bizMsgId: [sharedMsgId, [Validators.maxLength(35)]],
+            bizMsgId: [sharedMsgId, [Validators.required, Validators.maxLength(35)]],
             bizSvc: ['swift.cbprplus.02', [Validators.maxLength(35)]],
             creDtTm: [new Date().toISOString(), [Validators.required]],
-            msgId: [sharedMsgId, [Validators.maxLength(35)]],
+            msgId: [sharedMsgId, [Validators.required, Validators.maxLength(35)]],
 
             // AppHdr Expanded - Shared Party structure for From and To
             ...this.createPartyFields('from'),
