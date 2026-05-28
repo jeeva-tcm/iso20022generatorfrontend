@@ -391,15 +391,16 @@ export class Pain001Component implements OnInit, OnDestroy {
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}${s}${p(Math.floor(Math.abs(off) / 60))}:${p(Math.abs(off) % 60)}`;
   }
 
-  isoNowDate(): string { 
-    return new Date().toISOString().split('T')[0]; 
+  isoNowDate(): string {
+    const d = new Date(), p = (n: number) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
   }
 
   fdt(dt: string): string {
     if (!dt) return dt;
     let s = dt.trim();
     if (s.length === 10) s += 'T00:00:00';
-    s = s.replace(/\.\d+/, '').replace('Z', '+00:00');
+    s = s.replace(/\.\d+/, '').replace(/z/i, '+00:00');
     if (s && !/([+-]\d{2}:\d{2})$/.test(s)) s += '+00:00';
     return s;
   }
@@ -457,13 +458,13 @@ export class Pain001Component implements OnInit, OnDestroy {
     // Group Header
     const grpHdr = this.tag('GrpHdr',
       this.el('MsgId', v.msgId, 4) +
-      this.el('CreDtTm', creDtTm, 4) +
+      this.el('CreDtTm', this.fdt(creDtTm), 4) +
       this.tag('Authstn', v.authstnCd ? this.el('Cd', v.authstnCd, 6) : this.el('Prtry', v.authstnPrtry, 6), 5) +
       this.el('NbOfTxs', v.nbOfTxs, 4) +
       (v.ctrlSum && v.ctrlSum !== '0.00' ? this.el('CtrlSum', v.ctrlSum, 4) : '') +
       this.partyXml('InitgPty', 'initgPty', v, 4) +
       this.agtXml('FwdgAgt', 'fwdgAgt', v, 4) +
-      (v.initnSrc ? this.tag('InitnSrc', this.el('Nm', v.initnSrc, 6), 5) : ''),
+      (v.initnSrc && (v.head_msgDefIdr || '').match(/\.(11|12|13|14)$/) ? this.tag('InitnSrc', this.el('Nm', v.initnSrc, 6), 5) : ''),
       3
     );
 
@@ -483,8 +484,8 @@ export class Pain001Component implements OnInit, OnDestroy {
         (v.ctgyPurp ? this.tag('CtgyPurp', this.el('Cd', v.ctgyPurp, 7), 6) : ''), 4);
     }
 
-    pmtInfContent += (v.reqdExctnDt ? this.tag('ReqdExctnDt', this.el('Dt', v.reqdExctnDt, 6), 5) : '');
-    if (v.poolgAdjstmntDt) pmtInfContent += this.el('PoolgAdjstmntDt', v.poolgAdjstmntDt, 4);
+    pmtInfContent += (v.reqdExctnDt ? this.tag('ReqdExctnDt', this.el('Dt', this.fdt(v.reqdExctnDt).substring(0,10), 6), 5) : '');
+    if (v.poolgAdjstmntDt) pmtInfContent += this.el('PoolgAdjstmntDt', this.fdt(v.poolgAdjstmntDt).substring(0,10), 4);
 
     pmtInfContent += this.partyXml('Dbtr', 'dbtr', v, 4);
     if (v.dbtrIban) pmtInfContent += this.tag('DbtrAcct', this.acctXml(v.dbtrIban, 6), 4);

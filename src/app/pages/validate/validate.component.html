@@ -227,13 +227,18 @@
 
                 <!-- Layer Summary (L1, L2, L3) at the top -->
                 <div class="layer-summaries-row">
-                  <div class="layer-summary-pill" *ngFor="let k of getReportLayers(f.report)">
+                  <div class="layer-summary-pill" *ngFor="let k of getReportLayers(f.report)"
+                       [class.passed-pill]="isLayerPass(f.report, k)"
+                       [class.failed-pill]="isLayerFail(f.report, k)">
                     <div class="pill-left">
                       <mat-icon [class.success]="isLayerPass(f.report, k)" [class.error]="isLayerFail(f.report, k)"
                         [style.color]="getLayerStatus(f.report, k).includes('SKIPPED') ? '#94a3b8' : ''">{{
                         isLayerFail(f.report, k) ? 'cancel' : (getLayerStatus(f.report, k).includes('SKIPPED') ? 'block'
                         : 'check_circle') }}</mat-icon>
-                      <span>L{{k}} {{getLayerName(k)}}</span>
+                      <div class="pill-text-column">
+                        <span class="layer-title-text">Layer {{k}}: {{getLayerName(k)}}</span>
+                        <span class="layer-time-text">{{getLayerTime(f.report, k)}}ms</span>
+                      </div>
                     </div>
                     <div class="pill-right fail-text" *ngIf="isLayerFail(f.report, k)">
                       <mat-icon>close</mat-icon>

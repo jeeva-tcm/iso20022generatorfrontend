@@ -2063,13 +2063,38 @@ body.light-theme .btn-download {
   min-width: 250px;
 }
 
+.layer-summary-pill.passed-pill {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.layer-summary-pill.failed-pill {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
 .layer-summary-pill .pill-left {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-main);
+}
+
+.pill-text-column {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.layer-title-text {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.layer-time-text {
+  font-size: 12px;
+  color: #6b7280;
+  font-family: monospace;
 }
 
 .layer-summary-pill .pill-left mat-icon {
