@@ -133,12 +133,16 @@
                             {{item.message_type}}
                         </span>
                         <span class="feed-stats">
-                            <span class="stat-err" [class.zero]="(item.total_errors || 0) === 0">
+                            <span class="stat-err"
+                                [class.zero-pass]="(item.total_errors || 0) === 0 && item.status === 'PASS'"
+                                [class.has-errors]="(item.total_errors || 0) > 0">
                                 {{item.total_errors || 0}} {{(item.total_errors || 0) === 1 ? 'error' : 'errors'}}
                             </span>
                             <span class="stat-sep">·</span>
-                            <span class="stat-pass" [class.p-pass]="item.status === 'PASS'" [class.p-fail]="item.status !== 'PASS'">
-                                {{item.status === 'PASS' ? '100%' : '0%'}} pass
+                            <span class="stat-pass"
+                                [class.p-pass]="item.status === 'PASS'"
+                                [class.p-fail]="item.status !== 'PASS'">
+                                {{getItemPassRate(item)}}% pass
                             </span>
                         </span>
                         <span class="feed-spacer"></span>

@@ -73,6 +73,25 @@ export class DashboardComponent implements OnInit {
         return 'other';
     }
 
+    getItemPassRate(item: any): number {
+        if (item.status === 'PASS') return 100;
+        const ls = item.layer_status || item.report_json?.layer_status;
+        if (ls && typeof ls === 'object') {
+            const keys = Object.keys(ls);
+            if (keys.length > 0) {
+                let passed = 0;
+                for (const k of keys) {
+                    const s = String(ls[k]?.status || '');
+                    if (s.includes('✅') || s.includes('⚠') || s.includes('WARN')) {
+                        passed++;
+                    }
+                }
+                return Math.round((passed / keys.length) * 100);
+            }
+        }
+        return 0;
+    }
+
     isRefreshing = false;
 
     loadStats() {

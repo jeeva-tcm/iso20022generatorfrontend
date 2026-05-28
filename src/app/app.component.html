@@ -13,6 +13,7 @@
     <nav class="nav-links">
         <a mat-button routerLink="/" routerLinkActive="active-link"
             [routerLinkActiveOptions]="{exact: true}">DASHBOARD</a>
+        <a mat-button routerLink="/mt-to-mx" routerLinkActive="active-link">MT → MX</a>
         <a mat-button routerLink="/validate" routerLinkActive="active-link"
             [routerLinkActiveOptions]="{exact: true}">VALIDATE</a>
 
@@ -216,8 +217,7 @@
         
         
         <a mat-button routerLink="/bulk-generate" [class.active-link]="isBulkGenerateActive">BULK GENERATE</a>
-        <a mat-button routerLink="/mt-to-mx" routerLinkActive="active-link">MT → MX</a>
-        
+
         <a mat-button routerLink="/history" routerLinkActive="active-link">HISTORY</a>
         <a mat-button routerLink="/rules" routerLinkActive="active-link">RULES</a>
         <a mat-button routerLink="/help" routerLinkActive="active-link">HELP</a>
