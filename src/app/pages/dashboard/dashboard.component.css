@@ -19,13 +19,68 @@
 }
 
 /* ─────────────────────────────────────────────
+   ERROR BANNER
+───────────────────────────────────────────── */
+.db-error-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.08), rgba(239, 68, 68, 0.04));
+    border: 1px solid rgba(220, 38, 38, 0.25);
+    color: #dc2626;
+    animation: db-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.db-error-banner mat-icon {
+    flex-shrink: 0;
+    color: #dc2626;
+}
+
+.db-error-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.35;
+    flex: 1;
+    min-width: 0;
+}
+
+.db-error-text strong {
+    font-size: 0.92rem;
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.db-error-text span {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+.db-error-retry {
+    flex-shrink: 0;
+    color: #dc2626 !important;
+    font-weight: 600 !important;
+}
+
+body:not(.light-theme) .db-error-banner {
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.18), rgba(127, 29, 29, 0.12));
+    border-color: rgba(248, 113, 113, 0.4);
+}
+
+body:not(.light-theme) .db-error-banner mat-icon,
+body:not(.light-theme) .db-error-retry {
+    color: #fca5a5 !important;
+}
+
+/* ─────────────────────────────────────────────
    HERO
 ───────────────────────────────────────────── */
 .db-hero {
     position: relative;
     border-radius: 20px;
     background: var(--bg-card);
-    border: 1px solid var(--border-light);
+    border: none;
     padding: 48px 52px;
     overflow: hidden;
 }
@@ -72,6 +127,238 @@
     flex: 1;
     min-width: 0;
     max-width: 720px;
+}
+
+/* ── Feature Cloud (hero right) — uses static image ─────────────────── */
+.hero-right {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── Word/Tag Cloud — transparent, text-only word-cloud style ───────────── */
+.tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 16px 24px;
+    max-width: 160px;
+    padding: 16px 8px;
+    background: transparent;
+    line-height: 1.05;
+}
+
+.tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0;
+    margin: 0;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    font-weight: 800;
+    font-family: inherit;
+    letter-spacing: -0.5px;
+    line-height: 1;
+    cursor: default;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.tag mat-icon {
+    font-size: inherit;
+    width: 1em;
+    height: 1em;
+}
+
+/* Size variants — word-cloud style (varied sizes, no padding) */
+.tag-sm  { font-size: 1.4rem; opacity: 0.75; }
+.tag-md  { font-size: 1.35rem; opacity: 0.88; }
+.tag-xl  { font-size: 1.30rem;    opacity: 1; }
+
+/* Light mode — bold saturated colors that sit on the hero background */
+.tag-blue   { color: #1d4ed8; }
+.tag-purple { color: #6d28d9; }
+.tag-cyan   { color: #0e7490; }
+.tag-neutral { color: #475569; }
+
+/* ── (legacy, unused) Feature highlights stack ───────────────────────────── */
+.feature-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 420px;
+}
+
+.feature-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 22px 24px 22px 28px;
+    background:
+        linear-gradient(135deg, rgba(37, 99, 235, 0.04) 0%, rgba(255, 255, 255, 0) 55%),
+        #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    border-radius: 16px;
+    box-shadow: none;
+    overflow: hidden;
+    cursor: default;
+}
+
+/* Decorative top-right corner blob */
+.feature-row::after {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--accent-strip, #2563eb) 0%, transparent 70%);
+    opacity: 0.06;
+    pointer-events: none;
+}
+
+/* Left accent strip — category color */
+.feature-row::before {
+    content: '';
+    position: absolute;
+    top: 14px;
+    left: 0;
+    bottom: 14px;
+    width: 4px;
+    border-radius: 0 4px 4px 0;
+    background: var(--accent-strip, #2563eb);
+}
+
+/* Step number — decorative poster element */
+.feature-num {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent-strip, #2563eb);
+    opacity: 0.35;
+    letter-spacing: 1px;
+}
+
+.feature-ico {
+    position: relative;
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.feature-ico mat-icon {
+    font-size: 26px;
+    width: 26px;
+    height: 26px;
+    position: relative;
+    z-index: 1;
+}
+
+.feature-desc {
+    font-size: 0.78rem;
+    color: #64748b;
+    margin-top: 4px;
+    line-height: 1.4;
+}
+
+.fi-bic {
+    background: rgba(37, 99, 235, 0.10);
+    color: #1d4ed8;
+}
+.fi-mig {
+    background: rgba(139, 92, 246, 0.10);
+    color: #6d28d9;
+}
+.fi-qa  {
+    background: rgba(6, 182, 212, 0.10);
+    color: #0e7490;
+}
+
+.feature-row:has(.fi-bic) { --accent-strip: #2563eb; }
+.feature-row:has(.fi-mig) { --accent-strip: #7c3aed; }
+.feature-row:has(.fi-qa)  { --accent-strip: #0891b2; }
+
+.feature-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+    min-width: 0;
+    flex: 1;
+}
+
+.feature-eyebrow {
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    margin-bottom: 3px;
+}
+
+.feature-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #0f172a;
+    letter-spacing: -0.2px;
+}
+
+/* Dark theme — glassy cards that blend with hero */
+body:not(.light-theme) .feature-row,
+body.dark-theme .feature-row {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.55), rgba(15, 23, 42, 0.65)) !important;
+    border: 1px solid rgba(148, 163, 184, 0.14) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.35) !important;
+}
+
+body:not(.light-theme) .feature-row:hover,
+body.dark-theme .feature-row:hover {
+    border-color: rgba(96, 165, 250, 0.35) !important;
+    background: linear-gradient(135deg, rgba(37, 55, 88, 0.6), rgba(20, 30, 54, 0.7)) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 6px 18px rgba(0, 0, 0, 0.45) !important;
+}
+
+body:not(.light-theme) .fi-bic,
+body.dark-theme .fi-bic {
+    background: rgba(96, 165, 250, 0.16) !important;
+    color: #93c5fd !important;
+    box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.2);
+}
+body:not(.light-theme) .fi-mig,
+body.dark-theme .fi-mig {
+    background: rgba(167, 139, 250, 0.16) !important;
+    color: #c4b5fd !important;
+    box-shadow: inset 0 0 0 1px rgba(167, 139, 250, 0.2);
+}
+body:not(.light-theme) .fi-qa,
+body.dark-theme .fi-qa {
+    background: rgba(34, 211, 238, 0.16) !important;
+    color: #67e8f9 !important;
+    box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.2);
+}
+
+body:not(.light-theme) .feature-title,
+body.dark-theme .feature-title {
+    color: #f1f5f9 !important;
+}
+
+body:not(.light-theme) .feature-eyebrow,
+body.dark-theme .feature-eyebrow {
+    color: #94a3b8 !important;
 }
 
 /* "LIVE" badge */
@@ -437,6 +724,12 @@ body.light-theme .feed-dot.dot-fail { background: #dc2626; }
     padding: 2px 7px;
     border-radius: 4px;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+    box-sizing: border-box;
+    flex-shrink: 0;
 }
 .msg-badge.pacs  { background: rgba(37, 99, 235, 0.1);   color: #93c5fd; }
 .msg-badge.camt  { background: rgba(14, 165, 233, 0.09); color: #7dd3fc; }
@@ -674,8 +967,8 @@ body.light-theme .std-item {
 body.light-theme .db-hero {
     background:
         linear-gradient(135deg, #ffffff 0%, #f1f5fc 50%, #e7eef9 100%);
-    border: 1px solid #d6deea;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    border: none;
+    box-shadow: none;
 }
 body.light-theme .hero-bg-grid {
     background-image: radial-gradient(rgba(29, 78, 216, 0.1) 1px, transparent 1px);
@@ -712,6 +1005,8 @@ body.light-theme .db-hero::before {
     .db-hero { padding: 32px 28px; }
     .hero-content { flex-direction: column; align-items: flex-start; gap: 28px; }
     .hero-left { max-width: 100%; }
+    .hero-right { width: 100%; justify-content: flex-start; }
+    .feature-cloud { min-width: 0; width: 100%; }
     .hero-title { font-size: 2rem; letter-spacing: -0.5px; }
     .db-body { grid-template-columns: 1fr; }
     .db-aside { display: grid; grid-template-columns: 1fr 1fr; }

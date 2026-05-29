@@ -31,8 +31,30 @@
                 </div>
             </div>
 
+            <!-- Feature Tag Cloud (right side) -->
+            <div class="hero-right">
+                <div class="tag-cloud">
+                    <span class="tag tag-xl tag-blue"><mat-icon>account_balance</mat-icon> BIC Directory Engine</span>
+                    <span class="tag tag-xl tag-purple"><mat-icon>compare_arrows</mat-icon> Legacy SWIFT MT to ISO 20022 MX Converter</span>
+                    <span class="tag tag-xl tag-cyan"><mat-icon>speed</mat-icon> Intelligent Error-Free Test Data Generator</span>
+                </div>
+            </div>
+
         </div>
     </section>
+
+    <!-- ── ERROR BANNER ── -->
+    <div class="db-error-banner" *ngIf="statsError || activityError">
+        <mat-icon>error_outline</mat-icon>
+        <div class="db-error-text">
+            <strong>Couldn't load dashboard data.</strong>
+            <span>{{ statsError || activityError }}</span>
+        </div>
+        <button mat-button class="db-error-retry" (click)="refresh()" [disabled]="isRefreshing">
+            <mat-icon [class.spinning]="isRefreshing">refresh</mat-icon>
+            Retry
+        </button>
+    </div>
 
     <!-- ── KPI GRID ── -->
     <div class="kpi-grid">
@@ -45,7 +67,9 @@
             <div class="kpi-body">
                 <span class="kpi-label">Total Audits</span>
                 <div class="kpi-value">{{stats.total | number}}</div>
-                <span class="kpi-sub">All-time records</span>
+                <span class="kpi-sub">
+                    {{ statsLoaded && stats.total === 0 ? 'No validations run yet' : 'All-time records' }}
+                </span>
             </div>
         </div>
 

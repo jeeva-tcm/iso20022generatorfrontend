@@ -21,6 +21,12 @@ export class DashboardComponent implements OnInit {
     stats = { total: 0, passed: 0, failed: 0, efficiency: '0%' };
     recentActivity: any[] = [];
 
+    statsLoading = false;
+    activityLoading = false;
+    statsError: string | null = null;
+    activityError: string | null = null;
+    statsLoaded = false;
+
     // SVG ring: radius 33 inside 80×80 viewBox
     readonly ringCircumference = 2 * Math.PI * 33;
 
@@ -94,26 +100,51 @@ export class DashboardComponent implements OnInit {
 
     isRefreshing = false;
 
+    private formatError(err: any): string {
+        if (err?.status === 0) return 'Cannot reach the server. Is the backend running?';
+        if (err?.status === 404) return 'Endpoint not found on the server.';
+        if (err?.status >= 500) return 'Server error. Please try again.';
+        if (err?.statusText) return `${err.status} ${err.statusText}`;
+        return 'Failed to load data.';
+    }
+
     loadStats() {
+        this.statsLoading = true;
+        this.statsError = null;
         this.http.get<any>(this.config.getApiUrl('/dashboard/stats')).subscribe({
             next: (data) => {
-                this.stats.total = data.total_audits;
-                this.stats.passed = data.passed_messages;
-                this.stats.failed = data.failed_messages;
-                this.stats.efficiency = data.validation_quality + '%';
+                this.stats = {
+                    total: data?.total_audits ?? 0,
+                    passed: data?.passed_messages ?? 0,
+                    failed: data?.failed_messages ?? 0,
+                    efficiency: (data?.validation_quality ?? 0) + '%'
+                };
+                this.statsLoaded = true;
+                this.statsLoading = false;
                 localStorage.setItem('dashboard_stats', JSON.stringify(this.stats));
             },
-            error: (err) => console.error('Dashboard stats error:', err)
+            error: (err) => {
+                console.error('Dashboard stats error:', err);
+                this.statsError = this.formatError(err);
+                this.statsLoading = false;
+            }
         });
     }
 
     loadRecentActivity() {
+        this.activityLoading = true;
+        this.activityError = null;
         this.http.get<any[]>(this.config.getApiUrl('/history?limit=5')).subscribe({
             next: (data) => {
-                this.recentActivity = data;
-                localStorage.setItem('dashboard_activity', JSON.stringify(data));
+                this.recentActivity = Array.isArray(data) ? data : [];
+                this.activityLoading = false;
+                localStorage.setItem('dashboard_activity', JSON.stringify(this.recentActivity));
             },
-            error: (err) => console.error('Dashboard activity error:', err)
+            error: (err) => {
+                console.error('Dashboard activity error:', err);
+                this.activityError = this.formatError(err);
+                this.activityLoading = false;
+            }
         });
     }
 
@@ -129,34 +160,52 @@ export class DashboardComponent implements OnInit {
             if (completed === 2) {
                 setTimeout(() => {
                     this.isRefreshing = false;
-                    this.snackBar.open('Dashboard updated successfully.', 'Close', { duration: 2500 });
-                }, 800);
+                    const hadError = this.statsError || this.activityError;
+                    this.snackBar.open(
+                        hadError ? 'Dashboard refresh failed. See message above.' : 'Dashboard updated successfully.',
+                        'Close',
+                        { duration: 2500 }
+                    );
+                }, 600);
             }
         };
 
+        this.statsLoading = true;
+        this.statsError = null;
         this.http.get<any>(this.config.getApiUrl('/dashboard/stats')).subscribe({
             next: (data) => {
-                this.stats.total = data.total_audits;
-                this.stats.passed = data.passed_messages;
-                this.stats.failed = data.failed_messages;
-                this.stats.efficiency = data.validation_quality + '%';
+                this.stats = {
+                    total: data?.total_audits ?? 0,
+                    passed: data?.passed_messages ?? 0,
+                    failed: data?.failed_messages ?? 0,
+                    efficiency: (data?.validation_quality ?? 0) + '%'
+                };
+                this.statsLoaded = true;
+                this.statsLoading = false;
                 localStorage.setItem('dashboard_stats', JSON.stringify(this.stats));
                 checkDone();
             },
             error: (err) => {
                 console.error('Dashboard stats error:', err);
+                this.statsError = this.formatError(err);
+                this.statsLoading = false;
                 checkDone();
             }
         });
 
+        this.activityLoading = true;
+        this.activityError = null;
         this.http.get<any[]>(this.config.getApiUrl('/history?limit=5')).subscribe({
             next: (data) => {
-                this.recentActivity = data;
-                localStorage.setItem('dashboard_activity', JSON.stringify(data));
+                this.recentActivity = Array.isArray(data) ? data : [];
+                this.activityLoading = false;
+                localStorage.setItem('dashboard_activity', JSON.stringify(this.recentActivity));
                 checkDone();
             },
             error: (err) => {
                 console.error('Dashboard activity error:', err);
+                this.activityError = this.formatError(err);
+                this.activityLoading = false;
                 checkDone();
             }
         });

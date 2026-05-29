@@ -1,6 +1,29 @@
 /* Angular Material Theme */
 @import '@angular/material/prebuilt-themes/indigo-pink.css';
 
+/* Kill any default border/shadow under the app header toolbar AND on the dashboard hero */
+mat-toolbar.header,
+mat-toolbar.header::after,
+mat-toolbar.header::before,
+.mat-toolbar.header,
+.mat-mdc-toolbar.header,
+.db-hero,
+.db-hero::after,
+.db-hero::before,
+.db,
+.main-content {
+    border: none !important;
+    border-bottom: 0 !important;
+    border-top: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Re-allow the decorative ::before radial-gradient on the hero (which sets content '') */
+.db-hero::before {
+    content: '' !important;
+}
+
 /* Google Fonts Import */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
@@ -2362,4 +2385,103 @@ body .mandate-grid.mandate-grid .field-hint {
 .mat-mdc-paginator button.mat-mdc-paginator-navigation-previous:disabled,
 .mat-mdc-paginator button.mat-mdc-paginator-navigation-first:disabled {
     visibility: hidden !important;
+}
+
+/* ════════════════════════════════════════════════════════════
+   Dashboard Hero Feature Cards — Dark Mode (global override)
+   Placed here so view-encapsulation can't strip the body selector.
+   Each card gets its own colored tint, glow, and accent strip.
+   ════════════════════════════════════════════════════════════ */
+body:not(.light-theme) .feature-row {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(2, 6, 23, 0.95) 100%) !important;
+    border: 1px solid rgba(148, 163, 184, 0.10) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease !important;
+}
+
+/* Per-card colored tint — blue / purple / cyan */
+body:not(.light-theme) .feature-row:has(.fi-bic) {
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.45) 0%, rgba(15, 23, 42, 0.92) 60%) !important;
+    border-color: rgba(59, 130, 246, 0.22) !important;
+}
+body:not(.light-theme) .feature-row:has(.fi-mig) {
+    background: linear-gradient(135deg, rgba(76, 29, 149, 0.45) 0%, rgba(15, 23, 42, 0.92) 60%) !important;
+    border-color: rgba(139, 92, 246, 0.22) !important;
+}
+body:not(.light-theme) .feature-row:has(.fi-qa) {
+    background: linear-gradient(135deg, rgba(14, 116, 144, 0.45) 0%, rgba(15, 23, 42, 0.92) 60%) !important;
+    border-color: rgba(34, 211, 238, 0.22) !important;
+}
+
+/* Bigger accent strip in dark mode */
+body:not(.light-theme) .feature-row::before {
+    width: 4px !important;
+    box-shadow: 0 0 12px var(--accent-strip, #2563eb);
+}
+
+body:not(.light-theme) .feature-row:hover {
+    transform: translateY(-2px) !important;
+    border-color: rgba(96, 165, 250, 0.45) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 10px 30px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(96, 165, 250, 0.15) !important;
+}
+
+/* Icon tiles — glowing in dark mode */
+body:not(.light-theme) .fi-bic {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(37, 99, 235, 0.15)) !important;
+    color: #93c5fd !important;
+    box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.3), 0 0 18px rgba(59, 130, 246, 0.18) !important;
+}
+body:not(.light-theme) .fi-mig {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(109, 40, 217, 0.15)) !important;
+    color: #c4b5fd !important;
+    box-shadow: inset 0 0 0 1px rgba(167, 139, 250, 0.3), 0 0 18px rgba(139, 92, 246, 0.18) !important;
+}
+body:not(.light-theme) .fi-qa {
+    background: linear-gradient(135deg, rgba(34, 211, 238, 0.25), rgba(8, 145, 178, 0.15)) !important;
+    color: #67e8f9 !important;
+    box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.3), 0 0 18px rgba(34, 211, 238, 0.18) !important;
+}
+
+/* Text colors */
+body:not(.light-theme) .feature-title {
+    color: #f1f5f9 !important;
+}
+body:not(.light-theme) .feature-eyebrow {
+    color: #94a3b8 !important;
+}
+body:not(.light-theme) .feature-desc {
+    color: #94a3b8 !important;
+}
+body:not(.light-theme) .feature-num {
+    color: var(--accent-strip, #60a5fa) !important;
+    opacity: 0.55 !important;
+}
+
+/* Subtle gradient corner blob — brighter in dark mode */
+body:not(.light-theme) .feature-row::after {
+    opacity: 0.18 !important;
+}
+
+/* ════════════════════════════════════════════════════════════
+   Word/Tag Cloud — Dark Mode (transparent, bright text colors)
+   ════════════════════════════════════════════════════════════ */
+body:not(.light-theme) .tag {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+body:not(.light-theme) .tag-blue {
+    color: #60a5fa !important;
+    text-shadow: 0 0 24px rgba(96, 165, 250, 0.35);
+}
+body:not(.light-theme) .tag-purple {
+    color: #a78bfa !important;
+    text-shadow: 0 0 24px rgba(167, 139, 250, 0.35);
+}
+body:not(.light-theme) .tag-cyan {
+    color: #22d3ee !important;
+    text-shadow: 0 0 24px rgba(34, 211, 238, 0.35);
+}
+body:not(.light-theme) .tag-neutral {
+    color: #cbd5e1 !important;
 }

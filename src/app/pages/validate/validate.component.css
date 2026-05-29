@@ -1392,6 +1392,7 @@
   width: 100%;
   height: 300px !important;
   min-height: 300px !important;
+  max-height: 420px !important;
   font-family: 'JetBrains Mono', Consolas, monospace;
   font-size: 12px;
   line-height: 1.55;
@@ -1403,6 +1404,37 @@
   resize: vertical;
   outline: none;
   tab-size: 2;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 transparent;
+}
+
+.paste-textarea::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.paste-textarea::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 8px;
+}
+
+.paste-textarea::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.paste-textarea::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+  background-clip: content-box;
+  border: 2px solid transparent;
+}
+
+.paste-textarea::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 .paste-textarea:focus {

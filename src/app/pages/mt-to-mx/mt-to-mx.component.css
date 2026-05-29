@@ -876,7 +876,8 @@ header p {
     background: var(--editor-bg);
     border: 1px solid var(--border-light);
     border-radius: 0 0 10px 10px;
-    height: 500px;
+    flex: 1 1 auto;
+    min-height: 500px;
     overflow: hidden;
     position: relative;
 }
@@ -953,7 +954,8 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     border: 1px solid var(--border-light);
     border-radius: 0 0 10px 10px;
     text-align: center;
-    height: 500px;
+    flex: 1 1 auto;
+    min-height: 500px;
 }
 
 .empty-state mat-icon {
