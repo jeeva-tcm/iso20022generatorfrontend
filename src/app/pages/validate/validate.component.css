@@ -2379,6 +2379,36 @@ body.light-theme .btn-download {
   height: 11px;
 }
 
+/* Clickable "Line: N" — opens the editor and jumps to the line */
+.meta-line-link {
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.meta-line-link:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-main);
+  border-color: var(--border-main, #94a3b8);
+  text-decoration: underline;
+}
+.meta-line-link.meta-line-error {
+  color: #dc2626;
+  border-color: rgba(239, 68, 68, 0.40);
+}
+.meta-line-link.meta-line-warn {
+  color: #b45309;
+  border-color: rgba(234, 179, 8, 0.45);
+}
+.meta-line-icon { font-size: 12px !important; width: 12px !important; height: 12px !important; }
+
+/* Clickable line number in the expanded detail panel */
+.di-line-link {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.di-line-link:hover { text-decoration: underline; filter: brightness(1.15); }
+
 .issue-right {
   display: flex;
   align-items: center;
@@ -2868,10 +2898,37 @@ body.light-theme .btn-download {
   user-select: none;
 }
 
-.editor-line-numbers .active-line {
-  background-color: rgba(37, 99, 235, 0.15);
+/* Active line — follows the text caret (code-editor style) */
+.editor-line-numbers .cursor-line {
   color: #2563eb;
   font-weight: 700;
+  box-shadow: inset 3px 0 0 0 #2563eb;
+}
+.editor-line-numbers .cursor-line:not(.line-error):not(.line-warning) {
+  background-color: rgba(37, 99, 235, 0.16);
+}
+
+/* Severity colouring for every error / warning line in the file */
+.editor-line-numbers .line-error {
+  background-color: rgba(239, 68, 68, 0.16);
+  color: #dc2626;
+  font-weight: 700;
+}
+.editor-line-numbers .line-warning {
+  background-color: rgba(234, 179, 8, 0.20);
+  color: #b45309;
+  font-weight: 700;
+}
+/* The line the user jumped to — strongest emphasis + accent bar */
+.editor-line-numbers .target-error {
+  background-color: rgba(239, 68, 68, 0.38);
+  color: #b91c1c;
+  box-shadow: inset 3px 0 0 0 #dc2626;
+}
+.editor-line-numbers .target-warning {
+  background-color: rgba(234, 179, 8, 0.42);
+  color: #92400e;
+  box-shadow: inset 3px 0 0 0 #d97706;
 }
 
 .editor-textarea {
@@ -2889,7 +2946,60 @@ body.light-theme .btn-download {
   overflow: auto;
   line-height: 1.5;
   tab-size: 4;
+  position: relative;   /* sit above the highlight overlay */
+  z-index: 1;
 }
+
+/* ── Full-line highlight overlay (behind the textarea) ── */
+.editor-highlights {
+  position: absolute;
+  left: 50px;           /* matches .editor-line-numbers width */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.editor-highlights-inner {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  will-change: transform;
+}
+.hl-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 19.5px;       /* font-size 13px × line-height 1.5 */
+}
+.hl-band.hl-error   { background: rgba(239, 68, 68, 0.30); }
+.hl-band.hl-warning { background: rgba(234, 179, 8, 0.34); }
+/* The line the user jumped to gets a stronger tint + a left accent bar */
+.hl-band.hl-target.hl-error   { background: rgba(239, 68, 68, 0.45); box-shadow: inset 3px 0 0 0 #dc2626; }
+.hl-band.hl-target.hl-warning { background: rgba(234, 179, 8, 0.48); box-shadow: inset 3px 0 0 0 #d97706; }
+
+/* Editor colour-coding legend */
+.editor-legend {
+  position: absolute;
+  bottom: 12px;
+  right: 18px;
+  display: flex;
+  gap: 14px;
+  padding: 5px 11px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+.legend-item { display: inline-flex; align-items: center; gap: 5px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.legend-error { background: rgba(239, 68, 68, 0.7); }
+.legend-warn { background: rgba(234, 179, 8, 0.8); }
 
 /* ══════════════════════════════════════════════
    Table Pagination

@@ -79,6 +79,17 @@ export class ValidateComponent implements OnInit {
   selectedView = 'layer-1'; // Default active view
   editorLineCount: number[] = [];
   targetLine: number | null = null;
+  targetLineSeverity: 'error' | 'warning' | null = null;
+  /** line the text caret currently sits on (1-based) — drives the active-line highlight */
+  cursorLine: number | null = null;
+  /** line number → severity, used to colour error/warning lines in the editor gutter */
+  lineSeverityMap: { [line: number]: 'error' | 'warning' } = {};
+  /** full-width highlight bands drawn behind the textarea (one per flagged line) */
+  highlightBands: { top: number; sev: 'error' | 'warning'; target: boolean }[] = [];
+  editorScrollTop = 0;
+  // Must match the .editor-textarea CSS: font-size 13px × line-height 1.5, padding-top 10px
+  private readonly EDITOR_LINE_HEIGHT = 19.5;
+  private readonly EDITOR_PAD_TOP = 10;
   private xmlHistory: string[] = [];
   private xmlHistoryIdx: number = -1;
   private maxHistory = 200;
@@ -887,6 +898,11 @@ export class ValidateComponent implements OnInit {
     e.stopPropagation();
     this.editingEntry = f;
     this.originalContent = f.content;
+    this.targetLine = null;
+    this.targetLineSeverity = null;
+    this.cursorLine = 1;
+    this.editorScrollTop = 0;
+    this.buildLineSeverityMap(f);
     this.updateEditorLines(f.content);
 
     // Initialize history
@@ -899,6 +915,64 @@ export class ValidateComponent implements OnInit {
       this.editingEntry.content = this.originalContent;
     }
     this.editingEntry = null;
+    this.targetLine = null;
+    this.targetLineSeverity = null;
+    this.cursorLine = null;
+    this.lineSeverityMap = {};
+    this.highlightBands = [];
+  }
+
+  /** Build a line → severity map from the file's report so the editor can
+   *  colour every error line red and every warning line yellow. */
+  private buildLineSeverityMap(f: FileEntry | null) {
+    const map: { [line: number]: 'error' | 'warning' } = {};
+    const details = ((f as any)?.report?.details ?? []) as any[];
+    for (const iss of details) {
+      const ln = this.getIssueLine(iss);
+      if (!ln) continue;
+      const sev = iss.severity === 'ERROR' ? 'error'
+                : iss.severity === 'WARNING' ? 'warning' : null;
+      if (!sev) continue;
+      // ERROR takes precedence over WARNING when both fall on the same line
+      if (map[ln] === 'error') continue;
+      map[ln] = sev;
+    }
+    this.lineSeverityMap = map;
+    this.computeHighlightBands();
+  }
+
+  /** Position one full-width colour band per flagged line, behind the textarea. */
+  private computeHighlightBands() {
+    const bands: { top: number; sev: 'error' | 'warning'; target: boolean }[] = [];
+    for (const key of Object.keys(this.lineSeverityMap)) {
+      const ln = Number(key);
+      bands.push({
+        top: this.EDITOR_PAD_TOP + (ln - 1) * this.EDITOR_LINE_HEIGHT,
+        sev: this.lineSeverityMap[ln],
+        target: ln === this.targetLine,
+      });
+    }
+    this.highlightBands = bands;
+  }
+
+  /** CSS classes for a gutter line number (severity colouring + active caret line). */
+  lineClass(idx: number) {
+    const sev = this.lineSeverityMap[idx];
+    return {
+      'cursor-line': idx === this.cursorLine,        // active line follows the caret
+      'line-error': sev === 'error',
+      'line-warning': sev === 'warning',
+      'target-error': idx === this.targetLine && this.targetLineSeverity === 'error',
+      'target-warning': idx === this.targetLine && this.targetLineSeverity === 'warning',
+    };
+  }
+
+  /** Track which line the caret is on so the gutter highlights the active line
+   *  (code-editor style). Fired on click / keyup / focus in the textarea. */
+  updateCursorLine(ev: Event) {
+    const ta = ev.target as HTMLTextAreaElement;
+    if (!ta || ta.selectionStart == null) return;
+    this.cursorLine = ta.value.substring(0, ta.selectionStart).split('\n').length;
   }
 
   copyEditorXml() {
@@ -1042,6 +1116,8 @@ export class ValidateComponent implements OnInit {
 
   syncScroll(textarea: HTMLTextAreaElement, lineNumbers: HTMLDivElement) {
     lineNumbers.scrollTop = textarea.scrollTop;
+    // Keep the line-highlight overlay aligned with the scrolled text
+    this.editorScrollTop = textarea.scrollTop;
   }
 
   handleKeyDown(e: KeyboardEvent) {
@@ -1504,17 +1580,23 @@ export class ValidateComponent implements OnInit {
     return 'other';
   }
 
-  jumpToLine(f: FileEntry, lineNum: number | null, event: MouseEvent) {
+  jumpToLine(f: FileEntry, issue: any, event: MouseEvent) {
     if (event) {
       event.stopPropagation();
       event.preventDefault();
     }
+    const lineNum = this.getIssueLine(issue);
     if (!lineNum) return;
 
     try {
       this.editingEntry = f;
       this.originalContent = f.content;
       this.targetLine = Number(lineNum);
+      this.targetLineSeverity = issue?.severity === 'ERROR' ? 'error'
+                              : issue?.severity === 'WARNING' ? 'warning' : null;
+      this.cursorLine = Number(lineNum);
+      this.editorScrollTop = 0;
+      this.buildLineSeverityMap(f);
       this.updateEditorLines(f.content || '');
 
       // Initialize history
@@ -1556,7 +1638,10 @@ export class ValidateComponent implements OnInit {
         }
 
         textarea.focus();
-        textarea.setSelectionRange(charPos, charPos + (lines[targetL] || '').length);
+        // Place the cursor at the start of the line (collapsed selection) so the
+        // red/yellow line-highlight band stays visible instead of being covered
+        // by the browser's blue text-selection colour.
+        textarea.setSelectionRange(charPos, charPos);
 
         // Calculate scroll position (font-size 13px * line-height 1.5 = 19.5px)
         const lineHeight = 19.5;

@@ -304,7 +304,12 @@
                         <div class="issue-center">
                           <span class="issue-message-text">{{issue.message}}</span>
                           <div class="issue-meta-info" *ngIf="getIssueLine(issue)">
-                            <span class="meta-item">
+                            <span class="meta-item meta-line-link"
+                                  [class.meta-line-error]="issue.severity === 'ERROR'"
+                                  [class.meta-line-warn]="issue.severity === 'WARNING'"
+                                  (click)="jumpToLine(f, issue, $event)"
+                                  matTooltip="Open in editor and jump to this line">
+                              <mat-icon class="meta-line-icon">edit</mat-icon>
                               Line: {{getIssueLine(issue)}}
                             </span>
                           </div>
@@ -322,7 +327,10 @@
 
                           <div class="detail-item" *ngIf="getIssueLine(issue)">
                             <div class="di-label">LINE NUMBER</div>
-                            <div class="di-val mono">
+                            <div class="di-val mono di-line-link"
+                                 (click)="jumpToLine(f, issue, $event)"
+                                 matTooltip="Open in editor and jump to this line">
+                              <mat-icon class="meta-line-icon">edit</mat-icon>
                               {{getIssueLine(issue)}}
                             </div>
                           </div>
@@ -463,11 +471,27 @@
     </div>
     <div class="editor-body">
       <div class="editor-line-numbers" #lineNumbers>
-        <div *ngFor="let idx of editorLineCount" [class.active-line]="idx === targetLine">{{idx}}</div>
+        <div *ngFor="let idx of editorLineCount" [ngClass]="lineClass(idx)">{{idx}}</div>
+      </div>
+      <!-- Full-width line highlights drawn behind the (transparent) textarea -->
+      <div class="editor-highlights" aria-hidden="true">
+        <div class="editor-highlights-inner" [style.transform]="'translateY(' + (-editorScrollTop) + 'px)'">
+          <div *ngFor="let band of highlightBands" class="hl-band"
+               [class.hl-error]="band.sev === 'error'"
+               [class.hl-warning]="band.sev === 'warning'"
+               [class.hl-target]="band.target"
+               [style.top.px]="band.top"></div>
+        </div>
+      </div>
+      <!-- Legend: explains the line-number colour coding -->
+      <div class="editor-legend">
+        <span class="legend-item"><span class="legend-dot legend-error"></span>Error line</span>
+        <span class="legend-item"><span class="legend-dot legend-warn"></span>Warning line</span>
       </div>
       <textarea class="editor-textarea" [(ngModel)]="editingEntry.content" (ngModelChange)="onEditorChange($event)"
-        (scroll)="syncScroll(xmlEditor, lineNumbers)" (keydown)="handleKeyDown($event)" #xmlEditor wrap="off"
-        spellcheck="false"></textarea>
+        (scroll)="syncScroll(xmlEditor, lineNumbers)" (keydown)="handleKeyDown($event)"
+        (click)="updateCursorLine($event)" (keyup)="updateCursorLine($event)" (focus)="updateCursorLine($event)"
+        #xmlEditor wrap="off" spellcheck="false"></textarea>
     </div>
   </div>
 </div>
