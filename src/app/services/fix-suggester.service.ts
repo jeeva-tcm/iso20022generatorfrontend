@@ -20,7 +20,7 @@ export interface FixSuggestionResponse {
   fragment_xml: string;
   issue_code: string;
   issue_message: string;
-  confidence: 'high' | 'low' | 'unavailable';
+  confidence: 'high' | 'low' | 'unavailable' | 'resolved';
 }
 
 export interface SuggestBatchResponse {

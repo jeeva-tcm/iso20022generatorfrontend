@@ -1,305 +1,918 @@
-/* ── Overlay ───────────────────────────────────────────────────────── */
+/* Hallmark · component: modal · genre: modern-minimal · theme: Quiet
+ * states: default · hover · focus · active · disabled · selected · applied · unavailable
+ * contrast: pass (46–50)
+ */
+
+/* ════════════════════════════════════════════════════════════════════════
+   AI Fix Suggester — modal
+   Restrained, utility-first surface. One accent (ink-blue) on the primary
+   action and the selected rail; nothing else fights for attention.
+   ════════════════════════════════════════════════════════════════════════ */
+
+:host {
+  /* ─── Locked tokens ───────────────────────────────────────────────── */
+  /* Paper band (dark — modal lives over the app) */
+  --fs-paper:        oklch(13% 0.012 250);     /* shell */
+  --fs-paper-2:      oklch(17% 0.014 250);     /* surface card */
+  --fs-paper-3:      oklch(21% 0.016 250);     /* surface card hover */
+  --fs-paper-inset:  oklch(9%  0.010 250);     /* diff inset */
+
+  --fs-line:         oklch(28% 0.018 250);     /* hairline border */
+  --fs-line-2:       oklch(36% 0.022 250);     /* border hover */
+
+  /* Ink (text) */
+  --fs-ink:          oklch(96% 0.005 250);     /* primary */
+  --fs-ink-2:        oklch(74% 0.012 250);     /* secondary */
+  --fs-ink-3:        oklch(54% 0.014 250);     /* tertiary / muted */
+  --fs-ink-4:        oklch(40% 0.014 250);     /* whisper */
+
+  /* Accent — single cool ink-blue. Used only on:
+     1. The primary CTA fill
+     2. The selected card rail + ring
+     3. The progress bar fill
+     4. The checked checkbox
+     Nothing else. */
+  --fs-accent:       oklch(62% 0.14 250);
+  --fs-accent-2:     oklch(70% 0.12 250);      /* hover lighten */
+  --fs-accent-soft:  oklch(62% 0.14 250 / 0.14);
+  --fs-accent-ring:  oklch(62% 0.14 250 / 0.40);
+
+  /* Status (borrowed from diff conventions — not invented) */
+  --fs-good:         oklch(76% 0.16 155);
+  --fs-good-bg:      oklch(76% 0.16 155 / 0.10);
+  --fs-good-line:    oklch(76% 0.16 155 / 0.32);
+  --fs-warn:         oklch(82% 0.13  85);
+  --fs-warn-bg:      oklch(82% 0.13  85 / 0.10);
+  --fs-warn-line:    oklch(82% 0.13  85 / 0.30);
+  --fs-bad:          oklch(72% 0.18  25);
+  --fs-bad-bg:       oklch(72% 0.18  25 / 0.10);
+  --fs-bad-line:     oklch(72% 0.18  25 / 0.32);
+
+  /* Geometry */
+  --fs-r:            12px;
+  --fs-r-sm:         8px;
+  --fs-r-xs:         5px;
+  --fs-step:         4px;                       /* 4-pt scale */
+
+  /* Type */
+  --fs-font-ui:      system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --fs-font-mono:    ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Motion */
+  --fs-ease:         cubic-bezier(0.2, 0.7, 0.2, 1);
+  --fs-dur-fast:     140ms;
+  --fs-dur:          200ms;
+  --fs-dur-slow:     280ms;
+}
+
+::ng-deep body.fs-modal-open { overflow: hidden; }
+
+/* ────────────────────────────────────────────────────────────────────────
+   Overlay + shell
+   ──────────────────────────────────────────────────────────────────────── */
 .fs-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   z-index: 2000;
-  padding: 16px;
+  background: oklch(6% 0.008 250 / 0.72);
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  animation: fs-fade var(--fs-dur) var(--fs-ease);
 }
 
-/* ── Modal ─────────────────────────────────────────────────────────── */
+@keyframes fs-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fs-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fs-expand {
+  from { opacity: 0; max-height: 0; }
+  to   { opacity: 1; max-height: 600px; }
+}
+
 .fs-modal {
-  background: #1e2130;
-  border: 1px solid #2d3148;
-  border-radius: 12px;
   width: 100%;
-  max-width: 780px;
+  max-width: 860px;
   max-height: 88vh;
+  background: var(--fs-paper);
+  border: 1px solid var(--fs-line);
+  border-radius: var(--fs-r);
+  color: var(--fs-ink);
+  font-family: var(--fs-font-ui);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  animation: fs-rise 220ms var(--fs-ease);
+  box-shadow: 0 1px 0 oklch(100% 0 0 / 0.05) inset,
+              0 20px 40px oklch(0% 0 0 / 0.50);
 }
 
-/* ── Header ────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────
+   Header — title + tally
+   No decorative gradient lines. No icon-in-tinted-square. The title carries
+   the message; the subtitle states what the user is looking at. That is it.
+   ──────────────────────────────────────────────────────────────────────── */
 .fs-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid #2d3148;
-  flex-shrink: 0;
+  gap: 16px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--fs-line);
 }
 
-.fs-header-left {
+.fs-header-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  min-width: 0;
+}
+
+.fs-header-icon-wrap {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--fs-r-sm);
+  background: var(--fs-paper-2);
+  border: 1px solid var(--fs-line);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.fs-header-icon {
+  color: var(--fs-ink-2);
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.fs-header-text { min-width: 0; }
+
+.fs-title {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--fs-ink);
+  line-height: 1.3;
+}
+
+.fs-subtitle {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--fs-ink-2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  line-height: 1.45;
+}
+
+.dot-sep      { color: var(--fs-ink-4); }
+.muted        { color: var(--fs-ink-3); }
+.warn-text    { color: var(--fs-warn); }
+
+/* Close — icon button */
+.fs-icon-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--fs-ink-3);
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--fs-r-sm);
+  flex-shrink: 0;
+  transition: color var(--fs-dur-fast), background var(--fs-dur-fast), border-color var(--fs-dur-fast);
+}
+.fs-icon-btn:hover {
+  color: var(--fs-ink);
+  background: var(--fs-paper-2);
+  border-color: var(--fs-line);
+}
+.fs-icon-btn:focus-visible {
+  outline: 2px solid var(--fs-accent);
+  outline-offset: 2px;
+}
+.fs-icon-btn mat-icon { font-size: 16px; width: 16px; height: 16px; }
+
+/* ────────────────────────────────────────────────────────────────────────
+   Progress strip
+   ──────────────────────────────────────────────────────────────────────── */
+.fs-progress-strip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--fs-line);
+  background: var(--fs-paper);
+}
+
+.fs-progress-track {
+  flex: 1;
+  height: 4px;
+  background: var(--fs-paper-2);
+  border-radius: 99px;
+  overflow: hidden;
+  position: relative;
+}
+
+.fs-progress-fill {
+  height: 100%;
+  background: var(--fs-accent);
+  border-radius: 99px;
+  transition: width var(--fs-dur-slow) var(--fs-ease);
+}
+
+.fs-progress-label {
+  font-size: 12px;
+  color: var(--fs-ink-2);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.fs-progress-label strong { color: var(--fs-ink); font-weight: 600; }
+
+/* ────────────────────────────────────────────────────────────────────────
+   Loading
+   ──────────────────────────────────────────────────────────────────────── */
+.fs-loading {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 220px;
+}
+
+.fs-skeleton-rows { display: flex; flex-direction: column; gap: 8px; }
+.fs-skeleton-row {
+  height: 52px;
+  border-radius: var(--fs-r-sm);
+  background: linear-gradient(90deg,
+    var(--fs-paper-2) 0%,
+    var(--fs-paper-3) 50%,
+    var(--fs-paper-2) 100%);
+  background-size: 200% 100%;
+  animation: fs-shimmer 1400ms linear infinite;
+}
+@keyframes fs-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+.fs-loading-text {
   display: flex;
   align-items: center;
   gap: 10px;
+  font-size: 13px;
+  color: var(--fs-ink-2);
 }
 
-.fs-header-icon {
-  color: #a78bfa;
-  font-size: 22px;
-  width: 22px;
-  height: 22px;
-}
-
-.fs-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #e2e8f0;
-}
-
-.fs-badge {
-  background: #2d3148;
-  color: #94a3b8;
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 99px;
-}
-
-.fs-close-btn {
-  background: none;
-  border: none;
-  color: #64748b;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  transition: color 0.15s;
-}
-.fs-close-btn:hover { color: #e2e8f0; }
-
-/* ── Loading ───────────────────────────────────────────────────────── */
-.fs-loading {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 40px 24px;
-  color: #94a3b8;
-  font-size: 14px;
-}
-
-/* ── Error banner ──────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────
+   Error banner
+   ──────────────────────────────────────────────────────────────────────── */
 .fs-error-banner {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(245, 158, 11, 0.1);
-  border-left: 3px solid #f59e0b;
-  color: #fcd34d;
-  padding: 10px 20px;
-  font-size: 13px;
-  flex-shrink: 0;
+  padding: 10px 24px;
+  background: var(--fs-warn-bg);
+  border-bottom: 1px solid var(--fs-warn-line);
+  color: var(--fs-warn);
+  font-size: 12.5px;
 }
-.fs-error-banner mat-icon { font-size: 18px; width: 18px; height: 18px; }
+.fs-error-banner mat-icon { font-size: 16px; width: 16px; height: 16px; }
 
-/* ── Issue info row ────────────────────────────────────────────────── */
-.fs-issue-info {
+/* ════════════════════════════════════════════════════════════════════════
+   SINGLE mode
+   ════════════════════════════════════════════════════════════════════════ */
+.fs-single-body {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 14px 20px;
-  border-bottom: 1px solid #2d3148;
-  flex-wrap: wrap;
-  flex-shrink: 0;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 24px 6px;
+  overflow-y: auto;
+  flex: 1;
 }
 
-.fs-rule-badge {
-  background: #312e81;
-  color: #a5b4fc;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 4px;
-  white-space: nowrap;
-  font-family: monospace;
+.fs-issue-card {
+  background: var(--fs-paper-2);
+  border: 1px solid var(--fs-line);
+  border-radius: var(--fs-r-sm);
+  padding: 14px 16px;
+}
+
+.fs-issue-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
 }
 
 .fs-issue-msg {
-  color: #cbd5e1;
-  font-size: 13px;
-  flex: 1;
+  margin: 0;
+  color: var(--fs-ink);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   Inline before → after pill — the most useful affordance in this UI.
+   For short, single-line value changes, surfaces the change directly so
+   the user doesn't have to read XML to see what's happening.
+   ──────────────────────────────────────────────────────────────────────── */
+.fs-inline-diff {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.fs-inline-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 99px;
+  font-size: 12.5px;
+  border: 1px solid transparent;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.fs-inline-pill code {
+  font-family: var(--fs-font-mono);
+  font-size: 11.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 320px;
+}
+
+.fs-inline-pill.removed {
+  background: var(--fs-bad-bg);
+  border-color: var(--fs-bad-line);
+  color: var(--fs-bad);
+}
+.fs-inline-pill.added {
+  background: var(--fs-good-bg);
+  border-color: var(--fs-good-line);
+  color: var(--fs-good);
+}
+
+.fs-inline-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  opacity: 0.78;
+}
+
+.fs-inline-arrow {
+  color: var(--fs-ink-4);
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.fs-inline-compact .fs-inline-pill { padding: 3px 10px; }
+.fs-inline-compact .fs-inline-pill code { max-width: 220px; font-size: 11px; }
+.fs-inline-compact .fs-inline-arrow { font-size: 13px; width: 13px; height: 13px; }
+
+/* ────────────────────────────────────────────────────────────────────────
+   Diff card
+   ──────────────────────────────────────────────────────────────────────── */
+.fs-diff-card {
+  background: var(--fs-paper-inset);
+  border: 1px solid var(--fs-line);
+  border-radius: var(--fs-r-sm);
+  overflow: hidden;
+}
+
+.fs-diff-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 14px;
+  background: var(--fs-paper);
+  border-bottom: 1px solid var(--fs-line);
+}
+
+.fs-diff-card-title {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--fs-ink-3);
+}
+
+.fs-diff-xpath {
+  font-family: var(--fs-font-mono);
+  font-size: 11px;
+  color: var(--fs-ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60%;
+  text-align: right;
   min-width: 0;
 }
 
-/* Confidence badges */
-.fs-conf-badge {
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 99px;
-  white-space: nowrap;
-  font-weight: 500;
-}
-.conf-high   { background: rgba(16,185,129,0.15); color: #6ee7b7; }
-.conf-low    { background: rgba(245,158,11,0.15);  color: #fcd34d; }
-.conf-unavail{ background: rgba(100,116,139,0.15); color: #94a3b8; }
-
-/* ── Diff ──────────────────────────────────────────────────────────── */
-.fs-diff-wrap {
-  flex: 1;
-  overflow: auto;
-  padding: 0 20px 12px;
-}
-
-.fs-diff-header {
-  display: flex;
-  gap: 24px;
-  padding: 10px 0 6px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-}
-
-.diff-label { display: flex; align-items: center; gap: 6px; }
-.removed-label { color: #f87171; }
-.added-label   { color: #4ade80; }
-
-.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-.dot-red   { background: #f87171; }
-.dot-green { background: #4ade80; }
-
 .fs-diff-body {
   margin: 0;
-  background: #111827;
-  border: 1px solid #2d3148;
-  border-radius: 8px;
-  padding: 12px 14px;
+  padding: 8px 0;
+  font-family: var(--fs-font-mono);
   font-size: 12px;
-  font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
-  line-height: 1.6;
+  line-height: 1.65;
   overflow-x: auto;
+  color: var(--fs-ink-2);
   white-space: pre;
-  color: #94a3b8;
 }
 
-.fs-diff-compact {
-  max-height: 200px;
-  overflow-y: auto;
+.diff-line {
+  display: flex;
+  align-items: baseline;
+  padding: 0 14px;
+  min-height: 20px;
+  /* Long-word wrap (gate 63) */
+  overflow-wrap: anywhere;
 }
+
+.diff-gutter {
+  display: inline-block;
+  width: 14px;
+  flex-shrink: 0;
+  text-align: center;
+  font-weight: 600;
+  opacity: 0.55;
+  user-select: none;
+}
+
+.diff-text { white-space: pre; }
 
 .diff-removed {
-  display: block;
-  background: rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
+  background: var(--fs-bad-bg);
+  color: var(--fs-bad);
+  box-shadow: inset 2px 0 0 0 var(--fs-bad-line);
 }
+.diff-removed .diff-gutter { color: var(--fs-bad); opacity: 1; }
+
 .diff-added {
-  display: block;
-  background: rgba(74, 222, 128, 0.12);
-  color: #86efac;
+  background: var(--fs-good-bg);
+  color: var(--fs-good);
+  box-shadow: inset 2px 0 0 0 var(--fs-good-line);
 }
-.diff-unchanged {
-  display: block;
-  color: #64748b;
-}
+.diff-added .diff-gutter { color: var(--fs-good); opacity: 1; }
+
+.diff-unchanged { color: var(--fs-ink-3); }
 
 .fs-no-changes {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #64748b;
+  padding: 10px 14px;
+  border-top: 1px solid var(--fs-line);
+  background: var(--fs-paper);
+  color: var(--fs-ink-3);
   font-size: 12px;
-  padding: 8px 0;
 }
-.fs-no-changes mat-icon { font-size: 16px; width: 16px; height: 16px; }
+.fs-no-changes mat-icon { font-size: 15px; width: 15px; height: 15px; }
 
-/* ── Batch list ────────────────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════════════
+   BATCH mode
+   ════════════════════════════════════════════════════════════════════════ */
+.fs-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px 4px;
+}
+
+/* Master select-all + custom checkbox */
+.fs-master-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--fs-ink-2);
+  cursor: pointer;
+  user-select: none;
+  padding: 4px 8px;
+  margin-left: -8px;
+  border-radius: var(--fs-r-xs);
+  transition: background var(--fs-dur-fast);
+  position: relative;
+}
+.fs-master-check:hover { background: var(--fs-paper-2); }
+.fs-master-check input { position: absolute; opacity: 0; pointer-events: none; }
+
+.fs-master-label { font-weight: 500; }
+.fs-master-label .fs-master-count { color: var(--fs-ink-3); font-weight: 400; margin-left: 4px; }
+
+/* Custom checkbox box (shared between master + per-card) */
+.fs-checkbox-box {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: var(--fs-paper);
+  border: 1.5px solid var(--fs-line-2);
+  transition: background var(--fs-dur-fast), border-color var(--fs-dur-fast);
+  flex-shrink: 0;
+}
+
+.fs-master-check input:checked + .fs-checkbox-box,
+.fs-check input:checked + .fs-checkbox-box {
+  background: var(--fs-accent);
+  border-color: var(--fs-accent);
+}
+
+.fs-master-check input:checked + .fs-checkbox-box::after,
+.fs-check input:checked + .fs-checkbox-box::after {
+  content: '';
+  width: 8px;
+  height: 4px;
+  border-left: 2px solid var(--fs-ink);
+  border-bottom: 2px solid var(--fs-ink);
+  transform: rotate(-45deg) translate(0, -1px);
+}
+
+.fs-master-check.indeterminate .fs-checkbox-box {
+  background: var(--fs-accent);
+  border-color: var(--fs-accent);
+}
+.fs-master-check.indeterminate .fs-checkbox-box::after {
+  content: '';
+  width: 8px;
+  height: 0;
+  border-top: 2px solid var(--fs-ink);
+}
+
+/* Focus-visible ring on the focusable input — visible on the box */
+.fs-master-check input:focus-visible + .fs-checkbox-box,
+.fs-check input:focus-visible + .fs-checkbox-box {
+  box-shadow: 0 0 0 3px var(--fs-accent-ring);
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   Batch list
+   ──────────────────────────────────────────────────────────────────────── */
 .fs-batch-list {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 20px;
+  padding: 4px 24px 4px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
-.fs-batch-item {
-  background: #151824;
-  border: 1px solid #2d3148;
-  border-radius: 8px;
-  overflow: hidden;
-  transition: border-color 0.15s;
+.fs-batch-list::-webkit-scrollbar { width: 8px; }
+.fs-batch-list::-webkit-scrollbar-track { background: transparent; }
+.fs-batch-list::-webkit-scrollbar-thumb {
+  background: var(--fs-line-2);
+  border-radius: 4px;
+  border: 2px solid var(--fs-paper);
+  background-clip: padding-box;
 }
-.fs-batch-item.selected  { border-color: #4f46e5; }
-.fs-batch-item.unavailable { opacity: 0.5; }
 
-.fs-batch-item-header {
+/* ──── Batch card ─── states: default · hover · focus · selected · applied · unavailable · no-change ─── */
+.fs-batch-card {
+  position: relative;
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
+  background: var(--fs-paper-2);
+  border: 1px solid var(--fs-line);
+  border-radius: var(--fs-r-sm);
   cursor: pointer;
-  flex-wrap: wrap;
+  transition: border-color var(--fs-dur-fast), background var(--fs-dur-fast), transform var(--fs-dur-fast);
+  overflow: hidden;
 }
-.fs-batch-item-header:hover { background: rgba(255,255,255,0.03); }
+.fs-batch-card:hover {
+  border-color: var(--fs-line-2);
+  background: var(--fs-paper-3);
+}
+.fs-batch-card:focus-visible {
+  outline: none;
+  border-color: var(--fs-accent);
+  box-shadow: 0 0 0 3px var(--fs-accent-ring);
+}
 
-.fs-batch-item-header input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: #6366f1;
-  cursor: pointer;
+/* Left rail — the only accent in batch mode */
+.fs-card-rail {
+  width: 3px;
+  background: transparent;
+  transition: background var(--fs-dur-fast);
   flex-shrink: 0;
 }
 
-.fs-batch-msg {
+.fs-batch-card.selected         { border-color: var(--fs-accent); }
+.fs-batch-card.selected .fs-card-rail { background: var(--fs-accent); }
+.fs-batch-card.item-applied    { border-color: var(--fs-good-line); background: var(--fs-good-bg); }
+.fs-batch-card.item-applied .fs-card-rail { background: var(--fs-good); }
+.fs-batch-card.item-resolved   { opacity: 0.85; }
+.fs-batch-card.item-resolved .fs-card-rail { background: var(--fs-good); }
+.fs-batch-card.item-unavailable {
+  opacity: 0.55;
+  cursor: default;
+}
+.fs-batch-card.item-unavailable:hover {
+  border-color: var(--fs-line);
+  background: var(--fs-paper-2);
+}
+.fs-batch-card.item-no-change   { opacity: 0.6; }
+
+.fs-card-content {
   flex: 1;
-  font-size: 12px;
-  color: #94a3b8;
+  padding: 12px 14px;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fs-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.fs-check {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  padding-top: 2px;
+  position: relative;
+  flex-shrink: 0;
+}
+.fs-check input { position: absolute; opacity: 0; pointer-events: none; }
+
+.fs-check-icon {
+  font-size: 12px;
+  width: 12px;
+  height: 12px;
+  color: var(--fs-ink);
+}
+
+.fs-status-icon-wrap {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+.fs-status-icon { font-size: 16px; width: 16px; height: 16px; color: var(--fs-ink-3); }
+.item-applied    .fs-status-icon { color: var(--fs-good); }
+.item-resolved   .fs-status-icon { color: var(--fs-good); }
+.item-unavailable .fs-status-icon { color: var(--fs-warn); }
+
+.fs-card-text { flex: 1; min-width: 0; }
+
+.fs-card-line-1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.fs-card-msg {
+  margin: 0;
+  font-size: 13px;
+  color: var(--fs-ink);
+  line-height: 1.5;
+  /* Allow up to 2 lines, then truncate with ellipsis */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+  overflow-wrap: anywhere;
+}
+
+.fs-expand-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--fs-ink-3);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--fs-r-xs);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color var(--fs-dur-fast), background var(--fs-dur-fast), border-color var(--fs-dur-fast);
+}
+.fs-expand-btn:hover {
+  color: var(--fs-ink);
+  background: var(--fs-paper);
+  border-color: var(--fs-line);
+}
+.fs-expand-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--fs-accent-ring);
+}
+.fs-expand-btn mat-icon { font-size: 18px; width: 18px; height: 18px; }
+
+.fs-batch-diff {
+  overflow: hidden;
+  animation: fs-expand var(--fs-dur) var(--fs-ease);
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   Badges — rule code + confidence
+   The rule badge uses the same neutral surface as everything else; only
+   the confidence pill carries colour (and only when meaningful).
+   ──────────────────────────────────────────────────────────────────────── */
+.fs-rule-badge {
+  font-family: var(--fs-font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: var(--fs-paper);
+  border: 1px solid var(--fs-line);
+  color: var(--fs-ink-2);
   white-space: nowrap;
 }
 
-/* ── Footer ────────────────────────────────────────────────────────── */
-.fs-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding: 14px 20px;
-  border-top: 1px solid #2d3148;
+.fs-conf-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 99px;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.fs-conf-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
   flex-shrink: 0;
 }
 
-.fs-btn-cancel {
-  background: none;
-  border: 1px solid #2d3148;
-  color: #94a3b8;
-  padding: 8px 18px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.15s;
+.conf-high {
+  background: var(--fs-good-bg);
+  color: var(--fs-good);
+  border-color: var(--fs-good-line);
 }
-.fs-btn-cancel:hover { border-color: #475569; color: #e2e8f0; }
+.conf-low {
+  background: var(--fs-warn-bg);
+  color: var(--fs-warn);
+  border-color: var(--fs-warn-line);
+}
+.conf-unavail {
+  background: var(--fs-paper);
+  color: var(--fs-ink-3);
+  border-color: var(--fs-line);
+}
+/* 'resolved' — the issue was fixed by an overlapping fix in the same batch.
+   Reads as a muted success (it needs no separate action). */
+.conf-resolved {
+  background: var(--fs-good-bg);
+  color: var(--fs-good);
+  border-color: var(--fs-good-line);
+}
 
-.fs-btn-accept {
+.applied-badge {
+  background: var(--fs-good-bg);
+  color: var(--fs-good);
+  border-color: var(--fs-good-line);
+}
+.applied-badge mat-icon { font-size: 12px; width: 12px; height: 12px; }
+
+.fs-no-change-pill {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 99px;
+  background: var(--fs-paper);
+  color: var(--fs-ink-3);
+  border: 1px solid var(--fs-line);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   Empty state
+   ──────────────────────────────────────────────────────────────────────── */
+.fs-empty {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--fs-ink-2);
+}
+.fs-empty mat-icon { font-size: 32px; width: 32px; height: 32px; color: var(--fs-ink-4); }
+.fs-empty p { margin: 8px 0 0; font-size: 13px; }
+.fs-empty p.muted { font-size: 12px; }
+
+/* ────────────────────────────────────────────────────────────────────────
+   Footer
+   No fake kbd-key hints. The Esc key works; we don't need to advertise.
+   ──────────────────────────────────────────────────────────────────────── */
+.fs-footer {
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: #4f46e5;
-  border: none;
-  color: #fff;
-  padding: 8px 20px;
-  border-radius: 8px;
-  cursor: pointer;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 24px;
+  border-top: 1px solid var(--fs-line);
+  background: var(--fs-paper);
+}
+
+.fs-footer-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* ──── Button — 8 states ─── default · hover · focus · active · disabled · loading (.applying) · error (n/a here) · success (= applied) ─── */
+.fs-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--fs-r-sm);
   font-size: 13px;
   font-weight: 600;
-  transition: background 0.15s;
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-family: inherit;
+  white-space: nowrap;       /* gate 59: no two-line buttons */
+  transition: background var(--fs-dur-fast),
+              border-color var(--fs-dur-fast),
+              color var(--fs-dur-fast),
+              transform 80ms var(--fs-ease);
 }
-.fs-btn-accept:hover:not(:disabled) { background: #4338ca; }
-.fs-btn-accept:disabled { opacity: 0.45; cursor: not-allowed; }
-.fs-btn-accept mat-icon { font-size: 17px; width: 17px; height: 17px; }
+.fs-btn:active:not(:disabled) { transform: translateY(1px); }
+.fs-btn:disabled              { opacity: 0.40; cursor: not-allowed; }
+.fs-btn:focus-visible         {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--fs-accent-ring);
+}
+.fs-btn mat-icon              { font-size: 16px; width: 16px; height: 16px; }
 
-/* ── Spinner ───────────────────────────────────────────────────────── */
-.spin {
-  animation: spin 1s linear infinite;
+.fs-btn-ghost {
+  background: transparent;
+  border-color: var(--fs-line);
+  color: var(--fs-ink-2);
 }
-@keyframes spin {
+.fs-btn-ghost:hover:not(:disabled) {
+  background: var(--fs-paper-2);
+  border-color: var(--fs-line-2);
+  color: var(--fs-ink);
+}
+
+.fs-btn-primary {
+  background: var(--fs-accent);
+  color: oklch(15% 0.015 250);             /* dark ink on a mid-luminance fill — AA contrast */
+  font-weight: 600;
+}
+.fs-btn-primary:hover:not(:disabled) { background: var(--fs-accent-2); }
+
+/* Spinner */
+.spin {
+  animation: fs-spin 900ms linear infinite;
+  transform-origin: center;
+}
+@keyframes fs-spin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   Responsive — verified at 320 / 375 / 414 / 768 px
+   Gate 36: no horizontal scroll. Gate 64: section heads collapse to one col.
+   ════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 720px) {
+  .fs-overlay  { padding: 12px; }
+  .fs-modal    { max-height: 95vh; }
+  .fs-header   { padding: 16px 18px 12px; }
+  .fs-toolbar,
+  .fs-batch-list,
+  .fs-single-body,
+  .fs-footer { padding-left: 18px; padding-right: 18px; }
+  .fs-progress-strip { padding: 10px 18px; }
+  .fs-footer { flex-direction: column-reverse; align-items: stretch; }
+  .fs-footer-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .fs-footer-actions .fs-btn { justify-content: center; }
+  .fs-diff-xpath { display: none; }
+  .fs-inline-pill code { max-width: 160px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
 }

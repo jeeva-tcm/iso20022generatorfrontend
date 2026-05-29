@@ -100,14 +100,6 @@ export class ValidateComponent implements OnInit {
   // ── Selected issue (detail view) ───────────────────────────────────────────
   expandedIssue: any = null;
 
-  toggleIssue(issue: any) {
-    if (this.expandedIssue === issue.id) {
-      this.expandedIssue = null;
-    } else {
-      this.expandedIssue = issue.id;
-    }
-  }
-
   // ── Inline Fix Suggester state ──────────────────────────────────────────────
   fixSuggesterOpen = false;
   fixTarget: FileEntry | null = null;
@@ -127,10 +119,23 @@ export class ValidateComponent implements OnInit {
   openFixAll(entry: FileEntry, event: Event) {
     event.stopPropagation();
     this.fixTarget = entry;
-    this.activeFixIssues = (entry.report?.details ?? []) as IssueRef[];
+    // Only auto-fix ERROR-severity issues. Warnings (e.g. "BIC not found in
+    // directory") are advisory, not deterministically fixable, so they don't
+    // belong in the batch.
+    this.activeFixIssues = this.getFixableIssues(entry.report) as IssueRef[];
     this.activeFixIssue = undefined;
     this.fixMode = 'batch';
     this.fixSuggesterOpen = true;
+  }
+
+  /** Issues eligible for AI auto-fix: ERROR severity only. */
+  getFixableIssues(report: any): any[] {
+    return (report?.details ?? []).filter((i: any) => i?.severity === 'ERROR');
+  }
+
+  /** Count of fixable (ERROR-severity) issues — drives the Fix All button label. */
+  getFixableCount(report: any): number {
+    return this.getFixableIssues(report).length;
   }
 
   onFixApplied(entry: FileEntry, newXml: string) {
