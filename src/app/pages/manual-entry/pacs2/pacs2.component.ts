@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -79,7 +79,8 @@ export class Pacs2Component implements OnInit, OnDestroy {
     private snackBar: MatSnackBar,
     private router: Router,
     private uetrService: UetrService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -240,12 +241,13 @@ export class Pacs2Component implements OnInit, OnDestroy {
       this.updateReasonValidation();
     });
 
-    this.form.valueChanges.pipe(debounceTime(300)).subscribe(() => {
+    this.form.valueChanges.subscribe(() => {
       if (!this.isParsingXml && !this.isInternalChange) {
         this.generateXml();
         this.pushHistory();
       }
       this.scheduleDraftSave();
+      this.cdr.detectChanges();
     });
 
     // Initial validation check

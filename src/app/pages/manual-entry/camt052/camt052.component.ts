@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
@@ -50,7 +50,8 @@ export class Camt052Component implements OnInit, OnDestroy {
         private router: Router,
         private formatting: FormattingService,
         private uetr: UetrService,
-        private dialog: MatDialog
+        private dialog: MatDialog,
+        private cdr: ChangeDetectorRef
     ) { }
 
 
@@ -244,9 +245,10 @@ export class Camt052Component implements OnInit, OnDestroy {
           this.generateXml();
         }
 
-        this.form.valueChanges.pipe(debounceTime(300)).subscribe(() => {
+        this.form.valueChanges.subscribe(() => {
             this.scheduleDraftSave();
             this.generateXml();
+            this.cdr.detectChanges();
         });
 
         this.pushHistory();

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
@@ -74,7 +74,8 @@ export class Pacs10Component implements OnInit, OnDestroy {
         private snackBar: MatSnackBar,
         private router: Router,
         private uetrService: UetrService,
-        private dialog: MatDialog
+        private dialog: MatDialog,
+        private cdr: ChangeDetectorRef
     ) { }
 
     ngOnInit() {
@@ -116,7 +117,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
           this.generateXml();
         }
 
-        this.form.valueChanges.pipe(debounceTime(300)).subscribe(() => {
+        this.form.valueChanges.subscribe(() => {
             if (!this.isParsingXml && !this.isInternalChange) {
                 this.generateXml();
                 this.pushHistory();
@@ -124,6 +125,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
             this.scheduleDraftSave();
             this.updateConditionalValidators();
             this.updateClearingSystemValidation();
+            this.cdr.detectChanges();
         });
 
         this.form.get('currency')?.valueChanges.subscribe(() => {

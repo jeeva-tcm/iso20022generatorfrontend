@@ -1,6 +1,6 @@
 import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -66,7 +66,8 @@ export class Pain008Component implements OnInit, OnDestroy {
     private http: HttpClient,
     private config: ConfigService,
     private snackBar: MatSnackBar,
-    private formatting: FormattingService
+    private formatting: FormattingService,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
@@ -99,7 +100,7 @@ export class Pain008Component implements OnInit, OnDestroy {
     }
     this.generateXml();
     this.pushHistory();
-    this.form.valueChanges.pipe(debounceTime(300)).subscribe(() => { this.updateConditionalValidators(); this.generateXml(); this.scheduleDraftSave(); });
+    this.form.valueChanges.subscribe(() => { this.updateConditionalValidators(); this.generateXml(); this.scheduleDraftSave(); this.cdr.detectChanges(); });
     this.updateConditionalValidators();
   }
 

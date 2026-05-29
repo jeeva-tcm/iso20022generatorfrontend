@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -60,7 +60,8 @@ export class Pain001Component implements OnInit, OnDestroy {
     private config: ConfigService,
     private snackBar: MatSnackBar,
     private formatting: FormattingService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
@@ -94,10 +95,11 @@ export class Pain001Component implements OnInit, OnDestroy {
     this.generateXml();
     this.pushHistory();
 
-    this.form.valueChanges.pipe(debounceTime(300)).subscribe(() => {
+    this.form.valueChanges.subscribe(() => {
       this.updateConditionalValidators();
       this.generateXml();
       this.scheduleDraftSave();
+      this.cdr.detectChanges();
     });
 
     this.updateConditionalValidators();

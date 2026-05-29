@@ -121,10 +121,11 @@ export class Pacs4Component implements OnInit, OnDestroy {
           this.generateXml();
         }
 
-        this.form.valueChanges.pipe(debounceTime(300)).subscribe(() => {
+        this.form.valueChanges.subscribe(() => {
             this.updateConditionalValidators();
             this.generateXml();
             this.scheduleDraftSave();
+            this.cdr.detectChanges();
         });
 
         this.pushHistory();

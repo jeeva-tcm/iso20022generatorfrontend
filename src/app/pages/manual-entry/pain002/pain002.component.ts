@@ -1,6 +1,6 @@
 import { BicSearchDialogComponent } from '../bic-search-dialog/bic-search-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -139,7 +139,8 @@ export class Pain002Component implements OnInit, OnDestroy {
     private config: ConfigService,
     private snackBar: MatSnackBar,
     private router: Router,
-    public uetrService: UetrService
+    public uetrService: UetrService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -342,12 +343,13 @@ export class Pain002Component implements OnInit, OnDestroy {
       transactions: this.fb.array([this.initTransaction()])
     }, { validators: [this.bahValidator] });
 
-    this.form.valueChanges.pipe(debounceTime(300)).subscribe(() => {
+    this.form.valueChanges.subscribe(() => {
       if (this.isParsingXml || this.isInternalChange) return;
       this.applyAutoUppercase(this.form);
       this.generateXml();
       this.pushHistory();
       this.scheduleDraftSave();
+      this.cdr.detectChanges();
     });
 
     // Auto-enable Related Header when Copy/Duplicate is selected

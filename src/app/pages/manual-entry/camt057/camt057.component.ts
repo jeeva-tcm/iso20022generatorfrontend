@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
@@ -60,7 +60,8 @@ export class Camt057Component implements OnInit, OnDestroy {
         private router: Router,
         private uetrService: UetrService,
         private formatting: FormattingService,
-        private dialog: MatDialog
+        private dialog: MatDialog,
+        private cdr: ChangeDetectorRef
     ) { }
 
     public syncScroll(editor: any, gutter: any) {
@@ -103,10 +104,11 @@ export class Camt057Component implements OnInit, OnDestroy {
             this.updateClearingSystemValidation();
         });
 
-        this.form.valueChanges.pipe(debounceTime(300)).subscribe(() => {
+        this.form.valueChanges.subscribe(() => {
             this.updateConditionalValidators();
             this.generateXml();
             this.scheduleDraftSave();
+            this.cdr.detectChanges();
         });
 
         // Init history
