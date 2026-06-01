@@ -1266,6 +1266,45 @@ body.light-theme .draft-clear-btn {
     height: 28px;
 }
 
+.vm-status-banner.warn {
+    background: rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.28);
+}
+
+.vm-status-banner.warn mat-icon {
+    color: #f59e0b;
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+}
+
+/* Layer card colour states — global so all manual-entry components inherit */
+.vm-layer {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.65rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    background: var(--bg-card-hover);
+}
+
+.vm-layer.layer-pass {
+    border-color: rgba(34, 197, 94, 0.35) !important;
+    background: rgba(34, 197, 94, 0.08) !important;
+}
+
+.vm-layer.layer-fail {
+    border-color: rgba(239, 68, 68, 0.35) !important;
+    background: rgba(239, 68, 68, 0.08) !important;
+}
+
+.vm-layer.layer-warn {
+    border-color: rgba(245, 158, 11, 0.35) !important;
+    background: rgba(245, 158, 11, 0.08) !important;
+}
+
 .vm-status-text {
     display: flex;
     flex-direction: column;
@@ -2485,3 +2524,352 @@ body:not(.light-theme) .tag-cyan {
 body:not(.light-theme) .tag-neutral {
     color: #cbd5e1 !important;
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   ███  SENIOR-CRAFT POLISH LAYER  ███
+   Global improvements applied across the whole app.
+   - Custom easing curves (Emil Kowalski set)
+   - Universal press feedback on interactives
+   - Proper :focus-visible (keyboard-only, not mouse)
+   - Hover gating to skip touch devices
+   - prefers-reduced-motion compliance
+   - OpenType features on body type
+   - Replace `transition: all` anti-patterns
+   - Smoother selection + autofill
+   Same colors. Just craft.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+    /* Strong custom easings — built-in CSS easings are too weak for UI polish */
+    --ease-out-soft:   cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-out-snap:   cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in-out:     cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-drawer:     cubic-bezier(0.32, 0.72, 0, 1);
+    --ease-spring:     cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    /* Standard durations — UI animations stay under 300ms */
+    --dur-instant: 100ms;
+    --dur-fast:    160ms;
+    --dur-base:    220ms;
+    --dur-slow:    300ms;
+}
+
+/* ────────────────────────────────────────────────────────────
+   1. OpenType features — better numerals + ligatures everywhere
+─────────────────────────────────────────────────────────── */
+html {
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "ss01" 1;
+    text-rendering: optimizeLegibility;
+}
+
+/* Tabular numerals where they matter (counters, KPIs, timestamps) */
+.kpi-value, .ring-pct, .mc-val, .mc-val-sml,
+.fi-line, .td-err, .td-pass, .stat-err, .stat-pass,
+.pass-val-text, .feed-time, .feed-stats {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1, "kern" 1;
+}
+
+/* Monospace gets crisper rendering */
+code, pre, .mono, .msg-badge, .uetr-control-row, .editor-textarea, .code-editor {
+    font-feature-settings: "kern" 1, "calt" 0;
+}
+
+/* ────────────────────────────────────────────────────────────
+   2. Universal press feedback — buttons feel responsive
+   Subtle scale on :active gives instant tactile confirmation
+─────────────────────────────────────────────────────────── */
+button:not(:disabled):not([disabled]):active,
+[role="button"]:not(:disabled):not([disabled]):active,
+.btn-primary:not(:disabled):not([disabled]):active,
+.btn-ghost:not(:disabled):not([disabled]):active,
+.action-btn:not(:disabled):not([disabled]):active,
+.chip:not(:disabled):not([disabled]):active,
+.qa-item:active,
+.feed-item:active,
+.tab-btn:not(:disabled):active {
+    transform: scale(0.97);
+    transition: transform var(--dur-instant) var(--ease-out-snap);
+}
+
+/* Smooth release */
+button, [role="button"], .btn-primary, .btn-ghost, .action-btn,
+.chip, .qa-item, .feed-item, .tab-btn {
+    transition: transform var(--dur-fast) var(--ease-out-soft),
+                background-color var(--dur-fast) var(--ease-out-soft),
+                border-color var(--dur-fast) var(--ease-out-soft),
+                color var(--dur-fast) var(--ease-out-soft),
+                box-shadow var(--dur-fast) var(--ease-out-soft),
+                opacity var(--dur-fast) var(--ease-out-soft);
+}
+
+/* ────────────────────────────────────────────────────────────
+   3. Replace common `transition: all` anti-patterns
+   Be specific. `all` repaints everything and traps future devs.
+─────────────────────────────────────────────────────────── */
+.mat-mdc-card {
+    transition: transform var(--dur-base) var(--ease-out-soft),
+                background-color var(--dur-base) var(--ease-out-soft),
+                box-shadow var(--dur-base) var(--ease-out-soft),
+                border-color var(--dur-base) var(--ease-out-soft) !important;
+}
+
+/* ────────────────────────────────────────────────────────────
+   4. Hover states gated for actual pointer devices
+   Without this, mobile taps trigger hover-state flashes
+─────────────────────────────────────────────────────────── */
+@media (hover: none) or (pointer: coarse) {
+    /* Suppress hover lifts on touch */
+    .mat-mdc-card:hover,
+    .kpi-card:hover,
+    .qa-item:hover,
+    .feed-item:hover,
+    .file-item-new:hover,
+    .table-row:hover,
+    .action-btn:hover,
+    .feature-row:hover,
+    .icon-btn:hover {
+        transform: none !important;
+        box-shadow: inherit;
+    }
+}
+
+/* ────────────────────────────────────────────────────────────
+   5. Real :focus-visible — keyboard navigation gets a clear ring,
+   mouse clicks don't (no ugly residual outline on every click)
+─────────────────────────────────────────────────────────── */
+*:focus { outline: none; }
+
+button:focus-visible,
+[role="button"]:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+    outline: 2px solid var(--accent-color, #3b82f6);
+    outline-offset: 2px;
+    border-radius: inherit;
+}
+
+/* Form fields get an inset glow on focus, no outline jitter */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline-offset: 0;
+    outline: 2px solid transparent;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-color, #3b82f6) 22%, transparent);
+}
+
+/* ────────────────────────────────────────────────────────────
+   6. Selection — branded, not blue-system-default
+─────────────────────────────────────────────────────────── */
+::selection {
+    background: color-mix(in srgb, var(--accent-color, #3b82f6) 28%, transparent);
+    color: var(--text-main);
+}
+
+::-moz-selection {
+    background: color-mix(in srgb, var(--accent-color, #3b82f6) 28%, transparent);
+    color: var(--text-main);
+}
+
+/* ────────────────────────────────────────────────────────────
+   7. Smooth autofill — Chrome's yellow autofill background is ugly
+─────────────────────────────────────────────────────────── */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px var(--bg-card) inset !important;
+    -webkit-text-fill-color: var(--text-main) !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* ────────────────────────────────────────────────────────────
+   8. Better disabled states — clear visual + cursor cue
+─────────────────────────────────────────────────────────── */
+button:disabled, button[disabled],
+[role="button"][disabled], [role="button"]:disabled,
+input:disabled, select:disabled, textarea:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    pointer-events: auto;  /* keep cursor visible on hover */
+}
+
+button:disabled *, button[disabled] * {
+    pointer-events: none;
+}
+
+/* ────────────────────────────────────────────────────────────
+   9. Stagger animation utility for entering lists
+   Apply .stagger-in to parent; children animate in sequence.
+─────────────────────────────────────────────────────────── */
+.stagger-in > * {
+    opacity: 0;
+    transform: translateY(6px);
+    animation: stagger-fade var(--dur-slow) var(--ease-out-soft) forwards;
+}
+
+.stagger-in > *:nth-child(1)  { animation-delay: 0ms; }
+.stagger-in > *:nth-child(2)  { animation-delay: 40ms; }
+.stagger-in > *:nth-child(3)  { animation-delay: 80ms; }
+.stagger-in > *:nth-child(4)  { animation-delay: 120ms; }
+.stagger-in > *:nth-child(5)  { animation-delay: 160ms; }
+.stagger-in > *:nth-child(6)  { animation-delay: 200ms; }
+.stagger-in > *:nth-child(7)  { animation-delay: 240ms; }
+.stagger-in > *:nth-child(8)  { animation-delay: 280ms; }
+.stagger-in > *:nth-child(9)  { animation-delay: 320ms; }
+.stagger-in > *:nth-child(10) { animation-delay: 360ms; }
+
+@keyframes stagger-fade {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ────────────────────────────────────────────────────────────
+   10. Reduced motion — fewer + gentler, not zero
+   Keep opacity transitions for comprehension; kill transforms.
+─────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 120ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    /* Remove transform-based motion specifically */
+    .mat-mdc-card:hover,
+    .kpi-card:hover,
+    .qa-item:hover,
+    .feed-item:hover,
+    button:active,
+    [role="button"]:active {
+        transform: none !important;
+    }
+
+    .stagger-in > * {
+        opacity: 1;
+        transform: none;
+        animation: none;
+    }
+
+    .live-dot, .spin, .spinning, .spin-icon {
+        animation: none !important;
+    }
+}
+
+/* ────────────────────────────────────────────────────────────
+   11. Smoother native scroll anywhere there's overflow
+─────────────────────────────────────────────────────────── */
+html { scroll-behavior: smooth; }
+
+/* Global thin scrollbars (override Material defaults) */
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--text-muted, #94a3b8) 35%, transparent);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--text-muted, #94a3b8) 60%, transparent);
+    background-clip: content-box;
+    border: 2px solid transparent;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--text-muted, #94a3b8) 40%, transparent) transparent;
+}
+
+/* ────────────────────────────────────────────────────────────
+   12. Popover/dialog transform-origin — scale from trigger, not center
+   (Modals are exempt — they stay centered)
+─────────────────────────────────────────────────────────── */
+.mat-mdc-menu-panel,
+.cdk-overlay-pane .mat-mdc-autocomplete-panel,
+.cdk-overlay-pane .mat-mdc-select-panel,
+.mat-mdc-tooltip {
+    transform-origin: top center;
+}
+
+/* ────────────────────────────────────────────────────────────
+   13. KPI card hover — replace the existing 4px lift with senior craft
+   Lighter touch, custom easing, no `transition: all`
+─────────────────────────────────────────────────────────── */
+.kpi-card {
+    transition: transform var(--dur-base) var(--ease-out-soft),
+                box-shadow var(--dur-base) var(--ease-out-soft),
+                border-color var(--dur-base) var(--ease-out-soft);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .kpi-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+        border-color: color-mix(in srgb, var(--accent-color, #3b82f6) 25%, var(--border-light));
+    }
+}
+
+/* ────────────────────────────────────────────────────────────
+   14. Form inputs — softer focus, better placeholder color
+─────────────────────────────────────────────────────────── */
+input, select, textarea {
+    transition: border-color var(--dur-fast) var(--ease-out-soft),
+                background-color var(--dur-fast) var(--ease-out-soft),
+                box-shadow var(--dur-fast) var(--ease-out-soft);
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: color-mix(in srgb, var(--text-muted, #94a3b8) 70%, transparent);
+    opacity: 1;
+}
+
+/* ────────────────────────────────────────────────────────────
+   15. Material button overrides — make Material buttons feel native
+─────────────────────────────────────────────────────────── */
+.mat-mdc-button, .mat-mdc-icon-button,
+.mat-mdc-raised-button, .mat-mdc-stroked-button,
+.mat-mdc-flat-button, .mat-mdc-fab, .mat-mdc-mini-fab {
+    transition: transform var(--dur-fast) var(--ease-out-soft),
+                background-color var(--dur-fast) var(--ease-out-soft),
+                box-shadow var(--dur-fast) var(--ease-out-soft) !important;
+}
+
+.mat-mdc-button:not(:disabled):active,
+.mat-mdc-icon-button:not(:disabled):active,
+.mat-mdc-raised-button:not(:disabled):active,
+.mat-mdc-stroked-button:not(:disabled):active,
+.mat-mdc-flat-button:not(:disabled):active {
+    transform: scale(0.97);
+}
+
+/* ────────────────────────────────────────────────────────────
+   16. Link polish — underline-on-hover, animated underline
+─────────────────────────────────────────────────────────── */
+a:not(.mat-mdc-button):not(.btn-primary):not(.btn-ghost):not([class*="btn-"]):not(.qa-item):not(.tag) {
+    color: var(--accent-color, #3b82f6);
+    text-decoration: none;
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    transition: background-size var(--dur-base) var(--ease-out-soft),
+                color var(--dur-fast) var(--ease-out-soft);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    a:not(.mat-mdc-button):not(.btn-primary):not(.btn-ghost):not([class*="btn-"]):not(.qa-item):not(.tag):hover {
+        background-size: 100% 1px;
+    }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   END SENIOR-CRAFT POLISH LAYER
+   ════════════════════════════════════════════════════════════════════════════ */

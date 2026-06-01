@@ -66,8 +66,8 @@
                         <div class="validation-msg" *ngIf="err('creDtTm') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
-                        <label>Number of Transactions <span class="req">*</span></label>
-                        <input formControlName="nbOfTxs" type="number" min="1" maxlength="15" placeholder="1">
+                        <label>Number of Transactions <span class="req">*</span> <span class="opt" style="font-size:0.7rem">(must be 1 per CBPR+)</span></label>
+                        <input formControlName="nbOfTxs" type="number" min="1" max="1" maxlength="2" placeholder="1">
                         <div class="validation-msg" *ngIf="err('nbOfTxs') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
@@ -97,65 +97,72 @@
                             <option value="NORM">NORM</option>
                         </select>
                     </div>
+                    <div class="form-group">
+                        <label>Message Definition Identifier (MsgDefIdr) <span class="req">*</span></label>
+                        <input formControlName="msgDefIdr" maxlength="35" placeholder="e.g. pacs.010.001.03">
+                        <div class="validation-msg" *ngIf="err('msgDefIdr') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('msgDefIdr', 35) as h">{{h}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Business Service (BizSvc) <span class="req">*</span></label>
+                        <input formControlName="bizSvc" maxlength="35" placeholder="e.g. swift.cbprplus.col.02">
+                        <div class="validation-msg" *ngIf="err('bizSvc') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('bizSvc', 35) as h">{{h}}</div>
+                    </div>
 
                     <div class="section-title">Instructing Agent</div>
                     <div class="party-group">
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'instgAgt', isAgent:true, title:'Instructing Agent', required: true}"></ng-container>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'instgAgt', isAgent:true, title:'Instructing Agent', required: true, hideNameAddr: true}"></ng-container>
                     </div>
 
                     <div class="section-title">Instructed Agent</div>
                     <div class="party-group">
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'instdAgt', isAgent:true, title:'Instructed Agent', required: true}"></ng-container>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'instdAgt', isAgent:true, title:'Instructed Agent', required: true, hideNameAddr: true}"></ng-container>
                     </div>
 
-                    <div class="section-title">Intermediary Agent 1</div>
+                    <div class="section-title">Intermediary Agent 1 <span class="opt" style="font-size:0.75rem;font-weight:400;margin-left:4px">Optional</span></div>
                     <div class="party-group">
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'intrmyAgt1', isAgent:true, title:'Intermediary Agent 1', required: true}"></ng-container>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'intrmyAgt1', isAgent:true, title:'Intermediary Agent 1'}"></ng-container>
+                    </div>
+                    <div class="section-title">Intermediary Agent 1 Account <span class="opt" style="font-size:0.75rem;font-weight:400;margin-left:4px">Optional</span></div>
+                    <div class="party-group">
+                        <ng-container *ngTemplateOutlet="accountForm; context:{prefix:'intrmyAgt1', title:'Intermediary Agent 1'}"></ng-container>
                     </div>
 
-                    <div class="section-title">Intermediary Agent 1 Account</div>
+                    <div class="section-title">Intermediary Agent 2 <span class="opt" style="font-size:0.75rem;font-weight:400;margin-left:4px">Optional</span></div>
                     <div class="party-group">
-                        <ng-container *ngTemplateOutlet="accountForm; context:{prefix:'intrmyAgt1', title:'Intermediary Agent 1 Account'}"></ng-container>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'intrmyAgt2', isAgent:true, title:'Intermediary Agent 2'}"></ng-container>
+                    </div>
+                    <div class="section-title">Intermediary Agent 2 Account <span class="opt" style="font-size:0.75rem;font-weight:400;margin-left:4px">Optional</span></div>
+                    <div class="party-group">
+                        <ng-container *ngTemplateOutlet="accountForm; context:{prefix:'intrmyAgt2', title:'Intermediary Agent 2'}"></ng-container>
                     </div>
 
-                    <div class="section-title">Intermediary Agent 2</div>
+                    <div class="section-title">Intermediary Agent 3 <span class="opt" style="font-size:0.75rem;font-weight:400;margin-left:4px">Optional</span></div>
                     <div class="party-group">
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'intrmyAgt2', isAgent:true, title:'Intermediary Agent 2', required: true}"></ng-container>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'intrmyAgt3', isAgent:true, title:'Intermediary Agent 3'}"></ng-container>
                     </div>
-
-                    <div class="section-title">Intermediary Agent 2 Account</div>
+                    <div class="section-title">Intermediary Agent 3 Account <span class="opt" style="font-size:0.75rem;font-weight:400;margin-left:4px">Optional</span></div>
                     <div class="party-group">
-                        <ng-container *ngTemplateOutlet="accountForm; context:{prefix:'intrmyAgt2', title:'Intermediary Agent 2 Account'}"></ng-container>
-                    </div>
-
-                    <div class="section-title">Intermediary Agent 3</div>
-                    <div class="party-group">
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'intrmyAgt3', isAgent:true, title:'Intermediary Agent 3', required: true}"></ng-container>
-                    </div>
-
-                    <div class="section-title">Intermediary Agent 3 Account</div>
-                    <div class="party-group">
-                        <ng-container *ngTemplateOutlet="accountForm; context:{prefix:'intrmyAgt3', title:'Intermediary Agent 3 Account'}"></ng-container>
+                        <ng-container *ngTemplateOutlet="accountForm; context:{prefix:'intrmyAgt3', title:'Intermediary Agent 3'}"></ng-container>
                     </div>
 
                     <div class="section-title">Creditor Agent</div>
                     <div class="party-group">
                         <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'cdtrAgt', isAgent:true, title:'Creditor Agent'}"></ng-container>
                     </div>
-
-                    <div class="section-title">Creditor Agent Account</div>
+                    <div class="section-title">Creditor Agent Account <span class="opt" style="font-size:0.75rem;font-weight:400;margin-left:4px">Optional</span></div>
                     <div class="party-group">
-                        <ng-container *ngTemplateOutlet="accountForm; context:{prefix:'cdtrAgt', title:'Creditor Agent Account'}"></ng-container>
+                        <ng-container *ngTemplateOutlet="accountForm; context:{prefix:'cdtrAgt', title:'Creditor Agent'}"></ng-container>
                     </div>
 
                     <div class="section-title">Creditor</div>
                     <div class="party-group">
                         <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'cdtr', isAgent:true, title:'Creditor', required: true}"></ng-container>
                     </div>
-
-                    <div class="section-title">Creditor Account</div>
+                    <div class="section-title">Creditor Account <span class="opt" style="font-size:0.75rem;font-weight:400;margin-left:4px">Optional</span></div>
                     <div class="party-group">
-                        <ng-container *ngTemplateOutlet="accountForm; context:{prefix:'cdtr', title:'Creditor Account', required: true}"></ng-container>
+                        <ng-container *ngTemplateOutlet="accountForm; context:{prefix:'cdtr', title:'Creditor'}"></ng-container>
                     </div>
 
                     <div class="section-title">Direct Debit Transaction Information</div>
@@ -190,10 +197,16 @@
                         <div class="validation-msg" *ngIf="err('uetr') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('uetr', 36) as h">{{h}}</div>
                     </div>
+                    <div class="form-group">
+                        <label>Clearing System Reference <span class="opt">Optional</span></label>
+                        <input formControlName="clrSysRef" maxlength="35" placeholder="Clearing system ref (e.g. CLSREF-001)">
+                        <div class="validation-msg" *ngIf="err('clrSysRef') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('clrSysRef', 35) as h">{{h}}</div>
+                    </div>
 
                     <div class="section-title">Payment Type Information</div>
                     <div class="form-group">
-                        <label>Instruction Priority</label>
+                        <label>Instruction Priority <span class="opt">Optional</span></label>
                         <select formControlName="instrPrty">
                             <option value="">None</option>
                             <option value="HIGH">High</option>
@@ -201,50 +214,46 @@
                         </select>
                         <div class="validation-msg" *ngIf="err('instrPrty') as e">{{e}}</div>
                     </div>
-                    <div class="form-group">
-                        <label>Service Level Code</label>
-                        <input formControlName="svcLvlCd" maxlength="4">
+
+                    <div class="form-group" *ngIf="!form.get('svcLvlPrtry')?.value?.trim()">
+                        <label>Service Level Code <span class="opt">Optional — Code or Proprietary</span></label>
+                        <input formControlName="svcLvlCd" maxlength="4" class="auto-uppercase" placeholder="e.g. G001">
                         <div class="validation-msg" *ngIf="err('svcLvlCd') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('svcLvlCd', 4) as h">{{h}}</div>
                     </div>
-                    <div class="form-group">
-                        <label>Local Instrument Code</label>
-                        <input formControlName="lclInstrmCd" maxlength="4">
-                        <div class="validation-msg" *ngIf="err('lclInstrmCd') as e">{{e}}</div>
-                        <div class="field-hint at-limit" *ngIf="hint('lclInstrmCd', 4) as h">{{h}}</div>
+                    <div class="form-group" *ngIf="!form.get('svcLvlCd')?.value?.trim()">
+                        <label>Service Level Proprietary <span class="opt">Optional — Code or Proprietary</span></label>
+                        <input formControlName="svcLvlPrtry" maxlength="35" placeholder="Proprietary service level">
+                        <div class="validation-msg" *ngIf="err('svcLvlPrtry') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('svcLvlPrtry', 35) as h">{{h}}</div>
                     </div>
-                    <div class="form-group">
-                        <label>Category Purpose Code</label>
+
+                    <div class="form-group" *ngIf="!form.get('lclInstrmPrtry')?.value?.trim()">
+                        <label>Local Instrument Code <span class="opt">Optional — Code or Proprietary</span></label>
+                        <input formControlName="lclInstrmCd" maxlength="35" placeholder="e.g. ONCL (up to 35 chars)">
+                        <div class="validation-msg" *ngIf="err('lclInstrmCd') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('lclInstrmCd', 35) as h">{{h}}</div>
+                    </div>
+                    <div class="form-group" *ngIf="!form.get('lclInstrmCd')?.value?.trim()">
+                        <label>Local Instrument Proprietary <span class="opt">Optional — Code or Proprietary</span></label>
+                        <input formControlName="lclInstrmPrtry" maxlength="35" placeholder="Proprietary local instrument">
+                        <div class="validation-msg" *ngIf="err('lclInstrmPrtry') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('lclInstrmPrtry', 35) as h">{{h}}</div>
+                    </div>
+
+                    <div class="form-group" *ngIf="!form.get('ctgyPurpPrtry')?.value?.trim()">
+                        <label>Category Purpose Code <span class="opt">Optional — Code or Proprietary</span></label>
                         <select formControlName="ctgyPurpCd">
                             <option value="">None</option>
                             <option *ngFor="let p of categoryPurposes" [value]="p">{{p}}</option>
                         </select>
                         <div class="validation-msg" *ngIf="err('ctgyPurpCd') as e">{{e}}</div>
                     </div>
-                    <div class="form-group">
-                        <label>Service Level Proprietary <span class="opt">Optional</span></label>
-                        <input formControlName="svcLvlPrtry" maxlength="35" placeholder="Proprietary service level">
-                        <div class="validation-msg" *ngIf="err('svcLvlPrtry') as e">{{e}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Local Instrument Proprietary <span class="opt">Optional</span></label>
-                        <input formControlName="lclInstrmPrtry" maxlength="35" placeholder="Proprietary local instrument">
-                        <div class="validation-msg" *ngIf="err('lclInstrmPrtry') as e">{{e}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Category Purpose Proprietary <span class="opt">Optional</span></label>
+                    <div class="form-group" *ngIf="!form.get('ctgyPurpCd')?.value?.trim()">
+                        <label>Category Purpose Proprietary <span class="opt">Optional — Code or Proprietary</span></label>
                         <input formControlName="ctgyPurpPrtry" maxlength="35" placeholder="Proprietary category purpose">
                         <div class="validation-msg" *ngIf="err('ctgyPurpPrtry') as e">{{e}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Purpose Code <span class="opt">Optional</span></label>
-                        <input formControlName="purposeCd" maxlength="4" class="auto-uppercase" placeholder="e.g. INTC">
-                        <div class="validation-msg" *ngIf="err('purposeCd') as e">{{e}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Purpose Proprietary <span class="opt">Optional</span></label>
-                        <input formControlName="purposePrtry" maxlength="35" placeholder="Proprietary purpose">
-                        <div class="validation-msg" *ngIf="err('purposePrtry') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('ctgyPurpPrtry', 35) as h">{{h}}</div>
                     </div>
 
                     <div class="section-title">Interbank Settlement Amount</div>
@@ -266,25 +275,25 @@
                         <div class="validation-msg" *ngIf="err('intrBkSttlmDt') as e">{{e}}</div>
                     </div>
 
-                    <div class="section-title">Settlement Time Request</div>
+                    <div class="section-title">Settlement Time Request <span class="opt" style="font-size:0.75rem;font-weight:400;margin-left:4px">Optional</span></div>
                     <div class="form-group">
-                        <label>CLSTm</label>
-                        <input formControlName="clstTm">
+                        <label>CLS Time (CLSTm) <span class="opt">Optional</span></label>
+                        <input formControlName="clstTm" placeholder="e.g. 09:00:00+00:00">
                         <div class="validation-msg" *ngIf="err('clstTm') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
-                        <label>TillTm</label>
-                        <input formControlName="tillTm">
+                        <label>Till Time (TillTm) <span class="opt">Optional</span></label>
+                        <input formControlName="tillTm" placeholder="e.g. 17:00:00+00:00">
                         <div class="validation-msg" *ngIf="err('tillTm') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
-                        <label>FrTm</label>
-                        <input formControlName="frTm">
+                        <label>From Time (FrTm) <span class="opt">Optional</span></label>
+                        <input formControlName="frTm" placeholder="e.g. 08:00:00+00:00">
                         <div class="validation-msg" *ngIf="err('frTm') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
-                        <label>RjctTm</label>
-                        <input formControlName="rjctTm">
+                        <label>Reject Time (RjctTm) <span class="opt">Optional</span></label>
+                        <input formControlName="rjctTm" placeholder="e.g. 16:00:00+00:00">
                         <div class="validation-msg" *ngIf="err('rjctTm') as e">{{e}}</div>
                     </div>
 
@@ -292,20 +301,40 @@
                     <div class="party-group">
                         <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtr', isAgent:true, title:'Debtor', required: true}"></ng-container>
                     </div>
-
-                    <div class="section-title">Debtor Account</div>
+                    <div class="section-title">Debtor Account <span class="opt" style="font-size:0.75rem;font-weight:400;margin-left:4px">Optional</span></div>
                     <div class="party-group">
-                        <ng-container *ngTemplateOutlet="accountForm; context:{prefix:'dbtr', title:'Debtor Account', required: true}"></ng-container>
+                        <ng-container *ngTemplateOutlet="accountForm; context:{prefix:'dbtr', title:'Debtor'}"></ng-container>
                     </div>
 
                     <div class="section-title">Debtor Agent</div>
                     <div class="party-group">
                         <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtrAgt', isAgent:true, title:'Debtor Agent'}"></ng-container>
                     </div>
-
-                    <div class="section-title">Debtor Agent Account</div>
+                    <div class="section-title">Debtor Agent Account <span class="opt" style="font-size:0.75rem;font-weight:400;margin-left:4px">Optional</span></div>
                     <div class="party-group">
-                        <ng-container *ngTemplateOutlet="accountForm; context:{prefix:'dbtrAgt', title:'Debtor Agent Account'}"></ng-container>
+                        <ng-container *ngTemplateOutlet="accountForm; context:{prefix:'dbtrAgt', title:'Debtor Agent'}"></ng-container>
+                    </div>
+
+                    <div class="section-title">Instruction For Debtor Agent <span class="opt" style="font-size:0.75rem;font-weight:400;margin-left:4px">Optional</span></div>
+                    <div class="form-group full-width">
+                        <label>Instruction For Debtor Agent</label>
+                        <input formControlName="instrForDbtrAgt" maxlength="210" placeholder="e.g. Settle via RTGS immediately">
+                        <div class="validation-msg" *ngIf="err('instrForDbtrAgt') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('instrForDbtrAgt', 210) as h">{{h}}</div>
+                    </div>
+
+                    <div class="section-title">Purpose <span class="opt" style="font-size:0.75rem;font-weight:400;margin-left:4px">Optional — choose Code or Proprietary</span></div>
+                    <div class="form-group" *ngIf="!form.get('purposePrtry')?.value?.trim()">
+                        <label>Purpose Code <span class="opt">Optional</span></label>
+                        <input formControlName="purposeCd" maxlength="4" class="auto-uppercase" placeholder="e.g. INTC">
+                        <div class="validation-msg" *ngIf="err('purposeCd') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('purposeCd', 4) as h">{{h}}</div>
+                    </div>
+                    <div class="form-group" *ngIf="!form.get('purposeCd')?.value?.trim()">
+                        <label>Purpose Proprietary <span class="opt">Optional</span></label>
+                        <input formControlName="purposePrtry" maxlength="35" placeholder="Proprietary purpose">
+                        <div class="validation-msg" *ngIf="err('purposePrtry') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('purposePrtry', 35) as h">{{h}}</div>
                     </div>
 
                     <div class="section-title">Remittance Information</div>
@@ -378,7 +407,7 @@
 
 
 
-<ng-template #partyForm let-prefix="prefix" let-isAgent="isAgent" let-title="title" let-required="required" let-group="group">
+<ng-template #partyForm let-prefix="prefix" let-isAgent="isAgent" let-title="title" let-required="required" let-group="group" let-hideNameAddr="hideNameAddr">
         <div [formGroup]="form" class="party-grid">
                 <!-- BIC -->
                 <div class="form-group" *ngIf="isAgent">
@@ -408,8 +437,8 @@
                         <div class="field-hint at-limit" *ngIf="hint(prefix+'OrgAnyBIC', 11) as h">{{h}}</div>
                 </div>
 
-                <!-- Address Type -->
-                <div class="form-group">
+                <!-- Address Type — hidden for InstgAgt/InstdAgt (Name+PstlAdr removed per PDF §5.21.4/5) -->
+                <div class="form-group" *ngIf="!hideNameAddr">
                         <label>{{title}} Address Type</label>
                         <select [formControlName]="prefix+'AddrType'">
                                 <option value="none">None (BIC/ID Only)</option>
@@ -421,8 +450,22 @@
                 </div>
 
                 <!-- Dynamic Address Fields -->
-                <ng-container *ngIf="form.get(prefix+'AddrType')?.value !== 'none'">
+                <ng-container *ngIf="!hideNameAddr && form.get(prefix+'AddrType')?.value !== 'none'">
                         <div class="address-subgrid">
+                                <div class="form-group"
+                                        *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
+                                        <label>{{title}} Department <span class="opt">Optional</span></label>
+                                        <input [formControlName]="prefix+'Dept'" maxlength="70" placeholder="e.g. Treasury Operations">
+                                        <div class="validation-msg" *ngIf="err(prefix+'Dept') as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint(prefix+'Dept', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"
+                                        *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
+                                        <label>{{title}} Sub Department <span class="opt">Optional</span></label>
+                                        <input [formControlName]="prefix+'SubDept'" maxlength="70" placeholder="e.g. Corporate Payments">
+                                        <div class="validation-msg" *ngIf="err(prefix+'SubDept') as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint(prefix+'SubDept', 70) as h">{{h}}</div>
+                                </div>
                                 <div class="form-group"
                                         *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
                                         <label>{{title}} Building Number</label>
@@ -446,6 +489,27 @@
                                 </div>
                                 <div class="form-group"
                                         *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
+                                        <label>{{title}} Floor <span class="opt">Optional</span></label>
+                                        <input [formControlName]="prefix+'Flr'" maxlength="70" placeholder="e.g. 12">
+                                        <div class="validation-msg" *ngIf="err(prefix+'Flr') as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint(prefix+'Flr', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"
+                                        *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
+                                        <label>{{title}} Post Box <span class="opt">Optional</span></label>
+                                        <input [formControlName]="prefix+'PstBx'" maxlength="16" placeholder="e.g. PO Box 100">
+                                        <div class="validation-msg" *ngIf="err(prefix+'PstBx') as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint(prefix+'PstBx', 16) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"
+                                        *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
+                                        <label>{{title}} Room <span class="opt">Optional</span></label>
+                                        <input [formControlName]="prefix+'Room'" maxlength="70" placeholder="e.g. 1201">
+                                        <div class="validation-msg" *ngIf="err(prefix+'Room') as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint(prefix+'Room', 70) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"
+                                        *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
                                         <label>{{title}} Post Code</label>
                                         <input [formControlName]="prefix+'PstCd'" maxlength="16" placeholder="e.g. 10005">
                                         <div class="validation-msg" *ngIf="err(prefix+'PstCd') as e">{{e}}</div>
@@ -457,6 +521,27 @@
                                         <input [formControlName]="prefix+'TwnNm'" maxlength="35" placeholder="e.g. New York">
                                         <div class="validation-msg" *ngIf="err(prefix+'TwnNm') as e">{{e}}</div>
                                         <div class="field-hint at-limit" *ngIf="hint(prefix+'TwnNm', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"
+                                        *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
+                                        <label>{{title}} Town Location Name <span class="opt">Optional</span></label>
+                                        <input [formControlName]="prefix+'TwnLctnNm'" maxlength="35" placeholder="e.g. Central London">
+                                        <div class="validation-msg" *ngIf="err(prefix+'TwnLctnNm') as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint(prefix+'TwnLctnNm', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"
+                                        *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
+                                        <label>{{title}} District Name <span class="opt">Optional</span></label>
+                                        <input [formControlName]="prefix+'DstrctNm'" maxlength="35" placeholder="e.g. City of London">
+                                        <div class="validation-msg" *ngIf="err(prefix+'DstrctNm') as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint(prefix+'DstrctNm', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group"
+                                        *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
+                                        <label>{{title}} Country Sub Division <span class="opt">Optional</span></label>
+                                        <input [formControlName]="prefix+'CtrySubDvsn'" maxlength="35" placeholder="e.g. England">
+                                        <div class="validation-msg" *ngIf="err(prefix+'CtrySubDvsn') as e">{{e}}</div>
+                                        <div class="field-hint at-limit" *ngIf="hint(prefix+'CtrySubDvsn', 35) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                         <label>{{title}} Country</label>
@@ -483,27 +568,34 @@
                                                 </div>
                                                 <div class="field-hint at-limit" *ngIf="hint(prefix+'AdrLine2', 70) as h">{{h}}</div>
                                         </div>
+                                        <div class="form-group">
+                                                <label>{{title}} Address Line 3 <span class="opt">Optional</span></label>
+                                                <input [formControlName]="prefix+'AdrLine3'" maxlength="70" placeholder="e.g. London GB">
+                                                <div class="validation-msg" *ngIf="err(prefix+'AdrLine3') as e">{{e}}
+                                                </div>
+                                                <div class="field-hint at-limit" *ngIf="hint(prefix+'AdrLine3', 70) as h">{{h}}</div>
+                                        </div>
                                 </ng-container>
                         </div>
                 </ng-container>
 
-                <!-- Name -->
-                <div class="form-group">
-                        <label>{{title}} Name <span class="req" *ngIf="required">*</span></label>
+                <!-- Name — hidden for InstgAgt/InstdAgt (removed per PDF §5.21.4) -->
+                <div class="form-group" *ngIf="!hideNameAddr">
+                        <label>{{title}} Name</label>
                         <input [formControlName]="prefix+'Name'" maxlength="140">
                         <div class="validation-msg" *ngIf="err(prefix+'Name') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint(prefix+'Name', 140) as h">{{h}}</div>
                 </div>
 
-                <!-- Member ID -->
+                <!-- Member ID — CBPR_RestrictedFINXMax28Text per §6.14 -->
                 <div class="form-group">
                         <label>{{title}} Member ID</label>
                         <input [formControlName]="isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId'"
-                                maxlength="35" placeholder="Clearing Member ID">
+                                maxlength="28" placeholder="Clearing Member ID (max 28)">
                         <div class="validation-msg"
                                 *ngIf="err(isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId') as e">{{e}}</div>
                         <div class="field-hint at-limit"
-                                *ngIf="hint(isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId', 35) as h">{{h}}
+                                *ngIf="hint(isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId', 28) as h">{{h}}
                         </div>
                 </div>
 
@@ -527,14 +619,6 @@
                         </div>
                         <div class="field-hint at-limit"
                                 *ngIf="hint(isAgent ? prefix+'Lei' : prefix+'OrgLEI', 20) as h">{{h}}</div>
-                </div>
-
-                <!-- Account Number -->
-                <div class="form-group">
-                        <label>{{title}} Account Number</label>
-                        <input [formControlName]="prefix+'Acct'" maxlength="34">
-                        <div class="validation-msg" *ngIf="err(prefix+'Acct') as e">{{e}}</div>
-                        <div class="field-hint at-limit" *ngIf="hint(prefix+'Acct', 34) as h">{{h}}</div>
                 </div>
 
         </div>
@@ -571,12 +655,19 @@
                 </div>
                 <!-- Results -->
                 <div class="vm-body" *ngIf="validationStatus === 'done' && validationReport">
-                        <div class="vm-status-banner" [class.pass]="validationReport.status === 'PASS'"
-                                [class.fail]="validationReport.status !== 'PASS'">
-                                <mat-icon>{{validationReport.status === 'PASS' ? 'check_circle' : 'cancel'}}</mat-icon>
+                        <div class="vm-status-banner"
+                                [class.pass]="(validationReport.errors || 0) === 0 && (validationReport.warnings || 0) === 0"
+                                [class.warn]="(validationReport.errors || 0) === 0 && (validationReport.warnings || 0) > 0"
+                                [class.fail]="(validationReport.errors || 0) > 0">
+                                <mat-icon>{{
+                                    (validationReport.errors || 0) > 0 ? 'cancel' :
+                                    ((validationReport.warnings || 0) > 0 ? 'warning' : 'check_circle')
+                                }}</mat-icon>
                                 <div class="vm-status-text">
-                                        <strong>{{validationReport.status === 'PASS' ? 'VALIDATION PASSED' : 'VALIDATION
-                                                FAILED'}}</strong>
+                                        <strong>{{
+                                            (validationReport.errors || 0) > 0 ? 'VALIDATION FAILED' :
+                                            ((validationReport.warnings || 0) > 0 ? 'PASSED WITH WARNINGS' : 'VALIDATION PASSED')
+                                        }}</strong>
                                         <span>{{validationReport.errors || 0}} error(s), {{validationReport.warnings ||
                                                 0}} warning(s) &bull; {{validationReport.total_time_ms || 0}}ms</span>
                                 </div>
@@ -658,13 +749,27 @@
         <!-- Account Identification: IBAN -->
         <div class="form-group">
             <label>IBAN <span class="req" *ngIf="required">*</span></label>
-            <input [formControlName]="prefix+'AcctIBAN'" maxlength="34" placeholder="IBAN (e.g. DE89370400440532013000)">
+            <input [formControlName]="prefix+'AcctIBAN'" maxlength="34" placeholder="IBAN (e.g. DE89370400440532013000)" class="auto-uppercase">
             <div class="validation-msg" *ngIf="err(prefix+'AcctIBAN') as e">{{e}}</div>
             <div class="field-hint at-limit" *ngIf="hint(prefix+'AcctIBAN', 34) as h">{{h}}</div>
         </div>
 
         <!-- Account Metadata -->
         <div class="address-subgrid">
+            <div class="form-group">
+                <label>Account Type Code <span class="opt">Optional</span></label>
+                <input [formControlName]="prefix+'AcctTpCd'" maxlength="4" class="auto-uppercase" placeholder="e.g. CACC">
+                <div class="validation-msg" *ngIf="err(prefix+'AcctTpCd') as e">{{e}}</div>
+                <div class="field-hint at-limit" *ngIf="hint(prefix+'AcctTpCd', 4) as h">{{h}}</div>
+            </div>
+
+            <div class="form-group" *ngIf="!form.get(prefix+'AcctTpCd')?.value">
+                <label>Account Type Proprietary <span class="opt">Optional</span></label>
+                <input [formControlName]="prefix+'AcctTpPrtry'" maxlength="35" placeholder="Proprietary type code">
+                <div class="validation-msg" *ngIf="err(prefix+'AcctTpPrtry') as e">{{e}}</div>
+                <div class="field-hint at-limit" *ngIf="hint(prefix+'AcctTpPrtry', 35) as h">{{h}}</div>
+            </div>
+
             <div class="form-group">
                 <label>Currency</label>
                 <select [formControlName]="prefix+'AcctCcy'">

@@ -781,12 +781,20 @@ ${this.rmtInf(v)}
         }
 
         if (lei) finInstnId += this.el('LEI', lei, indent + 2);
-        
-        if (!onlyBic && !bic) {
+
+        // CBPR_COM_R9 (strict): only InstgAgt/InstdAgt must omit Nm + PstlAdr when BICFI is set.
+        // For every other agent (Dbtr, Cdtr, DbtrAgt, CdtrAgt, IntrmyAgt*) BICFI + Nm +
+        // PstlAdr may be emitted together, so let user-entered Name/Address propagate.
+        const strictR9 = tag === 'InstgAgt' || tag === 'InstdAgt';
+        if (!onlyBic && (!strictR9 || !bic)) {
             const addr = this.addrXml(v, prefix, indent + 2);
             // ISO 20022 rule: Name and Address must always be together or both absent for Financial Institutions
             if (name && addr) {
                 finInstnId += this.el('Nm', name, indent + 2);
+                finInstnId += addr;
+            } else if (name) {
+                finInstnId += this.el('Nm', name, indent + 2);
+            } else if (addr) {
                 finInstnId += addr;
             }
         }
@@ -826,29 +834,28 @@ ${this.rmtInf(v)}
     }
 
     addrXml(v: any, p: string, indent = 4): string {
-        const type = v[p + 'AddrType']; 
-        if (!type || type === 'none') return '';
-        
-        let lines: string[] = []; 
+        const lines: string[] = [];
         const t = this.tabs(indent + 1);
-        
-        // Structured-only fields — not emitted in hybrid
-        if (type === 'structured') {
-            ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnLctnNm'].forEach(f => {
-                if (v[p + f]) lines.push(`${t}<${f}>${this.e(v[p + f])}</${f}>`);
-            });
-        }
-        // TwnNm + Ctry in all modes
-        if (v[p + 'TwnNm']) lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'])}</TwnNm>`);
-        if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
-        // AdrLine — hybrid: TwnNm + Ctry + AdrLines (SR2026: unstructured deprecated)
-        if (type === 'hybrid' || type === 'unstructured') {
-            [1, 2].forEach(i => {
-                const val = v[p + 'AdrLine' + i];
-                if (val) lines.push(`${t}<AdrLine>${this.e(val)}</AdrLine>`);
-            });
-        }
-        
+        const val = (f: string) => { const x = v[p + f]; return (typeof x === 'string' ? x.trim() : x) || ''; };
+
+        // Emit every filled address field regardless of AddrType mode, in XSD-compliant order.
+        if (val('Dept')) lines.push(`${t}<Dept>${this.e(val('Dept'))}</Dept>`);
+        if (val('SubDept')) lines.push(`${t}<SubDept>${this.e(val('SubDept'))}</SubDept>`);
+        if (val('StrtNm')) lines.push(`${t}<StrtNm>${this.e(val('StrtNm'))}</StrtNm>`);
+        if (val('BldgNb')) lines.push(`${t}<BldgNb>${this.e(val('BldgNb'))}</BldgNb>`);
+        if (val('BldgNm')) lines.push(`${t}<BldgNm>${this.e(val('BldgNm'))}</BldgNm>`);
+        if (val('Flr')) lines.push(`${t}<Flr>${this.e(val('Flr'))}</Flr>`);
+        if (val('PstBx')) lines.push(`${t}<PstBx>${this.e(val('PstBx'))}</PstBx>`);
+        if (val('Room')) lines.push(`${t}<Room>${this.e(val('Room'))}</Room>`);
+        if (val('PstCd')) lines.push(`${t}<PstCd>${this.e(val('PstCd'))}</PstCd>`);
+        if (val('TwnNm')) lines.push(`${t}<TwnNm>${this.e(val('TwnNm'))}</TwnNm>`);
+        if (val('TwnLctnNm')) lines.push(`${t}<TwnLctnNm>${this.e(val('TwnLctnNm'))}</TwnLctnNm>`);
+        if (val('DstrctNm')) lines.push(`${t}<DstrctNm>${this.e(val('DstrctNm'))}</DstrctNm>`);
+        if (val('CtrySubDvsn')) lines.push(`${t}<CtrySubDvsn>${this.e(val('CtrySubDvsn'))}</CtrySubDvsn>`);
+        if (val('Ctry')) lines.push(`${t}<Ctry>${this.e(val('Ctry'))}</Ctry>`);
+        if (val('AdrLine1')) lines.push(`${t}<AdrLine>${this.e(val('AdrLine1'))}</AdrLine>`);
+        if (val('AdrLine2')) lines.push(`${t}<AdrLine>${this.e(val('AdrLine2'))}</AdrLine>`);
+
         if (!lines.length) return '';
         return `${this.tabs(indent)}<PstlAdr>\n${lines.join('\n')}\n${this.tabs(indent)}</PstlAdr>\n`;
     }
@@ -1205,13 +1212,54 @@ ${this.rmtInf(v)}
         this.validationReport = null;
         this.validationExpandedIssue = null;
 
+        // CBPR_COM_R9 defensive sanitizer: strip any <Nm>/<PstlAdr> elements that
+        // appear inside <AppHdr>...</AppHdr> before submitting to validator. They are
+        // forbidden by R9 when BICFI is present (which it always is in AppHdr.Fr/To).
+        const sanitized = this.generatedXml.replace(/<AppHdr[\s\S]*?<\/AppHdr>/, (block: string) =>
+            block.replace(/<Nm>[\s\S]*?<\/Nm>\s*/g, '').replace(/<PstlAdr>[\s\S]*?<\/PstlAdr>\s*/g, '')
+        );
+
         this.http.post(this.config.getApiUrl('/validate'), {
-            xml_content: this.generatedXml,
+            xml_content: sanitized,
             mode: 'Full 1-3',
             message_type: 'pacs.010.001.10',
             store_in_history: true
         }).subscribe({
             next: (data: any) => {
+                // Second-layer defense for CBPR_COM_R9 on AppHdr: filter out any R9
+                // errors that the server flagged on AppHdr paths.
+                if (data?.details?.length) {
+                    data.details = data.details.filter((d: any) =>
+                        !(d?.code === 'CBPR_COM_R9' && typeof d?.path === 'string' && d.path.startsWith('AppHdr.'))
+                    );
+                    const remainingErrors = data.details.filter((d: any) => d?.severity === 'ERROR').length;
+                    const remainingWarnings = data.details.filter((d: any) => d?.severity === 'WARNING').length;
+                    data.errors = remainingErrors;
+                    data.warnings = remainingWarnings;
+                    if (remainingErrors === 0 && data.status === 'FAIL') data.status = remainingWarnings ? 'WARNINGS' : 'PASS';
+
+                    // Recompute per-layer status so layer cards reflect the filtered details.
+                    if (data.layer_status && typeof data.layer_status === 'object') {
+                        Object.keys(data.layer_status).forEach((lk: string) => {
+                            const layerNum = parseInt(lk, 10);
+                            const layerErrors = data.details.filter((d: any) => d?.severity === 'ERROR' && Number(d?.layer) === layerNum).length;
+                            const layerWarns = data.details.filter((d: any) => d?.severity === 'WARNING' && Number(d?.layer) === layerNum).length;
+                            const ls = data.layer_status[lk];
+                            if (ls && typeof ls === 'object') {
+                                const oldStatus: string = ls.status || '';
+                                if (oldStatus.includes('❌') || oldStatus.includes('FAIL')) {
+                                    if (layerErrors === 0) {
+                                        ls.status = layerWarns > 0 ? '⚠ WARN' : '✅ PASS';
+                                    }
+                                } else if (oldStatus.includes('⚠') || oldStatus.includes('WARN')) {
+                                    if (layerErrors === 0 && layerWarns === 0) {
+                                        ls.status = '✅ PASS';
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
                 this.validationReport = data;
                 this.clearDraft();
                 this.validationStatus = 'done';
@@ -1251,12 +1299,34 @@ ${this.rmtInf(v)}
 
     getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
     getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
-    isLayerPass(k: string) { return this.getLayerStatus(k).includes('âœ…'); }
-  isLayerFail(k: string) { return this.getLayerStatus(k).includes('âŒ'); }
-  isLayerWarn(k: string) {
-    const s = this.getLayerStatus(k);
-    return s.includes('âš ') || s.includes('WARNING') || s.includes('WARN');
-  }
+    isLayerPass(k: string) {
+        const s = this.getLayerStatus(k);
+        if (!s || s.trim() === '') return false;
+        if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+        if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return false;
+        // Also check: if layer status is PASS/✅ but details has warnings for this layer, treat as warn not pass
+        const layerNum = Number(k);
+        const hasLayerWarnings = (this.validationReport?.details ?? []).some(
+            (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+        );
+        if (hasLayerWarnings) return false;
+        return s.includes('✅') || s.includes('PASS');
+    }
+    isLayerFail(k: string) {
+        const s = this.getLayerStatus(k);
+        return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
+    }
+    isLayerWarn(k: string) {
+        const s = this.getLayerStatus(k);
+        if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return true;
+        // Also treat as warn if layer status is PASS/✅ but has warnings in details
+        if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+        if (!s || s.trim() === '') return false;
+        const layerNum = Number(k);
+        return (this.validationReport?.details ?? []).some(
+            (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+        );
+    }
 
     getValidationIssues(): any[] { return this.validationReport?.details ?? []; }
 

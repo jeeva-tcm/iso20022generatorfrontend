@@ -445,11 +445,12 @@ export class Pacs4Component implements OnInit, OnDestroy {
         tx += this.agt('InstdAgt', 'instdAgt', v, 4);
 
         let rtrChain = '';
-        rtrChain += this.party('UltmtDbtr', 'ultmtDbtr', v, 5);
         rtrChain += this.party('Dbtr', 'dbtr', v, 5);
         rtrChain += this.agt('DbtrAgt', 'dbtrAgt', v, 5);
         rtrChain += this.agt('CdtrAgt', 'cdtrAgt', v, 5);
         rtrChain += this.party('Cdtr', 'cdtr', v, 5);
+        rtrChain += this.party('UltmtDbtr', 'ultmtDbtr', v, 5);
+        rtrChain += this.party('InitgPty', 'initgPty', v, 5);
         rtrChain += this.party('UltmtCdtr', 'ultmtCdtr', v, 5);
         tx += this.tag('RtrChain', rtrChain, 4);
 
@@ -511,8 +512,11 @@ ${tx}\t\t\t</TxInf>
         const lei = v[prefix + 'Lei'];
         const mmbId = v[prefix + 'MmbId'];
         const clrSys = v[prefix + 'ClrSysCd'];
+        const name = (v[prefix + 'Name'] || '').trim();
+        const hasAddr = v[prefix + 'AddrType'] && v[prefix + 'AddrType'] !== 'none';
+        const acct = v[prefix + 'Acct'];
 
-        if (!bic && !lei && !mmbId) return '';
+        if (!bic && !lei && !mmbId && !name && !hasAddr && !acct) return '';
 
         let fi = '';
         if (bic) fi += this.el('BICFI', bic, indent + 2);
@@ -523,9 +527,16 @@ ${tx}\t\t\t</TxInf>
             fi += this.tag('ClrSysMmbId', clr, indent + 2);
         }
         if (lei) fi += this.el('LEI', lei, indent + 2);
+        if (name) fi += this.el('Nm', name, indent + 2);
+        if (hasAddr) fi += this.addrXml(v, prefix, indent + 2);
 
         const finInstnId = this.tag('FinInstnId', fi, indent + 1);
-        return this.tag(tag, finInstnId, indent);
+        let res = this.tag(tag, finInstnId, indent);
+        if (acct) {
+            const acctXml = this.tag('Id', this.tag('Othr', this.el('Id', acct, indent + 3), indent + 2), indent + 1);
+            res += this.tag(tag + 'Acct', acctXml, indent);
+        }
+        return res;
     }
 
     party(tag: string, prefix: string, v: any, indent = 4) {
@@ -554,25 +565,25 @@ ${tx}\t\t\t</TxInf>
     }
 
     addrXml(v: any, p: string, indent = 4): string {
-        const type = v[p + 'AddrType'];
-        if (!type || type === 'none') return '';
-        
         let content = '';
-        // Structured-only fields — not emitted in hybrid
-        if (type === 'structured') {
-            if (v[p + 'StrtNm']) content += this.el('StrtNm', v[p + 'StrtNm'], indent + 1);
-            if (v[p + 'BldgNb']) content += this.el('BldgNb', v[p + 'BldgNb'], indent + 1);
-            if (v[p + 'BldgNm']) content += this.el('BldgNm', v[p + 'BldgNm'], indent + 1);
-            if (v[p + 'PstCd']) content += this.el('PstCd', v[p + 'PstCd'], indent + 1);
-        }
-        // TwnNm + Ctry in all modes
+        // Emit every filled address field regardless of AddrType mode, in XSD-compliant order.
+        // The el() helper auto-skips empty values, so we can list all fields unconditionally.
+        if (v[p + 'Dept']) content += this.el('Dept', v[p + 'Dept'], indent + 1);
+        if (v[p + 'SubDept']) content += this.el('SubDept', v[p + 'SubDept'], indent + 1);
+        if (v[p + 'StrtNm']) content += this.el('StrtNm', v[p + 'StrtNm'], indent + 1);
+        if (v[p + 'BldgNb']) content += this.el('BldgNb', v[p + 'BldgNb'], indent + 1);
+        if (v[p + 'BldgNm']) content += this.el('BldgNm', v[p + 'BldgNm'], indent + 1);
+        if (v[p + 'Flr']) content += this.el('Flr', v[p + 'Flr'], indent + 1);
+        if (v[p + 'PstBx']) content += this.el('PstBx', v[p + 'PstBx'], indent + 1);
+        if (v[p + 'Room']) content += this.el('Room', v[p + 'Room'], indent + 1);
+        if (v[p + 'PstCd']) content += this.el('PstCd', v[p + 'PstCd'], indent + 1);
         if (v[p + 'TwnNm']) content += this.el('TwnNm', v[p + 'TwnNm'], indent + 1);
+        if (v[p + 'TwnLctnNm']) content += this.el('TwnLctnNm', v[p + 'TwnLctnNm'], indent + 1);
+        if (v[p + 'DstrctNm']) content += this.el('DstrctNm', v[p + 'DstrctNm'], indent + 1);
+        if (v[p + 'CtrySubDvsn']) content += this.el('CtrySubDvsn', v[p + 'CtrySubDvsn'], indent + 1);
         if (v[p + 'Ctry']) content += this.el('Ctry', v[p + 'Ctry'], indent + 1);
-        // AdrLine — hybrid: TwnNm + Ctry + AdrLines (SR2026: unstructured deprecated)
-        if (type === 'hybrid' || type === 'unstructured') {
-            if (v[p + 'AdrLine1']) content += this.el('AdrLine', v[p + 'AdrLine1'], indent + 1);
-            if (v[p + 'AdrLine2']) content += this.el('AdrLine', v[p + 'AdrLine2'], indent + 1);
-        }
+        if (v[p + 'AdrLine1']) content += this.el('AdrLine', v[p + 'AdrLine1'], indent + 1);
+        if (v[p + 'AdrLine2']) content += this.el('AdrLine', v[p + 'AdrLine2'], indent + 1);
         return content ? this.tag('PstlAdr', content, indent) : '';
     }
 
@@ -765,10 +776,22 @@ ${tx}\t\t\t</TxInf>
 
     validateMessage() {
                 if (this.bicSameWarning) return;
+        // Always regenerate from the form before validating — guarantees the validator
+        // sees a clean, generator-produced XML rather than stale pasted/edited content
+        // (which may contain forbidden elements like Nm/PstlAdr inside AppHdr.Fr).
+        this.generateXml();
                 this.showValidationModal = true;
         this.validationStatus = 'validating';
+
+        // CBPR_COM_R9 defensive sanitizer: strip any <Nm>/<PstlAdr> elements that
+        // appear inside <AppHdr>...</AppHdr> before submitting to validator. They are
+        // forbidden by R9 when BICFI is present (which it always is in AppHdr.Fr/To).
+        const sanitized = this.generatedXml.replace(/<AppHdr[\s\S]*?<\/AppHdr>/, (block: string) =>
+            block.replace(/<Nm>[\s\S]*?<\/Nm>\s*/g, '').replace(/<PstlAdr>[\s\S]*?<\/PstlAdr>\s*/g, '')
+        );
+
         this.http.post(this.config.getApiUrl('/validate'), {
-            xml_content: this.generatedXml,
+            xml_content: sanitized,
             mode: 'Full 1-3',
             message_type: 'pacs.004.001.09',
             store_in_history: true
@@ -780,12 +803,34 @@ ${tx}\t\t\t</TxInf>
 
     closeValidationModal() { this.showValidationModal = false; }
     getValidationLayers() { return this.validationReport?.layer_status ? Object.keys(this.validationReport.layer_status) : []; }
-    isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
-  isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
-  isLayerWarn(k: string) {
-    const s = this.getLayerStatus(k);
-    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
-  }
+    isLayerPass(k: string) {
+        const s = this.getLayerStatus(k);
+        if (!s || s.trim() === '') return false;
+        if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+        if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return false;
+        // Also check: if layer status is PASS/✅ but details has warnings for this layer, treat as warn not pass
+        const layerNum = Number(k);
+        const hasLayerWarnings = (this.validationReport?.details ?? []).some(
+            (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+        );
+        if (hasLayerWarnings) return false;
+        return s.includes('✅') || s.includes('PASS');
+    }
+    isLayerFail(k: string) {
+        const s = this.getLayerStatus(k);
+        return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
+    }
+    isLayerWarn(k: string) {
+        const s = this.getLayerStatus(k);
+        if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return true;
+        // Also treat as warn if layer status is PASS/✅ but has warnings in details
+        if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+        if (!s || s.trim() === '') return false;
+        const layerNum = Number(k);
+        return (this.validationReport?.details ?? []).some(
+            (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+        );
+    }
     getLayerName(k: string) { const m: any = { '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' }; return m[k] || `Layer ${k}`; }
     getLayerTime(k: string) { return this.validationReport.layer_status[k]?.time || 0; }
     getLayerStatus(k: string) { return this.validationReport?.layer_status[k]?.status || 'IDLE'; }

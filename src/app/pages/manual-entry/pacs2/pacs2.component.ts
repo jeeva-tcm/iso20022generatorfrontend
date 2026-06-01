@@ -363,9 +363,11 @@ ${txInf.trimEnd()}
     
     // Originator
     let orgtr = '';
-    if (v.stsRsnOrgtrName?.trim() || v.stsRsnOrgtrTwnNm?.trim() || v.stsRsnOrgtrCtry?.trim() || 
+    if (v.stsRsnOrgtrName?.trim() || v.stsRsnOrgtrTwnNm?.trim() || v.stsRsnOrgtrCtry?.trim() ||
         v.stsRsnOrgtrAnyBIC?.trim() || v.stsRsnOrgtrLei?.trim() || v.stsRsnOrgtrCtryOfRes?.trim() ||
-        v.stsRsnOrgtrOrgIdOthrId?.trim() || v.stsRsnOrgtrPrvtIdOthrId?.trim() || v.stsRsnOrgtrBirthDt) {
+        v.stsRsnOrgtrOrgIdOthrId?.trim() || v.stsRsnOrgtrPrvtIdOthrId?.trim() || v.stsRsnOrgtrBirthDt ||
+        v.stsRsnOrgtrBldgNb?.trim() || v.stsRsnOrgtrBldgNm?.trim() || v.stsRsnOrgtrStrtNm?.trim() ||
+        v.stsRsnOrgtrPstCd?.trim() || v.stsRsnOrgtrAdrLine1?.trim() || v.stsRsnOrgtrAdrLine2?.trim()) {
       
       orgtr += this.leaf('Nm', v.stsRsnOrgtrName, 6);
       orgtr += this.addrXml(v, 'stsRsnOrgtr', 6);
@@ -460,31 +462,25 @@ ${txInf.trimEnd()}
 
   addrXml(v: any, p: string, indent = 4): string {
     const lines: string[] = []; const t = '\t'.repeat(indent + 1);
-    const val = (f: string) => v[p + f]?.trim();
-    const rawType = v[p + 'AddrType'];
-    const structuredFieldsList = ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn'];
-    const hasStructured = structuredFieldsList.some(f => val(f));
-    const hasAdrLine = val('AdrLine1') || val('AdrLine2');
-    // CBPR_R23: structured fields and <AdrLine> are mutually exclusive.
-    // If form has explicit AddrType, honor it; otherwise prefer structured (more granular data) over unstructured.
-    const type = (rawType && rawType !== 'none') ? rawType : (hasStructured ? 'structured' : (hasAdrLine ? 'unstructured' : 'structured'));
+    const val = (f: string) => v[p + f]?.toString().trim();
 
-    if (type === 'structured') {
-      ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd'].forEach(f => {
-        if (val(f)) lines.push(`${t}<${f}>${this.esc(val(f))}</${f}>`);
-      });
-    }
+    // Emit every filled address field regardless of AddrType mode, in XSD-compliant order.
+    if (val('Dept')) lines.push(`${t}<Dept>${this.esc(val('Dept'))}</Dept>`);
+    if (val('SubDept')) lines.push(`${t}<SubDept>${this.esc(val('SubDept'))}</SubDept>`);
+    if (val('StrtNm')) lines.push(`${t}<StrtNm>${this.esc(val('StrtNm'))}</StrtNm>`);
+    if (val('BldgNb')) lines.push(`${t}<BldgNb>${this.esc(val('BldgNb'))}</BldgNb>`);
+    if (val('BldgNm')) lines.push(`${t}<BldgNm>${this.esc(val('BldgNm'))}</BldgNm>`);
+    if (val('Flr')) lines.push(`${t}<Flr>${this.esc(val('Flr'))}</Flr>`);
+    if (val('PstBx')) lines.push(`${t}<PstBx>${this.esc(val('PstBx'))}</PstBx>`);
+    if (val('Room')) lines.push(`${t}<Room>${this.esc(val('Room'))}</Room>`);
+    if (val('PstCd')) lines.push(`${t}<PstCd>${this.esc(val('PstCd'))}</PstCd>`);
     if (val('TwnNm')) lines.push(`${t}<TwnNm>${this.esc(val('TwnNm'))}</TwnNm>`);
-    if (type === 'structured') {
-      ['TwnLctnNm', 'DstrctNm', 'CtrySubDvsn'].forEach(f => {
-        if (val(f)) lines.push(`${t}<${f}>${this.esc(val(f))}</${f}>`);
-      });
-    }
+    if (val('TwnLctnNm')) lines.push(`${t}<TwnLctnNm>${this.esc(val('TwnLctnNm'))}</TwnLctnNm>`);
+    if (val('DstrctNm')) lines.push(`${t}<DstrctNm>${this.esc(val('DstrctNm'))}</DstrctNm>`);
+    if (val('CtrySubDvsn')) lines.push(`${t}<CtrySubDvsn>${this.esc(val('CtrySubDvsn'))}</CtrySubDvsn>`);
     if (val('Ctry')) lines.push(`${t}<Ctry>${this.esc(val('Ctry'))}</Ctry>`);
-    if (type === 'hybrid' || type === 'unstructured') {
-      if (val('AdrLine1')) lines.push(`${t}<AdrLine>${this.esc(val('AdrLine1'))}</AdrLine>`);
-      if (val('AdrLine2')) lines.push(`${t}<AdrLine>${this.esc(val('AdrLine2'))}</AdrLine>`);
-    }
+    if (val('AdrLine1')) lines.push(`${t}<AdrLine>${this.esc(val('AdrLine1'))}</AdrLine>`);
+    if (val('AdrLine2')) lines.push(`${t}<AdrLine>${this.esc(val('AdrLine2'))}</AdrLine>`);
 
     return lines.length ? `${'\t'.repeat(indent)}<PstlAdr>\n${lines.join('\n')}\n${'\t'.repeat(indent)}</PstlAdr>\n` : '';
   }
@@ -778,6 +774,10 @@ ${txInf.trimEnd()}
       this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
       return;
     }
+    // Always regenerate from the form before validating — guarantees the validator
+    // sees a clean, generator-produced XML rather than stale pasted/edited content
+    // (which may contain forbidden elements like Nm/PstlAdr inside AppHdr.Fr).
+    this.generateXml();
     if (!this.generatedXml?.trim()) return;
 
     this.showValidationModal = true;
@@ -785,8 +785,15 @@ ${txInf.trimEnd()}
     this.validationReport = null;
     this.validationExpandedIssue = null;
 
+    // CBPR_COM_R9 defensive sanitizer: strip any <Nm>/<PstlAdr> elements that
+    // appear inside <AppHdr>...</AppHdr> before submitting to validator. They are
+    // forbidden by R9 when BICFI is present (which it always is in AppHdr.Fr/To).
+    const sanitized = this.generatedXml.replace(/<AppHdr[\s\S]*?<\/AppHdr>/, (block: string) =>
+        block.replace(/<Nm>[\s\S]*?<\/Nm>\s*/g, '').replace(/<PstlAdr>[\s\S]*?<\/PstlAdr>\s*/g, '')
+    );
+
     this.http.post(this.config.getApiUrl('/validate'), {
-      xml_content: this.generatedXml,
+      xml_content: sanitized,
       mode: 'Full 1-3',
       message_type: 'pacs.002.001.10',
       store_in_history: true
@@ -876,11 +883,33 @@ ${txInf.trimEnd()}
 
   closeValidationModal() { this.showValidationModal = false; }
   getValidationLayers() { return this.validationReport?.layer_status ? Object.keys(this.validationReport.layer_status) : []; }
-  isLayerPass(k: string) { return this.getLayerStatus(k).includes('âœ…'); }
-  isLayerFail(k: string) { return this.getLayerStatus(k).includes('âŒ'); }
+  isLayerPass(k: string) {
+    const s = this.getLayerStatus(k);
+    if (!s || s.trim() === '') return false;
+    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return false;
+    // Also check: if layer status is PASS/✅ but details has warnings for this layer, treat as warn not pass
+    const layerNum = Number(k);
+    const hasLayerWarnings = (this.validationReport?.details ?? []).some(
+        (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+    );
+    if (hasLayerWarnings) return false;
+    return s.includes('✅') || s.includes('PASS');
+  }
+  isLayerFail(k: string) {
+    const s = this.getLayerStatus(k);
+    return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
+  }
   isLayerWarn(k: string) {
     const s = this.getLayerStatus(k);
-    return s.includes('âš ') || s.includes('WARNING') || s.includes('WARN');
+    if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return true;
+    // Also treat as warn if layer status is PASS/✅ but has warnings in details
+    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (!s || s.trim() === '') return false;
+    const layerNum = Number(k);
+    return (this.validationReport?.details ?? []).some(
+        (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+    );
   }
   getLayerName(k: string) { const m: any = { '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' }; return m[k] || `Layer ${k}`; }
   getLayerTime(k: string) { return this.validationReport.layer_status[k]?.time || 0; }

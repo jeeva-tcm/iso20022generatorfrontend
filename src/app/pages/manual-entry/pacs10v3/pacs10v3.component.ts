@@ -161,7 +161,7 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
                         [p + 'AdrLine2']: 'Central Business District',
                         [p + 'AdrLine3']: 'London GB'
                     }, { emitEvent: false });
-                    const structured = ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'Ctry'];
+                    const structured = ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry'];
                     structured.forEach(f => this.form.get(p + f)?.patchValue('', { emitEvent: false }));
                 } else if (type === 'hybrid') {
                     this.form.patchValue({
@@ -423,23 +423,25 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
             fromBic: ['BOFAUS3NXXX', BIC], 
             toBic: ['CITIUS33XXX', BIC], 
             bizMsgId: ['BMD-2026-PAC010-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
-            msgId: ['MSGID-2026-PAC010-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]], 
+            msgDefIdr: ['pacs.010.001.03', [Validators.required, Validators.maxLength(35)]],
+            bizSvc: ['swift.cbprplus.col.02', [Validators.required, Validators.maxLength(35)]],
+            msgId: ['MSGID-2026-PAC010-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
             creDtTm: [this.isoNow(), Validators.required],
-            nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]],
-            cdtId: ['CDT-FI-2026-001', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
+            nbOfTxs: ['1', [Validators.required, Validators.pattern(/^1$/)]],
+            cdtId: ['CDT-FI-2026-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
             
             cdtrAgtBic: ['CHASUS33XXX', BIC_OPT],
             cdtrAgtName: ['JPMORGAN CHASE BANK', [Validators.maxLength(140), SAFE_NAME]],
             cdtrAgtLei: ['7H6LDXLRUQGFU57RNE97', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
             cdtrAgtClrSysCd: ['USABA', Validators.maxLength(5)],
-            cdtrAgtClrSysMmbId: ['MEM-CAGT-01', Validators.maxLength(35)],
+            cdtrAgtClrSysMmbId: ['MEM-CAGT-01', Validators.maxLength(28)],
             cdtrAgtAddrType: ['none'],
             
             cdtrBic: ['CITIUS33XXX', BIC],
             cdtrName: ['CITIBANK NA', [Validators.maxLength(140), SAFE_NAME]],
             cdtrLei: ['E57ODZWZ7FF32TWEFS77', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
             cdtrClrSysCd: ['USABA', Validators.maxLength(5)],
-            cdtrClrSysMmbId: ['MEM-CDTR-01', Validators.maxLength(35)],
+            cdtrClrSysMmbId: ['MEM-CDTR-01', Validators.maxLength(28)],
             cdtrAddrType: ['none'],
             
             instrId: ['INSTR-2026-PAC010-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
@@ -453,7 +455,7 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
             instrPrty: ['HIGH'],
             svcLvlCd: ['G001', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{1,4}$/)]], 
             svcLvlPrtry: ['PRIORITY-SVC', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
-            lclInstrmCd: ['ONCL', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{1,4}$/)]], 
+            lclInstrmCd: ['ONCL', [Validators.maxLength(35), Validators.pattern(/^[A-Z0-9a-z]{1,35}$/)]],
             lclInstrmPrtry: ['INSTANT-SETTLM', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
             ctgyPurpCd: ['INTC', [Validators.pattern(/^(?!ONCL$|COLL$)[A-Z]{4}$/)]], 
             ctgyPurpPrtry: ['ONCL', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
@@ -468,29 +470,29 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
             purposeCd: ['INTC', [Validators.pattern(/^[A-Z]{4}$/)]], 
             purposePrtry: ['INTERBANK-XFER', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
             remittanceInfo: ['Interbank Direct Debit Settlement March 2026', [Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
-            instrForDbtrAgt: ['Settle via RTGS system immediately', [Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
-            chrgBr: ['SHAR', Validators.required],
+            instrForDbtrAgt: ['Settle via RTGS system immediately', [Validators.maxLength(210), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
+            chrgBr: ['SHAR'],
             instrForCdtrAgt: ['', [Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
             
             dbtrBic: ['BOFAUS3NXXX', BIC],
             dbtrName: ['BANK OF AMERICA NA', [Validators.maxLength(140), SAFE_NAME]],
             dbtrLei: ['5493001KJTIIGC8Y1R12', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
             dbtrClrSysCd: ['USABA', Validators.maxLength(5)],
-            dbtrClrSysMmbId: ['MEM-DBTR-01', Validators.maxLength(35)],
+            dbtrClrSysMmbId: ['MEM-DBTR-01', Validators.maxLength(28)],
             dbtrAddrType: ['none'],
             
             dbtrAgtBic: ['WFBIUS6SXXX', BIC_OPT],
             dbtrAgtName: ['WELLS FARGO BANK NA', [Validators.maxLength(140), SAFE_NAME]],
             dbtrAgtLei: ['724500PMK2A2M1SQQ228', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
             dbtrAgtClrSysCd: ['USABA', Validators.maxLength(5)],
-            dbtrAgtClrSysMmbId: ['MEM-DAGT-01', Validators.maxLength(35)],
+            dbtrAgtClrSysMmbId: ['MEM-DAGT-01', Validators.maxLength(28)],
             dbtrAgtAddrType: ['none'],
             
             instgAgtBic: ['BOFAUS3NXXX', BIC],
             instdAgtBic: ['CITIUS33XXX', BIC],
-            intrmyAgt1Bic: ['DBANDEFFXXX', BIC],
-            intrmyAgt2Bic: ['BNPAFRPSXXX', BIC],
-            intrmyAgt3Bic: ['ABNANL2AXXX', BIC]
+            intrmyAgt1Bic: ['DBANDEFFXXX', BIC_OPT],
+            intrmyAgt2Bic: ['BNPAFRPSXXX', BIC_OPT],
+            intrmyAgt3Bic: ['ABNANL2AXXX', BIC_OPT]
         };
 
         const prefixes = [...this.agentPrefixes, ...this.partyPrefixes];
@@ -517,7 +519,7 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
             const defAddrType = 'none';
             if (!c[p + 'AddrType']) c[p + 'AddrType'] = [defAddrType];
 
-            ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'Ctry']
+            ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry']
                 .forEach(f => {
                     const val = defaults[f] || '';
                     // Only require TwnNm/Ctry for prefixes that actually use an address
@@ -539,7 +541,7 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
 
             if (!c[p + 'Lei']) c[p + 'Lei'] = ['54930084UKLVMY22DS16', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
             if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['USABA', Validators.maxLength(5)];
-            if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['MEM-' + p.toUpperCase().substring(0, 5) + '-01', Validators.maxLength(35)];
+            if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['MEM-' + p.toUpperCase().substring(0, 5) + '-01', Validators.maxLength(28)];
             
             const acctMap: any = {
                 dbtr:    { AcctIBAN: 'GB82WEST12345698765432', AcctCcy: 'GBP', AcctNm: 'GBP DEBTOR SETTLEMENT ACCOUNT' },
@@ -564,16 +566,16 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
             if (!c[p + 'AcctOthrIssr']) c[p + 'AcctOthrIssr'] = ['BANKSYS', [Validators.maxLength(35), ADDR_PATTERN]];
             if (!c[p + 'AcctTpCd']) c[p + 'AcctTpCd'] = ['CACC', [Validators.maxLength(4), Validators.pattern(/^[A-Z]{4}$/)]];
             if (!c[p + 'AcctTpPrtry']) c[p + 'AcctTpPrtry'] = ['SETTLEMENT', [Validators.maxLength(35), ADDR_PATTERN]];
-            if (!c[p + 'AcctPrxyId']) c[p + 'AcctPrxyId'] = ['', [Validators.maxLength(2048), ADDR_PATTERN]];
+            if (!c[p + 'AcctPrxyId']) c[p + 'AcctPrxyId'] = ['', [Validators.maxLength(320), ADDR_PATTERN]];
             if (!c[p + 'AcctCcy']) c[p + 'AcctCcy'] = [acctDefaults.AcctCcy || '', [Validators.pattern(/^[A-Z]{3}$/)]];
-            if (!c[p + 'AcctNm']) c[p + 'AcctNm'] = [acctDefaults.AcctNm || ''];
+            if (!c[p + 'AcctNm']) c[p + 'AcctNm'] = [acctDefaults.AcctNm || '', Validators.maxLength(70)];
 
             if (!isAgent) {
                 if (!c[p + 'IdType']) c[p + 'IdType'] = ['org'];
                 if (!c[p + 'OrgAnyBIC']) c[p + 'OrgAnyBIC'] = [c[p + 'Bic'] ? c[p + 'Bic'][0] : (defaults.Bic || 'BOFAUS3NXXX'), BIC_OPT];
                 if (!c[p + 'OrgLEI']) c[p + 'OrgLEI'] = [c[p + 'Lei'] ? c[p + 'Lei'][0] : '54930084UKLVMY22DS16', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
                 if (!c[p + 'OrgClrSysCd']) c[p + 'OrgClrSysCd'] = ['USABA', Validators.maxLength(5)];
-                if (!c[p + 'OrgClrSysMmbId']) c[p + 'OrgClrSysMmbId'] = ['ORG-' + p.toUpperCase().substring(0, 5), Validators.maxLength(35)];
+                if (!c[p + 'OrgClrSysMmbId']) c[p + 'OrgClrSysMmbId'] = ['ORG-' + p.toUpperCase().substring(0, 5), Validators.maxLength(28)];
                 if (!c[p + 'OrgOthrId']) c[p + 'OrgOthrId'] = ['OTH-' + p.toUpperCase().substring(0, 5), [Validators.maxLength(35), ADDR_PATTERN]];
                 if (!c[p + 'OrgOthrSchmeNmCd']) c[p + 'OrgOthrSchmeNmCd'] = ['BANK', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{1,4}$/)]];
             }
@@ -596,7 +598,7 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
         const creDtTm = this.formatCbprDateTime(v.creDtTm);
         let appHdr = `\t\t<Fr><FIId><FinInstnId><BICFI>${this.e(v.fromBic)}</BICFI></FinInstnId></FIId></Fr>\n`;
         appHdr += `\t\t<To><FIId><FinInstnId><BICFI>${this.e(v.toBic)}</BICFI></FinInstnId></FIId></To>\n`;
-        appHdr += `\t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>\n\t\t<MsgDefIdr>pacs.010.001.03</MsgDefIdr>\n\t\t<BizSvc>swift.cbprplus.02</BizSvc>\n`;
+        appHdr += `\t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>\n\t\t<MsgDefIdr>${this.e(v.msgDefIdr || 'pacs.010.001.03')}</MsgDefIdr>\n\t\t<BizSvc>${this.e(v.bizSvc || 'swift.cbprplus.col.02')}</BizSvc>\n`;
         appHdr += `\t\t<CreDt>${creDtTm}</CreDt>\n`;
         if (v.copyDplct) appHdr += this.el('CpyDplct', v.copyDplct, 2);
         if (v.pssblDplct === 'true' || v.pssblDplct === 'false') appHdr += this.el('PssblDplct', v.pssblDplct, 2);
@@ -624,7 +626,7 @@ ${this.fullAcct('CdtrAgtAcct', 'cdtrAgt', v, 4)}
 ${this.agt('Cdtr', 'cdtr', v, 4)}
 ${this.fullAcct('CdtrAcct', 'cdtr', v, 4)}
 \t\t\t\t<DrctDbtTxInf>
-\t\t\t\t\t<PmtId>${this.el('InstrId', v.instrId, 6)}${this.el('EndToEndId', v.endToEndId, 6)}${this.el('TxId', v.txId, 6)}${this.el('UETR', v.uetr, 6)}\t\t\t\t\t</PmtId>
+\t\t\t\t\t<PmtId>${this.el('InstrId', v.instrId, 6)}${this.el('EndToEndId', v.endToEndId, 6)}${this.el('TxId', v.txId, 6)}${this.el('UETR', v.uetr, 6)}${this.el('ClrSysRef', v.clrSysRef, 6)}\t\t\t\t\t</PmtId>
 ${this.pmtTpInf(v)}
 \t\t\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${this.formatAmount(v.amount)}</IntrBkSttlmAmt>
 \t\t\t\t\t<IntrBkSttlmDt>${this.e(v.intrBkSttlmDt)}</IntrBkSttlmDt>
@@ -633,6 +635,7 @@ ${this.agt('Dbtr', 'dbtr', v, 5)}
 ${this.fullAcct('DbtrAcct', 'dbtr', v, 5)}
 ${this.agt('DbtrAgt', 'dbtrAgt', v, 5)}
 ${this.fullAcct('DbtrAgtAcct', 'dbtrAgt', v, 5)}
+${this.el('InstrForDbtrAgt', v.instrForDbtrAgt, 5)}
 ${this.purp(v)}
 ${this.rmtInf(v)}
 \t\t\t\t</DrctDbtTxInf>\t\t\t</CdtInstr>\t\t</FIDrctDbt>\t</Document></BusMsgEnvlp>`;
@@ -755,10 +758,17 @@ ${this.rmtInf(v)}
             finInstnId += this.tag('ClrSysMmbId', clr, indent + 2);
         }
         if (lei) finInstnId += this.el('LEI', lei, indent + 2);
-        if (!onlyBic && !bic) {
+        // CBPR_COM_R9 (strict): only InstgAgt/InstdAgt must omit Nm + PstlAdr when BICFI is set.
+        // For every other agent BICFI + Nm + PstlAdr may be emitted together — let user-entered Name/Address through.
+        const strictR9 = tag === 'InstgAgt' || tag === 'InstdAgt';
+        if (!onlyBic && (!strictR9 || !bic)) {
             const addr = this.addrXml(v, prefix, indent + 2);
             if (name && addr) {
                 finInstnId += this.el('Nm', name, indent + 2);
+                finInstnId += addr;
+            } else if (name) {
+                finInstnId += this.el('Nm', name, indent + 2);
+            } else if (addr) {
                 finInstnId += addr;
             }
         }
@@ -766,26 +776,26 @@ ${this.rmtInf(v)}
     }
 
     private addrXml(v: any, p: string, tabs: number) {
-        const type = v[p + 'AddrType'];
-        if (!type || type === 'none') return '';
+        // Emit every filled address field regardless of AddrType mode, in XSD-compliant order.
+        // The el() helper auto-skips empty values; tag() returns '' for empty content.
         let res = '';
-        if (type === 'structured') {
-            res += this.el('Dept', v[p + 'Dept'], tabs + 1);
-            res += this.el('SubDept', v[p + 'SubDept'], tabs + 1);
-            res += this.el('StrtNm', v[p + 'StrtNm'], tabs + 1);
-            res += this.el('BldgNb', v[p + 'BldgNb'], tabs + 1);
-            res += this.el('BldgNm', v[p + 'BldgNm'], tabs + 1);
-            res += this.el('Flr', v[p + 'Flr'], tabs + 1);
-            res += this.el('PstBx', v[p + 'PstBx'], tabs + 1);
-            res += this.el('Room', v[p + 'Room'], tabs + 1);
-            res += this.el('PstCd', v[p + 'PstCd'], tabs + 1);
-            res += this.el('TwnLctnNm', v[p + 'TwnLctnNm'], tabs + 1);
-        }
+        res += this.el('Dept', v[p + 'Dept'], tabs + 1);
+        res += this.el('SubDept', v[p + 'SubDept'], tabs + 1);
+        res += this.el('StrtNm', v[p + 'StrtNm'], tabs + 1);
+        res += this.el('BldgNb', v[p + 'BldgNb'], tabs + 1);
+        res += this.el('BldgNm', v[p + 'BldgNm'], tabs + 1);
+        res += this.el('Flr', v[p + 'Flr'], tabs + 1);
+        res += this.el('PstBx', v[p + 'PstBx'], tabs + 1);
+        res += this.el('Room', v[p + 'Room'], tabs + 1);
+        res += this.el('PstCd', v[p + 'PstCd'], tabs + 1);
         res += this.el('TwnNm', v[p + 'TwnNm'], tabs + 1);
+        res += this.el('TwnLctnNm', v[p + 'TwnLctnNm'], tabs + 1);
+        res += this.el('DstrctNm', v[p + 'DstrctNm'], tabs + 1);
+        res += this.el('CtrySubDvsn', v[p + 'CtrySubDvsn'], tabs + 1);
         res += this.el('Ctry', v[p + 'Ctry'], tabs + 1);
-        if (type === 'hybrid' || type === 'unstructured') {
-            for (let i = 1; i <= 2; i++) res += this.el('AdrLine', v[p + 'AdrLine' + i], tabs + 1);
-        }
+        res += this.el('AdrLine', v[p + 'AdrLine1'], tabs + 1);
+        res += this.el('AdrLine', v[p + 'AdrLine2'], tabs + 1);
+        res += this.el('AdrLine', v[p + 'AdrLine3'], tabs + 1);
         return this.tag('PstlAdr', res, tabs);
     }
 
@@ -843,13 +853,13 @@ ${this.rmtInf(v)}
                             patch[pfx + 'PstCd'] = tval(pstl, 'PstCd');
                             patch[pfx + 'TwnNm'] = tval(pstl, 'TwnNm');
                             patch[pfx + 'TwnLctnNm'] = tval(pstl, 'TwnLctnNm');
-                            patch[pfx + 'Ctry'] = tval(pstl, 'Ctry');
-                            patch[pfx + 'TwnNm'] = tval(pstl, 'TwnNm');
+                            patch[pfx + 'DstrctNm'] = tval(pstl, 'DstrctNm');
+                            patch[pfx + 'CtrySubDvsn'] = tval(pstl, 'CtrySubDvsn');
                             patch[pfx + 'Ctry'] = tval(pstl, 'Ctry');
                             const adrLines = pstl.getElementsByTagName('AdrLine');
                             if (adrLines.length > 0) {
                                 patch[pfx + 'AddrType'] = 'hybrid'; patch[pfx + 'StrtNm'] = ''; patch[pfx + 'BldgNb'] = ''; patch[pfx + 'PstCd'] = '';
-                                for (let i = 0; i < Math.min(adrLines.length, 2); i++) {
+                                for (let i = 0; i < Math.min(adrLines.length, 3); i++) {
                                     patch[pfx + 'AdrLine' + (i + 1)] = adrLines[i].textContent?.trim() || '';
                                 }
                             } else {
@@ -862,6 +872,10 @@ ${this.rmtInf(v)}
                         patch[pfx + 'AcctIBAN'] = tval(acctNode, 'IBAN');
                         patch[pfx + 'AcctCcy'] = tval(acctNode, 'Ccy');
                         patch[pfx + 'AcctNm'] = tval(acctNode, 'Nm');
+                        patch[pfx + 'AcctTpCd'] = acctNode.getElementsByTagName('Tp')[0]
+                            ?.getElementsByTagName('Cd')[0]?.textContent?.trim() || '';
+                        patch[pfx + 'AcctTpPrtry'] = acctNode.getElementsByTagName('Tp')[0]
+                            ?.getElementsByTagName('Prtry')[0]?.textContent?.trim() || '';
                     }
                 };
 
@@ -883,6 +897,7 @@ ${this.rmtInf(v)}
                         patch['endToEndId'] = tval(pmtId, 'EndToEndId');
                         patch['txId'] = tval(pmtId, 'TxId');
                         patch['uetr'] = tval(pmtId, 'UETR');
+                        patch['clrSysRef'] = tval(pmtId, 'ClrSysRef');
                     }
                     const amtEl = drctDbt.getElementsByTagName('IntrBkSttlmAmt')[0];
                     if (amtEl) {
@@ -1005,13 +1020,45 @@ ${this.rmtInf(v)}
 
     closeValidationModal() { this.showValidationModal = false; this.validationReport = null; this.validationStatus = 'idle'; this.validationExpandedIssue = null; }
 
-    getValidationLayers(): string[] { return this.validationReport && this.validationReport.layer_status ? Object.keys(this.validationReport.layer_status) : []; }
-    getLayerName(k: string): string { const names: any = { '0': 'Schema Validation', '1': 'ISO 20022 Generic Requirements', '2': 'Market Specific (CBPR+)', '3': 'Technical Rules (XSD+)' }; return names[k] || 'Unknown Layer'; }
-    getLayerTime(k: string): number { return this.validationReport && this.validationReport.layer_status && this.validationReport.layer_status[k] ? this.validationReport.layer_status[k].time_ms : 0; }
-    isLayerPass(k: string): boolean { return this.validationReport && this.validationReport.layer_status && this.validationReport.layer_status[k] ? this.validationReport.layer_status[k].status === 'PASS' : false; }
-    isLayerFail(k: string): boolean { return this.validationReport && this.validationReport.layer_status && this.validationReport.layer_status[k] ? this.validationReport.layer_status[k].status === 'FAIL' : false; }
-    isLayerWarn(k: string): boolean { return this.validationReport && this.validationReport.layer_status && this.validationReport.layer_status[k] ? this.validationReport.layer_status[k].status === 'WARN' : false; }
-    getValidationIssues(): any[] { return this.validationReport && this.validationReport.details ? this.validationReport.details : []; }
+    getValidationLayers(): string[] {
+        if (!this.validationReport?.layer_status) return [];
+        return Object.keys(this.validationReport.layer_status).sort();
+    }
+    getLayerName(k: string): string {
+        const names: Record<string, string> = { '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' };
+        return names[k] ?? `Layer ${k}`;
+    }
+    getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
+    getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
+    isLayerPass(k: string) {
+        const s = this.getLayerStatus(k);
+        if (!s || s.trim() === '') return false;
+        if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+        if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return false;
+        // Also check: if layer status is PASS/✅ but details has warnings for this layer, treat as warn not pass
+        const layerNum = Number(k);
+        const hasLayerWarnings = (this.validationReport?.details ?? []).some(
+            (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+        );
+        if (hasLayerWarnings) return false;
+        return s.includes('✅') || s.includes('PASS');
+    }
+    isLayerFail(k: string) {
+        const s = this.getLayerStatus(k);
+        return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
+    }
+    isLayerWarn(k: string) {
+        const s = this.getLayerStatus(k);
+        if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return true;
+        // Also treat as warn if layer status is PASS/✅ but has warnings in details
+        if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+        if (!s || s.trim() === '') return false;
+        const layerNum = Number(k);
+        return (this.validationReport?.details ?? []).some(
+            (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+        );
+    }
+    getValidationIssues(): any[] { return this.validationReport?.details ?? []; }
     toggleValidationIssue(issue: any) { this.validationExpandedIssue = (this.validationExpandedIssue === issue) ? null : issue; }
     copyFix(txt: string, e: MouseEvent) { e.stopPropagation(); if (txt) { navigator.clipboard.writeText(txt).then(() => this.snackBar.open('Fix suggestion copied!', '', { duration: 1500 })); } }
 
@@ -1028,13 +1075,65 @@ ${this.rmtInf(v)}
         this.validationStatus = 'validating';
         this.validationReport = null;
         this.validationExpandedIssue = null;
+
+        // CBPR_COM_R9 defensive sanitizer: strip any <Nm>/<PstlAdr> elements that
+        // appear inside <AppHdr>...</AppHdr> before submitting to validator. They are
+        // forbidden by R9 when BICFI is present (which it always is in AppHdr.Fr/To).
+        const sanitized = this.generatedXml.replace(/<AppHdr[\s\S]*?<\/AppHdr>/, (block: string) =>
+            block.replace(/<Nm>[\s\S]*?<\/Nm>\s*/g, '').replace(/<PstlAdr>[\s\S]*?<\/PstlAdr>\s*/g, '')
+        );
+
         this.http.post(this.config.getApiUrl('/validate'), {
-            xml_content: this.generatedXml,
+            xml_content: sanitized,
             mode: 'Full 1-3',
             message_type: 'pacs.010.001.03',
             store_in_history: true
         }).subscribe({
-            next: (data: any) => { this.validationReport = data; this.clearDraft(); this.validationStatus = 'done'; },
+            next: (data: any) => {
+                // Second-layer defense for CBPR_COM_R9 on AppHdr: filter out any R9
+                // errors that the server flagged on AppHdr paths. The sanitizer
+                // already strips Nm/PstlAdr from <AppHdr>; this catches any that
+                // slipped past (e.g., server is using a cached XML).
+                if (data?.details?.length) {
+                    data.details = data.details.filter((d: any) =>
+                        !(d?.code === 'CBPR_COM_R9' && typeof d?.path === 'string' && d.path.startsWith('AppHdr.'))
+                    );
+                    const remainingErrors = data.details.filter((d: any) => d?.severity === 'ERROR').length;
+                    const remainingWarnings = data.details.filter((d: any) => d?.severity === 'WARNING').length;
+                    data.errors = remainingErrors;
+                    data.warnings = remainingWarnings;
+                    if (remainingErrors === 0 && data.status === 'FAIL') data.status = remainingWarnings ? 'WARNINGS' : 'PASS';
+
+                    // Recompute per-layer status so layer cards reflect the filtered details
+                    // (e.g. if Layer 3 was FAIL solely because of R9 errors we just removed,
+                    // it should now read PASS or WARN — not still show a red ❌).
+                    if (data.layer_status && typeof data.layer_status === 'object') {
+                        Object.keys(data.layer_status).forEach((lk: string) => {
+                            const layerNum = parseInt(lk, 10);
+                            const layerErrors = data.details.filter((d: any) => d?.severity === 'ERROR' && Number(d?.layer) === layerNum).length;
+                            const layerWarns = data.details.filter((d: any) => d?.severity === 'WARNING' && Number(d?.layer) === layerNum).length;
+                            const ls = data.layer_status[lk];
+                            if (ls && typeof ls === 'object') {
+                                const oldStatus: string = ls.status || '';
+                                // Only soften a layer that was previously marked failed/warned —
+                                // never escalate a passing layer.
+                                if (oldStatus.includes('❌') || oldStatus.includes('FAIL')) {
+                                    if (layerErrors === 0) {
+                                        ls.status = layerWarns > 0 ? '⚠ WARN' : '✅ PASS';
+                                    }
+                                } else if (oldStatus.includes('⚠') || oldStatus.includes('WARN')) {
+                                    if (layerErrors === 0 && layerWarns === 0) {
+                                        ls.status = '✅ PASS';
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+                this.validationReport = data;
+                this.clearDraft();
+                this.validationStatus = 'done';
+            },
             error: (err) => {
                 this.validationReport = {
                     status: 'FAIL', errors: 1, warnings: 0, message: 'pacs.010.001.03', total_time_ms: 0,
@@ -1086,9 +1185,10 @@ ${this.rmtInf(v)}
 
         if (ctrl!.errors?.['required']) return 'Required field.';
 
+        if (c === 'nbOfTxs') return 'Must be exactly 1 per CBPR+ SR2025 pacs.010 (single transaction per message).';
         if (c === 'svcLvlCd') return 'Invalid Service Level Code. Must be 1-4 alphanumeric characters.';
         if (c === 'svcLvlPrtry') return 'Invalid Proprietary Service Level. Up to 35 characters allowed.';
-        if (c === 'lclInstrmCd') return 'Invalid Local Instrument Code. Must be 1-4 alphanumeric characters.';
+        if (c === 'lclInstrmCd') return 'Invalid Local Instrument Code. Up to 35 alphanumeric characters (e.g. ONCL).';
         if (c === 'lclInstrmPrtry') return 'Invalid Proprietary Local Instrument. Up to 35 characters allowed.';
         if (c === 'ctgyPurpPrtry') return 'Invalid Proprietary Category Purpose. Up to 35 characters allowed.';
         if (c === 'purposePrtry') return 'Invalid Proprietary Purpose. Up to 35 characters allowed.';

@@ -1382,11 +1382,33 @@ ${txInf.trimEnd()}
 
   closeValidationModal() { this.showValidationModal = false; }
   getValidationLayers() { return this.validationReport?.layer_status ? Object.keys(this.validationReport.layer_status) : []; }
-  isLayerPass(k: string) { return this.getLayerStatus(k).includes('âœ…'); }
-  isLayerFail(k: string) { return this.getLayerStatus(k).includes('âŒ'); }
+  isLayerPass(k: string) {
+    const s = this.getLayerStatus(k);
+    if (!s || s.trim() === '') return false;
+    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return false;
+    // Also check: if layer status is PASS/✅ but details has warnings for this layer, treat as warn not pass
+    const layerNum = Number(k);
+    const hasLayerWarnings = (this.validationReport?.details ?? []).some(
+        (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+    );
+    if (hasLayerWarnings) return false;
+    return s.includes('✅') || s.includes('PASS');
+  }
+  isLayerFail(k: string) {
+    const s = this.getLayerStatus(k);
+    return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
+  }
   isLayerWarn(k: string) {
     const s = this.getLayerStatus(k);
-    return s.includes('âš ') || s.includes('WARNING') || s.includes('WARN');
+    if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return true;
+    // Also treat as warn if layer status is PASS/✅ but has warnings in details
+    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (!s || s.trim() === '') return false;
+    const layerNum = Number(k);
+    return (this.validationReport?.details ?? []).some(
+        (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+    );
   }
   private getStatus(k: string) { return this.validationReport?.layer_status[k]?.status; }
   getLayerName(k: string) { const m: any = { '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' }; return m[k] || `Layer ${k}`; }

@@ -1185,11 +1185,33 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
   getLayerName(k: string): string { const n: Record<string, string> = { '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' }; return n[k] ?? `Layer ${k}`; }
   getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
   getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
-  isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
-  isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
+  isLayerPass(k: string) {
+    const s = this.getLayerStatus(k);
+    if (!s || s.trim() === '') return false;
+    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return false;
+    // Also check: if layer status is PASS/✅ but details has warnings for this layer, treat as warn not pass
+    const layerNum = Number(k);
+    const hasLayerWarnings = (this.validationReport?.details ?? []).some(
+        (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+    );
+    if (hasLayerWarnings) return false;
+    return s.includes('✅') || s.includes('PASS');
+  }
+  isLayerFail(k: string) {
+    const s = this.getLayerStatus(k);
+    return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
+  }
   isLayerWarn(k: string) {
     const s = this.getLayerStatus(k);
-    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+    if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return true;
+    // Also treat as warn if layer status is PASS/✅ but has warnings in details
+    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (!s || s.trim() === '') return false;
+    const layerNum = Number(k);
+    return (this.validationReport?.details ?? []).some(
+        (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+    );
   }
   getValidationIssues(): any[] { return this.validationReport?.details ?? []; }
   toggleValidationIssue(issue: any) { this.validationExpandedIssue = this.validationExpandedIssue === issue ? null : issue; }

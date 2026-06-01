@@ -262,28 +262,13 @@
                     </div>
 
                     <div class="party-group">
-                        <div class="party-group-title">Creditor Agent Account</div>
-                        <ng-container *ngTemplateOutlet="accountForm; context:{prefix:'cdtrAgt', title:'Creditor Agent Account'}"></ng-container>
-                    </div>
-
-                    <div class="party-group">
                         <div class="party-group-title mandatory">Creditor</div>
                         <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'cdtr', isAgent:true, title:'Creditor', required: true}"></ng-container>
                     </div>
 
                     <div class="party-group">
-                        <div class="party-group-title mandatory">Creditor Account</div>
-                        <ng-container *ngTemplateOutlet="accountForm; context:{prefix:'cdtr', title:'Creditor Account', required: true}"></ng-container>
-                    </div>
-
-                    <div class="party-group">
                         <div class="party-group-title">Debtor Agent</div>
                         <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtrAgt', isAgent:true, title:'Debtor Agent'}"></ng-container>
-                    </div>
-
-                    <div class="party-group">
-                        <div class="party-group-title">Debtor Agent Account</div>
-                        <ng-container *ngTemplateOutlet="accountForm; context:{prefix:'dbtrAgt', title:'Debtor Agent Account'}"></ng-container>
                     </div>
 
                     <div class="section-title">Transaction Parties</div>
@@ -293,11 +278,6 @@
                     <div class="party-group">
                         <div class="party-group-title mandatory">Debtor</div>
                         <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtr', isAgent:true, title:'Debtor', required: true}"></ng-container>
-                    </div>
-
-                    <div class="party-group">
-                        <div class="party-group-title mandatory">Debtor Account</div>
-                        <ng-container *ngTemplateOutlet="accountForm; context:{prefix:'dbtr', title:'Debtor Account', required: true}"></ng-container>
                     </div>
 
 
@@ -529,14 +509,6 @@
                                 *ngIf="hint(isAgent ? prefix+'Lei' : prefix+'OrgLEI', 20) as h">{{h}}</div>
                 </div>
 
-                <!-- Account Number -->
-                <div class="form-group">
-                        <label>{{title}} Account Number</label>
-                        <input [formControlName]="prefix+'Acct'" maxlength="34">
-                        <div class="validation-msg" *ngIf="err(prefix+'Acct') as e">{{e}}</div>
-                        <div class="field-hint at-limit" *ngIf="hint(prefix+'Acct', 34) as h">{{h}}</div>
-                </div>
-
         </div>
 </ng-template>
 
@@ -571,12 +543,19 @@
                 </div>
                 <!-- Results -->
                 <div class="vm-body" *ngIf="validationStatus === 'done' && validationReport">
-                        <div class="vm-status-banner" [class.pass]="validationReport.status === 'PASS'"
-                                [class.fail]="validationReport.status !== 'PASS'">
-                                <mat-icon>{{validationReport.status === 'PASS' ? 'check_circle' : 'cancel'}}</mat-icon>
+                        <div class="vm-status-banner"
+                                [class.pass]="(validationReport.errors || 0) === 0 && (validationReport.warnings || 0) === 0"
+                                [class.warn]="(validationReport.errors || 0) === 0 && (validationReport.warnings || 0) > 0"
+                                [class.fail]="(validationReport.errors || 0) > 0">
+                                <mat-icon>{{
+                                    (validationReport.errors || 0) > 0 ? 'cancel' :
+                                    ((validationReport.warnings || 0) > 0 ? 'warning' : 'check_circle')
+                                }}</mat-icon>
                                 <div class="vm-status-text">
-                                        <strong>{{validationReport.status === 'PASS' ? 'VALIDATION PASSED' : 'VALIDATION
-                                                FAILED'}}</strong>
+                                        <strong>{{
+                                            (validationReport.errors || 0) > 0 ? 'VALIDATION FAILED' :
+                                            ((validationReport.warnings || 0) > 0 ? 'PASSED WITH WARNINGS' : 'VALIDATION PASSED')
+                                        }}</strong>
                                         <span>{{validationReport.errors || 0}} error(s), {{validationReport.warnings ||
                                                 0}} warning(s) &bull; {{validationReport.total_time_ms || 0}}ms</span>
                                 </div>

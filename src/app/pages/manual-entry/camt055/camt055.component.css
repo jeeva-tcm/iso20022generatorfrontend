@@ -1002,6 +1002,18 @@ textarea.code-editor {
     height: 28px;
 }
 
+.vm-status-banner.warn {
+    background: rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.28);
+}
+
+.vm-status-banner.warn mat-icon {
+    color: #f59e0b;
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+}
+
 .vm-status-text {
     display: flex;
     flex-direction: column;

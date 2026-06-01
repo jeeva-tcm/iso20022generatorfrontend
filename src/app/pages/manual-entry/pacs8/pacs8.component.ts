@@ -1287,10 +1287,13 @@ export class Pacs8Component implements OnInit, OnDestroy {
     if (v.cdtrAcct?.trim()) tx += this.tag('CdtrAcct', this.tag('Id', formatAcct(v.cdtrAcct, 5, v.cdtrAcctType), 5), 4);
     tx += this.partyAgentXml('UltmtCdtr', 'ultmtCdtr', v, 4);
 
-    // InstrForCdtrAgt (0..2)
+    // InstrForCdtrAgt (0..2) — CBPR+ R36: each <Cd> value must appear at most once
+    const seenCdtrAgtCds = new Set<string>();
     for (let i = 1; i <= 2; i++) {
       const cd = v[`instrForCdtrAgt${i}Cd`]?.trim();
       const txt = v[`instrForCdtrAgt${i}InfTxt`]?.trim();
+      if (cd && seenCdtrAgtCds.has(cd)) continue;  // skip duplicates
+      if (cd) seenCdtrAgtCds.add(cd);
       if (cd || txt) {
         let inner = '';
         if (cd) inner += this.el('Cd', cd, 5);
@@ -1299,10 +1302,13 @@ export class Pacs8Component implements OnInit, OnDestroy {
       }
     }
 
-    // InstrForNxtAgt (0..6)
+    // InstrForNxtAgt (0..6) — CBPR+ R36: each <Cd> value must appear at most once
+    const seenNxtAgtCds = new Set<string>();
     for (let i = 1; i <= 6; i++) {
       const cd = v[`instrForNxtAgt${i}Cd`]?.trim();
       const txt = v[`instrForNxtAgt${i}InfTxt`]?.trim();
+      if (cd && seenNxtAgtCds.has(cd)) continue;  // skip duplicates
+      if (cd) seenNxtAgtCds.add(cd);
       if (cd || txt) {
         let inner = '';
         if (cd) inner += this.el('Cd', cd, 5);
@@ -1332,7 +1338,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
         }
     }
 
-    if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 4), 3);
+    if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 5), 4);
 
     let rmtInf = '';
     if (v.rmtInfType === 'ustrd' && v.rmtInfUstrd) {
@@ -1463,8 +1469,11 @@ ${tx}\t\t\t</CdtTrfTxInf>
       content += `${t}</ClrSysMmbId>\n`;
     }
     if (lei) content += `${t}<LEI>${this.e(lei)}</LEI>\n`;
-    // CBPR+ rule: when BICFI is present, Nm and PstlAdr must NOT appear
-    if (!bic) {
+    // CBPR_COM_R9 (strict): only InstgAgt/InstdAgt must omit Nm + PstlAdr when BICFI is set.
+    // For every other agent (Dbtr, Cdtr, DbtrAgt, CdtrAgt, IntrmyAgt*, PrvsInstgAgt*)
+    // BICFI + Nm + PstlAdr are permitted together — let user-entered Name/Address through.
+    const strictR9 = tag === 'InstgAgt' || tag === 'InstdAgt';
+    if (!strictR9 || !bic) {
       if (name) content += `${t}<Nm>${this.e(name)}</Nm>\n`;
       content += this.addrXml(v, prefix, indent + 2, tag.startsWith('PrvsInstgAgt'));
     }
@@ -1473,52 +1482,35 @@ ${tx}\t\t\t</CdtTrfTxInf>
     return `${this.tabs(indent)}<${tag}>\n${this.tabs(indent + 1)}<FinInstnId>\n${content}${this.tabs(indent + 1)}</FinInstnId>\n${this.tabs(indent)}</${tag}>\n`;
   }
   addrXml(v: any, p: string, indent = 4, isPrvs = false): string {
-    const type = v[p + 'AddrType']; if (!type || type === 'none') return '';
     const lines: string[] = []; const t = this.tabs(indent + 1);
+    const val = (f: string) => { const x = v[p + f]; return (typeof x === 'string' ? x.trim() : x) || ''; };
 
-    // CBPR+ address modes:
-    //   structured   — Dept, SubDept, StrtNm, BldgNb, BldgNm, …, TwnNm, Ctry  (no AdrLine)
-    //   hybrid       — TwnNm + Ctry + AdrLine                                 (preferred)
-    //   unstructured — AdrLine only                                           (legacy / warning)
+    // Emit every filled address field regardless of AddrType mode, in XSD-compliant order.
+    // CBPR+ "single-mode" guidance becomes the user's responsibility, not the generator's.
 
-    // 1. AdrTp (allowed in any mode; forbidden in some PrvsInstgAgt contexts)
+    // 1. AdrTp (forbidden in some PrvsInstgAgt contexts)
     if (!isPrvs) {
-      if (v[p + 'AdrTpCd']) lines.push(`${t}<AdrTp>\n${t}\t<Cd>${this.e(v[p + 'AdrTpCd'])}</Cd>\n${t}</AdrTp>`);
-      else if (v[p + 'AdrTpPrtry']) lines.push(`${t}<AdrTp>\n${t}\t<Prtry>${this.e(v[p + 'AdrTpPrtry'])}</Prtry>\n${t}</AdrTp>`);
+      if (val('AdrTpCd')) lines.push(`${t}<AdrTp>\n${t}\t<Cd>${this.e(val('AdrTpCd'))}</Cd>\n${t}</AdrTp>`);
+      else if (val('AdrTpPrtry')) lines.push(`${t}<AdrTp>\n${t}\t<Prtry>${this.e(val('AdrTpPrtry'))}</Prtry>\n${t}</AdrTp>`);
     }
 
-    // Structured detail fields — only in pure structured mode.
-    if (type === 'structured') {
-      if (v[p + 'Dept']) lines.push(`${t}<Dept>${this.e(v[p + 'Dept'])}</Dept>`);
-      if (v[p + 'SubDept']) lines.push(`${t}<SubDept>${this.e(v[p + 'SubDept'])}</SubDept>`);
-      if (v[p + 'StrtNm']) lines.push(`${t}<StrtNm>${this.e(v[p + 'StrtNm'])}</StrtNm>`);
-      if (v[p + 'BldgNb']) lines.push(`${t}<BldgNb>${this.e(v[p + 'BldgNb'])}</BldgNb>`);
-      if (v[p + 'BldgNm']) lines.push(`${t}<BldgNm>${this.e(v[p + 'BldgNm'])}</BldgNm>`);
-      if (v[p + 'Flr']) lines.push(`${t}<Flr>${this.e(v[p + 'Flr'])}</Flr>`);
-      if (v[p + 'PstBx']) lines.push(`${t}<PstBx>${this.e(v[p + 'PstBx'])}</PstBx>`);
-      if (v[p + 'Room']) lines.push(`${t}<Room>${this.e(v[p + 'Room'])}</Room>`);
-      if (v[p + 'PstCd']) lines.push(`${t}<PstCd>${this.e(v[p + 'PstCd'])}</PstCd>`);
-    }
-
-    // TwnNm — emitted in structured and hybrid
-    if ((type === 'structured' || type === 'hybrid') && v[p + 'TwnNm']) {
-      lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'])}</TwnNm>`);
-    }
-    if (type === 'structured') {
-      if (v[p + 'TwnLctnNm']) lines.push(`${t}<TwnLctnNm>${this.e(v[p + 'TwnLctnNm'])}</TwnLctnNm>`);
-      if (v[p + 'DstrctNm']) lines.push(`${t}<DstrctNm>${this.e(v[p + 'DstrctNm'])}</DstrctNm>`);
-      if (v[p + 'CtrySubDvsn']) lines.push(`${t}<CtrySubDvsn>${this.e(v[p + 'CtrySubDvsn'])}</CtrySubDvsn>`);
-    }
-    // Ctry — emitted in structured and hybrid
-    if ((type === 'structured' || type === 'hybrid') && v[p + 'Ctry']) {
-      lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
-    }
-
-    // AdrLine — emitted in hybrid and unstructured
-    if (type === 'hybrid' || type === 'unstructured') {
-      if (v[p + 'AdrLine1']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine1'])}</AdrLine>`);
-      if (v[p + 'AdrLine2']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine2'])}</AdrLine>`);
-    }
+    // 2-15. Every other field: emit if filled, in XSD order
+    if (val('Dept')) lines.push(`${t}<Dept>${this.e(val('Dept'))}</Dept>`);
+    if (val('SubDept')) lines.push(`${t}<SubDept>${this.e(val('SubDept'))}</SubDept>`);
+    if (val('StrtNm')) lines.push(`${t}<StrtNm>${this.e(val('StrtNm'))}</StrtNm>`);
+    if (val('BldgNb')) lines.push(`${t}<BldgNb>${this.e(val('BldgNb'))}</BldgNb>`);
+    if (val('BldgNm')) lines.push(`${t}<BldgNm>${this.e(val('BldgNm'))}</BldgNm>`);
+    if (val('Flr')) lines.push(`${t}<Flr>${this.e(val('Flr'))}</Flr>`);
+    if (val('PstBx')) lines.push(`${t}<PstBx>${this.e(val('PstBx'))}</PstBx>`);
+    if (val('Room')) lines.push(`${t}<Room>${this.e(val('Room'))}</Room>`);
+    if (val('PstCd')) lines.push(`${t}<PstCd>${this.e(val('PstCd'))}</PstCd>`);
+    if (val('TwnNm')) lines.push(`${t}<TwnNm>${this.e(val('TwnNm'))}</TwnNm>`);
+    if (val('TwnLctnNm')) lines.push(`${t}<TwnLctnNm>${this.e(val('TwnLctnNm'))}</TwnLctnNm>`);
+    if (val('DstrctNm')) lines.push(`${t}<DstrctNm>${this.e(val('DstrctNm'))}</DstrctNm>`);
+    if (val('CtrySubDvsn')) lines.push(`${t}<CtrySubDvsn>${this.e(val('CtrySubDvsn'))}</CtrySubDvsn>`);
+    if (val('Ctry')) lines.push(`${t}<Ctry>${this.e(val('Ctry'))}</Ctry>`);
+    if (val('AdrLine1')) lines.push(`${t}<AdrLine>${this.e(val('AdrLine1'))}</AdrLine>`);
+    if (val('AdrLine2')) lines.push(`${t}<AdrLine>${this.e(val('AdrLine2'))}</AdrLine>`);
 
     if (!lines.length) return '';
     return `${this.tabs(indent)}<PstlAdr>\n${lines.join('\n')}\n${this.tabs(indent)}</PstlAdr>\n`;
@@ -1659,6 +1651,10 @@ ${tx}\t\t\t</CdtTrfTxInf>
       this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
       return;
     }
+    // Always regenerate from the form before validating — guarantees the validator
+    // sees a clean, generator-produced XML rather than stale pasted/edited content
+    // (which may contain forbidden elements like Nm/PstlAdr inside AppHdr.Fr).
+    this.generateXml();
     if (!this.generatedXml?.trim()) return;
 
     this.showValidationModal = true;
@@ -1666,8 +1662,15 @@ ${tx}\t\t\t</CdtTrfTxInf>
     this.validationReport = null;
     this.validationExpandedIssue = null;
 
+    // CBPR_COM_R9 defensive sanitizer: strip any <Nm>/<PstlAdr> elements that
+    // appear inside <AppHdr>...</AppHdr> before submitting to validator. They are
+    // forbidden by R9 when BICFI is present (which it always is in AppHdr.Fr/To).
+    const sanitized = this.generatedXml.replace(/<AppHdr[\s\S]*?<\/AppHdr>/, (block: string) =>
+        block.replace(/<Nm>[\s\S]*?<\/Nm>\s*/g, '').replace(/<PstlAdr>[\s\S]*?<\/PstlAdr>\s*/g, '')
+    );
+
     this.http.post(this.config.getApiUrl('/validate'), {
-      xml_content: this.generatedXml,
+      xml_content: sanitized,
       mode: 'Full 1-3',
       message_type: 'pacs.008.001.08',
       store_in_history: true
@@ -2361,11 +2364,33 @@ ${tx}\t\t\t</CdtTrfTxInf>
 
   getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
   getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
-  isLayerPass(k: string) { return this.getLayerStatus(k).includes('âœ…'); }
-  isLayerFail(k: string) { return this.getLayerStatus(k).includes('âŒ'); }
+  isLayerPass(k: string) {
+    const s = this.getLayerStatus(k);
+    if (!s || s.trim() === '') return false;
+    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return false;
+    // Also check: if layer status is PASS/✅ but details has warnings for this layer, treat as warn not pass
+    const layerNum = Number(k);
+    const hasLayerWarnings = (this.validationReport?.details ?? []).some(
+        (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+    );
+    if (hasLayerWarnings) return false;
+    return s.includes('✅') || s.includes('PASS');
+  }
+  isLayerFail(k: string) {
+    const s = this.getLayerStatus(k);
+    return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
+  }
   isLayerWarn(k: string) {
     const s = this.getLayerStatus(k);
-    return s.includes('âš ') || s.includes('WARNING') || s.includes('WARN');
+    if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return true;
+    // Also treat as warn if layer status is PASS/✅ but has warnings in details
+    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (!s || s.trim() === '') return false;
+    const layerNum = Number(k);
+    return (this.validationReport?.details ?? []).some(
+        (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+    );
   }
 
   getValidationIssues(): any[] { return this.validationReport?.details ?? []; }

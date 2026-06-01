@@ -1312,12 +1312,19 @@
                 </div>
                 <!-- Results -->
                 <div class="vm-body" *ngIf="validationStatus === 'done' && validationReport">
-                        <div class="vm-status-banner" [class.pass]="validationReport.status === 'PASS'"
-                                [class.fail]="validationReport.status !== 'PASS'">
-                                <mat-icon>{{validationReport.status === 'PASS' ? 'check_circle' : 'cancel'}}</mat-icon>
+                        <div class="vm-status-banner"
+                                [class.pass]="(validationReport.errors || 0) === 0 && (validationReport.warnings || 0) === 0"
+                                [class.warn]="(validationReport.errors || 0) === 0 && (validationReport.warnings || 0) > 0"
+                                [class.fail]="(validationReport.errors || 0) > 0">
+                                <mat-icon>{{
+                                    (validationReport.errors || 0) > 0 ? 'cancel' :
+                                    ((validationReport.warnings || 0) > 0 ? 'warning' : 'check_circle')
+                                }}</mat-icon>
                                 <div class="vm-status-text">
-                                        <strong>{{validationReport.status === 'PASS' ? 'VALIDATION PASSED' : 'VALIDATION
-                                                FAILED'}}</strong>
+                                        <strong>{{
+                                            (validationReport.errors || 0) > 0 ? 'VALIDATION FAILED' :
+                                            ((validationReport.warnings || 0) > 0 ? 'PASSED WITH WARNINGS' : 'VALIDATION PASSED')
+                                        }}</strong>
                                         <span>{{validationReport.errors || 0}} error(s), {{validationReport.warnings ||
                                                 0}} warning(s) &bull; {{validationReport.total_time_ms || 0}}ms</span>
                                 </div>
