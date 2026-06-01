@@ -163,7 +163,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
                         [p + 'AdrLine3']: 'London GB'
                     }, { emitEvent: false });
                     // Clear structured fields
-                    const structured = ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'Ctry'];
+                    const structured = ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry'];
                     structured.forEach(f => this.form.get(p + f)?.patchValue('', { emitEvent: false }));
                 } else if (type === 'hybrid') {
                     this.form.patchValue({
@@ -473,20 +473,22 @@ export class Pacs10Component implements OnInit, OnDestroy {
         const ADDR_PATTERN = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);
 
         const c: any = {
-            fromBic: ['BOFAUS3NXXX', BIC], 
-            toBic: ['CITIUS33XXX', BIC], 
+            fromBic: ['BOFAUS3NXXX', BIC],
+            toBic: ['CITIUS33XXX', BIC],
             bizMsgId: ['BMD-2026-PAC010-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
-            msgId: ['MSGID-2026-PAC010-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]], 
+            msgDefIdr: ['pacs.010.001.03', [Validators.required, Validators.maxLength(35)]],
+            bizSvc: ['swift.cbprplus.03', [Validators.required, Validators.maxLength(35)]],
+            msgId: ['MSGID-2026-PAC010-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
             creDtTm: [this.isoNow(), Validators.required],
-            nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]],
-            cdtId: ['CDT-FI-2026-001', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
+            nbOfTxs: ['1', [Validators.required, Validators.pattern(/^1$/)]],
+            cdtId: ['CDT-FI-2026-001', [Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
             
             // Creditor Agent
             cdtrAgtBic: ['CHASUS33XXX', BIC_OPT],
             cdtrAgtName: ['JPMORGAN CHASE BANK', [Validators.maxLength(140), SAFE_NAME]],
             cdtrAgtLei: ['7H6LDXLRUQGFU57RNE97', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
             cdtrAgtClrSysCd: ['USABA', Validators.maxLength(5)],
-            cdtrAgtClrSysMmbId: ['MEM-CAGT-01', Validators.maxLength(35)],
+            cdtrAgtClrSysMmbId: ['MEM-CAGT-01', Validators.maxLength(28)],
             cdtrAgtAddrType: ['none'],
             
             // Creditor
@@ -494,7 +496,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
             cdtrName: ['CITIBANK NA', [Validators.maxLength(140), SAFE_NAME]],
             cdtrLei: ['E57ODZWZ7FF32TWEFS77', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
             cdtrClrSysCd: ['USABA', Validators.maxLength(5)],
-            cdtrClrSysMmbId: ['MEM-CDTR-01', Validators.maxLength(35)],
+            cdtrClrSysMmbId: ['MEM-CDTR-01', Validators.maxLength(28)],
             cdtrAddrType: ['none'],
             
             // Payment IDs
@@ -511,7 +513,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
             instrPrty: ['HIGH'],
             svcLvlCd: ['G001', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{1,4}$/)]], 
             svcLvlPrtry: ['PRIORITY-SVC', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
-            lclInstrmCd: ['ONCL', [Validators.maxLength(4), Validators.pattern(/^[A-Z0-9]{1,4}$/)]], 
+            lclInstrmCd: ['ONCL', [Validators.maxLength(35), Validators.pattern(/^[A-Z0-9a-z]{1,35}$/)]],
             lclInstrmPrtry: ['INSTANT-SETTLM', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
             ctgyPurpCd: ['INTC', [Validators.pattern(/^[A-Z]{4}$/)]], 
             ctgyPurpPrtry: ['CORP-CASH-POOL', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
@@ -526,14 +528,14 @@ export class Pacs10Component implements OnInit, OnDestroy {
             purposeCd: ['INTC', [Validators.pattern(/^[A-Z]{4}$/)]], 
             purposePrtry: ['INTERBANK-XFER', [Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
             remittanceInfo: ['Interbank Direct Debit Settlement March 2026', [Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
-            instrForDbtrAgt: ['Settle via RTGS system immediately', [Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
+            instrForDbtrAgt: ['Settle via RTGS system immediately', [Validators.maxLength(210), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/)]],
             
             // Debtor
             dbtrBic: ['BOFAUS3NXXX', BIC],
             dbtrName: ['BANK OF AMERICA NA', [Validators.maxLength(140), SAFE_NAME]],
             dbtrLei: ['5493001KJTIIGC8Y1R12', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
             dbtrClrSysCd: ['USABA', Validators.maxLength(5)],
-            dbtrClrSysMmbId: ['MEM-DBTR-01', Validators.maxLength(35)],
+            dbtrClrSysMmbId: ['MEM-DBTR-01', Validators.maxLength(28)],
             dbtrAddrType: ['none'],
             
             // Debtor Agent
@@ -541,7 +543,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
             dbtrAgtName: ['WELLS FARGO BANK NA', [Validators.maxLength(140), SAFE_NAME]],
             dbtrAgtLei: ['724500PMK2A2M1SQQ228', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
             dbtrAgtClrSysCd: ['USABA', Validators.maxLength(5)],
-            dbtrAgtClrSysMmbId: ['MEM-DAGT-01', Validators.maxLength(35)],
+            dbtrAgtClrSysMmbId: ['MEM-DAGT-01', Validators.maxLength(28)],
             dbtrAgtAddrType: ['none'],
             
             // Instructing / Instructed Agents
@@ -565,7 +567,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
             };
             const defaults = addrMap[p] || {};
 
-            ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'Ctry', 'AdrLine1', 'AdrLine2', 'AdrLine3'].forEach(f => {
+            ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'TwnLctnNm', 'DstrctNm', 'CtrySubDvsn', 'Ctry', 'AdrLine1', 'AdrLine2', 'AdrLine3'].forEach(f => {
                 let val = defaults[f] || '';
                 
                 // Per-field ISO 20022 validators
@@ -584,7 +586,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
             if (!c[p + 'Name']) c[p + 'Name'] = [pName + ' INSTITUTION', [Validators.maxLength(140), SAFE_NAME]];
             if (!c[p + 'Lei']) c[p + 'Lei'] = ['54930084UKLVMY22DS16', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]];
             if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['USABA', Validators.maxLength(5)];
-            if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['MEM-' + p.toUpperCase().substring(0, 5) + '-01', Validators.maxLength(35)];
+            if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['MEM-' + p.toUpperCase().substring(0, 5) + '-01', Validators.maxLength(28)];
             
             if (!c[p + 'AcctIBAN']) {
                 c[p + 'AcctIBAN'] = ['', [Validators.pattern(/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/), Validators.minLength(10), Validators.maxLength(34)]];
@@ -609,8 +611,17 @@ export class Pacs10Component implements OnInit, OnDestroy {
                 c[p + 'AcctCcy'] = [acctDefaults.AcctCcy || '', [Validators.pattern(/^[A-Z]{3}$/)]];
             }
             if (!c[p + 'AcctNm']) {
-                c[p + 'AcctNm'] = [acctDefaults.AcctNm || ''];
+                c[p + 'AcctNm'] = [acctDefaults.AcctNm || '', Validators.maxLength(70)];
             }
+            if (!c[p + 'AcctTpCd']) c[p + 'AcctTpCd'] = ['', [Validators.maxLength(4), Validators.pattern(/^[A-Z]{1,4}$/)]];
+            if (!c[p + 'AcctTpPrtry']) c[p + 'AcctTpPrtry'] = ['', [Validators.maxLength(35)]];
+            if (!c[p + 'AcctOthrId']) c[p + 'AcctOthrId'] = ['', [Validators.maxLength(34)]];
+            if (!c[p + 'AcctOthrSchmeCd']) c[p + 'AcctOthrSchmeCd'] = ['', [Validators.maxLength(4), Validators.pattern(/^[A-Z]{1,4}$/)]];
+            if (!c[p + 'AcctOthrSchmePrtry']) c[p + 'AcctOthrSchmePrtry'] = ['', [Validators.maxLength(35)]];
+            if (!c[p + 'AcctOthrIssr']) c[p + 'AcctOthrIssr'] = ['', [Validators.maxLength(35)]];
+            if (!c[p + 'AcctPrxyId']) c[p + 'AcctPrxyId'] = ['', [Validators.maxLength(320)]];
+            if (!c[p + 'AcctPrxyTpCd']) c[p + 'AcctPrxyTpCd'] = ['', [Validators.maxLength(4)]];
+            if (!c[p + 'AcctPrxyTpPrtry']) c[p + 'AcctPrxyTpPrtry'] = ['', [Validators.maxLength(35)]];
 
             if (!isAgent) {
                 if (!c[p + 'IdType']) c[p + 'IdType'] = ['org'];
@@ -643,7 +654,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
 
         let appHdr = `\t\t<Fr><FIId><FinInstnId><BICFI>${this.e(v.fromBic)}</BICFI></FinInstnId></FIId></Fr>\n`;
         appHdr += `\t\t<To><FIId><FinInstnId><BICFI>${this.e(v.toBic)}</BICFI></FinInstnId></FIId></To>\n`;
-        appHdr += `\t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>\n\t\t<MsgDefIdr>pacs.010.001.10</MsgDefIdr>\n\t\t<BizSvc>swift.cbprplus.02</BizSvc>\n`;
+        appHdr += `\t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>\n\t\t<MsgDefIdr>${this.e(v.msgDefIdr || 'pacs.010.001.03')}</MsgDefIdr>\n\t\t<BizSvc>${this.e(v.bizSvc || 'swift.cbprplus.03')}</BizSvc>\n`;
         
         appHdr += `\t\t<CreDt>${creDtTm}</CreDt>\n`;
         if (v.copyDplct) appHdr += this.el('CpyDplct', v.copyDplct, 2);
@@ -656,7 +667,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
 <BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
 \t<AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
 ${appHdr}\t</AppHdr>
-\t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.010.001.10">
+\t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.010.001.03">
 \t\t<FIDrctDbt>
 \t\t\t<GrpHdr>
 \t\t\t\t<MsgId>${this.e(v.msgId)}</MsgId>
@@ -736,20 +747,45 @@ ${this.rmtInf(v)}
     }
 
     private fullAcct(tag: string, p: string, v: any, indent = 4) {
-        let id = this.formatAcctDetails(v, p, indent + 2);
-        if (!id) return '';
-        let res = this.tag('Id', id, indent + 1);
-        if (v[p + 'AcctCcy'] && /^[A-Z]{3}$/.test(v[p + 'AcctCcy'])) {
-            res += this.el('Ccy', v[p + 'AcctCcy'], indent + 1);
+        const id = this.formatAcctDetails(v, p, indent + 2);
+        if (!id && !v[p + 'AcctTpCd'] && !v[p + 'AcctTpPrtry'] && !v[p + 'AcctCcy'] && !v[p + 'AcctNm'] && !v[p + 'AcctPrxyId']) return '';
+        let res = '';
+        if (id) res += this.tag('Id', id, indent + 1);
+        const tpCd = v[p + 'AcctTpCd'], tpPrtry = v[p + 'AcctTpPrtry'];
+        if (tpCd || tpPrtry) {
+            const tpVal = tpCd ? this.el('Cd', tpCd, indent + 3) : this.el('Prtry', tpPrtry, indent + 3);
+            res += this.tag('Tp', tpVal, indent + 1);
         }
+        if (v[p + 'AcctCcy'] && /^[A-Z]{3}$/.test(v[p + 'AcctCcy'])) res += this.el('Ccy', v[p + 'AcctCcy'], indent + 1);
         if (v[p + 'AcctNm']) res += this.el('Nm', v[p + 'AcctNm'], indent + 1);
-        return this.tag(tag, res, indent);
+        // Proxy (Prxy) — optional
+        const prxyId = v[p + 'AcctPrxyId'];
+        if (prxyId) {
+            let prxyRes = '';
+            const pTpCd = v[p + 'AcctPrxyTpCd'], pTpPrtry = v[p + 'AcctPrxyTpPrtry'];
+            if (pTpCd || pTpPrtry) {
+                const pTpVal = pTpCd ? this.el('Cd', pTpCd, indent + 4) : this.el('Prtry', pTpPrtry, indent + 4);
+                prxyRes += this.tag('Tp', pTpVal, indent + 3);
+            }
+            prxyRes += this.el('Id', prxyId, indent + 3);
+            res += this.tag('Prxy', prxyRes, indent + 1);
+        }
+        return res ? this.tag(tag, res, indent) : '';
     }
 
     private formatAcctDetails(v: any, p: string, tabs: number) {
-        // IBAN is the only identification allowed in this standardized suite
-        if (v[p + 'AcctIBAN']) {
-            return this.el('IBAN', v[p + 'AcctIBAN'], tabs);
+        // Priority: IBAN → Other ID
+        if (v[p + 'AcctIBAN']) return this.el('IBAN', v[p + 'AcctIBAN'], tabs);
+        const othrId = v[p + 'AcctOthrId'];
+        if (othrId) {
+            let othrRes = this.el('Id', othrId, tabs + 2);
+            const schCd = v[p + 'AcctOthrSchmeCd'], schPrtry = v[p + 'AcctOthrSchmePrtry'];
+            if (schCd || schPrtry) {
+                const schVal = schCd ? this.el('Cd', schCd, tabs + 4) : this.el('Prtry', schPrtry, tabs + 4);
+                othrRes += this.tag('SchmeNm', schVal, tabs + 2);
+            }
+            if (v[p + 'AcctOthrIssr']) othrRes += this.el('Issr', v[p + 'AcctOthrIssr'], tabs + 2);
+            return this.tag('Othr', othrRes, tabs);
         }
         return '';
     }
@@ -834,27 +870,53 @@ ${this.rmtInf(v)}
     }
 
     addrXml(v: any, p: string, indent = 4): string {
+        // CBPR+ POSTAL ADDRESS RULES (R17, R18, R19, R20 from Interbank Direct Debit PDF):
+        //   R17 (Structured): If AdrLine absent → TwnNm + Country mandatory
+        //   R18 (Hybrid):     If AdrLine present AND any other element present
+        //                     → TwnNm + Country mandatory, max 2 AdrLine
+        //   R19:              Structured elements must NOT be repeated in AdrLine
+        //   R20 (Unstructured): If only AdrLine present → each AdrLine max 35 chars
+        //
+        // Strategy: honour the AddrType selection strictly.
         const lines: string[] = [];
         const t = this.tabs(indent + 1);
         const val = (f: string) => { const x = v[p + f]; return (typeof x === 'string' ? x.trim() : x) || ''; };
+        const addrType = val('AddrType');
 
-        // Emit every filled address field regardless of AddrType mode, in XSD-compliant order.
-        if (val('Dept')) lines.push(`${t}<Dept>${this.e(val('Dept'))}</Dept>`);
-        if (val('SubDept')) lines.push(`${t}<SubDept>${this.e(val('SubDept'))}</SubDept>`);
-        if (val('StrtNm')) lines.push(`${t}<StrtNm>${this.e(val('StrtNm'))}</StrtNm>`);
-        if (val('BldgNb')) lines.push(`${t}<BldgNb>${this.e(val('BldgNb'))}</BldgNb>`);
-        if (val('BldgNm')) lines.push(`${t}<BldgNm>${this.e(val('BldgNm'))}</BldgNm>`);
-        if (val('Flr')) lines.push(`${t}<Flr>${this.e(val('Flr'))}</Flr>`);
-        if (val('PstBx')) lines.push(`${t}<PstBx>${this.e(val('PstBx'))}</PstBx>`);
-        if (val('Room')) lines.push(`${t}<Room>${this.e(val('Room'))}</Room>`);
-        if (val('PstCd')) lines.push(`${t}<PstCd>${this.e(val('PstCd'))}</PstCd>`);
-        if (val('TwnNm')) lines.push(`${t}<TwnNm>${this.e(val('TwnNm'))}</TwnNm>`);
-        if (val('TwnLctnNm')) lines.push(`${t}<TwnLctnNm>${this.e(val('TwnLctnNm'))}</TwnLctnNm>`);
-        if (val('DstrctNm')) lines.push(`${t}<DstrctNm>${this.e(val('DstrctNm'))}</DstrctNm>`);
-        if (val('CtrySubDvsn')) lines.push(`${t}<CtrySubDvsn>${this.e(val('CtrySubDvsn'))}</CtrySubDvsn>`);
-        if (val('Ctry')) lines.push(`${t}<Ctry>${this.e(val('Ctry'))}</Ctry>`);
-        if (val('AdrLine1')) lines.push(`${t}<AdrLine>${this.e(val('AdrLine1'))}</AdrLine>`);
-        if (val('AdrLine2')) lines.push(`${t}<AdrLine>${this.e(val('AdrLine2'))}</AdrLine>`);
+        // 'none' or no address type → no PostalAddress element
+        if (!addrType || addrType === 'none') return '';
+
+        if (addrType === 'structured') {
+            // STRUCTURED: all structured fields, no AdrLine (R19)
+            if (val('Dept'))       lines.push(`${t}<Dept>${this.e(val('Dept'))}</Dept>`);
+            if (val('SubDept'))    lines.push(`${t}<SubDept>${this.e(val('SubDept'))}</SubDept>`);
+            if (val('StrtNm'))     lines.push(`${t}<StrtNm>${this.e(val('StrtNm'))}</StrtNm>`);
+            if (val('BldgNb'))     lines.push(`${t}<BldgNb>${this.e(val('BldgNb'))}</BldgNb>`);
+            if (val('BldgNm'))     lines.push(`${t}<BldgNm>${this.e(val('BldgNm'))}</BldgNm>`);
+            if (val('Flr'))        lines.push(`${t}<Flr>${this.e(val('Flr'))}</Flr>`);
+            if (val('PstBx'))      lines.push(`${t}<PstBx>${this.e(val('PstBx'))}</PstBx>`);
+            if (val('Room'))       lines.push(`${t}<Room>${this.e(val('Room'))}</Room>`);
+            if (val('PstCd'))      lines.push(`${t}<PstCd>${this.e(val('PstCd'))}</PstCd>`);
+            if (val('TwnNm'))      lines.push(`${t}<TwnNm>${this.e(val('TwnNm'))}</TwnNm>`);
+            if (val('TwnLctnNm'))  lines.push(`${t}<TwnLctnNm>${this.e(val('TwnLctnNm'))}</TwnLctnNm>`);
+            if (val('DstrctNm'))   lines.push(`${t}<DstrctNm>${this.e(val('DstrctNm'))}</DstrctNm>`);
+            if (val('CtrySubDvsn'))lines.push(`${t}<CtrySubDvsn>${this.e(val('CtrySubDvsn'))}</CtrySubDvsn>`);
+            if (val('Ctry'))       lines.push(`${t}<Ctry>${this.e(val('Ctry'))}</Ctry>`);
+
+        } else if (addrType === 'hybrid') {
+            // HYBRID (R18): TwnNm + Ctry mandatory, max 2 AdrLine, no other structured fields
+            if (val('TwnNm'))  lines.push(`${t}<TwnNm>${this.e(val('TwnNm'))}</TwnNm>`);
+            if (val('Ctry'))   lines.push(`${t}<Ctry>${this.e(val('Ctry'))}</Ctry>`);
+            // Max 2 AdrLine when other elements are present (R18)
+            if (val('AdrLine1')) lines.push(`${t}<AdrLine>${this.e(val('AdrLine1'))}</AdrLine>`);
+            if (val('AdrLine2')) lines.push(`${t}<AdrLine>${this.e(val('AdrLine2'))}</AdrLine>`);
+
+        } else if (addrType === 'unstructured') {
+            // UNSTRUCTURED (R20): AdrLine only, max 3 occurrences, each max 35 chars
+            if (val('AdrLine1')) lines.push(`${t}<AdrLine>${this.e(val('AdrLine1'))}</AdrLine>`);
+            if (val('AdrLine2')) lines.push(`${t}<AdrLine>${this.e(val('AdrLine2'))}</AdrLine>`);
+            if (val('AdrLine3')) lines.push(`${t}<AdrLine>${this.e(val('AdrLine3'))}</AdrLine>`);
+        }
 
         if (!lines.length) return '';
         return `${this.tabs(indent)}<PstlAdr>\n${lines.join('\n')}\n${this.tabs(indent)}</PstlAdr>\n`;
@@ -1077,8 +1139,12 @@ ${this.rmtInf(v)}
             patch['toBic'] = doc.getElementsByTagName('To')[0]
                 ?.getElementsByTagName('BICFI')[0]?.textContent?.trim() || '';
             patch['bizMsgId'] = tval(doc, 'BizMsgIdr');
+            patch['msgDefIdr'] = tval(doc, 'MsgDefIdr');
+            patch['bizSvc'] = tval(doc, 'BizSvc');
             patch['msgId'] = tval(doc, 'MsgId');
             patch['creDtTm'] = tval(doc, 'CreDtTm') || tval(doc, 'CreDt');
+            const nbEl = doc.getElementsByTagName('NbOfTxs')[0];
+            if (nbEl) patch['nbOfTxs'] = nbEl.textContent?.trim() || '1';
 
             const cdtInstr = doc.getElementsByTagName('CdtInstr')[0];
             if (cdtInstr) {
@@ -1222,7 +1288,7 @@ ${this.rmtInf(v)}
         this.http.post(this.config.getApiUrl('/validate'), {
             xml_content: sanitized,
             mode: 'Full 1-3',
-            message_type: 'pacs.010.001.10',
+            message_type: 'pacs.010.001.03',
             store_in_history: true
         }).subscribe({
             next: (data: any) => {
@@ -1267,7 +1333,7 @@ ${this.rmtInf(v)}
             error: (err) => {
                 this.validationReport = {
                     status: 'FAIL', errors: 1, warnings: 0,
-                    message: 'pacs.010.001.10', total_time_ms: 0,
+                    message: 'pacs.010.001.03', total_time_ms: 0,
                     layer_status: {},
                     details: [{
                         severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
@@ -1395,7 +1461,7 @@ ${this.rmtInf(v)}
 
         if (c === 'svcLvlCd') return 'Invalid Service Level Code. Must be 1-4 alphanumeric characters.';
         if (c === 'svcLvlPrtry') return 'Invalid Proprietary Service Level. Up to 35 characters allowed.';
-        if (c === 'lclInstrmCd') return 'Invalid Local Instrument Code. Must be 1-4 alphanumeric characters.';
+        if (c === 'lclInstrmCd') return 'Invalid Local Instrument Code. Up to 35 alphanumeric characters (e.g. ONCL).';
         if (c === 'lclInstrmPrtry') return 'Invalid Proprietary Local Instrument. Up to 35 characters allowed.';
         if (c === 'ctgyPurpPrtry') return 'Invalid Proprietary Category Purpose. Up to 35 characters allowed.';
         if (c === 'purposePrtry') return 'Invalid Proprietary Purpose. Up to 35 characters allowed.';
@@ -1551,6 +1617,8 @@ ${this.rmtInf(v)}
             target.value = val;
             if (start !== null && end !== null) target.setSelectionRange(start, end);
             this.form.get(name)?.setValue(val, { emitEvent: false });
+            // emitEvent:false suppresses form.valueChanges → manually sync XML
+            if (!this.isParsingXml && !this.isInternalChange) this.generateXml();
         }
 
         // Max length warning hints
