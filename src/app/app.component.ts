@@ -1,22 +1,26 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSelectModule } from '@angular/material/select';
 import { filter } from 'rxjs/operators';
 import { ThemeService } from './services/theme.service';
 import { BackendWarmupService } from './services/backend-warmup.service';
+import { SrVersionService } from './services/sr-version.service';
+import { SrVersion } from './config/sr-version.config';
 import { ChatbotComponent } from './chatbot/chatbot.component';
-
 
 @Component({
     selector: 'app-root',
     standalone: true,
     imports: [
         CommonModule,
+        FormsModule,
         RouterOutlet,
         RouterLink,
         RouterLinkActive,
@@ -25,7 +29,8 @@ import { ChatbotComponent } from './chatbot/chatbot.component';
         MatIconModule,
         MatChipsModule,
         MatTooltipModule,
-        ChatbotComponent
+        MatSelectModule,
+        ChatbotComponent,
     ],
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.css']
@@ -38,27 +43,44 @@ export class AppComponent implements OnInit {
     isBulkGenerateActive = false;
     isFullWidthPage = false;
     isMenuForcedClosed = false;
+    srDropdownOpen = false;
 
     constructor(
         private router: Router,
         private themeService: ThemeService,
-        private warmup: BackendWarmupService
+        private warmup: BackendWarmupService,
+        public srVersion: SrVersionService,
     ) { }
 
     ngOnInit() {
-        // Fire-and-forget: wakes the Render backend immediately on app boot
-        // and keeps it warm with a periodic ping so Vercel users don't hit
-        // 30-60s cold-start latency. Also logs Firestore connectivity.
         this.warmup.start();
-
         this.updateState(this.router.url);
-
         this.router.events.pipe(
             filter(e => e instanceof NavigationEnd)
         ).subscribe((e: any) => {
             this.updateState(e.urlAfterRedirects || e.url);
         });
     }
+
+    // ─── SR Version ───────────────────────────────────────────────────────────
+
+    get selectedVersion(): SrVersion {
+        return this.srVersion.currentVersion;
+    }
+
+    set selectedVersion(v: SrVersion) {
+        this.srVersion.setVersion(v);
+    }
+
+    get availableVersions(): SrVersion[] {
+        return this.srVersion.availableVersions;
+    }
+
+    getVersionBadgeColor(v: SrVersion): string {
+        return this.srVersion.config.badgeColor;
+    }
+
+    // ─── Theme ────────────────────────────────────────────────────────────────
 
     toggleTheme() {
         this.themeService.toggleTheme();
@@ -67,6 +89,8 @@ export class AppComponent implements OnInit {
     get isDarkMode(): boolean {
         return this.themeService.getTheme() === 'dark';
     }
+
+    // ─── Private ──────────────────────────────────────────────────────────────
 
     private updateState(url: string) {
         this.isValidatePage = url.includes('/validate');

@@ -57,7 +57,7 @@
     </div>
 
     <!-- ── KPI GRID ── -->
-    <div class="kpi-grid">
+    <div class="kpi-grid stagger-in">
 
         <div class="kpi-card kpi-total">
             <div class="kpi-top-accent"></div>
@@ -145,7 +145,7 @@
                 </div>
             </div>
 
-            <div class="activity-feed" *ngIf="recentActivity.length > 0">
+            <div class="activity-feed stagger-in" *ngIf="recentActivity.length > 0">
                 <div class="feed-item"
                     *ngFor="let item of recentActivity"
                     [routerLink]="['/validate']"
@@ -199,7 +199,7 @@
             <!-- Quick Actions -->
             <div class="aside-card qa-card">
                 <h3 class="aside-title">Quick Actions</h3>
-                <div class="qa-grid">
+                <div class="qa-grid stagger-in">
                     <a class="qa-item" routerLink="/mt-to-mx">
                         <div class="qa-icon qa-validate"><mat-icon>upload_file</mat-icon></div>
                         <span>MT → MX</span>

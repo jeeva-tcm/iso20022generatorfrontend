@@ -1,0 +1,1208 @@
+﻿import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
+import { MatDialog } from '@angular/material/dialog';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AbstractControl, FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
+import { HttpClient } from '@angular/common/http';
+import { ConfigService } from '../../../../services/config.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
+import { UetrService } from '../../../../services/uetr.service';
+import { debounceTime } from 'rxjs/operators';
+import { getValidationErrorMessage } from '../../../../utils/validation-utils';
+
+@Component({
+  selector: 'app-pain002',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule],
+  templateUrl: './pain002.component.html',
+  styleUrls: ['./pain002.component.css']
+})
+export class Pain002Component implements OnInit, OnDestroy {
+  @ViewChild('xmlEditor') xmlEditor!: ElementRef<HTMLTextAreaElement>;
+  @ViewChild('lineNumbers') lineNumbersRef!: ElementRef<HTMLDivElement>;
+
+  form!: FormGroup;
+  generatedXml = '';
+  isParsingXml = false;
+  isInternalChange = false;
+  validating = false;
+
+  // Validation reporting
+  showValidationModal = false;
+  validationStatus: 'idle' | 'validating' | 'done' = 'idle';
+  validationReport: any = null;
+  validationExpandedIssue: any = null;
+
+  editorLineCount: number[] = [1];
+  xmlHistory: string[] = [];
+  xmlHistoryIdx = -1;
+  maxHistory = 50;
+
+  // Form submission validation
+  formSubmissionErrors: string[] = [];
+  showSubmissionErrors = false;
+
+  // Real-time character limit validation
+  fieldLimits: Record<string, number> = {
+    'BizMsgIdr': 35, 'MsgId': 35, 'Nm': 140, 'AddtlInf': 105,
+    'BICFI': 11, 'LEI': 20, 'MmbId': 35, 'AdrLine': 70,
+    'BizSvc': 35, 'Regy': 35, 'Id': 35, 'ClrSys': 5,
+    'InstrId': 35, 'EndToEndId': 35, 'PmtInfId': 35,
+    'Prov': 35, 'City': 35, 'Prtry': 35, 'Issr': 35,
+    'Dept': 70, 'SubDept': 70, 'Street': 70, 'Floor': 70, 'Room': 70,
+    'BldgNm': 35, 'Town': 35, 'TownLctn': 35, 'District': 35, 'CtrySub': 35,
+    'BldgNb': 16, 'PstBx': 16, 'PstCd': 16
+  };
+  limitMessages: Record<string, string> = {};
+  leiValidationMessages: Record<string, string> = {};
+
+  // Collapsible sections
+  sections: Record<string, boolean> = {
+    'bah': true,
+    'bahMktPrctc': false,
+    'bahRltd': false,
+    'grpHdr': true,
+    'orgnlGrpInf': true,
+    'orgnlPmtInf': true
+  };
+
+  countries: string[] = [];
+
+  private readonly DRAFT_KEY = 'draft_pain002';
+  private draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
+  showDraftBanner = false;
+  isClearingDraft = false;
+
+  // Codelists
+  charSetOptions = ['UTF-8', 'US-ASCII', 'ISO-8859-1'];
+  groupStatuses = ['ACCP', 'ACSP', 'ACTC', 'PART', 'RCVD', 'RJCT'];
+  transactionStatuses = [
+    { code: 'ACCP', label: 'Accepted Customer Profile' },
+    { code: 'ACSC', label: 'Accepted Settlement Completed' },
+    { code: 'ACSP', label: 'Accepted Settlement In Process' },
+    { code: 'ACTC', label: 'Accepted Technical Validation' },
+    { code: 'ACWC', label: 'Accepted With Change' },
+    { code: 'ACWP', label: 'Accepted Without Posting' },
+    { code: 'BLCK', label: 'Blocked' },
+    { code: 'CANC', label: 'Cancelled' },
+    { code: 'PATC', label: 'Partially Accepted' },
+    { code: 'PDNG', label: 'Pending' },
+    { code: 'RCVD', label: 'Received' },
+    { code: 'RJCT', label: 'Rejected' }
+  ];
+  statusReasonCodes = [
+    { code: 'AC01', label: 'Incorrect Account Number' },
+    { code: 'AC04', label: 'Closed Account Number' },
+    { code: 'AC06', label: 'Blocked Account' },
+    { code: 'AG01', label: 'Transaction Forbidden' },
+    { code: 'AM04', label: 'Insufficient Funds' },
+    { code: 'AM05', label: 'Duplication' },
+    { code: 'BE05', label: 'Unrecognised Initiating Party' },
+    { code: 'CUST', label: 'Requested By Customer' },
+    { code: 'DUPL', label: 'Duplicate Payment' },
+    { code: 'MS03', label: 'Not Specified Reason Agent' },
+    { code: 'NARR', label: 'Narrative' },
+    { code: 'TECH', label: 'Technical Problem' }
+  ];
+
+  clrSysCodes = ['CHIPS', 'T2', 'FED', 'CHAPS'];
+  copyDplctCodes = ['COPY', 'CODU', 'DUPL'];
+  priorityCodes = ['HIGH', 'NORM'];
+  
+  orgSchemeCodes = ['LEI', 'DUNS', 'VAT', 'TXID', 'GIIN', 'CRN'];
+  prvtSchemeCodes = ['CCPT', 'DRLC', 'NIDN', 'SSSN', 'PASSPORT', 'NATIONALID'];
+
+  orgSchemeGuidance: Record<string, string> = {
+    'LEI': 'Enter valid Legal Entity Identifier (20 characters)',
+    'DUNS': 'Enter valid DUNS number (9 digits)',
+    'VAT': 'Enter valid VAT number',
+    'TXID': 'Enter valid Tax Identification Number',
+    'GIIN': 'Enter valid Global Intermediary Identification Number',
+    'CRN': 'Enter valid Company Registration Number'
+  };
+
+  prvtSchemeGuidance: Record<string, string> = {
+    'CCPT': 'Enter valid passport number',
+    'DRLC': 'Enter valid driving license number',
+    'NIDN': 'Enter valid national ID number',
+    'SSSN': 'Enter valid social security number',
+    'PASSPORT': 'Enter valid passport number',
+    'NATIONALID': 'Enter valid national identity number'
+  };
+
+  constructor(
+    private dialog: MatDialog,
+    private fb: FormBuilder,
+    private http: HttpClient,
+    private config: ConfigService,
+    private snackBar: MatSnackBar,
+    private router: Router,
+    public uetrService: UetrService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit() {
+    this.fetchCountries();
+    this.buildForm();
+        const bizMsgIdCtrl = this.form.get('head_bizMsgIdr');
+        const msgIdCtrl = this.form.get('grpHdr_msgId');
+        if (bizMsgIdCtrl && msgIdCtrl) {
+            if (msgIdCtrl.value !== bizMsgIdCtrl.value) {
+                msgIdCtrl.setValue(bizMsgIdCtrl.value, {emitEvent: false});
+                this.generateXml();
+            }
+            bizMsgIdCtrl.valueChanges.subscribe(v => {
+                if (msgIdCtrl.value !== v) {
+                    msgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+            msgIdCtrl.valueChanges.subscribe(v => {
+                if (bizMsgIdCtrl.value !== v) {
+                    bizMsgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+        }
+
+    const hadDraft = this.loadDraft();
+    if (hadDraft) {
+      this.showDraftBanner = true;
+      this.generateXml();
+    }
+    this.generateXml();
+    this.pushHistory();
+  }
+
+  fetchCountries() {
+    this.http.get<any>(this.config.getApiUrl('/codelists/country')).subscribe({
+      next: (res) => { if (res && res.codes) this.countries = res.codes; },
+      error: (err) => console.error('Failed to load countries', err)
+    });
+  }
+
+  toggleSection(key: string) {
+    this.sections[key] = !this.sections[key];
+  }
+
+  getSchemeGuidance(group: any, type: 'org' | 'prvt'): string {
+    const code = group.get(type === 'org' ? 'orgScheme' : 'prvtScheme')?.value;
+    if (!code) return '';
+    return type === 'org' ? this.orgSchemeGuidance[code] : this.prvtSchemeGuidance[code];
+  }
+
+  futureDateValidator(control: any) {
+    if (!control.value) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDate = new Date(control.value);
+    selectedDate.setHours(0, 0, 0, 0);
+    return selectedDate > today ? { future_date: true } : null;
+  }
+
+  bahValidator = (g: any): any => {
+    const checkClrSys = (prefix: string) => {
+      const cd = g.get(`${prefix}ClrSysCd`)?.value;
+      const mmb = g.get(`${prefix}MmbId`)?.value;
+      if (mmb && !cd) return { [`${prefix}_clrSysCdMissing`]: true };
+      return null;
+    };
+
+    const checkFIIdentity = (prefix: string, errKey: string) => {
+      const bic = (g.get(`${prefix}Bic`)?.value || '').trim();
+      const mmb = (g.get(`${prefix}MmbId`)?.value || '').trim();
+      const lei = (g.get(`${prefix}Lei`)?.value || '').trim();
+      if (!bic && !mmb && !lei) return { [errKey]: true };
+      return null;
+    };
+
+    let errors: any = null;
+    const merge = (e: any) => { if (e) errors = { ...(errors || {}), ...e }; };
+
+    merge(checkFIIdentity('head_from', 'head_from_idRequired'));
+    merge(checkFIIdentity('head_to', 'head_to_idRequired'));
+
+    const prefixes = ['head_from', 'head_to'];
+    const rltdEnabled = g.get('head_rltd_enabled')?.value;
+    if (rltdEnabled) {
+      prefixes.push('head_rltd_from', 'head_rltd_to');
+      merge(checkFIIdentity('head_rltd_from', 'head_rltd_from_idRequired'));
+      merge(checkFIIdentity('head_rltd_to', 'head_rltd_to_idRequired'));
+    }
+    for (const p of prefixes) merge(checkClrSys(p));
+
+    const cpy = g.get('head_cpyDplct')?.value;
+    if (cpy && !rltdEnabled) merge({ rltdHeaderMissing: true });
+
+    const mktRegy = (g.get('head_mktPrctcRegy')?.value || '').trim();
+    const mktId = (g.get('head_mktPrctcId')?.value || '').trim();
+    if (mktRegy && !mktId) merge({ mktPrctcIdMissing: true });
+    if (mktId && !mktRegy) merge({ mktPrctcRegyMissing: true });
+
+    const bicSame = ((g.get('head_fromBic')?.value || '').trim().toUpperCase()) ===
+                    ((g.get('head_toBic')?.value || '').trim().toUpperCase()) &&
+                    (g.get('head_fromBic')?.value || '').trim() !== '';
+    if (bicSame) merge({ bicSame: true });
+
+    const initPty = g.get('initgPty');
+    if (initPty) {
+      const type = initPty.get('idType')?.value;
+      if (type === 'org') {
+        const bic = initPty.get('orgAnyBic')?.value;
+        const lei = initPty.get('orgLei')?.value;
+        const othr = initPty.get('orgId')?.value;
+        if (!bic && !lei && !othr) merge({ initgPtyIdRequired: true });
+      } else if (type === 'prvt') {
+        const othr = initPty.get('prvtId')?.value;
+        const dob = initPty.get('prvtBirthDt')?.value;
+        if (!othr && !dob) merge({ initgPtyIdRequired: true });
+      }
+    }
+
+    const fwd = g.get('fwdgAgt');
+    if (fwd) {
+      const bic = fwd.get('bic')?.value;
+      const mmb = fwd.get('mmbId')?.value;
+      const lei = fwd.get('lei')?.value;
+      if (!bic && !mmb && !lei) merge({ fwdgAgtIdRequired: true });
+    }
+
+    const txArr = g.get('transactions') as FormArray;
+    if (txArr) {
+      txArr.controls.forEach((tx, i) => {
+        const sts = tx.get('txSts')?.value;
+        const rsn = tx.get('stsRsnCd')?.value;
+        if (sts === 'RJCT' && !rsn) merge({ [`tx_${i}_rsnRequired`]: true });
+      });
+    }
+
+    return errors;
+  };
+
+  buildForm() {
+    const sharedId = 'MSGID-' + this.dateStamp() + '-' + this.randomId();
+    const BIC_OPT = [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
+    const LEI_PATTERN = [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)];
+    const CLEARING_CODE_PATTERN = [Validators.minLength(1), Validators.maxLength(5)];
+    const MMB_ID_PATTERN = [Validators.pattern(/^[A-Z0-9]{1,35}$/)];
+    const ISO_DT = Validators.pattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/);
+    const MSG_NM_ID = Validators.pattern(/^(pain|pacs|camt|head|admi|auth|tsmt|setr|sese|semt|seev|reda|colr)\.\d{3}\.\d{3}\.\d{2}$/);
+    const NON_EMPTY = [Validators.required, Validators.minLength(1)];
+
+    this.form = this.fb.group({
+      head_charSet: ['UTF-8'],
+      head_fromBic: ['HDFCINBBXXX', BIC_OPT],
+      head_fromClrSysCd: ['', CLEARING_CODE_PATTERN],
+      head_fromMmbId: ['', MMB_ID_PATTERN],
+      head_fromLei: ['', LEI_PATTERN],
+      head_toBic: ['CHASUS33XXX', BIC_OPT],
+      head_toClrSysCd: ['', CLEARING_CODE_PATTERN],
+      head_toMmbId: ['', MMB_ID_PATTERN],
+      head_toLei: ['', LEI_PATTERN],
+      head_bizMsgIdr: [sharedId, [...NON_EMPTY, Validators.maxLength(35)]],
+      head_msgDefIdr: [{ value: 'pain.002.001.10', disabled: true }, [Validators.required]],
+      head_bizSvc: ['swift.cbprplus.02', [...NON_EMPTY, Validators.maxLength(35)]],
+      head_mktPrctcRegy: ['', [Validators.maxLength(350)]],
+      head_mktPrctcId: ['', [Validators.maxLength(2048)]],
+      head_creDt: [this.isoNow(), [Validators.required, ISO_DT]],
+      head_cpyDplct: [''],
+      head_pssblDplct: [false],
+      head_prty: ['NORM'],
+
+      head_rltd_enabled: [false],
+      head_rltd_charSet: ['UTF-8'],
+      head_rltd_fromBic: ['', BIC_OPT],
+      head_rltd_fromClrSysCd: ['', CLEARING_CODE_PATTERN],
+      head_rltd_fromMmbId: ['', MMB_ID_PATTERN],
+      head_rltd_fromLei: ['', LEI_PATTERN],
+      head_rltd_toBic: ['', BIC_OPT],
+      head_rltd_toClrSysCd: ['', CLEARING_CODE_PATTERN],
+      head_rltd_toMmbId: ['', MMB_ID_PATTERN],
+      head_rltd_toLei: ['', LEI_PATTERN],
+      head_rltd_bizMsgIdr: ['', [Validators.maxLength(35)]],
+      head_rltd_msgDefIdr: ['', [MSG_NM_ID]],
+      head_rltd_bizSvc: ['', [Validators.maxLength(35)]],
+      head_rltd_creDt: ['', [ISO_DT]],
+      head_rltd_cpyDplct: [''],
+      head_rltd_pssblDplct: [false],
+      head_rltd_prty: [''],
+
+      grpHdr_msgId: [sharedId, [...NON_EMPTY, Validators.maxLength(35)]],
+      grpHdr_creDtTm: [this.isoNow(), [Validators.required, ISO_DT]],
+      initgPty: this.initPartyGroup(),
+      fwdgAgt: this.initAgentGroup(),
+
+      orgnlMsgId: ['MSGID-' + this.dateStamp() + '-' + this.randomId(), [...NON_EMPTY, Validators.maxLength(35)]],
+      orgnlMsgNmId: ['pain.001.001.09', [...NON_EMPTY, Validators.maxLength(35), MSG_NM_ID]],
+      orgnlCreDtTm: ['', [ISO_DT]],
+      orgnlGrpSts: [''],
+
+      orgnlPmtInfId: ['PMTINF-' + this.dateStamp() + '-001', [...NON_EMPTY, Validators.maxLength(35)]],
+      transactions: this.fb.array([this.initTransaction()])
+    }, { validators: [this.bahValidator] });
+
+    this.form.valueChanges.subscribe(() => {
+      if (this.isParsingXml || this.isInternalChange) return;
+      this.applyAutoUppercase(this.form);
+      this.generateXml();
+      this.pushHistory();
+      this.scheduleDraftSave();
+      this.cdr.detectChanges();
+    });
+
+    // Auto-enable Related Header when Copy/Duplicate is selected
+    this.form.get('head_cpyDplct')?.valueChanges.subscribe(v => {
+      if (v) {
+        this.form.get('head_rltd_enabled')?.setValue(true);
+        this.sections['bahRltd'] = true;
+      }
+    });
+
+    // Clear Copy/Duplicate if Related Header is manually unchecked to maintain validity
+    this.form.get('head_rltd_enabled')?.valueChanges.subscribe(v => {
+      if (!v) {
+        this.form.get('head_cpyDplct')?.setValue('');
+      }
+    });
+  }
+
+  private applyAutoUppercase(group: FormGroup | FormArray) {
+    Object.keys(group.controls).forEach(key => {
+      const control = (group.controls as any)[key];
+      if (control instanceof FormGroup || control instanceof FormArray) {
+        this.applyAutoUppercase(control);
+      } else {
+        const val = control.value;
+        if (typeof val === 'string' && (key.toLowerCase().includes('bic') || key.toLowerCase().includes('lei') || key.toLowerCase().includes('mmbid'))) {
+          if (val !== val.toUpperCase()) {
+            control.setValue(val.toUpperCase(), { emitEvent: false });
+          }
+        }
+      }
+    });
+  }
+
+  initPartyGroup() {
+    return this.fb.group({
+      name: ['ABC CORPORATION', [Validators.maxLength(140)]],
+      postal: this.initPostalGroup(),
+      idType: ['org'],
+      orgAnyBic: ['ABCCUS33XXX', [Validators.pattern(/^[A-Z]{6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3})?$/)]],
+      orgLei: ['', [Validators.pattern(/^[A-Z0-9]{20}$/)]],
+      orgId: ['', [Validators.maxLength(35)]],
+      orgScheme: [''],
+      orgPrtry: ['', [Validators.maxLength(35)]],
+      orgIssr: ['', [Validators.maxLength(35)]],
+      prvtBirthDt: ['', [this.futureDateValidator]],
+      prvtProv: ['', [Validators.maxLength(35)]],
+      prvtCity: ['', [Validators.maxLength(35)]],
+      prvtCtry: ['', [Validators.maxLength(2), Validators.pattern(/^[A-Z]{2}$/)]],
+      prvtId: ['', [Validators.maxLength(35)]],
+      prvtScheme: [''],
+      prvtPrtry: ['', [Validators.maxLength(35)]],
+      prvtIssr: ['', [Validators.maxLength(35)]],
+      ctryOfRes: ['', [Validators.maxLength(2), Validators.pattern(/^[A-Z]{2}$/)]]
+    }, { validators: [this.partyIdValidator] });
+  }
+
+  partyIdValidator = (g: any): any => {
+    let errors: any = null;
+    const merge = (e: any) => { if (e) errors = { ...(errors || {}), ...e }; };
+    const type = g.get('idType')?.value;
+
+    if (type === 'org') {
+        const id = g.get('orgId')?.value;
+        const sch = g.get('orgScheme')?.value;
+        const prp = g.get('orgPrtry')?.value;
+        const issr = g.get('orgIssr')?.value;
+        if (id && !sch && !prp) merge({ orgSchemeMissing: true });
+        if (issr && !id) merge({ orgIdRequiredForIssr: true });
+    } else if (type === 'prvt') {
+        const id = g.get('prvtId')?.value;
+        const sch = g.get('prvtScheme')?.value;
+        const prp = g.get('prvtPrtry')?.value;
+        const issr = g.get('prvtIssr')?.value;
+        if (id && !sch && !prp) merge({ prvtSchemeMissing: true });
+        if (issr && !id) merge({ prvtIdRequiredForIssr: true });
+
+        const birthDt = g.get('prvtBirthDt')?.value;
+        const city = g.get('prvtCity')?.value;
+        const ctry = g.get('prvtCtry')?.value;
+        const prov = g.get('prvtProv')?.value;
+        const anyDob = birthDt || city || ctry || prov;
+        if (anyDob) {
+          if (!birthDt) merge({ dobBirthDtRequired: true });
+          if (!city) merge({ dobCityRequired: true });
+          if (!ctry) merge({ dobCtryRequired: true });
+        }
+    }
+    return errors;
+  };
+
+  initAgentGroup() {
+    return this.fb.group({
+      bic: ['CHASUS33XXX', [Validators.pattern(/^[A-Z]{6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3})?$/)]],
+      clrSys: ['', [Validators.maxLength(5)]],
+      mmbId: ['', [Validators.maxLength(35)]],
+      lei: ['', [Validators.pattern(/^[A-Z0-9]{20}$/)]]
+    }, {
+      validators: [(g: any) => {
+        const cd = g.get('clrSys')?.value;
+        const mmb = g.get('mmbId')?.value;
+        if (mmb && !cd) return { clrSysDependency: true };
+        return null;
+      }]
+    });
+  }
+
+  initPostalGroup() {
+    return this.fb.group({
+      addrType: ['none'],
+      dept: ['', [Validators.maxLength(70)]],
+      subDept: ['', [Validators.maxLength(70)]],
+      street: ['', [Validators.maxLength(70)]],
+      bldgNb: ['', [Validators.maxLength(16)]],
+      bldgNm: ['', [Validators.maxLength(35)]],
+      floor: ['', [Validators.maxLength(70)]],
+      pstBx: ['', [Validators.maxLength(16)]],
+      room: ['', [Validators.maxLength(70)]],
+      pstCd: ['', [Validators.maxLength(16)]],
+      town: ['', [Validators.maxLength(35)]],
+      townLctn: ['', [Validators.maxLength(35)]],
+      district: ['', [Validators.maxLength(35)]],
+      ctrySub: ['', [Validators.maxLength(35)]],
+      ctry: ['', [Validators.maxLength(2), Validators.pattern(/^[A-Z]{2}$/)]],
+      addrLines: this.fb.array([])
+    });
+  }
+
+  initTransaction() {
+    return this.fb.group({
+      orgnlInstrId: ['', [Validators.maxLength(35)]],
+      orgnlEndToEndId: ['E2E-' + this.dateStamp() + '-' + this.randomId(), [Validators.maxLength(35)]],
+      orgnlUetr: [this.uetrService.generate(), [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
+      txSts: ['ACSC', Validators.required],
+      orgtr: this.initPartyGroup(),
+      stsRsnCd: ['', [Validators.maxLength(4)]],
+      addtlInf: this.fb.array([this.fb.control('', [Validators.maxLength(105)])])
+    });
+  }
+
+  get transactions() { return this.form.get('transactions') as FormArray; }
+  addTransaction() { this.transactions.push(this.initTransaction()); this.generateXml(); }
+  removeTransaction(i: number) { if (this.transactions.length > 1) { this.transactions.removeAt(i); this.generateXml(); } }
+
+  addAddrLine(group: any) { (group.get('postal.addrLines') as FormArray).push(this.fb.control('', [Validators.maxLength(70)])); }
+  removeAddrLine(group: any, i: number) { const arr = group.get('postal.addrLines') as FormArray; if (arr.length > 1) arr.removeAt(i); }
+  getAddrLines(group: any) { return (group.get('postal.addrLines') as FormArray).controls; }
+
+  onAddrTypeChange(group: any) {
+    const type = group.get('postal.addrType')?.value;
+    const postal = group.get('postal') as FormGroup;
+    const lines = postal.get('addrLines') as FormArray;
+    while (lines.length) lines.removeAt(0);
+
+    // Clear structured fields when switching to a mode that doesn't render them.
+    if (type === 'none' || type === 'unstructured') {
+      const structuredKeys = ['dept', 'subDept', 'street', 'bldgNb', 'bldgNm', 'floor', 'pstBx', 'room', 'pstCd'];
+      const cleared: any = {};
+      structuredKeys.forEach(k => cleared[k] = '');
+      postal.patchValue(cleared, { emitEvent: false });
+    }
+    if (type === 'none') {
+      const allKeys = ['town', 'townLctn', 'district', 'ctrySub', 'ctry'];
+      const cleared: any = {};
+      allKeys.forEach(k => cleared[k] = '');
+      postal.patchValue(cleared, { emitEvent: false });
+    }
+
+    let count = 0;
+    if (type === 'unstructured') count = 3;
+    else if (type === 'hybrid') count = 2;
+    for (let i = 0; i < count; i++) {
+        lines.push(this.fb.control('', [Validators.maxLength(70)]));
+    }
+    this.generateXml();
+  }
+
+  onIdTypeChange(group: any) {
+    const type = group.get('idType')?.value;
+    if (type === 'prvt') {
+      group.patchValue({
+        orgAnyBic: '', orgLei: '', orgId: '', orgScheme: '', orgPrtry: '', orgIssr: ''
+      }, { emitEvent: false });
+    } else {
+      group.patchValue({
+        prvtId: '', prvtScheme: '', prvtPrtry: '', prvtIssr: '', prvtBirthDt: '', prvtCity: '', prvtProv: '', prvtCtry: ''
+      }, { emitEvent: false });
+    }
+    this.generateXml();
+  }
+
+  addAddtlInf(tx: any) { (tx.get('addtlInf') as FormArray).push(this.fb.control('', [Validators.maxLength(105)])); }
+  removeAddtlInf(tx: any, i: number) { const arr = tx.get('addtlInf') as FormArray; if (arr.length > 1) arr.removeAt(i); }
+  getAddtlInf(tx: any) { return (tx.get('addtlInf') as FormArray).controls; }
+
+  handleInput(event: any, controlPath: string, limitKey: string) {
+    const max = this.fieldLimits[limitKey];
+    if (!max) return;
+    const val = event.target.value || '';
+    if (val.length >= max) {
+      this.limitMessages[controlPath] = `Maximum ${max} characters reached (${max}/${max})`;
+      setTimeout(() => { delete this.limitMessages[controlPath]; }, 3000);
+    }
+  }
+
+  checkLei(event: any, controlPath: string) {
+    const val = event.target.value || '';
+    if (val && val.length < 20) {
+      this.leiValidationMessages[controlPath] = 'LEI must be exactly 20 characters';
+    } else {
+      delete this.leiValidationMessages[controlPath];
+    }
+  }
+
+  refreshUetr(tx: any) { tx.patchValue({ orgnlUetr: this.uetrService.generate() }); }
+
+  dateStamp() { return new Date().toISOString().slice(0, 10).replace(/-/g, ''); }
+  randomId() { return Math.random().toString(36).substring(2, 8).toUpperCase(); }
+  isoNow() { return new Date().toISOString().split('.')[0] + 'Z'; }
+  fdt(d: string) { return d ? d.replace('Z', '+00:00') : d; }
+
+  get bicSameWarning(): string | null {
+    const from = (this.form.get('head_fromBic')?.value || '').trim().toUpperCase();
+    const to = (this.form.get('head_toBic')?.value || '').trim().toUpperCase();
+    if (!from || !to) return null;
+    return from === to
+      ? 'Sender BIC and Receiver BIC are identical. The instructing and instructed agents must represent different financial institutions.'
+      : null;
+  }
+
+  get bicSameRltdWarning(): string | null {
+    if (!this.form.get('head_rltd_enabled')?.value) return null;
+    const from = (this.form.get('head_rltd_fromBic')?.value || '').trim().toUpperCase();
+    const to = (this.form.get('head_rltd_toBic')?.value || '').trim().toUpperCase();
+    if (!from || !to) return null;
+    return from === to
+      ? 'Related Sender BIC and Related Receiver BIC are identical. They must represent different financial institutions.'
+      : null;
+  }
+
+  isTxInvalid(i: number): boolean {
+    const tx = this.transactions.at(i);
+    if (!tx) return false;
+    return tx.invalid || !!this.form.errors?.[`tx_${i}_rsnRequired`];
+  }
+
+  getFormErrorList(): string[] {
+    const out: string[] = [];
+    const errs = this.form.errors || {};
+    const labels: Record<string, string> = {
+      head_from_idRequired: 'Sender (From) requires at least one identifier (BIC, MmbId, or LEI).',
+      head_to_idRequired: 'Receiver (To) requires at least one identifier (BIC, MmbId, or LEI).',
+      head_rltd_from_idRequired: 'Related Sender requires at least one identifier.',
+      head_rltd_to_idRequired: 'Related Receiver requires at least one identifier.',
+      head_from_clrSysCdMissing: 'Sender Clearing System Code required when Member ID is present.',
+      head_to_clrSysCdMissing: 'Receiver Clearing System Code required when Member ID is present.',
+      head_rltd_from_clrSysCdMissing: 'Related Sender Clearing System Code required when Member ID is present.',
+      head_rltd_to_clrSysCdMissing: 'Related Receiver Clearing System Code required when Member ID is present.',
+      rltdHeaderMissing: 'Related Header must be enabled when Copy/Duplicate is selected.',
+      mktPrctcIdMissing: 'Market Practice ID required when Registry is filled.',
+      mktPrctcRegyMissing: 'Market Practice Registry required when ID is filled.',
+      initgPtyIdRequired: 'Initiating Party requires at least one identifier.',
+      fwdgAgtIdRequired: 'Forwarding Agent requires at least one identifier (BIC, MmbId, or LEI).',
+      bicSame: 'Sender BIC and Receiver BIC must differ.'
+    };
+    Object.keys(errs).forEach(k => {
+      if (labels[k]) { out.push(labels[k]); return; }
+      const m = k.match(/^tx_(\d+)_rsnRequired$/);
+      if (m) out.push(`Transaction #${+m[1] + 1}: Reason Code required when status is RJCT.`);
+    });
+    return out;
+  }
+
+  generateXml() {
+    const v = this.form.getRawValue();
+    let bah = '';
+    bah += this.leaf('CharSet', v.head_charSet, 2);
+    bah += this.renderFIId('Fr', v.head_fromBic, v.head_fromClrSysCd, v.head_fromMmbId, v.head_fromLei, 2);
+    bah += this.renderFIId('To', v.head_toBic, v.head_toClrSysCd, v.head_toMmbId, v.head_toLei, 2);
+    bah += this.leaf('BizMsgIdr', v.head_bizMsgIdr, 2);
+    bah += this.leaf('MsgDefIdr', 'pain.002.001.10', 2);
+    bah += this.leaf('BizSvc', v.head_bizSvc, 2);
+    if (v.head_mktPrctcId || v.head_mktPrctcRegy) {
+      let mkt = '';
+      if (v.head_mktPrctcRegy) mkt += this.leaf('Regy', v.head_mktPrctcRegy, 3);
+      if (v.head_mktPrctcId) mkt += this.leaf('Id', v.head_mktPrctcId, 3);
+      bah += this.branch('MktPrctc', mkt, 2);
+    }
+    bah += this.leaf('CreDt', this.fdt(v.head_creDt), 2);
+    if (v.head_cpyDplct) bah += this.leaf('CpyDplct', v.head_cpyDplct, 2);
+    if (v.head_pssblDplct) bah += this.leaf('PssblDplct', 'true', 2);
+    bah += this.leaf('Prty', v.head_prty, 2);
+    if (v.head_rltd_enabled) {
+      let r = '';
+      if (v.head_rltd_charSet) r += this.leaf('CharSet', v.head_rltd_charSet, 3);
+      r += this.renderFIId('Fr', v.head_rltd_fromBic, v.head_rltd_fromClrSysCd, v.head_rltd_fromMmbId, v.head_rltd_fromLei, 3);
+      r += this.renderFIId('To', v.head_rltd_toBic, v.head_rltd_toClrSysCd, v.head_rltd_toMmbId, v.head_rltd_toLei, 3);
+      if (v.head_rltd_bizMsgIdr) r += this.leaf('BizMsgIdr', v.head_rltd_bizMsgIdr, 3);
+      if (v.head_rltd_msgDefIdr) r += this.leaf('MsgDefIdr', v.head_rltd_msgDefIdr, 3);
+      if (v.head_rltd_bizSvc) r += this.leaf('BizSvc', v.head_rltd_bizSvc, 3);
+      if (v.head_rltd_creDt) r += this.leaf('CreDt', this.fdt(v.head_rltd_creDt), 3);
+      if (v.head_rltd_cpyDplct) r += this.leaf('CpyDplct', v.head_rltd_cpyDplct, 3);
+      if (v.head_rltd_pssblDplct) r += this.leaf('PssblDplct', 'true', 3);
+      if (v.head_rltd_prty) r += this.leaf('Prty', v.head_rltd_prty, 3);
+      bah += this.branch('Rltd', r, 2);
+    }
+    let doc = '';
+    doc += this.branch('GrpHdr', this.leaf('MsgId', v.grpHdr_msgId, 4) + this.leaf('CreDtTm', this.fdt(v.grpHdr_creDtTm), 4) + this.renderParty('InitgPty', v.initgPty, 4) + this.renderAgent('FwdgAgt', v.fwdgAgt, 4), 3);
+    let orgnlGrp = '';
+    orgnlGrp += this.leaf('OrgnlMsgId', v.orgnlMsgId, 4);
+    orgnlGrp += this.leaf('OrgnlMsgNmId', v.orgnlMsgNmId, 4);
+    if (v.orgnlCreDtTm) orgnlGrp += this.leaf('OrgnlCreDtTm', this.fdt(v.orgnlCreDtTm), 4);
+    if (v.orgnlGrpSts) orgnlGrp += this.leaf('GrpSts', v.orgnlGrpSts, 4);
+    doc += this.branch('OrgnlGrpInfAndSts', orgnlGrp, 3);
+    let orgnlPmt = '';
+    orgnlPmt += this.leaf('OrgnlPmtInfId', v.orgnlPmtInfId, 4);
+    v.transactions.forEach((tx: any) => {
+      let txInf = '';
+      if (tx.orgnlInstrId) txInf += this.leaf('OrgnlInstrId', tx.orgnlInstrId, 5);
+      txInf += this.leaf('OrgnlEndToEndId', tx.orgnlEndToEndId, 5);
+      txInf += this.leaf('OrgnlUETR', tx.orgnlUetr, 5);
+      if (tx.txSts) txInf += this.leaf('TxSts', tx.txSts, 5);
+      let rsn = '';
+      if (tx.orgtr) rsn += this.renderParty('Orgtr', tx.orgtr, 6);
+      if (tx.stsRsnCd) rsn += this.branch('Rsn', this.leaf('Cd', tx.stsRsnCd, 7), 6);
+      tx.addtlInf.forEach((info: string) => { if (info) rsn += this.leaf('AddtlInf', info, 6); });
+      if (rsn) txInf += this.branch('StsRsnInf', rsn, 5);
+      orgnlPmt += this.branch('TxInfAndSts', txInf, 4);
+    });
+    doc += this.branch('OrgnlPmtInfAndSts', orgnlPmt, 3);
+    this.generatedXml = `<?xml version="1.0" encoding="UTF-8"?>
+<BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
+  <AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.02">
+${bah.trimEnd()}
+  </AppHdr>
+  <Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.002.001.10">
+    <CstmrPmtStsRpt>
+${doc.trimEnd()}
+    </CstmrPmtStsRpt>
+  </Document>
+</BusMsgEnvlp>`;
+    this.refreshLineCount();
+  }
+
+  renderFIId(tag: string, bic: string, clr: string, mmb: string, lei: string, ind: number) {
+    let fi = '';
+    if (bic) fi += this.leaf('BICFI', bic, ind + 3);
+    if (clr || mmb) {
+      let cid = '';
+      if (clr) cid += this.branch('ClrSysId', this.leaf('Cd', clr, ind + 5), ind + 4);
+      if (mmb) cid += this.leaf('MmbId', mmb, ind + 4);
+      fi += this.branch('ClrSysMmbId', cid, ind + 3);
+    }
+    if (lei) fi += this.leaf('LEI', lei, ind + 3);
+    if (!fi) return '';
+    return this.branch(tag, this.branch('FIId', this.branch('FinInstnId', fi, ind + 2), ind + 1), ind);
+  }
+
+  renderAgent(tag: string, a: any, ind: number) {
+    let fi = '';
+    if (a.bic) fi += this.leaf('BICFI', a.bic, ind + 2);
+    if (a.clrSys || a.mmbId) {
+      let cid = '';
+      if (a.clrSys) cid += this.branch('ClrSysId', this.leaf('Cd', a.clrSys, ind + 4), ind + 3);
+      if (a.mmbId) cid += this.leaf('MmbId', a.mmbId, ind + 3);
+      fi += this.branch('ClrSysMmbId', cid, ind + 2);
+    }
+    if (a.lei) fi += this.leaf('LEI', a.lei, ind + 2);
+    if (!fi) return '';
+    return this.branch(tag, this.branch('FinInstnId', fi, ind + 1), ind);
+  }
+
+  renderParty(tag: string, p: any, ind: number) {
+    let inner = '';
+    if (tag !== 'InitgPty' && p.name) inner += this.leaf('Nm', p.name, ind + 1);
+    if (tag !== 'InitgPty' && p.postal) inner += this.renderPostal(p.postal, ind + 1);
+    let org = '';
+    if (p.orgAnyBic) org += this.leaf('AnyBIC', p.orgAnyBic, ind + 4);
+    if (p.orgLei) org += this.leaf('LEI', p.orgLei, ind + 4);
+    if (p.orgId) {
+      let o = this.leaf('Id', p.orgId, ind + 5);
+      if (p.orgScheme || p.orgPrtry) {
+        let sn = '';
+        if (p.orgScheme) sn += this.leaf('Cd', p.orgScheme, ind + 7);
+        else if (p.orgPrtry) sn += this.leaf('Prtry', p.orgPrtry, ind + 7);
+        o += this.branch('SchmeNm', sn, ind + 6);
+      }
+      if (p.orgIssr) o += this.leaf('Issr', p.orgIssr, ind + 5);
+      org += this.branch('Othr', o, ind + 4);
+    }
+    let prvt = '';
+    if (p.prvtBirthDt || p.prvtCity || p.prvtCtry || p.prvtProv) {
+      let dt = '';
+      if (p.prvtBirthDt) dt += this.leaf('BirthDt', p.prvtBirthDt.split('T')[0], ind + 5);
+      if (p.prvtProv) dt += this.leaf('PrvcOfBirth', p.prvtProv, ind + 5);
+      if (p.prvtCity) dt += this.leaf('CityOfBirth', p.prvtCity, ind + 5);
+      if (p.prvtCtry) dt += this.leaf('CtryOfBirth', p.prvtCtry, ind + 5);
+      prvt += this.branch('DtAndPlcOfBirth', dt, ind + 4);
+    }
+    if (p.prvtId) {
+      let o = this.leaf('Id', p.prvtId, ind + 5);
+      if (p.prvtScheme || p.prvtPrtry) {
+        let sn = '';
+        if (p.prvtScheme) sn += this.leaf('Cd', p.prvtScheme, ind + 7);
+        else if (p.prvtPrtry) sn += this.leaf('Prtry', p.prvtPrtry, ind + 7);
+        o += this.branch('SchmeNm', sn, ind + 6);
+      }
+      if (p.prvtIssr) o += this.leaf('Issr', p.prvtIssr, ind + 5);
+      prvt += this.branch('Othr', o, ind + 4);
+    }
+    let id = '';
+    if (p.idType === 'org' && org) {
+      id = this.branch('OrgId', org, ind + 3);
+    } else if (p.idType === 'prvt' && prvt) {
+      id = this.branch('PrvtId', prvt, ind + 3);
+    }
+    if (id) inner += this.branch('Id', id, ind + 2);
+    if (tag !== 'InitgPty' && p.ctryOfRes) inner += this.leaf('CtryOfRes', p.ctryOfRes, ind + 1);
+    if (!inner) return '';
+    return this.branch(tag, inner, ind);
+  }
+
+  renderPostal(pa: any, ind: number) {
+    if (!pa || pa.addrType === 'none') return '';
+    let a = '';
+    const t = ind + 1;
+    // Detail structured fields — pure structured mode only (must not coexist with <AdrLine>).
+    if (pa.addrType === 'structured') {
+      if (pa.dept) a += this.leaf('Dept', pa.dept, t);
+      if (pa.subDept) a += this.leaf('SubDept', pa.subDept, t);
+      if (pa.street) a += this.leaf('StrtNm', pa.street, t);
+      if (pa.bldgNb) a += this.leaf('BldgNb', pa.bldgNb, t);
+      if (pa.bldgNm) a += this.leaf('BldgNm', pa.bldgNm, t);
+      if (pa.floor) a += this.leaf('Flr', pa.floor, t);
+      if (pa.pstBx) a += this.leaf('PstBx', pa.pstBx, t);
+      if (pa.room) a += this.leaf('Room', pa.room, t);
+      if (pa.pstCd) a += this.leaf('PstCd', pa.pstCd, t);
+    }
+    // TwnNm + Ctry — emitted in structured and hybrid (hybrid = TwnNm + Ctry + AdrLine).
+    if ((pa.addrType === 'structured' || pa.addrType === 'hybrid') && pa.town) {
+      a += this.leaf('TwnNm', pa.town, t);
+    }
+    if (pa.addrType === 'structured') {
+      if (pa.townLctn) a += this.leaf('TwnLctnNm', pa.townLctn, t);
+      if (pa.district) a += this.leaf('DstrctNm', pa.district, t);
+      if (pa.ctrySub) a += this.leaf('CtrySubDvsn', pa.ctrySub, t);
+    }
+    if ((pa.addrType === 'structured' || pa.addrType === 'hybrid') && pa.ctry) {
+      a += this.leaf('Ctry', pa.ctry, t);
+    }
+    if (pa.addrType === 'unstructured' || pa.addrType === 'hybrid') {
+      if (pa.addrLines) pa.addrLines.forEach((l: string) => { if (l) a += this.leaf('AdrLine', l, t); });
+    }
+    return this.branch('PstlAdr', a, ind);
+  }
+
+  leaf(t: string, v: any, i: number) { return v ? `${'  '.repeat(i)}<${t}>${v}</${t}>\n` : ''; }
+  branch(t: string, c: string, i: number) { return c.trim() ? `${'  '.repeat(i)}<${t}>\n${c.trimEnd()}\n${'  '.repeat(i)}</${t}>\n` : ''; }
+
+  refreshLineCount() { this.editorLineCount = Array.from({ length: (this.generatedXml || '').split('\n').length }, (_, i) => i + 1); }
+  syncScroll(e: any, g: any) { g.scrollTop = e.scrollTop; }
+  pushHistory() {
+    // Drop forward history when a new branch is created
+    this.xmlHistory = this.xmlHistory.slice(0, this.xmlHistoryIdx + 1);
+    this.xmlHistory.push(this.generatedXml);
+    if (this.xmlHistory.length > this.maxHistory) {
+      this.xmlHistory.shift();
+    }
+    this.xmlHistoryIdx = this.xmlHistory.length - 1;
+  }
+  undoXml() { if (this.xmlHistoryIdx > 0) { this.xmlHistoryIdx--; this.generatedXml = this.xmlHistory[this.xmlHistoryIdx]; this.refreshLineCount(); } }
+  redoXml() { if (this.xmlHistoryIdx < this.xmlHistory.length - 1) { this.xmlHistoryIdx++; this.generatedXml = this.xmlHistory[this.xmlHistoryIdx]; this.refreshLineCount(); } }
+  canUndoXml() { return this.xmlHistoryIdx > 0; }
+  canRedoXml() { return this.xmlHistoryIdx < this.xmlHistory.length - 1; }
+  copyToClipboard() { navigator.clipboard.writeText(this.generatedXml); this.snackBar.open('XML Copied!', 'Close', { duration: 2000 }); }
+  downloadXml() { const blob = new Blob([this.generatedXml], { type: 'application/xml' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `pain002-${Date.now()}.xml`; a.click(); }
+  onEditorChange(e: string) {
+    this.generatedXml = e;
+    this.refreshLineCount();
+    this.parseXmlToForm(e);
+  }
+
+  parseXmlToForm(xml: string) {
+    if (!xml || xml.length < 50) return;
+    if (this.isParsingXml) return;
+    try {
+      this.isParsingXml = true;
+      const cleanXml = xml.replace(/<(\/?)(?:[\w]+:)/g, '<$1');
+      const doc = new DOMParser().parseFromString(cleanXml, 'text/xml');
+      if (doc.querySelector('parsererror')) { this.isParsingXml = false; return; }
+
+      const getT = (t: string, p: any = doc): Element | null => {
+        const els = p.getElementsByTagName(t);
+        if (els.length > 0) return els[0];
+        const all = p.getElementsByTagName('*');
+        for (let i = 0; i < all.length; i++) {
+          if (all[i].localName === t) return all[i];
+        }
+        return null;
+      };
+      const tval = (t: string, p: any = doc) => getT(t, p)?.textContent?.trim() || '';
+      const patch: any = {};
+      const setIf = (key: string, value: any) => { if (value !== '' && value !== undefined && value !== null) patch[key] = value; };
+
+      // AppHdr
+      const head = getT('AppHdr');
+      if (head) {
+        const parseFI = (tag: string, pfx: string, parent: Element) => {
+          const node = getT(tag, parent);
+          if (!node) return;
+          setIf(pfx + 'Bic', tval('BICFI', node));
+          const clr = getT('ClrSysMmbId', node);
+          if (clr) {
+            setIf(pfx + 'ClrSysCd', tval('Cd', getT('ClrSysId', clr) || clr));
+            setIf(pfx + 'MmbId', tval('MmbId', clr));
+          }
+          setIf(pfx + 'Lei', tval('LEI', node));
+        };
+        parseFI('Fr', 'head_from', head);
+        parseFI('To', 'head_to', head);
+        setIf('head_bizMsgIdr', tval('BizMsgIdr', head));
+        setIf('head_bizSvc', tval('BizSvc', head));
+        const dt = (tval('CreDt', head) || tval('CreDtTm', head));
+        if (dt) patch['head_creDt'] = dt.substring(0, 25);
+        setIf('head_cpyDplct', tval('CpyDplct', head));
+        patch['head_pssblDplct'] = tval('PssblDplct', head) === 'true';
+        setIf('head_prty', tval('Prty', head));
+        const mkt = getT('MktPrctc', head);
+        if (mkt) { setIf('head_mktPrctcRegy', tval('Regy', mkt)); setIf('head_mktPrctcId', tval('Id', mkt)); }
+        const rltd = getT('Rltd', head);
+        if (rltd) {
+          patch['head_rltd_enabled'] = true;
+          parseFI('Fr', 'head_rltd_from', rltd);
+          parseFI('To', 'head_rltd_to', rltd);
+          setIf('head_rltd_bizMsgIdr', tval('BizMsgIdr', rltd));
+          setIf('head_rltd_bizSvc', tval('BizSvc', rltd));
+          setIf('head_rltd_creDt', tval('CreDt', rltd));
+          setIf('head_rltd_cpyDplct', tval('CpyDplct', rltd));
+          patch['head_rltd_pssblDplct'] = tval('PssblDplct', rltd) === 'true';
+          setIf('head_rltd_prty', tval('Prty', rltd));
+        }
+      }
+
+      // GrpHdr
+      const grpHdr = getT('GrpHdr');
+      if (grpHdr) {
+        setIf('grpHdr_msgId', tval('MsgId', grpHdr));
+        setIf('grpHdr_creDtTm', tval('CreDtTm', grpHdr));
+        const initgPty = getT('InitgPty', grpHdr);
+        if (initgPty) this.parsePartyGroup(initgPty, this.form.get('initgPty'), getT, tval);
+        const fwdgAgt = getT('FwdgAgt', grpHdr);
+        if (fwdgAgt) {
+          const fi = getT('FinInstnId', fwdgAgt);
+          if (fi) {
+            const agentPatch: any = {};
+            const agtBic = tval('BICFI', fi);
+            const agtLei = tval('LEI', fi);
+            const clrNode = getT('ClrSysMmbId', fi);
+            const agtClr = clrNode ? tval('Cd', getT('ClrSysId', clrNode) || clrNode) : '';
+            const agtMmb = clrNode ? tval('MmbId', clrNode) : '';
+            if (agtBic) agentPatch.bic = agtBic;
+            if (agtLei) agentPatch.lei = agtLei;
+            if (agtClr) agentPatch.clrSys = agtClr;
+            if (agtMmb) agentPatch.mmbId = agtMmb;
+            if (Object.keys(agentPatch).length) {
+              (this.form.get('fwdgAgt') as any)?.patchValue(agentPatch, { emitEvent: false });
+            }
+          }
+        }
+      }
+
+      // OrgnlGrpInfAndSts
+      const orgnlGrp = getT('OrgnlGrpInfAndSts');
+      if (orgnlGrp) {
+        setIf('orgnlMsgId', tval('OrgnlMsgId', orgnlGrp));
+        setIf('orgnlMsgNmId', tval('OrgnlMsgNmId', orgnlGrp));
+        setIf('orgnlCreDtTm', tval('OrgnlCreDtTm', orgnlGrp));
+        setIf('orgnlGrpSts', tval('GrpSts', orgnlGrp));
+      }
+
+      // OrgnlPmtInfAndSts / transactions
+      const orgnlPmt = getT('OrgnlPmtInfAndSts');
+      if (orgnlPmt) {
+        setIf('orgnlPmtInfId', tval('OrgnlPmtInfId', orgnlPmt));
+        const txEls = orgnlPmt.getElementsByTagName('TxInfAndSts');
+        if (txEls.length > 0) {
+          while (this.transactions.length > txEls.length) this.transactions.removeAt(this.transactions.length - 1);
+          while (this.transactions.length < txEls.length) this.transactions.push(this.initTransaction());
+          Array.from(txEls).forEach((tx, idx) => {
+            const g = this.transactions.at(idx) as FormGroup;
+            const tp: any = {};
+            const setTx = (k: string, v: any) => { if (v !== '' && v !== undefined && v !== null) tp[k] = v; };
+            setTx('orgnlInstrId', tval('OrgnlInstrId', tx));
+            setTx('orgnlEndToEndId', tval('OrgnlEndToEndId', tx));
+            setTx('orgnlUetr', tval('OrgnlUETR', tx));
+            setTx('txSts', tval('TxSts', tx));
+            const rsnInf = getT('StsRsnInf', tx);
+            if (rsnInf) {
+              const rsn = getT('Rsn', rsnInf);
+              if (rsn) setTx('stsRsnCd', tval('Cd', rsn));
+              const orgtr = getT('Orgtr', rsnInf);
+              if (orgtr) this.parsePartyGroup(orgtr, g.get('orgtr'), getT, tval);
+              const addtlInfs = rsnInf.getElementsByTagName('AddtlInf');
+              const txAddtlArr = g.get('addtlInf') as FormArray;
+              if (addtlInfs.length > 0) {
+                while (txAddtlArr.length > addtlInfs.length) txAddtlArr.removeAt(txAddtlArr.length - 1);
+                while (txAddtlArr.length < addtlInfs.length) txAddtlArr.push(this.fb.control('', [Validators.maxLength(105)]));
+                Array.from(addtlInfs).forEach((el: any, i: number) => txAddtlArr.at(i).setValue(el.textContent?.trim() || ''));
+              }
+            }
+            g.patchValue(tp, { emitEvent: false });
+          });
+        }
+      }
+
+      this.form.patchValue(patch, { emitEvent: false });
+    } catch (e) {
+      console.warn('pain002 XML parse failed', e);
+    } finally {
+      this.isParsingXml = false;
+    }
+  }
+
+  private parsePartyGroup(node: Element, group: AbstractControl | null, getT: any, tval: any) {
+    if (!node || !group) return;
+    const partyPatch: any = {};
+    const setIf = (k: string, v: any) => { if (v !== '' && v !== undefined && v !== null) partyPatch[k] = v; };
+
+    setIf('name', tval('Nm', node));
+
+    const pstl = getT('PstlAdr', node);
+    if (pstl) {
+      const adrLines = pstl.getElementsByTagName('AdrLine');
+
+      const addrType = adrLines.length > 0 ? 'hybrid' : (tval('StrtNm', pstl) ? 'structured' : 'hybrid');
+      const postalPatch: any = { addrType };
+      if (addrType === 'hybrid') { postalPatch['street'] = ''; postalPatch['town'] = tval('TwnNm', pstl); postalPatch['ctry'] = tval('Ctry', pstl); }
+      const sp = (k: string, t: string) => { const v = tval(t, pstl); if (v && addrType === 'structured') postalPatch[k] = v; };
+      sp('dept', 'Dept'); sp('subDept', 'SubDept'); sp('street', 'StrtNm');
+      sp('bldgNb', 'BldgNb'); sp('bldgNm', 'BldgNm'); sp('floor', 'Flr');
+      sp('town', 'TwnNm'); sp('townLctn', 'TwnLctnNm'); sp('district', 'DstrctNm');
+      sp('ctrySub', 'CtrySubDvsn'); sp('ctry', 'Ctry');
+
+      const postalGroup = (group as FormGroup).get('postal') as FormGroup;
+      if (postalGroup) {
+        postalGroup.patchValue(postalPatch, { emitEvent: false });
+        if (adrLines.length > 0) {
+          const addrLinesArr = postalGroup.get('addrLines') as FormArray;
+          while (addrLinesArr.length > adrLines.length) addrLinesArr.removeAt(addrLinesArr.length - 1);
+          while (addrLinesArr.length < adrLines.length) addrLinesArr.push(this.fb.control('', [Validators.maxLength(70)]));
+          Array.from(adrLines).forEach((el: any, i: number) => addrLinesArr.at(i).setValue(el.textContent?.trim() || '', { emitEvent: false }));
+        }
+      }
+    }
+
+    const id = getT('Id', node);
+    if (id) {
+      const org = getT('OrgId', id);
+      if (org) {
+        partyPatch.idType = 'org';
+        setIf('orgAnyBic', tval('AnyBIC', org));
+        setIf('orgLei', tval('LEI', org));
+        const othr = getT('Othr', org);
+        if (othr) {
+          setIf('orgId', tval('Id', othr));
+          const sch = getT('SchmeNm', othr);
+          if (sch) { setIf('orgScheme', tval('Cd', sch)); setIf('orgPrtry', tval('Prtry', sch)); }
+          setIf('orgIssr', tval('Issr', othr));
+        }
+      }
+      const prvt = getT('PrvtId', id);
+      if (prvt) {
+        partyPatch.idType = 'prvt';
+        const dob = getT('DtAndPlcOfBirth', prvt);
+        if (dob) {
+          setIf('prvtBirthDt', tval('BirthDt', dob));
+          setIf('prvtProv', tval('PrvcOfBirth', dob));
+          setIf('prvtCity', tval('CityOfBirth', dob));
+          setIf('prvtCtry', tval('CtryOfBirth', dob));
+        }
+        const othr = getT('Othr', prvt);
+        if (othr) {
+          setIf('prvtId', tval('Id', othr));
+          const sch = getT('SchmeNm', othr);
+          if (sch) { setIf('prvtScheme', tval('Cd', sch)); setIf('prvtPrtry', tval('Prtry', sch)); }
+          setIf('prvtIssr', tval('Issr', othr));
+        }
+      }
+    }
+    setIf('ctryOfRes', tval('CtryOfRes', node));
+
+    (group as FormGroup).patchValue(partyPatch, { emitEvent: false });
+  }
+
+  validateMessage() {
+    if (this.bicSameWarning) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
+      return;
+    }
+    this.showValidationModal = true;
+    this.validationStatus = 'validating';
+    this.http.post(this.config.getApiUrl('/validate'), {
+      xml_content: this.generatedXml,
+      mode: 'Full 1-3',
+      message_type: 'pain.002.001.10',
+      store_in_history: true
+    }).subscribe({
+      next: (data: any) => { this.validationReport = data; this.validationStatus = 'done'; this.clearDraft(); },
+      error: (err) => {
+        this.validationReport = { status: 'FAIL', errors: 1, warnings: 0, details: [{ severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR', path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'), fix_suggestion: 'Ensure the validation server is running.' }] };
+        this.validationStatus = 'done';
+      }
+    });
+  }
+
+  err(path: string) {
+    if (this.limitMessages[path]) return this.limitMessages[path];
+    if (this.leiValidationMessages[path]) return this.leiValidationMessages[path];
+    const c = this.form.get(path);
+    return getValidationErrorMessage(c, path);
+  }
+
+  charCount(path: string, max: number) { const v = this.form.get(path)?.value || ''; return `${v.length}/${max}`; }
+  isNearLimit(path: string, max: number) { return (this.form.get(path)?.value || '').length > max * 0.8; }
+  getValidationLayers() { return Object.keys(this.validationReport?.layer_status || {}).sort(); }
+  getLayerName(k: string) { const names: Record<string, string> = { '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' }; return names[k] ?? `Layer ${k}`; }
+  getLayerStatus(k: string) { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
+  getLayerTime(k: string) { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
+  isLayerPass(k: string) {
+    const s = this.getLayerStatus(k);
+    if (!s || s.trim() === '') return false;
+    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return false;
+    // Also check: if layer status is PASS/✅ but details has warnings for this layer, treat as warn not pass
+    const layerNum = Number(k);
+    const hasLayerWarnings = (this.validationReport?.details ?? []).some(
+        (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+    );
+    if (hasLayerWarnings) return false;
+    return s.includes('✅') || s.includes('PASS');
+  }
+  isLayerFail(k: string) {
+    const s = this.getLayerStatus(k);
+    return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
+  }
+  isLayerWarn(k: string) {
+    const s = this.getLayerStatus(k);
+    if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return true;
+    // Also treat as warn if layer status is PASS/✅ but has warnings in details
+    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (!s || s.trim() === '') return false;
+    const layerNum = Number(k);
+    return (this.validationReport?.details ?? []).some(
+        (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+    );
+  }
+  getValidationIssues() { return this.validationReport?.details ?? []; }
+  toggleValidationIssue(issue: any) { this.validationExpandedIssue = this.validationExpandedIssue === issue ? null : issue; }
+  closeValidationModal() { this.showValidationModal = false; this.validationReport = null; this.validationStatus = 'idle'; this.validationExpandedIssue = null; }
+  copyFix(text: string, e: MouseEvent) { e.stopPropagation(); navigator.clipboard.writeText(text).then(() => this.snackBar.open('Copied!', '', { duration: 1500 })); }
+  formatXml(showToast = true) { this.generateXml(); }
+  viewXmlModal() {
+    this.closeValidationModal();
+    setTimeout(() => this.xmlEditor?.nativeElement?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  }
+  editXmlModal() {
+    this.closeValidationModal();
+    setTimeout(() => {
+      this.xmlEditor?.nativeElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      this.xmlEditor?.nativeElement?.focus();
+    }, 50);
+  }
+  runValidationModal() { this.closeValidationModal(); setTimeout(() => this.validateMessage(), 100); }
+
+  openBicSearch(controlName: string, index?: number) {
+    const dialogRef = this.dialog.open(BicSearchDialogComponent, { width: '800px', disableClose: true });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.bic) {
+        if (index !== undefined) {
+           const grp = this.transactions.at(index) as FormGroup;
+           const grpCtrl = grp.get(controlName);
+            if (grpCtrl) {
+              grpCtrl.setValue(result.bic, { emitEvent: true });
+              grpCtrl.markAsTouched();
+              grpCtrl.markAsDirty();
+              grpCtrl.updateValueAndValidity();
+            }
+           grp.get(controlName)?.markAsDirty();
+        } else {
+           const ctrl = this.form.get(controlName);
+                     if (ctrl) {
+                       ctrl.setValue(result.bic, { emitEvent: true });
+                       ctrl.markAsTouched();
+                       ctrl.markAsDirty();
+                       ctrl.updateValueAndValidity();
+                     }
+        }
+      }
+    });
+  }
+
+  openBicSearchGroup(controlName: string, group: FormGroup) {
+    const dialogRef = this.dialog.open(BicSearchDialogComponent, { width: '800px', disableClose: true });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.bic) {
+        const targetGroup = group || this.form;
+
+        const tgCtrl = targetGroup.get(controlName);
+          if (tgCtrl) {
+            tgCtrl.setValue(result.bic, { emitEvent: true });
+            tgCtrl.markAsTouched();
+            tgCtrl.markAsDirty();
+            tgCtrl.updateValueAndValidity();
+          }
+        const control = targetGroup.get(controlName);
+        if (control) {
+          control.markAsDirty();
+          control.updateValueAndValidity();
+        }
+      }
+    });
+  }
+
+  private saveDraft(): void {
+    try { localStorage.setItem(this.DRAFT_KEY, JSON.stringify(this.form.value)); }
+    catch (e) { console.warn('Draft save failed:', e); }
+  }
+
+  private loadDraft(): boolean {
+    try {
+      const saved = localStorage.getItem(this.DRAFT_KEY);
+      if (!saved) return false;
+      this.form.patchValue(JSON.parse(saved), { emitEvent: false });
+      return true;
+    } catch (e) { console.warn('Draft load failed:', e); return false; }
+  }
+
+  clearDraft(reload = false): void {
+    this.isClearingDraft = reload;
+    try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
+    this.showDraftBanner = false;
+    if (reload) { setTimeout(() => window.location.reload(), 500); }
+  }
+
+  private scheduleDraftSave(): void {
+    if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+    this.draftSaveTimer = setTimeout(() => this.saveDraft(), 2000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+  }
+}
+
