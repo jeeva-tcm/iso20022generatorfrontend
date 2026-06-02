@@ -221,7 +221,7 @@ export class Camt056Component implements OnInit, OnDestroy {
         orgnlCreDtTm: [this.isoNowWithTZ()],
         
         // Transaction Reference
-        orgnlInstrId: ['', [Validators.maxLength(35)]],
+        orgnlInstrId:['', [Validators.maxLength(16)]],
         orgnlEndToEndId: ['E2E' + Date.now().toString().slice(-13), [Validators.maxLength(35)]],
         orgnlTxId: ['', [Validators.maxLength(35)]],
         orgnlUetr: [this.uetr.generate(), [Validators.required, Validators.pattern(UETR_REG)]],

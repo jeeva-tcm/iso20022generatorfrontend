@@ -151,7 +151,7 @@ export class Pacs2Component implements OnInit, OnDestroy {
       orgnlCreDtTm: [this.isoNow(), Validators.required],
 
       // TxRef
-      orgnlInstrId: ['INSTR-STATUS-001', [Validators.maxLength(35)]],
+      orgnlInstrId:['INSTR-STATUS-001', [Validators.maxLength(16)]],
       orgnlEndToEndId: ['E2E-STATUS-001', Validators.maxLength(35)],
       orgnlTxId: ['TX-STATUS-001', [Validators.maxLength(35)]],
       orgnlUETR: [this.uetrService.generate(), UETR_PATTERN],

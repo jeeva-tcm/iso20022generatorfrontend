@@ -294,27 +294,42 @@ export class FixSuggesterComponent implements OnInit, OnChanges, OnDestroy, Afte
   acceptSelected() {
     const selected = this.batchItems.filter(i => i.selected && i.status === 'ready');
     if (selected.length === 0) return;
+    this.applying = true;
+    this.cdr.markForCheck();
+
+    const onApplied = (newXml: string) => {
+      selected.forEach(i => i.status = 'applied');
+      this.applying = false;
+      this.cdr.markForCheck();
+      setTimeout(() => this.applied.emit(newXml), 350);
+    };
+    const onError = (err: any, what: string) => {
+      this.applying = false;
+      this.errorMsg = `Failed to apply fixes: ${err?.error?.detail ?? err.message}`;
+      this.cdr.markForCheck();
+      console.error(`[FixSuggester] ${what} error`, err);
+    };
+
+    // "Fix all at once": when every actionable issue is selected, run the
+    // backend's iterative auto-fix (validate→fix→re-validate until clean) so
+    // CASCADING errors — ones revealed only after an earlier fix — are resolved
+    // too, not just the issues visible in this single snapshot. For a partial
+    // selection we honour exactly what the user picked via apply-batch.
+    if (this.allSelected) {
+      this.fixService.autoFix(this.xml).subscribe({
+        next: (resp) => onApplied(resp.new_xml),
+        error: (err) => onError(err, 'auto-fix'),
+      });
+      return;
+    }
+
     const fixes: BatchFix[] = selected.map(i => ({
       xpath: i.suggestion.xpath,
       fragment_xml: i.suggestion.fragment_xml
     }));
-    this.applying = true;
-    this.cdr.markForCheck();
     this.fixService.applyBatch(this.xml, fixes).subscribe({
-      next: (resp) => {
-        // Mark all selected items as applied for the closing animation
-        selected.forEach(i => i.status = 'applied');
-        this.applying = false;
-        this.cdr.markForCheck();
-        // Brief pause so the user sees the green check, then emit.
-        setTimeout(() => this.applied.emit(resp.new_xml), 350);
-      },
-      error: (err) => {
-        this.applying = false;
-        this.errorMsg = `Failed to apply fixes: ${err?.error?.detail ?? err.message}`;
-        this.cdr.markForCheck();
-        console.error('[FixSuggester] apply-batch error', err);
-      }
+      next: (resp) => onApplied(resp.new_xml),
+      error: (err) => onError(err, 'apply-batch'),
     });
   }
 

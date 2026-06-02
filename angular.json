@@ -11,11 +11,11 @@
             "prefix": "app",
             "architect": {
                 "build": {
-                    "builder": "@angular-devkit/build-angular:browser-esbuild",
+                    "builder": "@angular-devkit/build-angular:application",
                     "options": {
                         "outputPath": "dist/frontend",
                         "index": "src/index.html",
-                        "main": "src/main.ts",
+                        "browser": "src/main.ts",
                         "polyfills": [
                             "zone.js"
                         ],
@@ -50,24 +50,28 @@
                                     "maximumError": "40000Mb"
                                 }
                             ],
-                            "outputHashing": "all"
+                            "outputHashing": "all",
+                            "sourceMap": false
                         },
                         "development": {
                             "optimization": false,
                             "extractLicenses": false,
-                            "sourceMap": true
+                            "sourceMap": false,
+                            "namedChunks": true,
+                            "aot": true,
+                            "tsConfig": "tsconfig.dev.json"
                         }
                     },
-                    "defaultConfiguration": "production"
+                    "defaultConfiguration": "development"
                 },
                 "serve": {
                     "builder": "@angular-devkit/build-angular:dev-server",
                     "configurations": {
                         "production": {
-                            "browserTarget": "frontend:build:production"
+                            "buildTarget": "frontend:build:production"
                         },
                         "development": {
-                            "browserTarget": "frontend:build:development"
+                            "buildTarget": "frontend:build:development"
                         }
                     },
                     "defaultConfiguration": "development"

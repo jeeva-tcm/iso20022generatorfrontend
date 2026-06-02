@@ -225,6 +225,21 @@
             <div class="row-details" *ngIf="expandedFile === f" (click)="$event.stopPropagation()">
               <div class="details-inner" *ngIf="f.report; else noReport">
 
+                <!-- ── Structural Fix Banner (shown when backend recovered malformed XML) ── -->
+                <div class="structural-fix-banner" *ngIf="f.fixedXml">
+                  <div class="sfb-left">
+                    <mat-icon class="sfb-icon">auto_fix_high</mat-icon>
+                    <div class="sfb-text">
+                      <strong>Auto-Repair Available</strong>
+                      <span>The backend detected and repaired structural issues (unclosed tags, missing elements, or reserved characters). Click to apply the fix.</span>
+                    </div>
+                  </div>
+                  <button class="btn-structural-fix" (click)="applyStructuralFix(f, $event)">
+                    <mat-icon>build_circle</mat-icon>
+                    Apply Structural Fix
+                  </button>
+                </div>
+
                 <!-- Fix All button (shown only when there are fixable ERROR-severity issues) -->
                 <div class="fix-all-row" *ngIf="getFixableCount(f.report) > 0">
                   <button class="btn-fix-all"

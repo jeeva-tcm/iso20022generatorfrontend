@@ -49,7 +49,7 @@ export class Pain002Component implements OnInit, OnDestroy {
     'BizMsgIdr': 35, 'MsgId': 35, 'Nm': 140, 'AddtlInf': 105,
     'BICFI': 11, 'LEI': 20, 'MmbId': 35, 'AdrLine': 70,
     'BizSvc': 35, 'Regy': 35, 'Id': 35, 'ClrSys': 5,
-    'InstrId': 35, 'EndToEndId': 35, 'PmtInfId': 35,
+    'InstrId':  16, 'EndToEndId': 35, 'PmtInfId': 35,
     'Prov': 35, 'City': 35, 'Prtry': 35, 'Issr': 35,
     'Dept': 70, 'SubDept': 70, 'Street': 70, 'Floor': 70, 'Room': 70,
     'BldgNm': 35, 'Town': 35, 'TownLctn': 35, 'District': 35, 'CtrySub': 35,
@@ -478,7 +478,7 @@ export class Pain002Component implements OnInit, OnDestroy {
 
   initTransaction() {
     return this.fb.group({
-      orgnlInstrId: ['', [Validators.maxLength(35)]],
+      orgnlInstrId:['', [Validators.maxLength(16)]],
       orgnlEndToEndId: ['E2E-' + this.dateStamp() + '-' + this.randomId(), [Validators.maxLength(35)]],
       orgnlUetr: [this.uetrService.generate(), [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
       txSts: ['ACSC', Validators.required],

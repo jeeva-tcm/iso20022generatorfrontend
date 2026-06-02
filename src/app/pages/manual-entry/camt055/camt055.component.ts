@@ -275,7 +275,7 @@ export class Camt055Component implements OnInit, OnDestroy {
       case_id: ['CASE-' + Date.now().toString().slice(-10), [Validators.required, Validators.maxLength(16)]],
 
       // Original References (OrgnlEndToEndId required before OrgnlUETR per schema)
-      orgnlInstrId: ['', Validators.maxLength(35)],
+      orgnlInstrId:['', Validators.maxLength(16)],
       orgnlEndToEndId: ['E2E-' + Date.now().toString().slice(-10), [Validators.maxLength(35)]],
       orgnlUETR: [this.uetrService.generate(), UETR_PATTERN],
 

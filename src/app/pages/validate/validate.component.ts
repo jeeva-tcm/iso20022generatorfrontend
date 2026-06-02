@@ -27,6 +27,8 @@ export interface FileEntry {
   messageType: string;
   handle?: any;
   origin?: 'Pasted' | 'Uploaded' | 'Manual Entry' | 'MT to MX';
+  /** Auto-repaired XML returned by the backend FixSuggester for structural/syntax errors */
+  fixedXml?: string;
 }
 
 @Component({
@@ -162,6 +164,22 @@ export class ValidateComponent implements OnInit {
     this.fixSuggesterOpen = false;
     this.fixTarget = null;
   }
+
+  /**
+   * Applies the backend's auto-repaired XML (fixed_xml from FixSuggester._try_xml_recovery)
+   * directly into the entry content, clears the fixedXml field, and re-validates.
+   * This is the one-click structural fix for malformed XML / unclosed tag errors.
+   */
+  applyStructuralFix(entry: FileEntry, event: Event) {
+    event.stopPropagation();
+    if (!entry.fixedXml) return;
+    entry.content = entry.fixedXml;
+    entry.fixedXml = undefined;
+    this.saveWorkspace();
+    this.validateFile(entry);
+    this.snackBar.open('Structural fix applied — re-validating…', '', { duration: 2500 });
+  }
+
 
   // ── Summary computed from all files ────────────────────────────────────────
   get summary() {
@@ -1240,75 +1258,8 @@ export class ValidateComponent implements OnInit {
     if (!entry.content?.trim()) return;
 
     // Client-side well-formedness pre-check
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(entry.content, 'text/xml');
-    const parseErrorEl = doc.querySelector('parsererror');
-    if (parseErrorEl) {
-      // Collect ALL errors from the raw content — don't stop at the first one
-      const allDetails: any[] = [];
-      const lines = entry.content.split('\n');
-      const rawAmpRe = /&(?![a-zA-Z#][a-zA-Z0-9#]*;)/g;
-      // Safe charset for name/address tags
-      const nameTagRe = /<(Nm|StrtNm|TwnNm|BldgNm|AdrLine|DstrctNm|CtrySubDvsn|TwnLctnNm)>([^<]+)<\/\1>/g;
-      const safeCharRe = /^[a-zA-Z0-9 .,()'"-]+$/;
-
-      // 1. Find every line with a literal unescaped &
-      lines.forEach((line, idx) => {
-        let m: RegExpExecArray | null;
-        rawAmpRe.lastIndex = 0;
-        while ((m = rawAmpRe.exec(line)) !== null) {
-          const lineNum = String(idx + 1);
-          allDetails.push({
-            severity: 'ERROR', layer: 1, code: 'INVALID_CHARSET', path: lineNum,
-            message: `Invalid character '&' at line ${lineNum}. The ampersand is a reserved XML character and is not allowed in name or address fields.`,
-            fix_suggestion: `Remove or replace the '&' at line ${lineNum}. Write 'and' instead of '&'.`
-          });
-          break; // one report per line is enough
-        }
-      });
-
-      // 2. Find invalid charset in name/address tags (works on content even if XML is partially broken)
-      let tagMatch: RegExpExecArray | null;
-      nameTagRe.lastIndex = 0;
-      while ((tagMatch = nameTagRe.exec(entry.content)) !== null) {
-        const tagName = tagMatch[1];
-        const tagValue = tagMatch[2].trim();
-        if (tagValue && !safeCharRe.test(tagValue)) {
-          const before = entry.content.substring(0, tagMatch.index);
-          const lineNum = String((before.match(/\n/g) || []).length + 1);
-          const badChars = [...new Set(tagValue.split('').filter(c => !/[a-zA-Z0-9 .,()'"-]/.test(c)))].join(' ');
-          allDetails.push({
-            severity: 'ERROR', layer: 1, code: 'INVALID_CHARSET', path: lineNum,
-            message: `Field <${tagName}> at line ${lineNum} contains invalid character(s): ${badChars}. Only letters, digits, spaces and . , ( ) ' - are allowed.`,
-            fix_suggestion: `Remove or replace the invalid character(s) ${badChars} in <${tagName}> at line ${lineNum}.`
-          });
-        }
-      }
-
-      // 3. If nothing specific found, fall back to a generic parse error with the browser's line number
-      if (allDetails.length === 0) {
-        const rawError = parseErrorEl.textContent || '';
-        let lineNum = '?';
-        const lineMatch = rawError.match(/[Ll]ine[:\s]+(\d+)/i) || rawError.match(/(\d+):(\d+)/);
-        if (lineMatch) lineNum = lineMatch[1];
-        allDetails.push({
-          severity: 'ERROR', layer: 1, code: 'XML_SYNTAX', path: lineNum,
-          message: `Malformed XML at line ${lineNum} — invalid structure or unclosed tags.`,
-          fix_suggestion: `Check line ${lineNum}: ensure all tags are properly opened and closed and values contain no reserved XML characters.`
-        });
-      }
-
-      const totalErrors = allDetails.length;
-      this.snackBar.open(`${entry.name}: ${totalErrors} error(s) found`, 'Dismiss', { duration: 4000 });
-      entry.status = 'failed';
-      entry.report = {
-        status: 'FAIL', errors: totalErrors, warnings: 0,
-        message: 'Unknown', total_time_ms: 0,
-        layer_status: { '1': { status: '❌', time: 0 } },
-        details: allDetails
-      };
-      return;
-    }
+    // REMOVED: Now delegating entirely to the backend layer1_validator to handle XML syntax errors
+    // so that the FixSuggester can automatically suggest structural fixes via _try_xml_recovery.
 
     entry.status = 'validating';
     entry.report = null;
@@ -1352,6 +1303,16 @@ export class ValidateComponent implements OnInit {
         }
         entry.report = data;
         entry.messageType = data.message ?? '';
+
+        // Store the backend-repaired XML so the UI can offer a one-click structural fix
+        // The backend FixSuggester runs _try_xml_recovery for XMLSyntaxError issues and
+        // returns the repaired document in fixed_xml. If the fix produced no change
+        // (or there was nothing to fix), fixed_xml equals the original or is absent.
+        if (data.fixed_xml && data.fixed_xml !== entry.content) {
+          entry.fixedXml = data.fixed_xml;
+        } else {
+          entry.fixedXml = undefined;
+        }
 
         // Rename pasted files to use the detected message type
         if (entry.name.startsWith('pasted-') && entry.messageType && entry.messageType !== 'Unknown') {
@@ -1517,7 +1478,10 @@ export class ValidateComponent implements OnInit {
   }
 
   getLayerTime(report: any, k: string): number {
-    return report?.layer_status?.[k]?.time ?? 0;
+    const t = report?.layer_status?.[k]?.time ?? 0;
+    // Guard against unrounded backend timings (e.g. 0.3571510314941406) so the
+    // UI always shows a clean 2-decimal millisecond value.
+    return Math.round((Number(t) || 0) * 100) / 100;
   }
 
   isLayerPass(report: any, k: string) { return this.getLayerStatus(report, k).includes('✅'); }

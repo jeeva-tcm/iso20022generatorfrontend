@@ -266,7 +266,7 @@ export class Pain001Component implements OnInit, OnDestroy {
     const LEI = [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)];
 
     return this.fb.group({
-      instrId: ['INSTR-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
+      instrId:['INSTR-' + Date.now(), [Validators.required, Validators.maxLength(16)]],
       endToEndId: ['E2E-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
       uetr: [crypto.randomUUID ? crypto.randomUUID() : '550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)]],
       amount: ['12500.00', [Validators.required, Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],

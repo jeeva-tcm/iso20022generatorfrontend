@@ -3158,6 +3158,94 @@ body.light-theme .btn-download {
   height: 16px;
 }
 
+/* ── Structural Fix Banner ── */
+.structural-fix-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.08) 0%, rgba(16, 185, 129, 0.05) 100%);
+  border: 1px solid rgba(20, 184, 166, 0.35);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  animation: sfb-slide-in 0.3s ease;
+}
+@keyframes sfb-slide-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.sfb-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+.sfb-icon {
+  color: #14b8a6;
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.sfb-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.sfb-text strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0d9488;
+}
+.sfb-text span {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.btn-structural-fix {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: linear-gradient(135deg, #0d9488 0%, #059669 100%);
+  border: none;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.01em;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 10px rgba(13, 148, 136, 0.35);
+}
+.btn-structural-fix:hover {
+  box-shadow: 0 4px 16px rgba(13, 148, 136, 0.5);
+  transform: translateY(-1px);
+}
+.btn-structural-fix:active {
+  transform: translateY(0);
+}
+.btn-structural-fix mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+/* dark-theme overrides for structural fix banner */
+body.dark-theme .structural-fix-banner {
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.06) 0%, rgba(16, 185, 129, 0.04) 100%);
+  border-color: rgba(20, 184, 166, 0.25);
+}
+body.dark-theme .sfb-text strong {
+  color: #2dd4bf;
+}
+
+
 /* ══════════════════════════════════════════════
    DARK THEME — Validate Results Section
    ══════════════════════════════════════════════ */

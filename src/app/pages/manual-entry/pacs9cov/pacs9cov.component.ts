@@ -399,7 +399,7 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
             nbOfTxs: ['1', [Validators.required, Validators.maxLength(15), Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['INDA', Validators.required],
             sttlmAcct: ['', [Validators.maxLength(34), Validators.pattern(/^[A-Z0-9]{5,34}$/)]],
             instgAgtBic: ['RBOSGB2L', BIC], instdAgtBic: ['NDEAFIHH', BIC],
-            instrId: ['pacs9bizmsgidr01', Validators.required], endToEndId: ['pacs8bizmsgidr01', Validators.required],
+            instrId:['pacs9bizmsgidr01', Validators.required], endToEndId: ['pacs8bizmsgidr01', Validators.required],
             uetr: ['8a562c67-ca16-48ba-b074-65581be6f001', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
             clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
             appHdrPriority: [''],
@@ -446,7 +446,7 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
             covInstrForCdtrAgt1Cd: [''], covInstrForCdtrAgt1InfTxt: ['', [Validators.minLength(1), Validators.maxLength(140), ADDR_PATTERN]],
             covInstrForCdtrAgt2Cd: [''], covInstrForCdtrAgt2InfTxt: ['', [Validators.minLength(1), Validators.maxLength(140), ADDR_PATTERN]],
             // InstrForNxtAgt (COV) (0..6)
-            covInstrForNxtAgt1Cd: [''], covInstrForNxtAgt1InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
+            covInstrForNxtAgt1Cd: [''], covInstrForNxtAgt1InfTxt: ['', [Validators.minLength(1), Validators.maxLength(16), ADDR_PATTERN]],
             covInstrForNxtAgt2Cd: [''], covInstrForNxtAgt2InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
             covInstrForNxtAgt3Cd: [''], covInstrForNxtAgt3InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
             covInstrForNxtAgt4Cd: [''], covInstrForNxtAgt4InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
@@ -609,7 +609,8 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
             if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Amount must be > 0 (max 18 digits).';
             if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Please select from the list or enter a valid ISO 20022 Purpose Code.';
             if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
-            if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId' || f === 'clrSysRef') return 'Invalid Pattern (Alphanumeric only, max 35 chars).';
+            if ( f === 'orgnlInstrId') return 'Invalid Pattern (Alphanumeric only, max 16 chars).';
+      if (f === 'bizMsgId' || f === 'msgId'  || f === 'endToEndId' || f === 'txId' || f === 'clrSysRef') return 'Invalid Pattern (Alphanumeric only, max 35 chars).';
             if (f.toLowerCase().includes('name') || f.toLowerCase().includes('nm')) return "Invalid characters. Only letters, numbers, spaces and . , ( ) ' - are allowed (no &, @, !, etc.)";
             if (f.toLowerCase().includes('ustrd') || f.toLowerCase().includes('adtlrmtinf')) return "Invalid character in remittance field. Only ISO 20022 MX allowed chars permitted.";
             if (f === 'instrPrty') return 'Invalid Priority. Must be HIGH or NORM.';

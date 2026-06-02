@@ -281,7 +281,7 @@ export class Pacs4Component implements OnInit, OnDestroy {
             sttlmMtd: ['INDA', Validators.required],
 
             rtrId: ['RTR-TX-001', [Validators.maxLength(35)]],
-            orgnlInstrId: ['INSTR-ORIG-001', [Validators.maxLength(35)]],
+            orgnlInstrId:['INSTR-ORIG-001', [Validators.maxLength(16)]],
             orgnlEndToEndId: ['E2E-ORIG-001', [Validators.maxLength(35)]],
             orgnlTxId: ['TX-ORIG-001', [Validators.maxLength(35)]],
             orgnlUETR: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
