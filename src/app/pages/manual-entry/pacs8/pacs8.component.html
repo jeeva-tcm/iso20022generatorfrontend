@@ -443,55 +443,12 @@
                                                 <div class="party-group-title mandatory">Instructing Agent</div>
                                                 <ng-container
                                                         *ngTemplateOutlet="partyForm; context:{prefix:'instgAgt',isAgent:true, title:'Instructing Agent', group: form}"></ng-container>
-                                                <div [formGroup]="form" class="party-grid" style="padding: 0.5rem 1rem;">
-                                                    <div class="form-group">
-                                                        <label>Instructing Agent Account <span class="opt">Optional</span></label>
-                                                        <input formControlName="instgAgtAcct" maxlength="34" placeholder="IBAN or account ID">
-                                                        <div class="validation-msg" *ngIf="err('instgAgtAcct') as e">{{e}}</div>
-                                                    </div>
-                                                </div>
                                         </div>
 
                                         <div class="party-group">
                                                 <div class="party-group-title mandatory">Instructed Agent</div>
                                                 <ng-container
                                                         *ngTemplateOutlet="partyForm; context:{prefix:'instdAgt',isAgent:true, title:'Instructed Agent', group: form}"></ng-container>
-                                                <div [formGroup]="form" class="party-grid" style="padding: 0.5rem 1rem;">
-                                                    <div class="form-group">
-                                                        <label>Instructed Agent Account <span class="opt">Optional</span></label>
-                                                        <input formControlName="instdAgtAcct" maxlength="34" placeholder="IBAN or account ID">
-                                                        <div class="validation-msg" *ngIf="err('instdAgtAcct') as e">{{e}}</div>
-                                                    </div>
-                                                </div>
-                                        </div>
-
-                                        <div class="party-group">
-                                                <div class="party-group-title">Initiating Party</div>
-                                                <ng-container
-                                                        *ngTemplateOutlet="partyForm; context:{prefix:'initgPty',isAgent:false, hideAccount:true, title:'Initiating Party', group: form}"></ng-container>
-                                        </div>
-
-                                        <!-- Initiating Party Account -->
-                                        <div class="party-group">
-                                                <div class="party-group-title">Initiating Party Account</div>
-                                                <div [formGroup]="form" class="party-grid">
-                                                        <!-- Account Type dropdown -->
-                                                        <div class="form-group">
-                                                                <label>Account Type</label>
-                                                                <select formControlName="initgPtyAcctType" id="initg-pty-acct-type-select">
-                                                                        <option value="iban">IBAN</option>
-                                                                        <option value="other">Other (Othr/Id)</option>
-                                                                </select>
-                                                        </div>
-                                                        <!-- Account Number input -->
-                                                        <div class="form-group">
-                                                                <label>Account Number</label>
-                                                                <input formControlName="initgPtyAcct" maxlength="34"
-                                                                        [placeholder]="form.get('initgPtyAcctType')?.value === 'iban' ? 'e.g. BE68539007547034' : 'e.g. 471932901234'">
-                                                                <div class="validation-msg"
-                                                                        *ngIf="err('initgPtyAcct') as e">{{e}}</div>
-                                                        </div>
-                                                </div>
                                         </div>
 
                                         <div class="party-group">
@@ -652,6 +609,7 @@
                                                          <mat-icon>add_circle_outline</mat-icon>
                                                  </button>
                                          </div>
+                                         <div class="validation-msg" *ngIf="instrForCdtrAgtErrorMsg">{{instrForCdtrAgtErrorMsg}}</div>
                                          <div class="party-group" *ngIf="visibleCdtrAgtInstrCount >= 1">
                                                  <div class="party-group-title">Instr for Creditor Agent 1</div>
                                                  <div [formGroup]="form" class="party-grid">
@@ -1152,7 +1110,7 @@
                                                 (click)="downloadXml()"><mat-icon>download</mat-icon>
                                                 Download XML</button>
                                         <button type="button" class="action-btn validate-btn"
-                                                (click)="validateMessage()" [disabled]="form.invalid">
+                                                (click)="validateMessage()" [disabled]="!isFormValidForValidation()">
                                                 <mat-icon>verified</mat-icon> Validate Message
                                         </button>
                                 </div>
