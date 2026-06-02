@@ -46,26 +46,22 @@ export class Pacs2Component implements OnInit, OnDestroy {
 
   countries: string[] = [];
   agentPrefixes = ['instgAgt', 'instdAgt'];
-  statusCodes = ['ACTC', 'ACCP', 'RJCT', 'PDNG'];
+  // CBPR+ SR2025 valid TxSts codes (ExternalPaymentTransactionStatus1Code)
+  statusCodes = ['ACTC', 'ACCP', 'ACSP', 'ACSC', 'ACWC', 'RJCT', 'PDNG', 'RCVD', 'PART'];
   reasonCodes: { [key: string]: string[] } = {
     'RJCT': [
-      'AC01 â€“ Incorrect Account Number',
-      'AC04 â€“ Closed Account',
-      'AC06 â€“ Blocked Account',
-      'AG01 â€“ Transaction Forbidden',
-      'AG02 â€“ Invalid Bank',
-      'AM04 â€“ Insufficient Funds',
-      'BE01 â€“ Invalid Beneficiary',
-      'FF01 â€“ Fraud Suspected',
-      'RC01 â€“ Invalid BIC'
+      'AC01', 'AC04', 'AC06', 'AG01', 'AG02', 'AM04', 'AM05',
+      'BE01', 'BE04', 'BE05', 'FF01', 'MD01', 'MD07',
+      'MS02', 'MS03', 'RC01', 'RR01', 'RR02', 'RR03', 'RR04', 'NARR'
     ],
-    'PDNG': [
-      'PD01 â€“ Pending Processing',
-      'PD02 â€“ Awaiting Funds',
-      'PD03 â€“ Awaiting Authorization'
-    ],
-    'ACCP': ['NARR â€“ No specific reason / informational'],
-    'ACTC': ['NARR â€“ No specific reason / informational']
+    'PDNG': ['NARR'],
+    'ACCP': ['NARR'],
+    'ACTC': ['NARR'],
+    'ACSP': ['NARR'],
+    'ACSC': ['NARR'],
+    'ACWC': ['NARR'],
+    'RCVD': ['NARR'],
+    'PART': ['NARR']
   };
 
   get currentReasonCodes() {
@@ -140,21 +136,22 @@ export class Pacs2Component implements OnInit, OnDestroy {
       toBic: ['CCCCGB2LXXX', BIC],
       bizMsgId: ['MSG-2026-FI-S-001', [Validators.required, Validators.maxLength(35)]],
       msgDefIdr: ['pacs.002.001.10', [Validators.maxLength(35)]],
-      bizSvc: ['swift.cbprplus.02', [Validators.maxLength(35)]],
+      bizSvc: ['swift.cbprplus.03', [Validators.required, Validators.maxLength(35)]],
+      prty: [''],
       creDtTm: [this.isoNow(), Validators.required],
 
       // GrpHdr
       msgId: ['MSG-2026-FI-S-001-GH', [Validators.required, Validators.maxLength(35)]],
 
-      // OrgnlGrpInf
-      orgnlMsgId: ['MSG-' + Date.now() + '-ORG', [Validators.maxLength(35)]],
-      orgnlMsgNmId: ['pacs.008.001.08', [Validators.maxLength(35)]],
-      orgnlCreDtTm: [this.isoNow(), Validators.required],
+      // OrgnlGrpInf — OrgnlGrpInf is mandatory; OrgnlMsgId+OrgnlMsgNmId are [1..1] mandatory
+      orgnlMsgId: ['MSG-' + Date.now() + '-ORG', [Validators.required, Validators.maxLength(35)]],
+      orgnlMsgNmId: ['pacs.008.001.08', [Validators.required, Validators.maxLength(35)]],
+      orgnlCreDtTm: [this.isoNow(), []],   // [0..1] optional
 
       // TxRef
-      orgnlInstrId: ['INSTR-STATUS-001', [Validators.maxLength(35)]],
-      orgnlEndToEndId: ['E2E-STATUS-001', Validators.maxLength(35)],
-      orgnlTxId: ['TX-STATUS-001', [Validators.maxLength(35)]],
+      orgnlInstrId: ['INSTR-STATUS-001', [Validators.maxLength(35)]],          // [0..1] optional
+      orgnlEndToEndId: ['E2E-STATUS-001', [Validators.required, Validators.maxLength(35)]], // MANDATORY
+      orgnlTxId: ['TX-STATUS-001', [Validators.maxLength(35)]],                // [0..1] optional
       orgnlUETR: [this.uetrService.generate(), UETR_PATTERN],
 
       // TxSts
@@ -204,8 +201,9 @@ export class Pacs2Component implements OnInit, OnDestroy {
       stsRsnCd: [''],
       stsRsnPrtry: ['', [Validators.maxLength(35)]],
 
-      // AddtlInf
+      // AddtlInf (max 2 per CBPR+ §5.98.3)
       stsRsnAddtlInf: ['', [Validators.maxLength(105)]],
+      stsRsnAddtlInf2: ['', [Validators.maxLength(105)]],
 
       // EffDt
       effDt: [''],
@@ -216,19 +214,10 @@ export class Pacs2Component implements OnInit, OnDestroy {
 
     };
 
+    // CBPR+ §5.39: For InstgAgt/InstdAgt in TxInfAndSts, Name/PostalAddress/Other are REMOVED.
+    // Only BICFI (mandatory per §5.39.1), ClrSysMmbId (optional), and LEI (optional) are allowed.
     this.agentPrefixes.forEach(p => {
-      if (!c[p + 'AddrType']) c[p + 'AddrType'] = ['none'];
-      if (!c[p + 'AdrLine1']) c[p + 'AdrLine1'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
-      if (!c[p + 'AdrLine2']) c[p + 'AdrLine2'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
-      if (!c[p + 'StrtNm']) c[p + 'StrtNm'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
-      if (!c[p + 'BldgNb']) c[p + 'BldgNb'] = ['', [Validators.maxLength(16), ADDR_PATTERN]];
-      if (!c[p + 'BldgNm']) c[p + 'BldgNm'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
-      if (!c[p + 'PstCd']) c[p + 'PstCd'] = ['', [Validators.maxLength(16), ADDR_PATTERN]];
-      if (!c[p + 'TwnNm']) c[p + 'TwnNm'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
-      if (!c[p + 'Ctry']) c[p + 'Ctry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
-      if (!c[p + 'Name']) c[p + 'Name'] = ['', Validators.maxLength(140)];
-      if (!c[p + 'Acct']) c[p + 'Acct'] = ['', Validators.maxLength(34)];
-      if (!c[p + 'Bic']) c[p + 'Bic'] = [p === 'instgAgt' ? 'BBBBUS33XXX' : 'CCCCGB2LXXX', BIC_OPT];
+      if (!c[p + 'Bic']) c[p + 'Bic'] = [p === 'instgAgt' ? 'BBBBUS33XXX' : 'CCCCGB2LXXX', BIC];
       if (!c[p + 'Lei']) c[p + 'Lei'] = ['', Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)];
       if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['', Validators.maxLength(5)];
       if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
@@ -340,7 +329,7 @@ export class Pacs2Component implements OnInit, OnDestroy {
 \t\t<BizMsgIdr>${this.esc(v.bizMsgId)}</BizMsgIdr>
 \t\t<MsgDefIdr>${this.esc(v.msgDefIdr)}</MsgDefIdr>
 \t\t<BizSvc>${this.esc(v.bizSvc)}</BizSvc>
-\t\t<CreDt>${this.fdt(v.creDtTm)}</CreDt>
+\t\t<CreDt>${this.fdt(v.creDtTm)}</CreDt>${v.prty ? `\n\t\t<Prty>${this.esc(v.prty)}</Prty>` : ''}
 \t</AppHdr>
 \t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.002.001.10">
 \t\t<FIToFIPmtStsRpt>
@@ -426,19 +415,24 @@ ${txInf.trimEnd()}
     else if (v.stsRsnPrtry?.trim()) rsn += this.leaf('Prtry', v.stsRsnPrtry, 7);
     if (rsn) inner += this.branch('Rsn', rsn, 6);
 
-    // AddtlInf
+    // AddtlInf (max 2 occurrences per CBPR+ §5.98.3)
     if (v.stsRsnAddtlInf?.trim()) inner += this.leaf('AddtlInf', v.stsRsnAddtlInf, 5);
+    if (v.stsRsnAddtlInf2?.trim()) inner += this.leaf('AddtlInf', v.stsRsnAddtlInf2, 5);
 
     return inner ? this.branch('StsRsnInf', inner, 4) : '';
   }
 
   buildFctvIntrBkSttlmDt(v: any): string {
+    // CBPR+ FormalRule: If TxSts = RJCT, FctvIntrBkSttlmDt is NOT allowed.
+    if (v.txSts === 'RJCT') return '';
     if (v.effDt?.trim()) return this.branch('FctvIntrBkSttlmDt', this.leaf('Dt', v.effDt, 5), 4);
     if (v.effDtTm?.trim()) return this.branch('FctvIntrBkSttlmDt', this.leaf('DtTm', this.fdt(v.effDtTm), 5), 4);
     return '';
   }
 
   buildAgt(tag: string, v: any, prefix: string): string {
+    // CBPR+ §5.39: Name, PostalAddress, Other are REMOVED for InstgAgt/InstdAgt in TxInfAndSts.
+    // Only BICFI (mandatory), ClrSysMmbId, and LEI are allowed.
     let inner = '';
     if (v[prefix + 'Bic']?.trim()) inner += this.leaf('BICFI', v[prefix + 'Bic'], 6);
     const clrMmb = v[prefix + 'ClrSysMmbId']?.trim();
@@ -449,15 +443,8 @@ ${txInf.trimEnd()}
       inner += this.branch('ClrSysMmbId', clr, 6);
     }
     if (v[prefix + 'Lei']?.trim()) inner += this.leaf('LEI', v[prefix + 'Lei'], 6);
-    if (v[prefix + 'Name']?.trim()) inner += this.leaf('Nm', v[prefix + 'Name'], 6);
-    inner += this.addrXml(v, prefix, 6);
-
-    if (!inner.trim() && !v[prefix + 'Acct']?.trim()) return '';
-    let body = inner.trim() ? this.branch('FinInstnId', inner, 5) : '';
-    if (v[prefix + 'Acct']?.trim()) {
-      body += this.branch('Acct', this.branch('Id', this.leaf('IBAN', v[prefix + 'Acct'], 6), 5), 4);
-    }
-    return body ? this.branch(tag, body, 4) : '';
+    if (!inner.trim()) return '';
+    return this.branch(tag, this.branch('FinInstnId', inner, 5), 4);
   }
 
   addrXml(v: any, p: string, indent = 4): string {

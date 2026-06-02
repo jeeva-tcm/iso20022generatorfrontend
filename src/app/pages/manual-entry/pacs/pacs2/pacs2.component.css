@@ -10,6 +10,13 @@
     padding: 1.25rem 1.5rem 3rem;
     box-sizing: border-box;
     transition: background-color 0.3s ease, color 0.3s ease;
+    --editor-gutter: #1e1e1e;
+    --editor-gutter-text: #858585;
+}
+
+:host-context(body.light-theme) {
+    --editor-gutter: #f8fafc;
+    --editor-gutter-text: #94a3b8;
 }
 
 
@@ -146,7 +153,16 @@ header p {
 }
 
 
-/* Using global .grid, .section-title, .form-group from styles.css */
+/* Single-column layout — same style as pacs8 but 1 column */
+:host .grid {
+    grid-template-columns: 1fr;
+    gap: 1rem 0;
+}
+
+:host .party-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem 0;
+}
 
 input,
 select,
@@ -168,8 +184,8 @@ textarea {
     border-radius: 8px;
     border: 1px solid var(--border-light);
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: .5rem .75rem;
+    grid-template-columns: 1fr;
+    gap: .75rem 0;
     margin-bottom: .25rem;
 }
 

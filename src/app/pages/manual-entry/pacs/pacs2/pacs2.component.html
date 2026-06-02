@@ -81,6 +81,14 @@
                         <input formControlName="msgDefIdr" maxlength="35" placeholder="e.g. pacs.002.001.10">
                         <div class="validation-msg" *ngIf="err('msgDefIdr') as e">{{e}}</div>
                     </div>
+                    <div class="form-group">
+                        <label>Priority <span class="opt">Optional</span></label>
+                        <select formControlName="prty">
+                            <option value="">Not Set</option>
+                            <option value="HIGH">HIGH</option>
+                            <option value="NORM">NORM</option>
+                        </select>
+                    </div>
 
                     <div class="section-title">Original Group Information</div>
                     <div class="form-group">
@@ -95,27 +103,27 @@
                         <div class="validation-msg" *ngIf="err('orgnlMsgNmId') as e">{{e}}</div>
                     </div>
                     <div class="form-group">
-                        <label>Original Creation DateTime <span class="req">*</span></label>
-                        <input formControlName="orgnlCreDtTm" required>
+                        <label>Original Creation DateTime <span class="opt">Optional</span></label>
+                        <input formControlName="orgnlCreDtTm" placeholder="2026-01-15T10:00:00+00:00">
                         <div class="validation-msg" *ngIf="err('orgnlCreDtTm') as e">{{e}}</div>
                     </div>
 
                     <div class="section-title">Transaction References</div>
                     <div class="form-group intermediary-field">
-                        <label>Original Instruction ID <span class="req">*</span></label>
-                        <input formControlName="orgnlInstrId" required>
+                        <label>Original Instruction ID <span class="opt">Optional</span></label>
+                        <input formControlName="orgnlInstrId" maxlength="35">
                         <div class="validation-msg" *ngIf="err('orgnlInstrId') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('orgnlInstrId', 35) as h">{{h}}</div>
                     </div>
                     <div class="form-group intermediary-field">
-                        <label>Original End To End ID</label>
-                        <input formControlName="orgnlEndToEndId">
+                        <label>Original End To End ID <span class="req">*</span></label>
+                        <input formControlName="orgnlEndToEndId" maxlength="35" required>
                         <div class="validation-msg" *ngIf="err('orgnlEndToEndId') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('orgnlEndToEndId', 35) as h">{{h}}</div>
                     </div>
                     <div class="form-group intermediary-field">
-                        <label>Original Transaction ID <span class="req">*</span></label>
-                        <input formControlName="orgnlTxId" required>
+                        <label>Original Transaction ID <span class="opt">Optional</span></label>
+                        <input formControlName="orgnlTxId" maxlength="35">
                         <div class="validation-msg" *ngIf="err('orgnlTxId') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('orgnlTxId', 35) as h">{{h}}</div>
                     </div>
@@ -150,7 +158,7 @@
                         <label>Reason Code <span class="req" *ngIf="form.get('txSts')?.value === 'RJCT' || form.get('txSts')?.value === 'PDNG'">*</span></label>
                         <select formControlName="stsRsnCd">
                             <option value="">-- Select Reason --</option>
-                            <option *ngFor="let c of currentReasonCodes" [value]="c.split(' – ')[0]">{{c}}</option>
+                            <option *ngFor="let c of currentReasonCodes" [value]="c">{{c}}</option>
                         </select>
                         <div class="validation-msg" *ngIf="err('stsRsnCd') as e">{{e}}</div>
                     </div>
@@ -160,11 +168,18 @@
                         <div class="validation-msg" *ngIf="err('stsRsnPrtry') as e">{{e}}</div>
                     </div>
                     <div class="form-group intermediary-field">
-                        <label>Additional Information</label>
-                        <textarea formControlName="stsRsnAddtlInf" rows="2"></textarea>
+                        <label>Additional Information 1 <span class="field-hint">(max 105 chars)</span></label>
+                        <textarea formControlName="stsRsnAddtlInf" rows="2" maxlength="105"></textarea>
                         <div class="validation-msg" *ngIf="err('stsRsnAddtlInf') as e">{{e}}</div>
                     </div>
+                    <div class="form-group intermediary-field">
+                        <label>Additional Information 2 <span class="field-hint">(optional, max 105 chars — CBPR+ allows 2)</span></label>
+                        <textarea formControlName="stsRsnAddtlInf2" rows="2" maxlength="105"></textarea>
+                        <div class="validation-msg" *ngIf="err('stsRsnAddtlInf2') as e">{{e}}</div>
+                    </div>
 
+                    <!-- Effective Date blocked when TxSts = RJCT per CBPR+ FormalRule -->
+                    <ng-container *ngIf="form.get('txSts')?.value !== 'RJCT'">
                     <div class="section-title">Effective Date & Time</div>
                     <div class="form-group"><label>Effective Date</label>
                         <input formControlName="effDt" type="date">
@@ -173,6 +188,10 @@
                     <div class="form-group"><label>Effective Date Time (ISO)</label>
                         <input formControlName="effDtTm" placeholder="2026-03-19T12:00:00Z">
                         <div class="validation-msg" *ngIf="err('effDtTm') as e">{{e}}</div>
+                    </div>
+                    </ng-container>
+                    <div class="validation-msg" *ngIf="form.get('txSts')?.value === 'RJCT'" style="font-size:0.78rem;color:#e07b00;margin-bottom:8px;">
+                        Effective Date not allowed when Transaction Status is RJCT (CBPR+ rule).
                     </div>
 
                     <div class="party-group">
@@ -396,9 +415,9 @@
 
 <ng-template #partyForm let-prefix="prefix" let-isAgent="isAgent" let-title="title" let-required="required" let-group="group">
         <div [formGroup]="form" class="party-grid">
-                <!-- BIC -->
+                <!-- BIC — MANDATORY for agents per CBPR+ §5.39.1 -->
                 <div class="form-group" *ngIf="isAgent">
-                        <label>{{title}} BIC <span class="req" *ngIf="required">*</span></label>
+                        <label>{{title}} BIC <span class="req">*</span></label>
                         <div class="uetr-control-row">
                                 <input [formControlName]="prefix+'Bic'" maxlength="11" placeholder="e.g. NDEAFIHH" class="auto-uppercase">
                                 <button type="button" class="uetr-refresh-btn"
@@ -424,8 +443,8 @@
                         <div class="field-hint at-limit" *ngIf="hint(prefix+'OrgAnyBIC', 11) as h">{{h}}</div>
                 </div>
 
-                <!-- Address Type -->
-                <div class="form-group">
+                <!-- Address Type — CBPR+ §5.39: Name/PostalAddress REMOVED for InstgAgt/InstdAgt -->
+                <div class="form-group" *ngIf="!isAgent">
                         <label>{{title}} Address Type</label>
                         <select [formControlName]="prefix+'AddrType'">
                                 <option value="none">None (BIC/ID Only)</option>
@@ -436,8 +455,8 @@
                         <div class="validation-msg" *ngIf="err(prefix+'AddrType') as e">{{e}}</div>
                 </div>
 
-                <!-- Dynamic Address Fields -->
-                <ng-container *ngIf="form.get(prefix+'AddrType')?.value !== 'none'">
+                <!-- Dynamic Address Fields (only for parties, NOT for agents per CBPR+ §5.39) -->
+                <ng-container *ngIf="!isAgent && form.get(prefix+'AddrType')?.value !== 'none'">
                         <div class="address-subgrid">
                                 <div class="form-group"
                                         *ngIf="form.get(prefix+'AddrType')?.value === 'structured'">
@@ -503,8 +522,8 @@
                         </div>
                 </ng-container>
 
-                <!-- Name -->
-                <div class="form-group">
+                <!-- Name — REMOVED for agents per CBPR+ §5.39.4 -->
+                <div class="form-group" *ngIf="!isAgent">
                         <label>{{title}} Name <span class="req" *ngIf="required">*</span></label>
                         <input [formControlName]="prefix+'Name'" maxlength="140">
                         <div class="validation-msg" *ngIf="err(prefix+'Name') as e">{{e}}</div>
@@ -545,8 +564,8 @@
                                 *ngIf="hint(isAgent ? prefix+'Lei' : prefix+'OrgLEI', 20) as h">{{h}}</div>
                 </div>
 
-                <!-- Account Number -->
-                <div class="form-group">
+                <!-- Account Number — not applicable for agents in pacs.002 -->
+                <div class="form-group" *ngIf="!isAgent">
                         <label>{{title}} Account Number</label>
                         <input [formControlName]="prefix+'Acct'" maxlength="34">
                         <div class="validation-msg" *ngIf="err(prefix+'Acct') as e">{{e}}</div>
