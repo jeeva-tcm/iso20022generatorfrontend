@@ -27,7 +27,11 @@ export class FormattingService {
    */
   formatAmount(amount: any, currency?: string): string {
     if (amount === null || amount === undefined || amount === '') return '';
-    return amount.toString().trim();
+    const str = amount.toString().trim();
+    const num = parseFloat(str);
+    if (isNaN(num)) return str;
+    const decimals = this.getDecimalCount(currency || '');
+    return num.toFixed(decimals);
   }
 
   /**

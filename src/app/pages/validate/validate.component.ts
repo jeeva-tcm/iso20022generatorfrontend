@@ -151,8 +151,38 @@ export class ValidateComponent implements OnInit {
     return this.getFixableIssues(report).length;
   }
 
+  /** Indent XML with 4-space indentation for consistent display. */
+  private formatXml(xml: string): string {
+    try {
+      const tab = '    ';
+      let formatted = '';
+      let indent = '';
+      const cleaned = xml.replace(/>\s+</g, '><').trim();
+      const reg = /(<[^/!?][^>]*>[^<]*<\/[^>]+>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
+      const nodes = cleaned.match(reg) || [];
+      nodes.forEach(node => {
+        const trimmed = node.trim();
+        if (!trimmed) return;
+        if (trimmed.startsWith('</')) {
+          if (indent.length >= tab.length) indent = indent.substring(tab.length);
+          formatted += indent + trimmed + '\n';
+        } else if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
+          formatted += indent + trimmed + '\n';
+        } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
+          formatted += indent + trimmed + '\n';
+          indent += tab;
+        } else {
+          formatted += indent + trimmed + '\n';
+        }
+      });
+      return formatted.trim();
+    } catch {
+      return xml;
+    }
+  }
+
   onFixApplied(entry: FileEntry, newXml: string) {
-    entry.content = newXml;
+    entry.content = this.formatXml(newXml);
     this.fixSuggesterOpen = false;
     this.fixTarget = null;
     this.saveWorkspace();
@@ -173,7 +203,7 @@ export class ValidateComponent implements OnInit {
   applyStructuralFix(entry: FileEntry, event: Event) {
     event.stopPropagation();
     if (!entry.fixedXml) return;
-    entry.content = entry.fixedXml;
+    entry.content = this.formatXml(entry.fixedXml);
     entry.fixedXml = undefined;
     this.saveWorkspace();
     this.validateFile(entry);
@@ -1304,14 +1334,23 @@ export class ValidateComponent implements OnInit {
         entry.report = data;
         entry.messageType = data.message ?? '';
 
-        // Store the backend-repaired XML so the UI can offer a one-click structural fix
-        // The backend FixSuggester runs _try_xml_recovery for XMLSyntaxError issues and
-        // returns the repaired document in fixed_xml. If the fix produced no change
-        // (or there was nothing to fix), fixed_xml equals the original or is absent.
-        if (data.fixed_xml && data.fixed_xml !== entry.content) {
-          entry.fixedXml = data.fixed_xml;
-        } else {
-          entry.fixedXml = undefined;
+        // fixed_xml is no longer computed inline during validation (too slow for errored
+        // messages). Request it in the background now so the validation result is instant.
+        entry.fixedXml = undefined;
+        if (data.errors > 0) {
+          const xmlForFix = entry.content;
+          const msgTypeForFix = data.message ?? 'Auto-detect';
+          this.http.post(this.config.getApiUrl('/fixes/auto-fix'), {
+            xml: xmlForFix,
+            message_type: msgTypeForFix
+          }).subscribe({
+            next: (fixData: any) => {
+              if (fixData?.new_xml && fixData.new_xml !== entry.content) {
+                entry.fixedXml = fixData.new_xml;
+              }
+            },
+            error: () => { /* fix preview optional — ignore failures */ }
+          });
         }
 
         // Rename pasted files to use the detected message type
