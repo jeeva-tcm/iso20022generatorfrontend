@@ -151,8 +151,8 @@ export class ValidateComponent implements OnInit {
     return this.getFixableIssues(report).length;
   }
 
-  /** Indent XML with 4-space indentation for consistent display. */
-  private formatXml(xml: string): string {
+  /** Indent XML string with 4-space indentation for consistent display after fixes. */
+  private formatXmlString(xml: string): string {
     try {
       const tab = '    ';
       let formatted = '';
@@ -182,7 +182,7 @@ export class ValidateComponent implements OnInit {
   }
 
   onFixApplied(entry: FileEntry, newXml: string) {
-    entry.content = this.formatXml(newXml);
+    entry.content = this.formatXmlString(newXml);
     this.fixSuggesterOpen = false;
     this.fixTarget = null;
     this.saveWorkspace();
@@ -203,7 +203,7 @@ export class ValidateComponent implements OnInit {
   applyStructuralFix(entry: FileEntry, event: Event) {
     event.stopPropagation();
     if (!entry.fixedXml) return;
-    entry.content = this.formatXml(entry.fixedXml);
+    entry.content = this.formatXmlString(entry.fixedXml);
     entry.fixedXml = undefined;
     this.saveWorkspace();
     this.validateFile(entry);
