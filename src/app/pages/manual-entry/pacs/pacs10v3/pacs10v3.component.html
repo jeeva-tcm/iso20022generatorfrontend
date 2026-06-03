@@ -752,13 +752,51 @@
 
 <ng-template #accountForm let-prefix="prefix" let-title="title" let-required="required">
     <div [formGroup]="form" class="party-grid">
-        <!-- Account Identification: IBAN -->
+        <!-- Account ID Type dropdown -->
         <div class="form-group">
-            <label>IBAN <span class="req" *ngIf="required">*</span></label>
-            <input [formControlName]="prefix+'AcctIBAN'" maxlength="34" placeholder="IBAN (e.g. DE89370400440532013000)" class="auto-uppercase">
+            <label>{{title}} Account Type</label>
+            <select [formControlName]="prefix+'AcctType'">
+                <option value="none">None (No Account ID)</option>
+                <option value="IBAN">IBAN</option>
+                <option value="Othr">Other (Othr)</option>
+            </select>
+        </div>
+
+        <!-- IBAN input (shown only when IBAN selected) -->
+        <div class="form-group" *ngIf="form.get(prefix+'AcctType')?.value === 'IBAN'">
+            <label>{{title}} IBAN <span class="req" *ngIf="required">*</span></label>
+            <input [formControlName]="prefix+'AcctIBAN'" maxlength="34" placeholder="e.g. GB29NWBK60161331926819" class="auto-uppercase">
             <div class="validation-msg" *ngIf="err(prefix+'AcctIBAN') as e">{{e}}</div>
             <div class="field-hint at-limit" *ngIf="hint(prefix+'AcctIBAN', 34) as h">{{h}}</div>
         </div>
+
+        <!-- Other ID inputs (shown only when Othr selected) -->
+        <ng-container *ngIf="form.get(prefix+'AcctType')?.value === 'Othr'">
+            <div class="form-group">
+                <label>{{title}} Other Account ID</label>
+                <input [formControlName]="prefix+'AcctOthrId'" maxlength="34" placeholder="Account identifier">
+                <div class="validation-msg" *ngIf="err(prefix+'AcctOthrId') as e">{{e}}</div>
+                <div class="field-hint at-limit" *ngIf="hint(prefix+'AcctOthrId', 34) as h">{{h}}</div>
+            </div>
+            <div class="form-group" *ngIf="!form.get(prefix+'AcctOthrSchmePrtry')?.value?.trim()">
+                <label>{{title}} Scheme Name Code <span class="opt">Optional</span></label>
+                <input [formControlName]="prefix+'AcctOthrSchmeCd'" maxlength="4" class="auto-uppercase" placeholder="e.g. BBAN">
+                <div class="validation-msg" *ngIf="err(prefix+'AcctOthrSchmeCd') as e">{{e}}</div>
+                <div class="field-hint at-limit" *ngIf="hint(prefix+'AcctOthrSchmeCd', 4) as h">{{h}}</div>
+            </div>
+            <div class="form-group" *ngIf="!form.get(prefix+'AcctOthrSchmeCd')?.value?.trim()">
+                <label>{{title}} Scheme Name Proprietary <span class="opt">Optional</span></label>
+                <input [formControlName]="prefix+'AcctOthrSchmePrtry'" maxlength="35" placeholder="Proprietary scheme name">
+                <div class="validation-msg" *ngIf="err(prefix+'AcctOthrSchmePrtry') as e">{{e}}</div>
+                <div class="field-hint at-limit" *ngIf="hint(prefix+'AcctOthrSchmePrtry', 35) as h">{{h}}</div>
+            </div>
+            <div class="form-group">
+                <label>{{title}} Issuer <span class="opt">Optional</span></label>
+                <input [formControlName]="prefix+'AcctOthrIssr'" maxlength="35" placeholder="e.g. BANKSYS">
+                <div class="validation-msg" *ngIf="err(prefix+'AcctOthrIssr') as e">{{e}}</div>
+                <div class="field-hint at-limit" *ngIf="hint(prefix+'AcctOthrIssr', 35) as h">{{h}}</div>
+            </div>
+        </ng-container>
 
         <!-- Account Metadata -->
         <div class="address-subgrid">

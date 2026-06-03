@@ -222,7 +222,11 @@ export class Pain001Component implements OnInit, OnDestroy {
       dbtrFlr: ['', [Validators.maxLength(70)]],
       dbtrAdrLine1: ['270 Park Avenue', [Validators.maxLength(70)]],
       dbtrAdrLine2: ['', [Validators.maxLength(70)]],
+      dbtrAcctType: ['IBAN'],
+      dbtrAcctOthrId: [''],
+      dbtrAgtAcctType: ['IBAN'],
       dbtrAgtAcctIban: ['11112222333344', [Validators.maxLength(34)]],
+      dbtrAgtAcctOthrId: [''],
       dbtrAgtBic: ['CHASUS33XXX', [Validators.maxLength(11)]],
       dbtrAgtClrSysCd: ['USABA', [Validators.maxLength(5)]],
       dbtrAgtClrSysMmbId: ['021000021', [Validators.maxLength(35)]],
@@ -254,7 +258,9 @@ export class Pain001Component implements OnInit, OnDestroy {
       ultmtDbtrAdrLine1: ['', [Validators.maxLength(70)]],
       ultmtDbtrAdrLine2: ['', [Validators.maxLength(70)]],
       relMsgId: ['REL-' + Date.now(), [Validators.maxLength(35)]],
+      chrgsAcctType: ['IBAN'],
       chrgsAcctIban: ['US12345678901231', [Validators.maxLength(34)]],
+      chrgsAcctOthrId: [''],
       chrgsAcctAgtBic: ['CHASUS33XXX', [Validators.pattern(/^([A-Z0-9]{8}|[A-Z0-9]{11})$/)]],
 
       // Transactions
@@ -292,7 +298,9 @@ export class Pain001Component implements OnInit, OnDestroy {
       intrmyAgt1TwnNm: ['New York', [Validators.maxLength(35)]],
       intrmyAgt1ClrSysCd: ['', Validators.maxLength(5)],
       intrmyAgt1ClrSysMmbId: ['', Validators.maxLength(35)],
+      intrmyAgt1AcctType: ['none'],
       intrmyAgt1Acct: ['', [Validators.maxLength(34)]],
+      intrmyAgt1AcctOthrId: [''],
 
       intrmyAgt2Bic: ['', BIC_OPT],
       intrmyAgt2Lei: ['', LEI],
@@ -301,7 +309,9 @@ export class Pain001Component implements OnInit, OnDestroy {
       intrmyAgt2TwnNm: ['London', [Validators.maxLength(35)]],
       intrmyAgt2ClrSysCd: ['', Validators.maxLength(5)],
       intrmyAgt2ClrSysMmbId: ['', Validators.maxLength(35)],
+      intrmyAgt2AcctType: ['none'],
       intrmyAgt2Acct: ['', [Validators.maxLength(34)]],
+      intrmyAgt2AcctOthrId: [''],
 
       intrmyAgt3Bic: ['', BIC_OPT],
       intrmyAgt3Lei: ['', LEI],
@@ -310,7 +320,9 @@ export class Pain001Component implements OnInit, OnDestroy {
       intrmyAgt3TwnNm: ['Singapore', [Validators.maxLength(35)]],
       intrmyAgt3ClrSysCd: ['', Validators.maxLength(5)],
       intrmyAgt3ClrSysMmbId: ['', Validators.maxLength(35)],
+      intrmyAgt3AcctType: ['none'],
       intrmyAgt3Acct: ['', [Validators.maxLength(34)]],
+      intrmyAgt3AcctOthrId: [''],
 
       cdtrAgtBic: ['BANCGB2LXXX', [Validators.maxLength(11)]],
       cdtrAgtLei: ['', LEI],
@@ -322,9 +334,13 @@ export class Pain001Component implements OnInit, OnDestroy {
       cdtrAgtAddrType: ['none'],
       cdtrAgtClrSysCd: ['', Validators.maxLength(5)],
       cdtrAgtClrSysMmbId: ['', Validators.maxLength(35)],
+      cdtrAgtAcctType: ['IBAN'],
       cdtrAgtAcct: ['GB73BARC20000012345678'],
+      cdtrAgtAcctOthrId: [''],
       cdtrName: ['Precision Engineering Ltd', [Validators.required, Validators.maxLength(140)]],
+      cdtrAcctType: ['IBAN'],
       cdtrIban: ['GB73BARC20000012345678', [Validators.required, Validators.maxLength(34)]],
+      cdtrAcctOthrId: [''],
       cdtrAddrType: ['hybrid'],
       cdtrCtry: ['GB', [Validators.pattern(/^[A-Z]{2,2}$/)]],
       cdtrTwnNm: ['Manchester', [Validators.maxLength(135)]],
@@ -490,16 +506,22 @@ export class Pain001Component implements OnInit, OnDestroy {
     if (v.poolgAdjstmntDt) pmtInfContent += this.el('PoolgAdjstmntDt', this.fdt(v.poolgAdjstmntDt).substring(0,10), 4);
 
     pmtInfContent += this.partyXml('Dbtr', 'dbtr', v, 4);
-    if (v.dbtrIban) pmtInfContent += this.tag('DbtrAcct', this.acctXml(v.dbtrIban, 6), 4);
+    const dbtrAcctType = v.dbtrAcctType || 'none';
+    if (dbtrAcctType === 'IBAN' && v.dbtrIban) pmtInfContent += this.tag('DbtrAcct', this.acctXml(v.dbtrIban, 6, 'IBAN'), 4);
+    else if (dbtrAcctType === 'Othr' && v.dbtrAcctOthrId) pmtInfContent += this.tag('DbtrAcct', this.acctXml(v.dbtrAcctOthrId, 6, 'Othr'), 4);
     pmtInfContent += this.agtXml('DbtrAgt', 'dbtrAgt', v, 4);
-    if (v.dbtrAgtAcctIban) pmtInfContent += this.tag('DbtrAgtAcct', this.acctXml(v.dbtrAgtAcctIban, 6), 4);
+    const dbtrAgtAcctType = v.dbtrAgtAcctType || 'none';
+    if (dbtrAgtAcctType === 'IBAN' && v.dbtrAgtAcctIban) pmtInfContent += this.tag('DbtrAgtAcct', this.acctXml(v.dbtrAgtAcctIban, 6, 'IBAN'), 4);
+    else if (dbtrAgtAcctType === 'Othr' && v.dbtrAgtAcctOthrId) pmtInfContent += this.tag('DbtrAgtAcct', this.acctXml(v.dbtrAgtAcctOthrId, 6, 'Othr'), 4);
     
     // XOR logic for UltmtDbtr
     const hasGlobalUltmtDbtr = !!v.ultmtDbtrName;
     if (hasGlobalUltmtDbtr) pmtInfContent += this.partyXml('UltmtDbtr', 'ultmtDbtr', v, 4);
     
     pmtInfContent += this.el('ChrgBr', v.chrgBr, 4);
-    if (v.chrgsAcctIban) pmtInfContent += this.tag('ChrgsAcct', this.acctXml(v.chrgsAcctIban, 6), 4);
+    const chrgsAcctType = v.chrgsAcctType || 'none';
+    if (chrgsAcctType === 'IBAN' && v.chrgsAcctIban) pmtInfContent += this.tag('ChrgsAcct', this.acctXml(v.chrgsAcctIban, 6, 'IBAN'), 4);
+    else if (chrgsAcctType === 'Othr' && v.chrgsAcctOthrId) pmtInfContent += this.tag('ChrgsAcct', this.acctXml(v.chrgsAcctOthrId, 6, 'Othr'), 4);
     if (v.chrgsAcctAgtBic) pmtInfContent += this.tag('ChrgsAcctAgt', this.tag('FinInstnId', this.el('BICFI', v.chrgsAcctAgtBic, 7), 6), 5);
 
     // Transactions loop
@@ -543,7 +565,9 @@ export class Pain001Component implements OnInit, OnDestroy {
 
       txContent += this.agtXml('CdtrAgt', 'cdtrAgt', tx, 5);
       txContent += this.partyXml('Cdtr', 'cdtr', tx, 5);
-      if (tx.cdtrIban) txContent += this.tag('CdtrAcct', this.acctXml(tx.cdtrIban, 6), 5);
+      const cdtrAcctType = tx.cdtrAcctType || 'none';
+      if (cdtrAcctType === 'IBAN' && tx.cdtrIban) txContent += this.tag('CdtrAcct', this.acctXml(tx.cdtrIban, 6, 'IBAN'), 5);
+      else if (cdtrAcctType === 'Othr' && tx.cdtrAcctOthrId) txContent += this.tag('CdtrAcct', this.acctXml(tx.cdtrAcctOthrId, 6, 'Othr'), 5);
       if (tx.purpCd) txContent += this.tag('Purp', this.el('Cd', tx.purpCd, 7), 6);
       
       if (tx.taxAmt || tx.taxId) {
@@ -714,9 +738,11 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
     const nm = v[pref + 'Name'];
     const clrCd = v[pref + 'ClrSysCd'] || v[pref + 'ClrSysId'];
     const clrMmb = v[pref + 'ClrSysMmbId'];
+    const acctType = v[pref + 'AcctType'] || 'none';
     const acct = v[pref + 'Acct'];
+    const acctOthr = v[pref + 'AcctOthrId'];
 
-    if (!bic && !lei && !nm && !clrMmb && !acct) return '';
+    if (!bic && !lei && !nm && !clrMmb && acctType === 'none') return '';
 
     let fiId = '';
     if (bic) fiId += this.el('BICFI', bic, indent + 3);
@@ -743,9 +769,9 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
     if (fiId) inner += this.tag('FinInstnId', fiId, indent + 2);
     
     let res = this.tag(tag, inner, indent);
-    if (acct) {
-      const acctTag = tag + 'Acct';
-      res += this.tag(acctTag, this.acctXml(acct, indent + 2), indent);
+    if (acctType !== 'none') {
+      const acctVal = acctType === 'IBAN' ? acct : acctOthr;
+      if (acctVal) res += this.tag(tag + 'Acct', this.acctXml(acctVal, indent + 2, acctType), indent);
     }
     return res;
   }
@@ -845,8 +871,9 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
     return idContent ? this.tag('Id', idContent, indent + 1) : '';
   }
 
-  private acctXml(acc: string, indent: number): string {
+  private acctXml(acc: string, indent: number, type: string = 'Othr'): string {
     if (!acc) return '';
+    if (type === 'IBAN') return this.tag('Id', this.el('IBAN', acc, indent + 1), indent);
     const id = this.tag('Othr', this.el('Id', acc.replace(/\s/g, ''), indent + 3), indent + 2);
     return this.tag('Id', id, indent);
   }
@@ -951,17 +978,29 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
 
           this.mapAddrToForm(getT('Dbtr', pmtInf), 'dbtr', patch);
           const dbtrAcct = getT('DbtrAcct', pmtInf);
-          if (dbtrAcct) setV('dbtrIban', tval('Id', getT('Othr', getT('Id', dbtrAcct) || dbtrAcct) || (getT('Id', dbtrAcct) || dbtrAcct)));
-          
+          if (dbtrAcct) {
+            const iban = tval('IBAN', getT('Id', dbtrAcct) || dbtrAcct);
+            if (iban) { patch['dbtrAcctType'] = 'IBAN'; setV('dbtrIban', iban); }
+            else { const othId = tval('Id', getT('Othr', getT('Id', dbtrAcct) || dbtrAcct) || (getT('Id', dbtrAcct) || dbtrAcct)); if (othId) { patch['dbtrAcctType'] = 'Othr'; patch['dbtrAcctOthrId'] = othId; } }
+          }
+
           this.mapAddrToForm(getT('DbtrAgt', pmtInf), 'dbtrAgt', patch);
           const dbtrAgtAcct = getT('DbtrAgtAcct', pmtInf);
-          if (dbtrAgtAcct) setV('dbtrAgtAcctIban', tval('Id', getT('Othr', getT('Id', dbtrAgtAcct) || dbtrAgtAcct) || (getT('Id', dbtrAgtAcct) || dbtrAgtAcct)));
-          
+          if (dbtrAgtAcct) {
+            const iban = tval('IBAN', getT('Id', dbtrAgtAcct) || dbtrAgtAcct);
+            if (iban) { patch['dbtrAgtAcctType'] = 'IBAN'; setV('dbtrAgtAcctIban', iban); }
+            else { const othId = tval('Id', getT('Othr', getT('Id', dbtrAgtAcct) || dbtrAgtAcct) || (getT('Id', dbtrAgtAcct) || dbtrAgtAcct)); if (othId) { patch['dbtrAgtAcctType'] = 'Othr'; patch['dbtrAgtAcctOthrId'] = othId; } }
+          }
+
           this.mapAddrToForm(getT('UltmtDbtr', pmtInf), 'ultmtDbtr', patch);
           setV('chrgBr', tval('ChrgBr', pmtInf));
-          
+
           const chrgsAcct = getT('ChrgsAcct', pmtInf);
-          if (chrgsAcct) setV('chrgsAcctIban', tval('Id', getT('Othr', getT('Id', chrgsAcct) || chrgsAcct) || (getT('Id', chrgsAcct) || chrgsAcct)));
+          if (chrgsAcct) {
+            const iban = tval('IBAN', getT('Id', chrgsAcct) || chrgsAcct);
+            if (iban) { patch['chrgsAcctType'] = 'IBAN'; setV('chrgsAcctIban', iban); }
+            else { const othId = tval('Id', getT('Othr', getT('Id', chrgsAcct) || chrgsAcct) || (getT('Id', chrgsAcct) || chrgsAcct)); if (othId) { patch['chrgsAcctType'] = 'Othr'; patch['chrgsAcctOthrId'] = othId; } }
+          }
           
           const chrgsAgt = getT('ChrgsAcctAgt', pmtInf);
           if (chrgsAgt) {
@@ -1017,23 +1056,23 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
               this.mapAddrToForm(getT('UltmtDbtr', t), 'ultmtDbtr', tp);
               this.mapAddrToForm(getT('IntrmyAgt1', t), 'intrmyAgt1', tp);
               const i1acct = getT('IntrmyAgt1Acct', t);
-              if (i1acct) sv('intrmyAgt1Acct', tval('Id', getT('Othr', getT('Id', i1acct) || i1acct) || (getT('Id', i1acct) || i1acct)));
-              
+              if (i1acct) { const ib = tval('IBAN', getT('Id', i1acct) || i1acct); if (ib) { tp['intrmyAgt1AcctType'] = 'IBAN'; sv('intrmyAgt1Acct', ib); } else { const oi = tval('Id', getT('Othr', getT('Id', i1acct) || i1acct) || (getT('Id', i1acct) || i1acct)); if (oi) { tp['intrmyAgt1AcctType'] = 'Othr'; sv('intrmyAgt1AcctOthrId', oi); } } }
+
               this.mapAddrToForm(getT('IntrmyAgt2', t), 'intrmyAgt2', tp);
               const i2acct = getT('IntrmyAgt2Acct', t);
-               if (i2acct) sv('intrmyAgt2Acct', tval('Id', getT('Othr', getT('Id', i2acct) || i2acct) || (getT('Id', i2acct) || i2acct)));
+              if (i2acct) { const ib = tval('IBAN', getT('Id', i2acct) || i2acct); if (ib) { tp['intrmyAgt2AcctType'] = 'IBAN'; sv('intrmyAgt2Acct', ib); } else { const oi = tval('Id', getT('Othr', getT('Id', i2acct) || i2acct) || (getT('Id', i2acct) || i2acct)); if (oi) { tp['intrmyAgt2AcctType'] = 'Othr'; sv('intrmyAgt2AcctOthrId', oi); } } }
 
               this.mapAddrToForm(getT('IntrmyAgt3', t), 'intrmyAgt3', tp);
               const i3acct = getT('IntrmyAgt3Acct', t);
-               if (i3acct) sv('intrmyAgt3Acct', tval('Id', getT('Othr', getT('Id', i3acct) || i3acct) || (getT('Id', i3acct) || i3acct)));
+              if (i3acct) { const ib = tval('IBAN', getT('Id', i3acct) || i3acct); if (ib) { tp['intrmyAgt3AcctType'] = 'IBAN'; sv('intrmyAgt3Acct', ib); } else { const oi = tval('Id', getT('Othr', getT('Id', i3acct) || i3acct) || (getT('Id', i3acct) || i3acct)); if (oi) { tp['intrmyAgt3AcctType'] = 'Othr'; sv('intrmyAgt3AcctOthrId', oi); } } }
 
               this.mapAddrToForm(getT('CdtrAgt', t), 'cdtrAgt', tp);
               const cagtAcct = getT('CdtrAgtAcct', t);
-              if (cagtAcct) sv('cdtrAgtAcct', tval('Id', getT('Othr', getT('Id', cagtAcct) || cagtAcct) || (getT('Id', cagtAcct) || cagtAcct)));
+              if (cagtAcct) { const ib = tval('IBAN', getT('Id', cagtAcct) || cagtAcct); if (ib) { tp['cdtrAgtAcctType'] = 'IBAN'; sv('cdtrAgtAcct', ib); } else { const oi = tval('Id', getT('Othr', getT('Id', cagtAcct) || cagtAcct) || (getT('Id', cagtAcct) || cagtAcct)); if (oi) { tp['cdtrAgtAcctType'] = 'Othr'; sv('cdtrAgtAcctOthrId', oi); } } }
 
               this.mapAddrToForm(getT('Cdtr', t), 'cdtr', tp);
               const cdtrAcct = getT('CdtrAcct', t);
-              if (cdtrAcct) sv('cdtrIban', tval('Id', getT('Othr', getT('Id', cdtrAcct) || cdtrAcct) || (getT('Id', cdtrAcct) || cdtrAcct)));
+              if (cdtrAcct) { const ib = tval('IBAN', getT('Id', cdtrAcct) || cdtrAcct); if (ib) { tp['cdtrAcctType'] = 'IBAN'; sv('cdtrIban', ib); } else { const oi = tval('Id', getT('Othr', getT('Id', cdtrAcct) || cdtrAcct) || (getT('Id', cdtrAcct) || cdtrAcct)); if (oi) { tp['cdtrAcctType'] = 'Othr'; sv('cdtrAcctOthrId', oi); } } }
 
               sv('purpCd', tv('Cd', getT('Purp', t) || t));
               const tax = getT('Tax', t);

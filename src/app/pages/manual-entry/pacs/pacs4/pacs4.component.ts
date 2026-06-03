@@ -44,14 +44,10 @@ export class Pacs4Component implements OnInit, OnDestroy {
     currencyPrecision: { [key: string]: number } = {};
     countries: string[] = [];
     chargeBearers = ['CRED', 'SHAR', 'SLEV'];
-    sttlmMethods = ['INDA', 'INGA', 'COVE', 'CLRG'];
-    returnReasons = [
-        'AC01', 'AC04', 'AC06', 'AG01', 'AG02', 'AM01', 'AM02', 'AM03', 'AM04', 'AM05', 
-        'AM06', 'AM07', 'AM09', 'AM10', 'BE01', 'BE04', 'BE05', 'BE06', 'BE07', 'DNOR', 
-        'ERIN', 'FF01', 'MD01', 'MD07', 'MS02', 'MS03', 'RC01', 'RR01', 'RR02', 'RR03', 'RR04'
-    ];
+    sttlmMethods = ['INDA', 'INGA'];
+    returnReasons: string[] = [];
 
-    agentPrefixes = ['instgAgt', 'instdAgt', 'initgPty', 'dbtr', 'dbtrAgt', 'cdtrAgt', 'cdtr', 'ultmtDbtr', 'ultmtCdtr'];
+    agentPrefixes = ['instgAgt', 'instdAgt', 'dbtr', 'dbtrAgt', 'intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3', 'cdtrAgt', 'cdtr', 'initgPty', 'ultmtDbtr', 'ultmtCdtr'];
 
     private readonly DRAFT_KEY = 'draft_pacs004';
     private draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -264,6 +260,18 @@ export class Pacs4Component implements OnInit, OnDestroy {
             }
         });
         this.http.get<any>(this.config.getApiUrl('/codelists/country')).subscribe({ next: (res) => { if (res?.codes) { this.countries = res.codes; this.cdr.detectChanges(); } } });
+        this.http.get<any>(this.config.getApiUrl('/codelists/return_reason')).subscribe({
+            next: (res) => {
+                if (res?.codes) {
+                    this.returnReasons = res.codes;
+                    this.cdr.detectChanges();
+                }
+            },
+            error: () => {
+                this.returnReasons = ['AC01','AC04','AC06','AG01','AG02','AM01','AM02','AM03','AM04','AM05','AM06','AM07','AM09','AM10','BE01','BE04','BE05','BE06','BE07','DNOR','ERIN','FF01','MD01','MD07','MS02','MS03','RC01','RR01','RR02','RR03','RR04'];
+                this.cdr.detectChanges();
+            }
+        });
     }
 
     private buildForm() {
@@ -286,6 +294,7 @@ export class Pacs4Component implements OnInit, OnDestroy {
             orgnlEndToEndId: ['E2E-ORIG-001', [Validators.maxLength(35)]],
             orgnlTxId: ['TX-ORIG-001', [Validators.maxLength(35)]],
             orgnlUETR: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
+            orgnlClrSysRef: ['', [Validators.maxLength(35)]],
 
             amount: ['50000.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]],
             currency: ['USD', Validators.required],
@@ -335,7 +344,8 @@ export class Pacs4Component implements OnInit, OnDestroy {
             c[p + 'BldgNb'] = ['', [Validators.maxLength(16), ADDR_PATTERN]];
             c[p + 'BldgNm'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
             c[p + 'PstCd'] = ['', [Validators.maxLength(16), ADDR_PATTERN]];
-            c[p + 'Acct'] = ['', [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
+            c[p + 'AcctType'] = ['none'];
+            c[p + 'Acct'] = ['', [Validators.maxLength(34)]];
 
             c[p + 'MmbId'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
             c[p + 'ClrSysCd'] = [''];
@@ -430,8 +440,9 @@ export class Pacs4Component implements OnInit, OnDestroy {
         tx += this.el('OrgnlInstrId', v.orgnlInstrId, 4);
         tx += this.el('OrgnlEndToEndId', v.orgnlEndToEndId, 4);
         tx += this.el('OrgnlTxId', v.orgnlTxId, 4);
-        tx += this.el('OrgnlUETR', v.orgnlUETR, 4); 
-        
+        tx += this.el('OrgnlUETR', v.orgnlUETR, 4);
+        tx += this.el('OrgnlClrSysRef', v.orgnlClrSysRef, 4);
+
         if (v.orgnlAmount) {
             tx += `${this.tabs(4)}<OrgnlIntrBkSttlmAmt Ccy="${this.e(v.orgnlCurrency)}">${this.formatting.formatAmount(v.orgnlAmount, v.orgnlCurrency)}</OrgnlIntrBkSttlmAmt>\n`;
         }
@@ -447,11 +458,14 @@ export class Pacs4Component implements OnInit, OnDestroy {
         let rtrChain = '';
         rtrChain += this.party('Dbtr', 'dbtr', v, 5);
         rtrChain += this.agt('DbtrAgt', 'dbtrAgt', v, 5);
+        rtrChain += this.agt('IntrmyAgt1', 'intrmyAgt1', v, 5);
+        rtrChain += this.agt('IntrmyAgt2', 'intrmyAgt2', v, 5);
+        rtrChain += this.agt('IntrmyAgt3', 'intrmyAgt3', v, 5);
         rtrChain += this.agt('CdtrAgt', 'cdtrAgt', v, 5);
         rtrChain += this.party('Cdtr', 'cdtr', v, 5);
         rtrChain += this.party('UltmtDbtr', 'ultmtDbtr', v, 5);
-        rtrChain += this.party('InitgPty', 'initgPty', v, 5);
         rtrChain += this.party('UltmtCdtr', 'ultmtCdtr', v, 5);
+        rtrChain += this.party('InitgPty', 'initgPty', v, 5);
         tx += this.tag('RtrChain', rtrChain, 4);
 
         let rtrRsnInner = this.tag('Rsn', this.el('Cd', v.rtrRsnCd, 6), 5);
@@ -514,9 +528,10 @@ ${tx}\t\t\t</TxInf>
         const clrSys = v[prefix + 'ClrSysCd'];
         const name = (v[prefix + 'Name'] || '').trim();
         const hasAddr = v[prefix + 'AddrType'] && v[prefix + 'AddrType'] !== 'none';
-        const acct = v[prefix + 'Acct'];
+        const acct = (v[prefix + 'Acct'] || '').trim();
+        const acctType = v[prefix + 'AcctType'] || 'none';
 
-        if (!bic && !lei && !mmbId && !name && !hasAddr && !acct) return '';
+        if (!bic && !lei && !mmbId && !name && !hasAddr && (!acct || acctType === 'none')) return '';
 
         let fi = '';
         if (bic) fi += this.el('BICFI', bic, indent + 2);
@@ -532,9 +547,14 @@ ${tx}\t\t\t</TxInf>
 
         const finInstnId = this.tag('FinInstnId', fi, indent + 1);
         let res = this.tag(tag, finInstnId, indent);
-        if (acct) {
-            const acctXml = this.tag('Id', this.tag('Othr', this.el('Id', acct, indent + 3), indent + 2), indent + 1);
-            res += this.tag(tag + 'Acct', acctXml, indent);
+        if (acct && acctType !== 'none') {
+            let acctIdXml: string;
+            if (acctType === 'IBAN') {
+                acctIdXml = this.tag('Id', this.el('IBAN', acct, indent + 2), indent + 1);
+            } else {
+                acctIdXml = this.tag('Id', this.tag('Othr', this.el('Id', acct, indent + 3), indent + 2), indent + 1);
+            }
+            res += this.tag(tag + 'Acct', acctIdXml, indent);
         }
         return res;
     }
@@ -557,9 +577,16 @@ ${tx}\t\t\t</TxInf>
         }
 
         let res = this.tag(tag, this.tag('Pty', pty, indent + 1), indent);
-        if (v[prefix + 'Acct']) {
-            const acct = this.tag('Id', this.tag('Othr', this.el('Id', v[prefix + 'Acct'], indent + 3), indent + 2), indent + 1);
-            res += this.tag(tag + 'Acct', acct, indent);
+        const acct = (v[prefix + 'Acct'] || '').trim();
+        const acctType = v[prefix + 'AcctType'] || 'none';
+        if (acct && acctType !== 'none') {
+            let acctIdXml: string;
+            if (acctType === 'IBAN') {
+                acctIdXml = this.tag('Id', this.el('IBAN', acct, indent + 2), indent + 1);
+            } else {
+                acctIdXml = this.tag('Id', this.tag('Othr', this.el('Id', acct, indent + 3), indent + 2), indent + 1);
+            }
+            res += this.tag(tag + 'Acct', acctIdXml, indent);
         }
         return res;
     }
@@ -670,15 +697,20 @@ ${tx}\t\t\t</TxInf>
             const tx = getT('TxInf');
             if (tx) {
                 patch.rtrId = tval('RtrId', tx);
-                const orgId = getT('OrgnlGrpInf', tx) || tx;
-                patch.orgnlMsgId = tval('OrgnlMsgId', orgId);
-                patch.orgnlMsgNmId = tval('OrgnlMsgNmId', orgId);
+                const orgGrpInf = getT('OrgnlGrpInf', tx);
+                if (orgGrpInf) {
+                    patch.orgnlMsgId = tval('OrgnlMsgId', orgGrpInf);
+                    patch.orgnlMsgNmId = tval('OrgnlMsgNmId', orgGrpInf);
+                    const orgCreDt = tval('OrgnlCreDtTm', orgGrpInf);
+                    if (orgCreDt) patch.orgnlCreDtTm = orgCreDt;
+                }
 
-                const txId = getT('OrgnlTxRef', tx) || tx;
-                patch.orgnlInstrId = tval('OrgnlInstrId', txId);
-                patch.orgnlEndToEndId = tval('OrgnlEndToEndId', txId);
-                patch.orgnlTxId = tval('OrgnlTxId', txId);
-                patch.orgnlUETR = tval('OrgnlUETR', txId);
+                patch.orgnlInstrId = tval('OrgnlInstrId', tx);
+                patch.orgnlEndToEndId = tval('OrgnlEndToEndId', tx);
+                patch.orgnlTxId = tval('OrgnlTxId', tx);
+                patch.orgnlUETR = tval('OrgnlUETR', tx);
+                const clrSysRef = tval('OrgnlClrSysRef', tx);
+                if (clrSysRef) patch.orgnlClrSysRef = clrSysRef;
 
                 const amtEl = getT('RtrdIntrBkSttlmAmt', tx) || getT('IntrBkSttlmAmt', tx);
                 if (amtEl) {
@@ -710,45 +742,110 @@ ${tx}\t\t\t</TxInf>
                         patch[p + 'Bic'] = tval('BICFI', fi);
                         patch[p + 'Lei'] = tval('LEI', fi);
                         patch[p + 'Name'] = tval('Nm', fi);
+                        const clr = getT('ClrSysMmbId', fi);
+                        if (clr) {
+                            patch[p + 'MmbId'] = tval('MmbId', clr);
+                            patch[p + 'ClrSysCd'] = tval('Cd', getT('ClrSysId', clr) || clr);
+                        }
+                        const pstl = getT('PstlAdr', fi);
+                        if (pstl) {
+                            const lines = pstl.querySelectorAll(':scope > AdrLine');
+                            patch[p + 'TwnNm'] = tval('TwnNm', pstl);
+                            patch[p + 'Ctry'] = tval('Ctry', pstl);
+                            if (lines.length > 0) {
+                                patch[p + 'AdrLine1'] = lines[0].textContent || '';
+                                if (lines.length > 1) patch[p + 'AdrLine2'] = lines[1].textContent || '';
+                                patch[p + 'AddrType'] = 'hybrid';
+                            } else {
+                                patch[p + 'StrtNm'] = tval('StrtNm', pstl);
+                                patch[p + 'BldgNb'] = tval('BldgNb', pstl);
+                                patch[p + 'PstCd'] = tval('PstCd', pstl);
+                                patch[p + 'AddrType'] = tval('StrtNm', pstl) ? 'structured' : 'none';
+                            }
+                        }
                     }
-                    const acct = getT(tag + 'Acct', parent);
-                    if (acct) {
-                        patch[p + 'Acct'] = tval('IBAN', getT('Id', acct) || acct) || tval('Id', getT('Othr', getT('Id', acct) || acct) || acct);
+                    const acctEl = getT(tag + 'Acct', parent);
+                    if (acctEl) {
+                        const iban = tval('IBAN', acctEl);
+                        if (iban) {
+                            patch[p + 'AcctType'] = 'IBAN';
+                            patch[p + 'Acct'] = iban;
+                        } else {
+                            const otherId = tval('Id', getT('Othr', getT('Id', acctEl) || acctEl) || acctEl);
+                            if (otherId) {
+                                patch[p + 'AcctType'] = 'Othr';
+                                patch[p + 'Acct'] = otherId;
+                            }
+                        }
                     }
                 };
 
                 const mapParty = (p: string, tag: string, parent: any = tx) => {
                     const el = getT(tag, parent);
                     if (!el) return;
-                    patch[p + 'Name'] = tval('Nm', el);
-                    const pstl = getT('PstlAdr', el);
-                    if (pstl) {
-                        const lines = pstl.querySelectorAll(':scope > AdrLine');
-                        patch[p + 'TwnNm'] = tval('TwnNm', pstl);
-                        patch[p + 'Ctry'] = tval('Ctry', pstl);
-                        if (lines.length > 0) {
-                            patch[p + 'AdrLine1'] = lines[0].textContent || '';
-                            if (lines.length > 1) patch[p + 'AdrLine2'] = lines[1].textContent || '';
-                            patch[p + 'AddrType'] = 'hybrid';
-                            patch[p + 'StrtNm'] = ''; patch[p + 'BldgNb'] = ''; patch[p + 'PstCd'] = '';
+                    // pacs.004 wraps party data in <Pty>
+                    const ptyEl = getT('Pty', el) || el;
+                    // Read AnyBIC (OrgId.AnyBIC)
+                    const anyBic = tval('AnyBIC', ptyEl);
+                    if (anyBic) {
+                        patch[p + 'OrgAnyBIC'] = anyBic;
+                        patch[p + 'AddrType'] = 'none';
+                    } else {
+                        patch[p + 'Name'] = tval('Nm', ptyEl);
+                        const pstl = getT('PstlAdr', ptyEl);
+                        if (pstl) {
+                            const lines = pstl.querySelectorAll(':scope > AdrLine');
+                            patch[p + 'TwnNm'] = tval('TwnNm', pstl);
+                            patch[p + 'Ctry'] = tval('Ctry', pstl);
+                            if (lines.length > 0) {
+                                patch[p + 'AdrLine1'] = lines[0].textContent || '';
+                                if (lines.length > 1) patch[p + 'AdrLine2'] = lines[1].textContent || '';
+                                patch[p + 'AddrType'] = 'hybrid';
+                                patch[p + 'StrtNm'] = ''; patch[p + 'BldgNb'] = ''; patch[p + 'PstCd'] = '';
+                            } else {
+                                patch[p + 'StrtNm'] = tval('StrtNm', pstl);
+                                patch[p + 'BldgNb'] = tval('BldgNb', pstl);
+                                patch[p + 'PstCd'] = tval('PstCd', pstl);
+                                patch[p + 'AddrType'] = tval('StrtNm', pstl) ? 'structured' : 'hybrid';
+                            }
+                        }
+                        // LEI in OrgId
+                        const lei = tval('LEI', ptyEl);
+                        if (lei) patch[p + 'Lei'] = lei;
+                    }
+                    const acctEl = getT(tag + 'Acct', parent);
+                    if (acctEl) {
+                        const iban = tval('IBAN', acctEl);
+                        if (iban) {
+                            patch[p + 'AcctType'] = 'IBAN';
+                            patch[p + 'Acct'] = iban;
                         } else {
-                            patch[p + 'StrtNm'] = tval('StrtNm', pstl);
-                            patch[p + 'BldgNb'] = tval('BldgNb', pstl);
-                            patch[p + 'PstCd'] = tval('PstCd', pstl);
-                            patch[p + 'AddrType'] = tval('StrtNm', pstl) ? 'structured' : 'hybrid';
+                            const otherId = tval('Id', getT('Othr', getT('Id', acctEl) || acctEl) || acctEl);
+                            if (otherId) {
+                                patch[p + 'AcctType'] = 'Othr';
+                                patch[p + 'Acct'] = otherId;
+                            }
                         }
                     }
                 };
 
-                mapAgt('instgAgt', 'InstgAgt');
-                mapAgt('instdAgt', 'InstdAgt');
-                mapAgt('dbtrAgt', 'DbtrAgt');
-                mapAgt('cdtrAgt', 'CdtrAgt');
-                mapParty('dbtr', 'Dbtr');
-                mapParty('cdtr', 'Cdtr');
-                mapParty('initgPty', 'InitgPty');
-                mapParty('ultmtDbtr', 'UltmtDbtr');
-                mapParty('ultmtCdtr', 'UltmtCdtr');
+                // InstgAgt / InstdAgt are direct children of TxInf
+                mapAgt('instgAgt', 'InstgAgt', tx);
+                mapAgt('instdAgt', 'InstdAgt', tx);
+
+                // RtrChain elements - use RtrChain as parent for correct scoping
+                const rtrChainEl = getT('RtrChain', tx);
+                const rtrParent = rtrChainEl || tx;
+                mapParty('dbtr', 'Dbtr', rtrParent);
+                mapAgt('dbtrAgt', 'DbtrAgt', rtrParent);
+                mapAgt('intrmyAgt1', 'IntrmyAgt1', rtrParent);
+                mapAgt('intrmyAgt2', 'IntrmyAgt2', rtrParent);
+                mapAgt('intrmyAgt3', 'IntrmyAgt3', rtrParent);
+                mapAgt('cdtrAgt', 'CdtrAgt', rtrParent);
+                mapParty('cdtr', 'Cdtr', rtrParent);
+                mapParty('ultmtDbtr', 'UltmtDbtr', rtrParent);
+                mapParty('ultmtCdtr', 'UltmtCdtr', rtrParent);
+                mapParty('initgPty', 'InitgPty', rtrParent);
             }
 
             this.form.patchValue(patch, { emitEvent: false });

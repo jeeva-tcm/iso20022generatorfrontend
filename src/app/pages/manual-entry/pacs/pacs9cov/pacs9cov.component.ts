@@ -52,7 +52,7 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
         'instgRmbrsmntAgt', 'instdRmbrsmntAgt'];
 
     // COV address prefixes for UndrlygCstmrCdtTrf parties
-    covPartyPrefixes = ['covDbtr', 'covCdtr', 'covUltmtCdtr'];
+    covPartyPrefixes = ['covDbtr', 'covCdtr', 'covUltmtDbtr', 'covUltmtCdtr'];
 
     instrForCdtrAgtCodes = ['', 'CHQB', 'HOLD', 'PHOB', 'TELB'];
 
@@ -400,8 +400,11 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
             sttlmPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
             nbOfTxs: ['1', [Validators.required, Validators.maxLength(15), Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['INDA', Validators.required],
             sttlmAcct: ['', [Validators.maxLength(34), Validators.pattern(/^[A-Z0-9]{5,34}$/)]],
+            sttlmAcctType: ['IBAN'],
+            sttlmAcctOthrId: [''],
             instgAgtBic: ['RBOSGB2L', BIC], instdAgtBic: ['NDEAFIHH', BIC],
             instrId: ['pacs9bizmsgidr01', Validators.required], endToEndId: ['pacs8bizmsgidr01', Validators.required],
+            txId: ['pacs9bizmsgidr01', [Validators.required, Validators.maxLength(35)]],
             uetr: ['8a562c67-ca16-48ba-b074-65581be6f001', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
             clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
             appHdrPriority: [''],
@@ -409,20 +412,30 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
             sttlmDt: [new Date().toISOString().split('T')[0], [Validators.required, Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]],
             // Debtor FI (required)
             dbtrFiBic: ['BBBBUS33XXX', BIC],
-            dbtrFiAcct: ['471932901234'],
+            dbtrFiAcct: ['DE89370400440532013000'],
+            dbtrFiAcctType: ['IBAN'],
+            dbtrFiAcctOthrId: [''],
             // Debtor Agent (mandatory)
             dbtrAgtBic: ['BBBBUS33XXX', BIC],
             dbtrAgtAcct: [''],
+            dbtrAgtAcctType: ['none'],
+            dbtrAgtAcctOthrId: [''],
             // Creditor Agent (mandatory)
             cdtrAgtBic: ['CCCCGB2LXXX', BIC],
             cdtrAgtAcct: [''],
+            cdtrAgtAcctType: ['none'],
+            cdtrAgtAcctOthrId: [''],
             // Creditor FI (required)
             cdtrFiBic: ['CCCCGB2LXXX', BIC],
-            cdtrFiAcct: ['471932905678'],
+            cdtrFiAcct: ['GB82WEST12345698765432'],
+            cdtrFiAcctType: ['IBAN'],
+            cdtrFiAcctOthrId: [''],
             // Optional agents
             prvsInstgAgt1Bic: ['', BIC_OPT], prvsInstgAgt2Bic: ['', BIC_OPT], prvsInstgAgt3Bic: ['', BIC_OPT],
             intrmyAgt1Bic: ['', BIC_OPT], intrmyAgt2Bic: ['', BIC_OPT], intrmyAgt3Bic: ['', BIC_OPT],
-            prvsInstgAgt1Acct: [''], prvsInstgAgt2Acct: [''], prvsInstgAgt3Acct: [''],
+            prvsInstgAgt1Acct: [''], prvsInstgAgt1AcctType: ['none'], prvsInstgAgt1AcctOthrId: [''],
+            prvsInstgAgt2Acct: [''], prvsInstgAgt2AcctType: ['none'], prvsInstgAgt2AcctOthrId: [''],
+            prvsInstgAgt3Acct: [''], prvsInstgAgt3AcctType: ['none'], prvsInstgAgt3AcctOthrId: [''],
             intrmyAgt1Acct: [''], intrmyAgt2Acct: [''], intrmyAgt3Acct: [''],
             // COVE Reimbursement Agents — at least one required for COVE settlement method
             instgRmbrsmntAgtBic: ['RBOSGB2L', BIC_OPT],
@@ -430,15 +443,23 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
 
             // COV â€” UndrlygCstmrCdtTrf fields
             covDbtrName: ['Debtor Name', [Validators.required, Validators.maxLength(140), SAFE_NAME]],
-            covDbtrAcct: ['471932901234'],
+            covDbtrAcct: ['DE89370400440532013000'],
+            covDbtrAcctType: ['IBAN'],
+            covDbtrAcctOthrId: [''],
             covDbtrOrgAnyBIC: ['BBBBUS33XXX', BIC],
             covDbtrAgtBic: ['BBBBUS33XXX', BIC],
             covDbtrAgtAcct: [''],
+            covDbtrAgtAcctType: ['none'],
+            covDbtrAgtAcctOthrId: [''],
             covCdtrAgtBic: ['CCCCGB2LXXX', BIC],
             covCdtrAgtAcct: [''],
+            covCdtrAgtAcctType: ['none'],
+            covCdtrAgtAcctOthrId: [''],
             covCdtrName: ['Creditor Name', [Validators.required, Validators.maxLength(140), SAFE_NAME]],
             covCdtrOrgAnyBIC: ['CCCCGB2LXXX', BIC],
-            covCdtrAcct: ['471932905678'],
+            covCdtrAcct: ['GB82WEST12345698765432'],
+            covCdtrAcctType: ['IBAN'],
+            covCdtrAcctOthrId: [''],
             covPurpCd: ['', [Validators.pattern(/^[A-Z]{4,4}$/), (control: any) => {
                 if (!control.value) return null;
                 return this.purposes.includes(control.value.toUpperCase()) ? null : { invalidPurpose: true };
@@ -500,9 +521,8 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
             // CBPR_RestrictedFINXMax28Text — MmbId capped at 28 + FIN-X charset
             if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['', [Validators.maxLength(28), ADDR_PATTERN]];
             if (!c[p + 'Acct']) c[p + 'Acct'] = ['', [Validators.maxLength(34), Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
-            if (['intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'].includes(p)) {
-                if (!c[p + 'AcctType']) c[p + 'AcctType'] = ['iban'];
-            }
+            if (!c[p + 'AcctType']) c[p + 'AcctType'] = ['none'];
+            if (!c[p + 'AcctOthrId']) c[p + 'AcctOthrId'] = [''];
         });
         // Address prefixes for COV parties (Debtor / Creditor in UndrlygCstmrCdtTrf)
         // covDbtr and covCdtr are mandatory and ship with full address data â€” they default to 'hybrid'.
@@ -829,7 +849,7 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
 
         // CdtTrfTxInf â€” pacs.009.001.08 COV element order
         let tx = '';
-        let pmtIdXml = this.el('InstrId', v.instrId) + this.el('EndToEndId', v.endToEndId) + this.el('UETR', v.uetr);
+        let pmtIdXml = this.el('InstrId', v.instrId) + this.el('EndToEndId', v.endToEndId) + this.el('TxId', v.txId) + this.el('UETR', v.uetr);
         if (v.clrSysRef?.trim()) pmtIdXml += this.el('ClrSysRef', v.clrSysRef);
         tx += this.tag('PmtId', pmtIdXml, 4);
 
@@ -882,14 +902,10 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
         const frBic = v.fromBic;
         const toBic = v.toBic;
 
-        // Reimbursement Agents inside SttlmInf (XSD order: after SttlmAcct, before ClrSys/Thrd)
-        let rmbAgts = '';
-        if (v.instgRmbrsmntAgtBic?.trim()) {
-            rmbAgts += `\n\t\t\t\t\t<InstgRmbrsmntAgt>\n\t\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t\t<BICFI>${this.e(v.instgRmbrsmntAgtBic)}</BICFI>\n\t\t\t\t\t\t</FinInstnId>\n\t\t\t\t\t</InstgRmbrsmntAgt>`;
-        }
-        if (v.instdRmbrsmntAgtBic?.trim()) {
-            rmbAgts += `\n\t\t\t\t\t<InstdRmbrsmntAgt>\n\t\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t\t<BICFI>${this.e(v.instdRmbrsmntAgtBic)}</BICFI>\n\t\t\t\t\t\t</FinInstnId>\n\t\t\t\t\t</InstdRmbrsmntAgt>`;
-        }
+        // Note: InstgRmbrsmntAgt / InstdRmbrsmntAgt are NOT generated in CBPR+ pacs.009.001.08.
+        // CBPR+ restricts SttlmMtd to INDA/INGA; reimbursement agents are only valid with COVE
+        // which is not permitted in this specification. COV is indicated by UndrlygCstmrCdtTrf.
+        const rmbAgts = '';
 
         this.generatedXml = `<?xml version="1.0" encoding="UTF-8"?>
 <BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
@@ -920,7 +936,7 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
 				<CreDtTm>${creDtTm}</CreDtTm>
 				<NbOfTxs>${v.nbOfTxs}</NbOfTxs>
 				<SttlmInf>
-					<SttlmMtd>${this.e(v.sttlmMtd)}</SttlmMtd>${v.sttlmAcct?.trim() ? `\n\t\t\t\t\t<SttlmAcct><Id><IBAN>${this.e(v.sttlmAcct)}</IBAN></Id></SttlmAcct>` : ''}${rmbAgts}
+					<SttlmMtd>${this.e(v.sttlmMtd)}</SttlmMtd>${(() => { const t = v.sttlmAcctType || 'none'; if (t === 'IBAN' && v.sttlmAcct?.trim()) return `\n\t\t\t\t\t<SttlmAcct><Id><IBAN>${this.e(v.sttlmAcct)}</IBAN></Id></SttlmAcct>`; if (t === 'Othr' && v.sttlmAcctOthrId?.trim()) return `\n\t\t\t\t\t<SttlmAcct><Id><Othr><Id>${this.e(v.sttlmAcctOthrId)}</Id></Othr></Id></SttlmAcct>`; return ''; })()}${rmbAgts}
 				</SttlmInf>
 			</GrpHdr>
 			<CdtTrfTxInf>
@@ -996,15 +1012,14 @@ ${tx}\t\t\t</CdtTrfTxInf>
     }
     agtWithAcct(tag: string, prefix: string, v: any, indent = 4) {
         let res = this.agt(tag, prefix, v, indent);
-        if (v[prefix + 'Acct']?.trim()) {
-            const val = v[prefix + 'Acct'];
-            const ibanCountries = ['AD', 'AE', 'AL', 'AT', 'AZ', 'BA', 'BE', 'BG', 'BH', 'BR', 'BY', 'CH', 'CR', 'CY', 'CZ', 'DE', 'DK', 'DO', 'EE', 'EG', 'ES', 'FI', 'FO', 'FR', 'GB', 'GE', 'GI', 'GL', 'GR', 'GT', 'HR', 'HU', 'IE', 'IL', 'IQ', 'IS', 'IT', 'JO', 'KW', 'KZ', 'LB', 'LI', 'LT', 'LU', 'LV', 'MC', 'MD', 'ME', 'MK', 'MR', 'MT', 'MU', 'NL', 'NO', 'PK', 'PL', 'PS', 'PT', 'QA', 'RO', 'RS', 'RU', 'SA', 'SC', 'SE', 'SI', 'SK', 'SM', 'ST', 'SV', 'TL', 'TN', 'TR', 'UA', 'VA', 'VG', 'XK'];
-            let idContent = '';
-            if (val.length >= 14 && ibanCountries.includes(val.substring(0, 2).toUpperCase()) && /^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/i.test(val)) {
-                idContent = this.el('IBAN', val, indent + 2);
-            } else {
-                idContent = `\n${this.tabs(indent + 2)}<Othr>\n${this.tabs(indent + 3)}<Id>${this.e(val)}</Id>\n${this.tabs(indent + 2)}</Othr>\n${this.tabs(indent + 1)}`;
-            }
+        const acctType = v[prefix + 'AcctType'] || 'none';
+        let idContent = '';
+        if (acctType === 'IBAN' && v[prefix + 'Acct']?.trim()) {
+            idContent = this.el('IBAN', v[prefix + 'Acct'], indent + 2);
+        } else if (acctType === 'Othr' && v[prefix + 'AcctOthrId']?.trim()) {
+            idContent = `\n${this.tabs(indent + 2)}<Othr>\n${this.tabs(indent + 3)}<Id>${this.e(v[prefix + 'AcctOthrId'])}</Id>\n${this.tabs(indent + 2)}</Othr>\n${this.tabs(indent + 1)}`;
+        }
+        if (idContent) {
             res += this.tag(tag + 'Acct', this.tag('Id', idContent, indent + 1), indent);
         }
         return res;
@@ -1142,14 +1157,14 @@ ${tx}\t\t\t</CdtTrfTxInf>
     private buildCov(v: any): string {
         let b = `\t\t\t<UndrlygCstmrCdtTrf>\n`;
 
-        const formatAcct = (val: string, tabs: number) => {
-            if (!val) return '';
-            const ibanCountries = ['AD', 'AE', 'AL', 'AT', 'AZ', 'BA', 'BE', 'BG', 'BH', 'BR', 'BY', 'CH', 'CR', 'CY', 'CZ', 'DE', 'DK', 'DO', 'EE', 'EG', 'ES', 'FI', 'FO', 'FR', 'GB', 'GE', 'GI', 'GL', 'GR', 'GT', 'HR', 'HU', 'IE', 'IL', 'IQ', 'IS', 'IT', 'JO', 'KW', 'KZ', 'LB', 'LI', 'LT', 'LU', 'LV', 'MC', 'MD', 'ME', 'MK', 'MR', 'MT', 'MU', 'NL', 'NO', 'PK', 'PL', 'PS', 'PT', 'QA', 'RO', 'RS', 'RU', 'SA', 'SC', 'SE', 'SI', 'SK', 'SM', 'ST', 'SV', 'TL', 'TN', 'TR', 'UA', 'VA', 'VG', 'XK'];
-            if (val.length >= 14 && ibanCountries.includes(val.substring(0, 2).toUpperCase()) && /^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/i.test(val)) {
-                return this.el('IBAN', val, tabs + 1);
-            } else {
-                return `\n${'\t'.repeat(tabs + 1)}<Othr>\n${'\t'.repeat(tabs + 2)}<Id>${this.e(val)}</Id>\n${'\t'.repeat(tabs + 1)}</Othr>\n${'\t'.repeat(tabs)}`;
+        const formatAcctByType = (acctTypeKey: string, ibanKey: string, othrIdKey: string, tabs: number) => {
+            const acctType = v[acctTypeKey] || 'none';
+            if (acctType === 'IBAN' && v[ibanKey]?.trim()) {
+                return this.el('IBAN', v[ibanKey], tabs + 1);
+            } else if (acctType === 'Othr' && v[othrIdKey]?.trim()) {
+                return `\n${'\t'.repeat(tabs + 1)}<Othr>\n${'\t'.repeat(tabs + 2)}<Id>${this.e(v[othrIdKey])}</Id>\n${'\t'.repeat(tabs + 1)}</Othr>\n${'\t'.repeat(tabs)}`;
             }
+            return '';
         };
 
         // Dbtr (PartyIdentification272)
@@ -1157,28 +1172,36 @@ ${tx}\t\t\t</CdtTrfTxInf>
             b += this.partyAgentXml('Dbtr', 'covDbtr', v, 4);
         }
         // DbtrAcct
-        if (v.covDbtrAcct?.trim()) {
-            b += `\t\t\t\t<DbtrAcct>\n\t\t\t\t\t<Id>${formatAcct(v.covDbtrAcct, 5)}\t\t\t\t\t</Id>\n\t\t\t\t</DbtrAcct>\n`;
+        const covDbtrAcctContent = formatAcctByType('covDbtrAcctType', 'covDbtrAcct', 'covDbtrAcctOthrId', 5);
+        if (covDbtrAcctContent) {
+            b += `\t\t\t\t<DbtrAcct>\n\t\t\t\t\t<Id>${covDbtrAcctContent}\t\t\t\t\t</Id>\n\t\t\t\t</DbtrAcct>\n`;
         }
         // DbtrAgt (uses agt() so address fields like covDbtrAgtAddrType are included)
         b += this.agt('DbtrAgt', 'covDbtrAgt', v, 4);
         // DbtrAgtAcct
-        if (v.covDbtrAgtAcct?.trim()) {
-            b += `\t\t\t\t<DbtrAgtAcct>\n\t\t\t\t\t<Id>${formatAcct(v.covDbtrAgtAcct, 5)}\t\t\t\t\t</Id>\n\t\t\t\t</DbtrAgtAcct>\n`;
+        const covDbtrAgtAcctContent = formatAcctByType('covDbtrAgtAcctType', 'covDbtrAgtAcct', 'covDbtrAgtAcctOthrId', 5);
+        if (covDbtrAgtAcctContent) {
+            b += `\t\t\t\t<DbtrAgtAcct>\n\t\t\t\t\t<Id>${covDbtrAgtAcctContent}\t\t\t\t\t</Id>\n\t\t\t\t</DbtrAgtAcct>\n`;
         }
         // CdtrAgt (uses agt() so address fields like covCdtrAgtAddrType are included)
         b += this.agt('CdtrAgt', 'covCdtrAgt', v, 4);
         // CdtrAgtAcct
-        if (v.covCdtrAgtAcct?.trim()) {
-            b += `\t\t\t\t<CdtrAgtAcct>\n\t\t\t\t\t<Id>${formatAcct(v.covCdtrAgtAcct, 5)}\t\t\t\t\t</Id>\n\t\t\t\t</CdtrAgtAcct>\n`;
+        const covCdtrAgtAcctContent = formatAcctByType('covCdtrAgtAcctType', 'covCdtrAgtAcct', 'covCdtrAgtAcctOthrId', 5);
+        if (covCdtrAgtAcctContent) {
+            b += `\t\t\t\t<CdtrAgtAcct>\n\t\t\t\t\t<Id>${covCdtrAgtAcctContent}\t\t\t\t\t</Id>\n\t\t\t\t</CdtrAgtAcct>\n`;
         }
         // Cdtr (PartyIdentification272)
         if (v.covCdtrName?.trim() || v.covCdtrBic?.trim() || v.covCdtrLei?.trim() || v.covCdtrClrSysMmbId?.trim() || (v.covCdtrAddrType && v.covCdtrAddrType !== 'none')) {
             b += this.partyAgentXml('Cdtr', 'covCdtr', v, 4);
         }
         // CdtrAcct
-        if (v.covCdtrAcct?.trim()) {
-            b += `\t\t\t\t<CdtrAcct>\n\t\t\t\t\t<Id>${formatAcct(v.covCdtrAcct, 5)}\t\t\t\t\t</Id>\n\t\t\t\t</CdtrAcct>\n`;
+        const covCdtrAcctContent = formatAcctByType('covCdtrAcctType', 'covCdtrAcct', 'covCdtrAcctOthrId', 5);
+        if (covCdtrAcctContent) {
+            b += `\t\t\t\t<CdtrAcct>\n\t\t\t\t\t<Id>${covCdtrAcctContent}\t\t\t\t\t</Id>\n\t\t\t\t</CdtrAcct>\n`;
+        }
+        // UltmtDbtr (COV Ultimate Debtor - optional party)
+        if (v.covUltmtDbtrName?.trim() || v.covUltmtDbtrOrgAnyBIC?.trim() || v.covUltmtDbtrOrgLEI?.trim() || (v.covUltmtDbtrAddrType && v.covUltmtDbtrAddrType !== 'none')) {
+            b += this.partyAgentXml('UltmtDbtr', 'covUltmtDbtr', v, 4);
         }
         // UltmtCdtr (COV Ultimate Creditor - optional party)
         if (v.covUltmtCdtrName?.trim() || v.covUltmtCdtrOrgAnyBIC?.trim() || v.covUltmtCdtrOrgLEI?.trim() || (v.covUltmtCdtrAddrType && v.covUltmtCdtrAddrType !== 'none')) {
@@ -1207,7 +1230,22 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 b += `\t\t\t\t<InstrForNxtAgt>\n${inner}\t\t\t\t</InstrForNxtAgt>\n`;
             }
         }
-        // RmtInf (optional â€” inside UndrlygCstmrCdtTrf)
+        // Purp (optional)
+        if (v.covPurpCd?.trim()) {
+            b += `\t\t\t\t<Purp>\n\t\t\t\t\t<Cd>${this.e(v.covPurpCd)}</Cd>\n\t\t\t\t</Purp>\n`;
+        }
+
+        // Tax (optional)
+        if (v.covTaxRef?.trim() || v.covTaxAmt?.trim()) {
+            let taxContent = '';
+            if (v.covTaxRef?.trim()) taxContent += this.el('Id', v.covTaxRef, 5);
+            if (v.covTaxAmt?.trim() && v.covTaxCcy?.trim()) {
+                taxContent += `\t\t\t\t\t<TtlAmt Ccy=”${this.e(v.covTaxCcy)}”>${this.formatting.formatAmount(v.covTaxAmt, v.covTaxCcy)}</TtlAmt>\n`;
+            }
+            if (taxContent) b += `\t\t\t\t<Tax>\n${taxContent}\t\t\t\t</Tax>\n`;
+        }
+
+        // RmtInf (optional — inside UndrlygCstmrCdtTrf)
         if (v.rmtInfType === 'ustrd') {
             let ustrdContent = '';
             if (v.rmtInfUstrd?.trim()) {
@@ -1522,7 +1560,20 @@ ${tx}\t\t\t</CdtTrfTxInf>
                     patch.sttlmMtd = tval('SttlmMtd', sttlmInf);
                     const sttlmAcct = getT('SttlmAcct', sttlmInf);
                     if (sttlmAcct) {
-                        patch.sttlmAcct = tval('IBAN', getT('Id', sttlmAcct) || sttlmAcct);
+                        const sttlmIdEl = getT('Id', sttlmAcct) || sttlmAcct;
+                        const sttlmIban = tval('IBAN', sttlmIdEl);
+                        if (sttlmIban) {
+                            patch.sttlmAcctType = 'IBAN';
+                            patch.sttlmAcct = sttlmIban;
+                        } else {
+                            const sttlmOthrId = tval('Id', getT('Othr', sttlmIdEl) || sttlmIdEl);
+                            if (sttlmOthrId) {
+                                patch.sttlmAcctType = 'Othr';
+                                patch.sttlmAcctOthrId = sttlmOthrId;
+                            } else {
+                                patch.sttlmAcctType = 'none';
+                            }
+                        }
                     }
                     const instgRmb = getT('InstgRmbrsmntAgt', sttlmInf);
                     if (instgRmb) patch.instgRmbrsmntAgtBic = tval('BICFI', getT('FinInstnId', instgRmb) || instgRmb);
@@ -1537,7 +1588,8 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 if (pmtId) {
                     patch.instrId = tval('InstrId', pmtId);
                     patch.endToEndId = tval('EndToEndId', pmtId);
-                    patch.txId = tval('TxId', pmtId);
+                    const txIdVal = tval('TxId', pmtId);
+                    if (txIdVal) patch.txId = txIdVal;
                     patch.uetr = tval('UETR', pmtId);
                     patch.clrSysRef = tval('ClrSysRef', pmtId);
                 }
@@ -1587,10 +1639,19 @@ ${tx}\t\t\t</CdtTrfTxInf>
                     }
                     const acct = getT(tag + 'Acct', parent);
                     if (acct) {
-                        patch[p + 'Acct'] = tval('IBAN', getT('Id', acct) || acct) || tval('Id', getT('Othr', getT('Id', acct) || acct) || acct);
-                        if (['intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'].includes(p)) {
-                            const isIban = acct.querySelector('IBAN') || getT('IBAN', acct);
-                            patch[p + 'AcctType'] = isIban ? 'iban' : 'other';
+                        const acctIdEl = getT('Id', acct) || acct;
+                        const ibanVal = tval('IBAN', acctIdEl);
+                        if (ibanVal) {
+                            patch[p + 'AcctType'] = 'IBAN';
+                            patch[p + 'Acct'] = ibanVal;
+                        } else {
+                            const othrId = tval('Id', getT('Othr', acctIdEl) || acctIdEl);
+                            if (othrId) {
+                                patch[p + 'AcctType'] = 'Othr';
+                                patch[p + 'AcctOthrId'] = othrId;
+                            } else {
+                                patch[p + 'AcctType'] = 'none';
+                            }
                         }
                     }
                 };
@@ -1618,7 +1679,20 @@ ${tx}\t\t\t</CdtTrfTxInf>
                     }
                     const acct = getT(tag + 'Acct', parent);
                     if (acct) {
-                        patch[p + 'Acct'] = tval('IBAN', getT('Id', acct) || acct) || tval('Id', getT('Othr', getT('Id', acct) || acct) || acct);
+                        const acctIdEl = getT('Id', acct) || acct;
+                        const ibanVal = tval('IBAN', acctIdEl);
+                        if (ibanVal) {
+                            patch[p + 'AcctType'] = 'IBAN';
+                            patch[p + 'Acct'] = ibanVal;
+                        } else {
+                            const othrId = tval('Id', getT('Othr', acctIdEl) || acctIdEl);
+                            if (othrId) {
+                                patch[p + 'AcctType'] = 'Othr';
+                                patch[p + 'AcctOthrId'] = othrId;
+                            } else {
+                                patch[p + 'AcctType'] = 'none';
+                            }
+                        }
                     }
                     const id = getT('Id', el);
                     if (id) {
@@ -1674,6 +1748,8 @@ ${tx}\t\t\t</CdtTrfTxInf>
                     mapAgt('covDbtrAgt', 'DbtrAgt', undrl);
                     mapAgt('covCdtrAgt', 'CdtrAgt', undrl);
                     mapParty('covCdtr', 'Cdtr', undrl);
+                    mapParty('covUltmtDbtr', 'UltmtDbtr', undrl);
+                    mapParty('covUltmtCdtr', 'UltmtCdtr', undrl);
 
                     const uInstrC = undrl.querySelectorAll(':scope > InstrForCdtrAgt');
                     uInstrC.forEach((el, i) => {
@@ -1690,6 +1766,16 @@ ${tx}\t\t\t</CdtTrfTxInf>
                     });
 
                     patch.covPurpCd = tval('Cd', getT('Purp', undrl) || undrl);
+
+                    const covTax = getT('Tax', undrl);
+                    if (covTax) {
+                        patch.covTaxRef = tval('Id', covTax);
+                        const ttlAmtEl = getT('TtlAmt', covTax);
+                        if (ttlAmtEl) {
+                            patch.covTaxAmt = ttlAmtEl.textContent?.trim() || '';
+                            patch.covTaxCcy = ttlAmtEl.getAttribute('Ccy') || '';
+                        }
+                    }
 
                     const uRmt = undrl.querySelectorAll(':scope > RmtInf');
                     if (uRmt.length > 0) patch.covRmtInfUstrd = tval('Ustrd', uRmt[0]);

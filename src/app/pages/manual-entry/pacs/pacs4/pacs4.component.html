@@ -57,6 +57,7 @@
                     <div class="form-group"><label>Original Message ID <span class="req">*</span></label><input formControlName="orgnlMsgId" maxlength="35" required><div class="validation-msg" *ngIf="err('orgnlMsgId') as e">{{e}}</div><div class="field-hint at-limit" *ngIf="hint('orgnlMsgId', 35) as h">{{h}}</div></div>
                     <div class="form-group"><label>Original Msg Name ID <span class="req">*</span></label><input formControlName="orgnlMsgNmId" maxlength="35" placeholder="e.g. pacs.008.001.08" required><div class="validation-msg" *ngIf="err('orgnlMsgNmId') as e">{{e}}</div><div class="field-hint at-limit" *ngIf="hint('orgnlMsgNmId', 35) as h">{{h}}</div></div>
                     <div class="form-group"><label>Original UETR <span class="req">*</span></label><div class="uetr-control-row"><input formControlName="orgnlUETR" maxlength="36" required><button type="button" class="uetr-refresh-btn" (click)="refreshUetr()" title="Refresh UETR"><mat-icon>refresh</mat-icon></button></div><div class="validation-msg" *ngIf="err('orgnlUETR') as e">{{e}}</div></div>
+                    <div class="form-group"><label>Original Clearing System Ref <span class="opt">Optional</span></label><input formControlName="orgnlClrSysRef" maxlength="35" placeholder="e.g. CLRSYS-REF-001"><div class="validation-msg" *ngIf="err('orgnlClrSysRef') as e">{{e}}</div><div class="field-hint at-limit" *ngIf="hint('orgnlClrSysRef', 35) as h">{{h}}</div></div>
                     <div class="form-group"><label>Original Instruction ID <span class="req">*</span></label><input formControlName="orgnlInstrId" maxlength="35" required><div class="validation-msg" *ngIf="err('orgnlInstrId') as e">{{e}}</div><div class="field-hint at-limit" *ngIf="hint('orgnlInstrId', 35) as h">{{h}}</div></div>
                     <div class="form-group"><label>Original EndToEnd ID <span class="req">*</span></label><input formControlName="orgnlEndToEndId" maxlength="35" required><div class="validation-msg" *ngIf="err('orgnlEndToEndId') as e">{{e}}</div><div class="field-hint at-limit" *ngIf="hint('orgnlEndToEndId', 35) as h">{{h}}</div></div>
                     <div class="form-group"><label>Original Transaction ID <span class="req">*</span></label><input formControlName="orgnlTxId" maxlength="35" required><div class="validation-msg" *ngIf="err('orgnlTxId') as e">{{e}}</div><div class="field-hint at-limit" *ngIf="hint('orgnlTxId', 35) as h">{{h}}</div></div>
@@ -93,6 +94,18 @@
                         <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtrAgt', isAgent:true, title:'Debtor Agent', group: form}"></ng-container>
                     </div>
                     <div class="party-group">
+                        <div class="party-group-title">Intermediary Agent 1 <span class="opt">Optional</span></div>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'intrmyAgt1', isAgent:true, title:'Intermediary Agent 1', group: form}"></ng-container>
+                    </div>
+                    <div class="party-group">
+                        <div class="party-group-title">Intermediary Agent 2 <span class="opt">Optional</span></div>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'intrmyAgt2', isAgent:true, title:'Intermediary Agent 2', group: form}"></ng-container>
+                    </div>
+                    <div class="party-group">
+                        <div class="party-group-title">Intermediary Agent 3 <span class="opt">Optional</span></div>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'intrmyAgt3', isAgent:true, title:'Intermediary Agent 3', group: form}"></ng-container>
+                    </div>
+                    <div class="party-group">
                         <div class="party-group-title">Creditor Agent</div>
                         <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'cdtrAgt', isAgent:true, title:'Creditor Agent', group: form}"></ng-container>
                     </div>
@@ -100,19 +113,17 @@
                         <div class="party-group-title mandatory">Original Creditor</div>
                         <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'cdtr', isAgent:false, title:'Original Creditor', required:true, group: form}"></ng-container>
                     </div>
-
-                    <div class="section-title">Supplementary Parties <span class="opt">Optional</span></div>
                     <div class="party-group">
-                        <div class="party-group-title">Initiating Party</div>
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'initgPty', isAgent:false, title:'Initiating Party', group: form}"></ng-container>
-                    </div>
-                    <div class="party-group">
-                        <div class="party-group-title">Ultimate Debtor</div>
+                        <div class="party-group-title">Ultimate Debtor <span class="opt">Optional</span></div>
                         <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'ultmtDbtr', isAgent:false, title:'Ultimate Debtor', group: form}"></ng-container>
                     </div>
                     <div class="party-group">
-                        <div class="party-group-title">Ultimate Creditor</div>
+                        <div class="party-group-title">Ultimate Creditor <span class="opt">Optional</span></div>
                         <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'ultmtCdtr', isAgent:false, title:'Ultimate Creditor', group: form}"></ng-container>
+                    </div>
+                    <div class="party-group">
+                        <div class="party-group-title">Initiating Party <span class="opt">Optional</span></div>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'initgPty', isAgent:false, title:'Initiating Party', group: form}"></ng-container>
                     </div>
                 </div>
             </form>
@@ -295,44 +306,56 @@
                 <!-- Member ID -->
                 <div class="form-group">
                         <label>{{title}} Member ID</label>
-                        <input [formControlName]="isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId'"
+                        <input [formControlName]="prefix+'MmbId'"
                                 maxlength="35" placeholder="Clearing Member ID">
                         <div class="validation-msg"
-                                *ngIf="err(isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId') as e">{{e}}</div>
+                                *ngIf="err(prefix+'MmbId') as e">{{e}}</div>
                         <div class="field-hint at-limit"
-                                *ngIf="hint(isAgent ? prefix+'ClrSysMmbId' : prefix+'OrgClrSysMmbId', 35) as h">{{h}}
+                                *ngIf="hint(prefix+'MmbId', 35) as h">{{h}}
                         </div>
                 </div>
 
                 <!-- Clearing System Code -->
                 <div class="form-group">
                         <label>{{title}} Clearing System Code</label>
-                        <input [formControlName]="isAgent ? prefix+'ClrSysCd' : prefix+'OrgClrSysCd'" maxlength="5"
+                        <input [formControlName]="prefix+'ClrSysCd'" maxlength="5"
                                 placeholder="e.g. USABA, CHAPS, T2">
                         <div class="validation-msg"
-                                *ngIf="err(isAgent ? prefix+'ClrSysCd' : prefix+'OrgClrSysCd') as e">{{e}}</div>
+                                *ngIf="err(prefix+'ClrSysCd') as e">{{e}}</div>
                         <div class="field-hint at-limit"
-                                *ngIf="hint(isAgent ? prefix+'ClrSysCd' : prefix+'OrgClrSysCd', 5) as h">{{h}}</div>
+                                *ngIf="hint(prefix+'ClrSysCd', 5) as h">{{h}}</div>
                 </div>
 
                 <!-- LEI -->
                 <div class="form-group">
                         <label>{{title}} LEI</label>
-                        <input [formControlName]="isAgent ? prefix+'Lei' : prefix+'OrgLEI'" maxlength="20"
+                        <input [formControlName]="prefix+'Lei'" maxlength="20"
                                 placeholder="20-char LEI">
-                        <div class="validation-msg" *ngIf="err(isAgent ? prefix+'Lei' : prefix+'OrgLEI') as e">{{e}}
+                        <div class="validation-msg" *ngIf="err(prefix+'Lei') as e">{{e}}
                         </div>
                         <div class="field-hint at-limit"
-                                *ngIf="hint(isAgent ? prefix+'Lei' : prefix+'OrgLEI', 20) as h">{{h}}</div>
+                                *ngIf="hint(prefix+'Lei', 20) as h">{{h}}</div>
                 </div>
 
-                <!-- Account Number -->
-                <div class="form-group">
-                        <label>{{title}} Account Number</label>
-                        <input [formControlName]="prefix+'Acct'" maxlength="34">
-                        <div class="validation-msg" *ngIf="err(prefix+'Acct') as e">{{e}}</div>
-                        <div class="field-hint at-limit" *ngIf="hint(prefix+'Acct', 34) as h">{{h}}</div>
-                </div>
+                <!-- Account (not applicable for InstgAgt / InstdAgt) -->
+                <ng-container *ngIf="prefix !== 'instgAgt' && prefix !== 'instdAgt'">
+                        <div class="form-group">
+                                <label>{{title}} Account Type</label>
+                                <select [formControlName]="prefix+'AcctType'">
+                                        <option value="none">None (No Account)</option>
+                                        <option value="IBAN">IBAN</option>
+                                        <option value="Othr">Other (Othr)</option>
+                                </select>
+                        </div>
+                        <div class="form-group" *ngIf="form.get(prefix+'AcctType')?.value !== 'none'">
+                                <label>{{title}} Account Number</label>
+                                <input [formControlName]="prefix+'Acct'"
+                                       [maxlength]="form.get(prefix+'AcctType')?.value === 'IBAN' ? 34 : 34"
+                                       [placeholder]="form.get(prefix+'AcctType')?.value === 'IBAN' ? 'e.g. GB29NWBK60161331926819' : 'e.g. ACC12345678'">
+                                <div class="validation-msg" *ngIf="err(prefix+'Acct') as e">{{e}}</div>
+                                <div class="field-hint at-limit" *ngIf="hint(prefix+'Acct', 34) as h">{{h}}</div>
+                        </div>
+                </ng-container>
 
         </div>
 </ng-template>

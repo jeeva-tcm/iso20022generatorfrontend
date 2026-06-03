@@ -571,6 +571,7 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
             };
             const acctDefaults = acctMap[p] || {};
 
+            if (!c[p + 'AcctType']) c[p + 'AcctType'] = [acctDefaults.AcctIBAN ? 'IBAN' : 'none'];
             if (!c[p + 'AcctIBAN']) {
                 const val = acctDefaults.AcctIBAN || '';
                 const validators = [Validators.pattern(/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/), Validators.minLength(10), Validators.maxLength(34)];
@@ -746,14 +747,17 @@ ${this.rmtInf(v)}
     }
 
     private formatAcctDetails(v: any, p: string, tabs: number) {
-        if (v[p + 'AcctIBAN']) return this.el('IBAN', v[p + 'AcctIBAN'], tabs);
-        const othrId = v[p + 'AcctOthrId'];
-        if (othrId) {
-            let othrRes = this.el('Id', othrId, tabs + 2);
-            const schCd = v[p + 'AcctOthrSchmeCd'], schPrtry = v[p + 'AcctOthrSchmePrtry'];
-            if (schCd || schPrtry) { let schRes = schCd ? this.el('Cd', schCd, tabs + 4) : this.el('Prtry', schPrtry, tabs + 4); othrRes += this.tag('SchmeNm', schRes, tabs + 2); }
-            if (v[p + 'AcctOthrIssr']) othrRes += this.el('Issr', v[p + 'AcctOthrIssr'], tabs + 2);
-            return this.tag('Othr', othrRes, tabs);
+        const acctType = v[p + 'AcctType'] || 'none';
+        if (acctType === 'IBAN' && v[p + 'AcctIBAN']) return this.el('IBAN', v[p + 'AcctIBAN'], tabs);
+        if (acctType === 'Othr') {
+            const othrId = v[p + 'AcctOthrId'];
+            if (othrId) {
+                let othrRes = this.el('Id', othrId, tabs + 2);
+                const schCd = v[p + 'AcctOthrSchmeCd'], schPrtry = v[p + 'AcctOthrSchmePrtry'];
+                if (schCd || schPrtry) { let schRes = schCd ? this.el('Cd', schCd, tabs + 4) : this.el('Prtry', schPrtry, tabs + 4); othrRes += this.tag('SchmeNm', schRes, tabs + 2); }
+                if (v[p + 'AcctOthrIssr']) othrRes += this.el('Issr', v[p + 'AcctOthrIssr'], tabs + 2);
+                return this.tag('Othr', othrRes, tabs);
+            }
         }
         return '';
     }
@@ -887,7 +891,25 @@ ${this.rmtInf(v)}
                     }
                     const acctNode = cdtInstr.getElementsByTagName(tag + 'Acct')[0];
                     if (acctNode) {
-                        patch[pfx + 'AcctIBAN'] = tval(acctNode, 'IBAN');
+                        const iban = tval(acctNode, 'IBAN');
+                        patch[pfx + 'AcctIBAN'] = iban;
+                        if (iban) {
+                            patch[pfx + 'AcctType'] = 'IBAN';
+                        } else {
+                            const othrEl = acctNode.getElementsByTagName('Othr')[0];
+                            const othrId = othrEl ? tval(othrEl, 'Id') : '';
+                            if (othrId) {
+                                patch[pfx + 'AcctType'] = 'Othr';
+                                patch[pfx + 'AcctOthrId'] = othrId;
+                                patch[pfx + 'AcctOthrSchmeCd'] = othrEl?.getElementsByTagName('SchmeNm')[0]
+                                    ?.getElementsByTagName('Cd')[0]?.textContent?.trim() || '';
+                                patch[pfx + 'AcctOthrSchmePrtry'] = othrEl?.getElementsByTagName('SchmeNm')[0]
+                                    ?.getElementsByTagName('Prtry')[0]?.textContent?.trim() || '';
+                                patch[pfx + 'AcctOthrIssr'] = othrEl ? tval(othrEl, 'Issr') : '';
+                            } else {
+                                patch[pfx + 'AcctType'] = 'none';
+                            }
+                        }
                         patch[pfx + 'AcctCcy'] = tval(acctNode, 'Ccy');
                         patch[pfx + 'AcctNm'] = tval(acctNode, 'Nm');
                         patch[pfx + 'AcctTpCd'] = acctNode.getElementsByTagName('Tp')[0]

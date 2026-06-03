@@ -322,11 +322,19 @@ export class Pacs9AdvComponent implements OnInit, OnDestroy {
             // Optional agents
             prvsInstgAgt1Bic: ['', BIC_OPT], prvsInstgAgt2Bic: ['', BIC_OPT], prvsInstgAgt3Bic: ['', BIC_OPT],
             intrmyAgt1Bic: ['', BIC_OPT], intrmyAgt2Bic: ['', BIC_OPT], intrmyAgt3Bic: ['', BIC_OPT],
-            // Debtor/Creditor FI Accounts
-            dbtrFiAcct: [''],
-            cdtrFiAcct: [''],
-            dbtrAgtAcct: [''],
-            cdtrAgtAcct: [''],
+            // Debtor/Creditor FI Accounts (AcctType + IBAN/OthrId)
+            dbtrFiAcctType: ['none'],
+            dbtrFiAcctIBAN: [''],
+            dbtrFiAcctOthrId: [''],
+            cdtrFiAcctType: ['none'],
+            cdtrFiAcctIBAN: [''],
+            cdtrFiAcctOthrId: [''],
+            dbtrAgtAcctType: ['none'],
+            dbtrAgtAcctIBAN: [''],
+            dbtrAgtAcctOthrId: [''],
+            cdtrAgtAcctType: ['none'],
+            cdtrAgtAcctIBAN: [''],
+            cdtrAgtAcctOthrId: [''],
             // Instructions for Creditor Agent (0..2)
             instrForCdtrAgt1Cd: [''], instrForCdtrAgt1InfTxt: ['', [Validators.minLength(1), Validators.maxLength(140), ADDR_PATTERN]],
             instrForCdtrAgt2Cd: [''], instrForCdtrAgt2InfTxt: ['', [Validators.minLength(1), Validators.maxLength(140), ADDR_PATTERN]],
@@ -381,9 +389,9 @@ export class Pacs9AdvComponent implements OnInit, OnDestroy {
             if (!c[p + 'ClrSysCd']) c[p + 'ClrSysCd'] = ['', Validators.maxLength(5)];
             if (!c[p + 'ClrSysMmbId']) c[p + 'ClrSysMmbId'] = ['', Validators.maxLength(35)];
             if (!c[p + 'Acct']) c[p + 'Acct'] = ['', [Validators.pattern(/^[A-Z0-9]{5,34}$/)]];
-            if (['intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'].includes(p)) {
-                if (!c[p + 'AcctType']) c[p + 'AcctType'] = ['iban'];
-            }
+            if (!c[p + 'AcctType']) c[p + 'AcctType'] = ['none'];
+            if (!c[p + 'AcctIBAN']) c[p + 'AcctIBAN'] = [''];
+            if (!c[p + 'AcctOthrId']) c[p + 'AcctOthrId'] = [''];
         });
         // CBPR_COM_R9: BICFI present → Nm and PstlAdr must NOT appear.
         // All mandatory parties have BICFI set, so clear Name and AddrType=none.
@@ -709,21 +717,18 @@ export class Pacs9AdvComponent implements OnInit, OnDestroy {
             }
         }
         // Instructions for Next Agent (0..6)
-        const seenNxtAgtCds = new Set<string>();
         for (let i = 1; i <= 6; i++) {
             const cd = v[`instrForNxtAgt${i}Cd`]?.trim();
             const txt = v[`instrForNxtAgt${i}InfTxt`]?.trim();
-            if (cd && seenNxtAgtCds.has(cd)) continue;  // skip duplicates
-            if (cd) seenNxtAgtCds.add(cd);
             if (cd || txt) {
                 let inner = '';
-                if (cd) inner += this.el('Cd', cd, 4);
-                if (txt) inner += this.el('InstrInf', txt, 4);
-                tx += this.tag('InstrForNxtAgt', inner, 3);
+                if (cd) inner += this.el('Cd', cd, 5);
+                if (txt) inner += this.el('InstrInf', txt, 5);
+                tx += this.tag('InstrForNxtAgt', inner, 4);
             }
         }
 
-        if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 4), 3);
+        if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 5), 4);
 
         // Remittance Information
         if (v.rmtInfType === 'ustrd' && v.rmtInfUstrd?.trim()) {
@@ -866,15 +871,18 @@ ${tx}\t\t\t</CdtTrfTxInf>
     }
     agtWithAcct(tag: string, prefix: string, v: any, indent = 4) {
         let res = this.agt(tag, prefix, v, indent);
-        if (v[prefix + 'Acct']?.trim()) {
-            const val = v[prefix + 'Acct'];
-            const ibanCountries = ['AD', 'AE', 'AL', 'AT', 'AZ', 'BA', 'BE', 'BG', 'BH', 'BR', 'BY', 'CH', 'CR', 'CY', 'CZ', 'DE', 'DK', 'DO', 'EE', 'EG', 'ES', 'FI', 'FO', 'FR', 'GB', 'GE', 'GI', 'GL', 'GR', 'GT', 'HR', 'HU', 'IE', 'IL', 'IQ', 'IS', 'IT', 'JO', 'KW', 'KZ', 'LB', 'LI', 'LT', 'LU', 'LV', 'MC', 'MD', 'ME', 'MK', 'MR', 'MT', 'MU', 'NL', 'NO', 'PK', 'PL', 'PS', 'PT', 'QA', 'RO', 'RS', 'RU', 'SA', 'SC', 'SE', 'SI', 'SK', 'SM', 'ST', 'SV', 'TL', 'TN', 'TR', 'UA', 'VA', 'VG', 'XK'];
-            let idContent = '';
-            if (val.length >= 14 && ibanCountries.includes(val.substring(0, 2).toUpperCase()) && /^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/i.test(val)) {
-                idContent = this.el('IBAN', val, indent + 2);
-            } else {
-                idContent = `\n${this.tabs(indent + 2)}<Othr>\n${this.tabs(indent + 3)}<Id>${this.e(val)}</Id>\n${this.tabs(indent + 2)}</Othr>\n${this.tabs(indent + 1)}`;
+        const acctType = (v[prefix + 'AcctType'] || 'none') as string;
+        let idContent = '';
+        if (acctType === 'IBAN') {
+            const iban = (v[prefix + 'AcctIBAN'] || '').trim();
+            if (iban) idContent = this.el('IBAN', iban, indent + 2);
+        } else if (acctType === 'Othr') {
+            const othrId = (v[prefix + 'AcctOthrId'] || '').trim();
+            if (othrId) {
+                idContent = `\n${this.tabs(indent + 2)}<Othr>\n${this.tabs(indent + 3)}<Id>${this.e(othrId)}</Id>\n${this.tabs(indent + 2)}</Othr>\n${this.tabs(indent + 1)}`;
             }
+        }
+        if (idContent) {
             res += this.tag(tag + 'Acct', this.tag('Id', idContent, indent + 1), indent);
         }
         return res;
@@ -1281,10 +1289,24 @@ ${tx}\t\t\t</CdtTrfTxInf>
                     }
                     const acct = getT(tag + 'Acct', parent);
                     if (acct) {
-                        patch[p + 'Acct'] = tval('IBAN', getT('Id', acct) || acct) || tval('Id', getT('Othr', getT('Id', acct) || acct) || acct);
-                        if (['intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'].includes(p)) {
-                            const isIban = acct.querySelector('IBAN') || getT('IBAN', acct);
-                            patch[p + 'AcctType'] = isIban ? 'iban' : 'other';
+                        const idEl = getT('Id', acct) || acct;
+                        const iban = tval('IBAN', idEl);
+                        if (iban) {
+                            patch[p + 'AcctType'] = 'IBAN';
+                            patch[p + 'AcctIBAN'] = iban;
+                            patch[p + 'AcctOthrId'] = '';
+                        } else {
+                            const othrEl = getT('Othr', idEl) || getT('Othr', acct);
+                            const othrId = othrEl ? tval('Id', othrEl) : '';
+                            if (othrId) {
+                                patch[p + 'AcctType'] = 'Othr';
+                                patch[p + 'AcctOthrId'] = othrId;
+                                patch[p + 'AcctIBAN'] = '';
+                            } else {
+                                patch[p + 'AcctType'] = 'none';
+                                patch[p + 'AcctIBAN'] = '';
+                                patch[p + 'AcctOthrId'] = '';
+                            }
                         }
                     }
                 };
@@ -1301,6 +1323,21 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 mapAgt('dbtrAgt', 'DbtrAgt');
                 mapAgt('cdtrAgt', 'CdtrAgt');
                 mapAgt('cdtrFi', 'Cdtr');
+
+                const instrForCdtrAgts = tx.querySelectorAll(':scope > InstrForCdtrAgt');
+                instrForCdtrAgts.forEach((el: Element, i: number) => {
+                    if (i < 2) {
+                        patch[`instrForCdtrAgt${i + 1}Cd`] = tval('Cd', el);
+                        patch[`instrForCdtrAgt${i + 1}InfTxt`] = tval('InstrInf', el);
+                    }
+                });
+                const instrForNxtAgts = tx.querySelectorAll(':scope > InstrForNxtAgt');
+                instrForNxtAgts.forEach((el: Element, i: number) => {
+                    if (i < 6) {
+                        patch[`instrForNxtAgt${i + 1}Cd`] = tval('Cd', el);
+                        patch[`instrForNxtAgt${i + 1}InfTxt`] = tval('InstrInf', el);
+                    }
+                });
 
                 const rmtInf = getT('RmtInf', tx);
                 if (rmtInf) {

@@ -623,6 +623,11 @@ export class Pacs10Component implements OnInit, OnDestroy {
                 c[p + 'AcctIBAN'] = [acctDefaults.AcctIBAN, [Validators.pattern(/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/), Validators.minLength(10), Validators.maxLength(34)]];
             }
 
+            // Account ID type selector: 'none' | 'IBAN' | 'Othr'
+            if (!c[p + 'AcctIdType']) {
+                c[p + 'AcctIdType'] = [acctDefaults.AcctIBAN ? 'IBAN' : 'none'];
+            }
+
             // Currency, Account Name
             if (!c[p + 'AcctCcy']) {
                 c[p + 'AcctCcy'] = [acctDefaults.AcctCcy || '', [Validators.pattern(/^[A-Z]{3}$/)]];
@@ -792,18 +797,22 @@ ${this.rmtInf(v)}
     }
 
     private formatAcctDetails(v: any, p: string, tabs: number) {
-        // Priority: IBAN → Other ID
-        if (v[p + 'AcctIBAN']) return this.el('IBAN', v[p + 'AcctIBAN'], tabs);
-        const othrId = v[p + 'AcctOthrId'];
-        if (othrId) {
-            let othrRes = this.el('Id', othrId, tabs + 2);
-            const schCd = v[p + 'AcctOthrSchmeCd'], schPrtry = v[p + 'AcctOthrSchmePrtry'];
-            if (schCd || schPrtry) {
-                const schVal = schCd ? this.el('Cd', schCd, tabs + 4) : this.el('Prtry', schPrtry, tabs + 4);
-                othrRes += this.tag('SchmeNm', schVal, tabs + 2);
+        const acctIdType = v[p + 'AcctIdType'] || 'none';
+        if (acctIdType === 'IBAN' && v[p + 'AcctIBAN']) {
+            return this.el('IBAN', v[p + 'AcctIBAN'], tabs);
+        }
+        if (acctIdType === 'Othr') {
+            const othrId = v[p + 'AcctOthrId'];
+            if (othrId) {
+                let othrRes = this.el('Id', othrId, tabs + 2);
+                const schCd = v[p + 'AcctOthrSchmeCd'], schPrtry = v[p + 'AcctOthrSchmePrtry'];
+                if (schCd || schPrtry) {
+                    const schVal = schCd ? this.el('Cd', schCd, tabs + 4) : this.el('Prtry', schPrtry, tabs + 4);
+                    othrRes += this.tag('SchmeNm', schVal, tabs + 2);
+                }
+                if (v[p + 'AcctOthrIssr']) othrRes += this.el('Issr', v[p + 'AcctOthrIssr'], tabs + 2);
+                return this.tag('Othr', othrRes, tabs);
             }
-            if (v[p + 'AcctOthrIssr']) othrRes += this.el('Issr', v[p + 'AcctOthrIssr'], tabs + 2);
-            return this.tag('Othr', othrRes, tabs);
         }
         return '';
     }
@@ -1203,7 +1212,26 @@ ${this.rmtInf(v)}
                     }
                     const acctNode = cdtInstr.getElementsByTagName(tag + 'Acct')[0];
                     if (acctNode) {
-                        patch[pfx + 'AcctIBAN'] = tval(acctNode, 'IBAN');
+                        const iban = tval(acctNode, 'IBAN');
+                        if (iban) {
+                            patch[pfx + 'AcctIdType'] = 'IBAN';
+                            patch[pfx + 'AcctIBAN'] = iban;
+                        } else {
+                            const othrEl = acctNode.getElementsByTagName('Othr')[0];
+                            const othrId = othrEl ? tval(othrEl, 'Id') : '';
+                            if (othrId) {
+                                patch[pfx + 'AcctIdType'] = 'Othr';
+                                patch[pfx + 'AcctOthrId'] = othrId;
+                                const schmeEl = othrEl?.getElementsByTagName('SchmeNm')[0];
+                                if (schmeEl) {
+                                    patch[pfx + 'AcctOthrSchmeCd'] = tval(schmeEl, 'Cd');
+                                    patch[pfx + 'AcctOthrSchmePrtry'] = tval(schmeEl, 'Prtry');
+                                }
+                                patch[pfx + 'AcctOthrIssr'] = othrEl ? tval(othrEl, 'Issr') : '';
+                            } else {
+                                patch[pfx + 'AcctIdType'] = 'none';
+                            }
+                        }
                         patch[pfx + 'AcctCcy'] = tval(acctNode, 'Ccy');
                         patch[pfx + 'AcctNm'] = tval(acctNode, 'Nm');
                     }
