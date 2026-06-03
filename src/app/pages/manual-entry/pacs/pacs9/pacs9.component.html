@@ -159,12 +159,13 @@
                                                 <div class="field-hint at-limit" *ngIf="hint('clrSysRef', 35) as h">{{h}}</div>
                                         </div>
 
-                                        <div class="section-title">Settlement Amounts</div>
+                                        <div class="section-title">Settlement Amounts &amp; Timing</div>
                                         <div class="form-group intermediary-field"><label>Amount <span class="req">*</span></label><input
                                                         formControlName="amount" pattern="^\d{1,18}(\.\d{1,5})?$"
                                                         required type="text">
                                                 <div class="validation-msg" *ngIf="err('amount') as e">{{e}}</div>
-                                        </div>                                         <div class="form-group intermediary-field"><label>Currency <span class="req">*</span></label>
+                                        </div>
+                                        <div class="form-group intermediary-field"><label>Currency <span class="req">*</span></label>
                                                 <select formControlName="currency" required>
                                                         <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
                                                 </select>
@@ -180,27 +181,76 @@
                                                                 class="opt">Optional</span></label>
                                                 <select formControlName="sttlmPrty">
                                                         <option value="">None</option>
-                                                        <option value="HIGH">HIGH</option>
-                                                        <option value="NORM">NORM</option>
+                                                        <option value="HIGH">HIGH – High</option>
+                                                        <option value="NORM">NORM – Normal</option>
+                                                        <option value="URGT">URGT – Urgent</option>
                                                 </select>
                                                 <div class="validation-msg" *ngIf="err('sttlmPrty') as e">{{e}}</div>
                                         </div>
-                                        <div class="form-group intermediary-field">
-                                            <label>Instructed Amount <span class="opt">Optional</span></label>
-                                            <input formControlName="instdAmt" type="text" pattern="^\d{1,18}(\.\d{1,5})?$" placeholder="e.g. 1000.00">
-                                            <div class="validation-msg" *ngIf="err('instdAmt') as e">{{e}}</div>
+
+                                        <!-- Settlement Account (GrpHdr/SttlmInf §5.113.2) -->
+                                        <div class="party-group">
+                                                <div class="party-group-title">Settlement Account <span class="opt">Optional</span></div>
+                                                <div class="party-grid">
+                                                        <div class="form-group intermediary-field">
+                                                                <label>Settlement Account Type</label>
+                                                                <select formControlName="sttlmAcctType">
+                                                                        <option value="none">None</option>
+                                                                        <option value="IBAN">IBAN</option>
+                                                                        <option value="Othr">Other (Othr)</option>
+                                                                </select>
+                                                        </div>
+                                                        <div class="form-group intermediary-field" *ngIf="form.get('sttlmAcctType')?.value === 'IBAN'">
+                                                                <label>Settlement IBAN</label>
+                                                                <input formControlName="sttlmAcct" maxlength="34" placeholder="e.g. DE89370400440532013000" class="auto-uppercase">
+                                                        </div>
+                                                        <div class="form-group intermediary-field" *ngIf="form.get('sttlmAcctType')?.value === 'Othr'">
+                                                                <label>Settlement Account ID (Other)</label>
+                                                                <input formControlName="sttlmAcct" maxlength="34" placeholder="Account identifier">
+                                                        </div>
+                                                </div>
                                         </div>
-                                        <div class="form-group intermediary-field">
-                                            <label>Instructed Amount Currency <span class="opt">Optional</span></label>
-                                            <select formControlName="instdAmtCcy">
-                                                <option value=""></option>
-                                                <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
-                                            </select>
+
+                                        <!-- Settlement Time Indication (§5.23.6) -->
+                                        <div class="party-group">
+                                                <div class="party-group-title">Settlement Time Indication <span class="opt">Optional</span></div>
+                                                <div class="party-grid">
+                                                        <div class="form-group intermediary-field">
+                                                                <label>Debit DateTime</label>
+                                                                <input formControlName="sttlmTmDbtDtTm" placeholder="YYYY-MM-DDThh:mm:ss±hh:mm"
+                                                                       maxlength="25">
+                                                                <small class="field-note">CBPR_DateTime with UTC offset</small>
+                                                        </div>
+                                                        <div class="form-group intermediary-field">
+                                                                <label>Credit DateTime</label>
+                                                                <input formControlName="sttlmTmCdtDtTm" placeholder="YYYY-MM-DDThh:mm:ss±hh:mm"
+                                                                       maxlength="25">
+                                                                <small class="field-note">CBPR_DateTime with UTC offset</small>
+                                                        </div>
+                                                </div>
                                         </div>
-                                        <div class="form-group intermediary-field">
-                                            <label>Exchange Rate <span class="opt">Optional</span></label>
-                                            <input formControlName="xchgRate" type="text" placeholder="e.g. 1.08">
-                                            <div class="validation-msg" *ngIf="err('xchgRate') as e">{{e}}</div>
+
+                                        <!-- Settlement Time Request (§5.23.7) -->
+                                        <div class="party-group">
+                                                <div class="party-group-title">Settlement Time Request <span class="opt">Optional</span></div>
+                                                <div class="party-grid">
+                                                        <div class="form-group intermediary-field">
+                                                                <label>CLS Time</label>
+                                                                <input formControlName="sttlmTmReqClsTm" placeholder="hh:mm:ss±hh:mm" maxlength="14">
+                                                        </div>
+                                                        <div class="form-group intermediary-field">
+                                                                <label>Till Time</label>
+                                                                <input formControlName="sttlmTmReqTillTm" placeholder="hh:mm:ss±hh:mm" maxlength="14">
+                                                        </div>
+                                                        <div class="form-group intermediary-field">
+                                                                <label>From Time</label>
+                                                                <input formControlName="sttlmTmReqFrTm" placeholder="hh:mm:ss±hh:mm" maxlength="14">
+                                                        </div>
+                                                        <div class="form-group intermediary-field">
+                                                                <label>Reject Time</label>
+                                                                <input formControlName="sttlmTmReqRjctTm" placeholder="hh:mm:ss±hh:mm" maxlength="14">
+                                                        </div>
+                                                </div>
                                         </div>
 
                                         <!-- Main Agents -->
@@ -602,41 +652,25 @@
                                         <div class="party-group">
                                                 <div class="party-group-title">Instr for Next Agent 5</div>
                                                 <div [formGroup]="form" class="party-grid">
-                                                        <div class="form-group">
-                                                                <label>Instruction Code</label>
-                                                                <select formControlName="instrForNxtAgt5Cd">
-                                                                        <option value="">None</option>
-                                                                        <option value="PHOA">PHOA – Phone account owner</option>
-                                                                        <option value="TELA">TELA – Telecom account owner</option>
-                                                                </select>
-                                                                <div class="validation-msg" *ngIf="err('instrForNxtAgt5Cd') as e">{{e}}</div>
-                                                        </div>
+                                                        <!-- CBPR+ removes <Cd> for InstrForNxtAgt — only InstrInf emitted -->
                                                         <div class="form-group">
                                                                 <label>Instruction Information</label>
-                                                                 <input formControlName="instrForNxtAgt5InfTxt" maxlength="35" placeholder="Free text (max 35)">
-                                                                 <div class="validation-msg" *ngIf="err('instrForNxtAgt5InfTxt') as e">{{e}}</div>
+                                                                <input formControlName="instrForNxtAgt5InfTxt" maxlength="35" placeholder="Free text (max 35)">
+                                                                <div class="validation-msg" *ngIf="err('instrForNxtAgt5InfTxt') as e">{{e}}</div>
                                                                 <div class="field-hint at-limit" *ngIf="hint('instrForNxtAgt5InfTxt', 35) as h">{{h}}</div>
-                                                         </div>
+                                                        </div>
                                                 </div>
                                         </div>
                                         <div class="party-group">
                                                 <div class="party-group-title">Instr for Next Agent 6</div>
                                                 <div [formGroup]="form" class="party-grid">
-                                                        <div class="form-group">
-                                                                <label>Instruction Code</label>
-                                                                <select formControlName="instrForNxtAgt6Cd">
-                                                                        <option value="">None</option>
-                                                                        <option value="PHOA">PHOA – Phone account owner</option>
-                                                                        <option value="TELA">TELA – Telecom account owner</option>
-                                                                </select>
-                                                                <div class="validation-msg" *ngIf="err('instrForNxtAgt6Cd') as e">{{e}}</div>
-                                                        </div>
+                                                        <!-- CBPR+ removes <Cd> for InstrForNxtAgt — only InstrInf emitted -->
                                                         <div class="form-group">
                                                                 <label>Instruction Information</label>
-                                                                 <input formControlName="instrForNxtAgt6InfTxt" maxlength="35" placeholder="Free text (max 35)">
-                                                                 <div class="validation-msg" *ngIf="err('instrForNxtAgt6InfTxt') as e">{{e}}</div>
+                                                                <input formControlName="instrForNxtAgt6InfTxt" maxlength="35" placeholder="Free text (max 35)">
+                                                                <div class="validation-msg" *ngIf="err('instrForNxtAgt6InfTxt') as e">{{e}}</div>
                                                                 <div class="field-hint at-limit" *ngIf="hint('instrForNxtAgt6InfTxt', 35) as h">{{h}}</div>
-                                                         </div>
+                                                        </div>
                                                 </div>
                                         </div>
 

@@ -262,13 +262,55 @@
                                                         formControlName="xchgRate" pattern="^\d{1,11}(\.\d{1,10})?$">
                                                 <div class="validation-msg" *ngIf="err('xchgRate') as e">{{e}}</div>
                                         </div>
-                                        <div class="form-group intermediary-field"><label>Debit DateTime</label><input
+                                        <!-- Settlement Priority (CdtTrfTxInf level — after IntrBkSttlmDt) -->
+                                        <div class="form-group intermediary-field"><label>Settlement Priority <span
+                                                                class="opt">Optional</span></label>
+                                                <select formControlName="sttlmPrty">
+                                                        <option value="">None</option>
+                                                        <option value="HIGH">HIGH – High</option>
+                                                        <option value="NORM">NORM – Normal</option>
+                                                        <option value="URGT">URGT – Urgent</option>
+                                                </select>
+                                                <div class="validation-msg" *ngIf="err('sttlmPrty') as e">{{e}}</div>
+                                        </div>
+                                        <!-- SttlmTmIndctn -->
+                                        <div class="form-group intermediary-field"><label>Debit DateTime <span class="opt">Optional</span></label><input
                                                         type="datetime-local" formControlName="dbtDtTm">
                                                 <div class="validation-msg" *ngIf="err('dbtDtTm') as e">{{e}}</div>
                                         </div>
-                                        <div class="form-group intermediary-field"><label>Credit DateTime</label><input
+                                        <div class="form-group intermediary-field"><label>Credit DateTime <span class="opt">Optional</span></label><input
                                                         type="datetime-local" formControlName="cdtDtTm">
                                                 <div class="validation-msg" *ngIf="err('cdtDtTm') as e">{{e}}</div>
+                                        </div>
+                                        <!-- SttlmTmReq -->
+                                        <div class="party-group">
+                                                <div class="party-group-title">Settlement Time Request <span class="opt">Optional</span></div>
+                                                <div class="party-grid">
+                                                        <div class="form-group intermediary-field">
+                                                                <label>CLS Time</label>
+                                                                <input formControlName="sttlmTmReqClsTm" placeholder="hh:mm:ss±hh:mm" maxlength="14">
+                                                        </div>
+                                                        <div class="form-group intermediary-field">
+                                                                <label>Till Time</label>
+                                                                <input formControlName="sttlmTmReqTillTm" placeholder="hh:mm:ss±hh:mm" maxlength="14">
+                                                        </div>
+                                                        <div class="form-group intermediary-field">
+                                                                <label>From Time</label>
+                                                                <input formControlName="sttlmTmReqFrTm" placeholder="hh:mm:ss±hh:mm" maxlength="14">
+                                                        </div>
+                                                        <div class="form-group intermediary-field">
+                                                                <label>Reject Time</label>
+                                                                <input formControlName="sttlmTmReqRjctTm" placeholder="hh:mm:ss±hh:mm" maxlength="14">
+                                                        </div>
+                                                </div>
+                                        </div>
+                                        <!-- AccptncDtTm (pacs.008-specific) -->
+                                        <div class="form-group intermediary-field">
+                                                <label>Acceptance DateTime <span class="opt">Optional</span>
+                                                        <mat-icon class="info-icon-small" matTooltip="Date/time the payment instruction was accepted (pacs.008-specific)">info</mat-icon>
+                                                </label>
+                                                <input formControlName="accptncDtTm" placeholder="YYYY-MM-DDThh:mm:ss±hh:mm" maxlength="25">
+                                                <div class="validation-msg" *ngIf="err('accptncDtTm') as e">{{e}}</div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>Charges Amount</label><input
                                                         formControlName="chrgsInfAmt" pattern="^\d{1,18}(\.\d{1,5})?$">
@@ -286,15 +328,6 @@
                                                         class="auto-uppercase">
                                                 <div class="validation-msg" *ngIf="err('chrgsInfAgtBic') as e">{{e}}
                                                 </div>
-                                        </div>
-                                        <div class="form-group intermediary-field"><label>Settlement Priority <span
-                                                                class="opt">Optional</span></label>
-                                                <select formControlName="sttlmPrty">
-                                                        <option value="">None</option>
-                                                        <option value="HIGH">HIGH</option>
-                                                        <option value="NORM">NORM</option>
-                                                </select>
-                                                <div class="validation-msg" *ngIf="err('sttlmPrty') as e">{{e}}</div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>Charge Bearer <span
                                                                 class="req">*</span></label>
@@ -457,6 +490,56 @@
                                                         *ngTemplateOutlet="partyForm; context:{prefix:'ultmtDbtr',isAgent:false, title:'Ultimate Debtor', group: form}"></ng-container>
                                         </div>
 
+                                        <!-- Initiating Party (InitgPty — between UltmtDbtr and Dbtr per pacs.008 XSD) -->
+                                        <div class="party-group">
+                                                <div class="party-group-title">Initiating Party <span class="opt">Optional</span></div>
+                                                <div [formGroup]="form" class="party-grid">
+                                                        <div class="form-group">
+                                                                <label>Name</label>
+                                                                <input formControlName="initgPtyName" maxlength="140" placeholder="Party name">
+                                                                <div class="validation-msg" *ngIf="err('initgPtyName') as e">{{e}}</div>
+                                                        </div>
+                                                        <div class="form-group">
+                                                                <label>Identification Type</label>
+                                                                <select formControlName="initgPtyIdType">
+                                                                        <option value="none">None</option>
+                                                                        <option value="org">Organisation ID</option>
+                                                                        <option value="prvt">Private ID</option>
+                                                                </select>
+                                                        </div>
+                                                        <ng-container *ngIf="form.get('initgPtyIdType')?.value === 'org'">
+                                                                <div class="form-group">
+                                                                        <label>AnyBIC</label>
+                                                                        <input formControlName="initgPtyOrgAnyBIC" maxlength="11" class="auto-uppercase" placeholder="8 or 11 char BIC">
+                                                                        <div class="validation-msg" *ngIf="err('initgPtyOrgAnyBIC') as e">{{e}}</div>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                        <label>LEI</label>
+                                                                        <input formControlName="initgPtyOrgLEI" maxlength="20" class="auto-uppercase" placeholder="20-char LEI">
+                                                                        <div class="validation-msg" *ngIf="err('initgPtyOrgLEI') as e">{{e}}</div>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                        <label>Other ID</label>
+                                                                        <input formControlName="initgPtyOrgOthrId" maxlength="35" placeholder="Organisation other ID">
+                                                                </div>
+                                                                <div class="form-group">
+                                                                        <label>Scheme Name Code</label>
+                                                                        <input formControlName="initgPtyOrgOthrSchmeNmCd" maxlength="4" class="auto-uppercase" placeholder="e.g. COID">
+                                                                </div>
+                                                        </ng-container>
+                                                        <ng-container *ngIf="form.get('initgPtyIdType')?.value === 'prvt'">
+                                                                <div class="form-group">
+                                                                        <label>Private Other ID</label>
+                                                                        <input formControlName="initgPtyPrvtOthrId" maxlength="35" placeholder="Private ID">
+                                                                </div>
+                                                                <div class="form-group">
+                                                                        <label>Scheme Name Code</label>
+                                                                        <input formControlName="initgPtyPrvtOthrSchmeNmCd" maxlength="4" class="auto-uppercase" placeholder="e.g. DRLC">
+                                                                </div>
+                                                        </ng-container>
+                                                </div>
+                                        </div>
+
                                         <!-- Debtor -->
                                         <div class="party-group">
                                                 <div class="party-group-title mandatory">Debtor</div>
@@ -597,11 +680,39 @@
                                                 <ng-container
                                                         *ngTemplateOutlet="partyForm; context:{prefix:'intrmyAgt2',isAgent:true, title:'Intermediary Agent 2', group: form}"></ng-container>
                                         </div>
-                                                <div class="party-group">
+                                        <div class="party-group">
                                                 <div class="party-group-title">Intermediary Agent 3</div>
                                                 <ng-container
                                                         *ngTemplateOutlet="partyForm; context:{prefix:'intrmyAgt3',isAgent:true, title:'Intermediary Agent 3', group: form}"></ng-container>
                                         </div>
+
+                                        <!-- Previous Instructing Agents with Accounts -->
+                                        <div class="section-title">Previous Instructing Agents <span class="opt">Optional</span></div>
+                                        <ng-container *ngFor="let n of [1,2,3]">
+                                                <div class="party-group">
+                                                        <div class="party-group-title">Previous Instructing Agent {{n}}</div>
+                                                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'prvsInstgAgt'+n,isAgent:true, title:'Previous Instructing Agent '+n, group: form}"></ng-container>
+                                                </div>
+                                                <!-- PrvsInstgAgt Account -->
+                                                <div class="party-group" *ngIf="form.get('prvsInstgAgt'+n+'Bic')?.value?.trim()">
+                                                        <div class="party-group-title">Prev Instructing Agent {{n}} Account</div>
+                                                        <div [formGroup]="form" class="party-grid">
+                                                                <div class="form-group">
+                                                                        <label>Account Type</label>
+                                                                        <select [formControlName]="'prvsInstgAgt'+n+'AcctType'">
+                                                                                <option value="none">None</option>
+                                                                                <option value="iban">IBAN</option>
+                                                                                <option value="other">Other (Othr/Id)</option>
+                                                                        </select>
+                                                                </div>
+                                                                <div class="form-group" *ngIf="form.get('prvsInstgAgt'+n+'AcctType')?.value !== 'none'">
+                                                                        <label>Account Number</label>
+                                                                        <input [formControlName]="'prvsInstgAgt'+n+'Acct'" maxlength="34"
+                                                                               [placeholder]="form.get('prvsInstgAgt'+n+'AcctType')?.value === 'iban' ? 'e.g. GB29NWBK60161331926819' : 'Account ID'">
+                                                                </div>
+                                                        </div>
+                                                </div>
+                                        </ng-container>
                                          <!-- Instructions for Creditor Agent (0..2) -->
                                          <div class="section-title-container">
                                                  <div class="section-title">Instructions for Creditor Agent <span class="opt">Optional &bull; max 2</span></div>

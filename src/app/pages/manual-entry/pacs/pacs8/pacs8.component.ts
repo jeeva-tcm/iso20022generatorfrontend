@@ -777,7 +777,15 @@ export class Pacs8Component implements OnInit, OnDestroy {
       fromMmbId: ['', [Validators.maxLength(35)]], fromClrSysId: ['', [Validators.maxLength(5)]], fromLei: ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
       toMmbId: ['', [Validators.maxLength(35)]], toClrSysId: ['', [Validators.maxLength(5)]], toLei: ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
       rltd: [''],
-      sttlmPrty: [''],
+      // SttlmPrty lives in CdtTrfTxInf (after IntrBkSttlmDt), NOT in GrpHdr/SttlmInf
+      sttlmPrty: ['', [Validators.pattern(/^(HIGH|NORM|URGT)$/)]],
+      // Settlement Time Request (§CdtTrfTxInf — after SttlmTmIndctn)
+      sttlmTmReqClsTm: [''],
+      sttlmTmReqTillTm: [''],
+      sttlmTmReqFrTm: [''],
+      sttlmTmReqRjctTm: [''],
+      // Acceptance Date/Time (pacs.008-specific, after SttlmTmReq)
+      accptncDtTm: [''],
 
       instdAmt: ['15000.00', [Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]],
       instdAmtCcy: ['EUR'],
@@ -806,6 +814,22 @@ export class Pacs8Component implements OnInit, OnDestroy {
       cdtrAgtBic: ['RCVRLU2AXXX', BIC_OPT],
       ultmtDbtrName: ['', [Validators.maxLength(140), SAFE_NAME]],
       ultmtCdtrName: ['', [Validators.maxLength(140), SAFE_NAME]],
+      // Initiating Party (InitgPty) — between UltmtDbtr and Dbtr in CdtTrfTxInf
+      initgPtyName: ['', [Validators.maxLength(140), SAFE_NAME]],
+      initgPtyIdType: ['none'],
+      initgPtyOrgAnyBIC: ['', BIC_OPT],
+      initgPtyOrgLEI: ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
+      initgPtyOrgOthrId: ['', [Validators.maxLength(35), ADDR_PATTERN]],
+      initgPtyOrgOthrSchmeNmCd: ['', Validators.maxLength(4)],
+      initgPtyPrvtOthrId: ['', [Validators.maxLength(35), ADDR_PATTERN]],
+      initgPtyPrvtOthrSchmeNmCd: ['', Validators.maxLength(4)],
+      // PrvsInstgAgt accounts (PrvsInstgAgt1Acct, PrvsInstgAgt2Acct, PrvsInstgAgt3Acct)
+      prvsInstgAgt1Acct: [''],
+      prvsInstgAgt1AcctType: ['none'],
+      prvsInstgAgt2Acct: [''],
+      prvsInstgAgt2AcctType: ['none'],
+      prvsInstgAgt3Acct: [''],
+      prvsInstgAgt3AcctType: ['none'],
       prvsInstgAgt1Bic: ['', BIC_OPT], prvsInstgAgt2Bic: ['', BIC_OPT], prvsInstgAgt3Bic: ['', BIC_OPT],
       intrmyAgt1Bic: ['', BIC_OPT], intrmyAgt2Bic: ['', BIC_OPT], intrmyAgt3Bic: ['', BIC_OPT],
       purpCd: [''],
@@ -1401,13 +1425,30 @@ export class Pacs8Component implements OnInit, OnDestroy {
     const formattedAmt = this.formatting.formatAmount(v.amount, v.currency);
     tx += `\t\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${formattedAmt}</IntrBkSttlmAmt>\n`;
     tx += this.el('IntrBkSttlmDt', v.sttlmDt, 4);
-    // SttlmTmIndctn must appear right after IntrBkSttlmDt per pacs.008.001.08 XSD sequence
+    // SttlmPrty — at CdtTrfTxInf level (not in GrpHdr/SttlmInf)
+    if (v.sttlmPrty?.trim()) tx += this.el('SttlmPrty', v.sttlmPrty, 4);
+    // SttlmTmIndctn — after IntrBkSttlmDt per pacs.008.001.08 XSD sequence
     if (v.dbtDtTm || v.cdtDtTm) {
         let stind = '';
         if (v.dbtDtTm) stind += this.el('DbtDtTm', this.fdt(v.dbtDtTm), 5);
         if (v.cdtDtTm) stind += this.el('CdtDtTm', this.fdt(v.cdtDtTm), 5);
         tx += this.tag('SttlmTmIndctn', stind, 4);
     }
+    // SttlmTmReq — after SttlmTmIndctn
+    const clsTm = v.sttlmTmReqClsTm?.trim();
+    const tillTm = v.sttlmTmReqTillTm?.trim();
+    const frTm = v.sttlmTmReqFrTm?.trim();
+    const rjctTm = v.sttlmTmReqRjctTm?.trim();
+    if (clsTm || tillTm || frTm || rjctTm) {
+        let tmReq = '';
+        if (clsTm) tmReq += this.el('CLSTm', clsTm, 5);
+        if (tillTm) tmReq += this.el('TillTm', tillTm, 5);
+        if (frTm) tmReq += this.el('FrTm', frTm, 5);
+        if (rjctTm) tmReq += this.el('RjctTm', rjctTm, 5);
+        tx += this.tag('SttlmTmReq', tmReq, 4);
+    }
+    // AccptncDtTm — pacs.008-specific, after SttlmTmReq
+    if (v.accptncDtTm?.trim()) tx += this.el('AccptncDtTm', this.fdt(v.accptncDtTm), 4);
     let instdAmtVal = v.instdAmt;
     let instdAmtCcyVal = v.instdAmtCcy;
     const hasCharges = !!(v.chrgsInfAmt && v.chrgsInfCcy);
@@ -1454,10 +1495,18 @@ export class Pacs8Component implements OnInit, OnDestroy {
       }
     };
 
-    // PrvsInstgAgts
+    // PrvsInstgAgts with optional accounts (per pacs.008.001.08 spec)
+    const formatAcctPrvs = (val: string, type: string, tabs: number) => {
+      if (!val?.trim()) return '';
+      if (type === 'iban') return this.el('IBAN', val, tabs + 1);
+      return `\n${'\t'.repeat(tabs + 1)}<Othr>\n${'\t'.repeat(tabs + 2)}<Id>${this.e(val)}</Id>\n${'\t'.repeat(tabs + 1)}</Othr>\n${'\t'.repeat(tabs)}`;
+    };
     tx += this.agt('PrvsInstgAgt1', 'prvsInstgAgt1', v, 4);
+    if (v.prvsInstgAgt1Acct?.trim()) tx += this.tag('PrvsInstgAgt1Acct', this.tag('Id', formatAcctPrvs(v.prvsInstgAgt1Acct, v.prvsInstgAgt1AcctType, 5), 5), 4);
     tx += this.agt('PrvsInstgAgt2', 'prvsInstgAgt2', v, 4);
+    if (v.prvsInstgAgt2Acct?.trim()) tx += this.tag('PrvsInstgAgt2Acct', this.tag('Id', formatAcctPrvs(v.prvsInstgAgt2Acct, v.prvsInstgAgt2AcctType, 5), 5), 4);
     tx += this.agt('PrvsInstgAgt3', 'prvsInstgAgt3', v, 4);
+    if (v.prvsInstgAgt3Acct?.trim()) tx += this.tag('PrvsInstgAgt3Acct', this.tag('Id', formatAcctPrvs(v.prvsInstgAgt3Acct, v.prvsInstgAgt3AcctType, 5), 5), 4);
     // InstgAgt/InstdAgt in CdtTrfTxInf (CBPR+ requires these at txn level, NOT GrpHdr)
     tx += this.agt('InstgAgt', 'instgAgt', v, 4);
     tx += this.agt('InstdAgt', 'instdAgt', v, 4);
@@ -1472,6 +1521,29 @@ export class Pacs8Component implements OnInit, OnDestroy {
     // ISO 20022 pacs.008.001.08 CdtTrfTxInf schema order:
     // UltmtDbtr → InitgPty → Dbtr → DbtrAcct → DbtrAgt → DbtrAgtAcct → CdtrAgt → CdtrAgtAcct → Cdtr → CdtrAcct → UltmtCdtr
     tx += this.partyAgentXml('UltmtDbtr', 'ultmtDbtr', v, 4);
+    // InitgPty — Initiating Party (between UltmtDbtr and Dbtr)
+    if (v.initgPtyName?.trim() || v.initgPtyOrgAnyBIC?.trim() || v.initgPtyOrgOthrId?.trim() || v.initgPtyPrvtOthrId?.trim()) {
+        let initgContent = '';
+        if (v.initgPtyName?.trim()) initgContent += `${this.tabs(5)}<Nm>${this.e(v.initgPtyName)}</Nm>\n`;
+        // Identification
+        if (v.initgPtyOrgAnyBIC?.trim() || v.initgPtyOrgLEI?.trim() || v.initgPtyOrgOthrId?.trim()) {
+            let orgId = '';
+            if (v.initgPtyOrgAnyBIC?.trim()) orgId += `${this.tabs(7)}<AnyBIC>${this.e(v.initgPtyOrgAnyBIC)}</AnyBIC>\n`;
+            if (v.initgPtyOrgLEI?.trim()) orgId += `${this.tabs(7)}<LEI>${this.e(v.initgPtyOrgLEI)}</LEI>\n`;
+            if (v.initgPtyOrgOthrId?.trim()) {
+                orgId += `${this.tabs(7)}<Othr>\n${this.tabs(8)}<Id>${this.e(v.initgPtyOrgOthrId)}</Id>\n`;
+                if (v.initgPtyOrgOthrSchmeNmCd?.trim()) orgId += `${this.tabs(8)}<SchmeNm>\n${this.tabs(9)}<Cd>${this.e(v.initgPtyOrgOthrSchmeNmCd)}</Cd>\n${this.tabs(8)}</SchmeNm>\n`;
+                orgId += `${this.tabs(7)}</Othr>\n`;
+            }
+            initgContent += `${this.tabs(5)}<Id>\n${this.tabs(6)}<OrgId>\n${orgId}${this.tabs(6)}</OrgId>\n${this.tabs(5)}</Id>\n`;
+        } else if (v.initgPtyPrvtOthrId?.trim()) {
+            let prvtId = `${this.tabs(7)}<Othr>\n${this.tabs(8)}<Id>${this.e(v.initgPtyPrvtOthrId)}</Id>\n`;
+            if (v.initgPtyPrvtOthrSchmeNmCd?.trim()) prvtId += `${this.tabs(8)}<SchmeNm>\n${this.tabs(9)}<Cd>${this.e(v.initgPtyPrvtOthrSchmeNmCd)}</Cd>\n${this.tabs(8)}</SchmeNm>\n`;
+            prvtId += `${this.tabs(7)}</Othr>\n`;
+            initgContent += `${this.tabs(5)}<Id>\n${this.tabs(6)}<PrvtId>\n${prvtId}${this.tabs(6)}</PrvtId>\n${this.tabs(5)}</Id>\n`;
+        }
+        if (initgContent.trim()) tx += `${this.tabs(4)}<InitgPty>\n${initgContent}${this.tabs(4)}</InitgPty>\n`;
+    }
     tx += this.partyAgentXml('Dbtr', 'dbtr', v, 4);
     if (v.dbtrAcct?.trim()) tx += this.tag('DbtrAcct', this.tag('Id', formatAcct(v.dbtrAcct, 5, v.dbtrAcctType), 5), 4);
     tx += this.agt('DbtrAgt', 'dbtrAgt', v, 4);
@@ -1514,6 +1586,9 @@ export class Pacs8Component implements OnInit, OnDestroy {
     }
 
 
+    // Purp — Purpose (must appear BEFORE RgltryRptg per pacs.008 XSD order)
+    if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 5), 4);
+
     // Regulatory Reporting (0..3)
     for (let i = 1; i <= 3; i++) {
         const cd = v[`rgltryRptg${i}Code`]?.trim();
@@ -1533,8 +1608,6 @@ export class Pacs8Component implements OnInit, OnDestroy {
             tx += this.tag('RltdRmtInf', this.el('Ref', ref, 5), 4);
         }
     }
-
-    if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 5), 4);
 
     let rmtInf = '';
     if (v.rmtInfType === 'ustrd' && v.rmtInfUstrd) {
@@ -1610,7 +1683,7 @@ ${appHdrFi(v.toBic, v.toMmbId, v.toClrSysId, v.toLei)}\t\t</To>
 \t\t\t\t<CreDtTm>${creDtTm}</CreDtTm>
 \t\t\t\t<NbOfTxs>${v.nbOfTxs}</NbOfTxs>
 \t\t\t\t<SttlmInf>
-\t\t\t\t\t<SttlmMtd>${this.e(v.sttlmMtd)}</SttlmMtd>${v.sttlmPrty?.trim() ? `\n\t\t\t\t\t<SttlmPrty>${v.sttlmPrty}</SttlmPrty>` : ''}${v.sttlmMtd === 'COVE' && v.instgRmbrsmntAgtBic?.trim() ? `\n\t\t\t\t\t<InstgRmbrsmntAgt>\n\t\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t\t<BICFI>${this.e(v.instgRmbrsmntAgtBic)}</BICFI>\n\t\t\t\t\t\t</FinInstnId>\n\t\t\t\t\t</InstgRmbrsmntAgt>` : ''}${v.sttlmMtd === 'COVE' && v.instdRmbrsmntAgtBic?.trim() ? `\n\t\t\t\t\t<InstdRmbrsmntAgt>\n\t\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t\t<BICFI>${this.e(v.instdRmbrsmntAgtBic)}</BICFI>\n\t\t\t\t\t\t</FinInstnId>\n\t\t\t\t\t</InstdRmbrsmntAgt>` : ''}${v.sttlmMtd === 'COVE' && v.thrdRmbrsmntAgtBic?.trim() ? `\n\t\t\t\t\t<ThrdRmbrsmntAgt>\n\t\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t\t<BICFI>${this.e(v.thrdRmbrsmntAgtBic)}</BICFI>\n\t\t\t\t\t\t</FinInstnId>\n\t\t\t\t\t</ThrdRmbrsmntAgt>` : ''}
+\t\t\t\t\t<SttlmMtd>${this.e(v.sttlmMtd)}</SttlmMtd>${v.sttlmMtd === 'COVE' && v.instgRmbrsmntAgtBic?.trim() ? `\n\t\t\t\t\t<InstgRmbrsmntAgt>\n\t\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t\t<BICFI>${this.e(v.instgRmbrsmntAgtBic)}</BICFI>\n\t\t\t\t\t\t</FinInstnId>\n\t\t\t\t\t</InstgRmbrsmntAgt>` : ''}${v.sttlmMtd === 'COVE' && v.instdRmbrsmntAgtBic?.trim() ? `\n\t\t\t\t\t<InstdRmbrsmntAgt>\n\t\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t\t<BICFI>${this.e(v.instdRmbrsmntAgtBic)}</BICFI>\n\t\t\t\t\t\t</FinInstnId>\n\t\t\t\t\t</InstdRmbrsmntAgt>` : ''}${v.sttlmMtd === 'COVE' && v.thrdRmbrsmntAgtBic?.trim() ? `\n\t\t\t\t\t<ThrdRmbrsmntAgt>\n\t\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t\t<BICFI>${this.e(v.thrdRmbrsmntAgtBic)}</BICFI>\n\t\t\t\t\t\t</FinInstnId>\n\t\t\t\t\t</ThrdRmbrsmntAgt>` : ''}
 \t\t\t\t</SttlmInf>
 \t\t\t</GrpHdr>
 \t\t\t<CdtTrfTxInf>
@@ -2144,6 +2217,16 @@ ${tx}\t\t\t</CdtTrfTxInf>
           setVal('dbtDtTm', tval('DbtDtTm', mntInf));
           setVal('cdtDtTm', tval('CdtDtTm', mntInf));
         }
+        // SttlmTmReq
+        const sttlmTmReqEl = getT('SttlmTmReq', tx);
+        if (sttlmTmReqEl) {
+          setVal('sttlmTmReqClsTm', tval('CLSTm', sttlmTmReqEl));
+          setVal('sttlmTmReqTillTm', tval('TillTm', sttlmTmReqEl));
+          setVal('sttlmTmReqFrTm', tval('FrTm', sttlmTmReqEl));
+          setVal('sttlmTmReqRjctTm', tval('RjctTm', sttlmTmReqEl));
+        }
+        // AccptncDtTm (pacs.008-specific)
+        setVal('accptncDtTm', tval('AccptncDtTm', tx));
 
         const chrgsInf = getT('ChrgsInf', tx);
         if (chrgsInf) {
@@ -2430,7 +2513,56 @@ ${tx}\t\t\t</CdtTrfTxInf>
             const tag = p.charAt(0).toUpperCase() + p.slice(1);
             mapAgent(tag, p, tx);
         });
-        
+
+        // Parse PrvsInstgAgt1/2/3 accounts (separate from agentPrefixes loop)
+        [1, 2, 3].forEach(n => {
+            const acctTag = `PrvsInstgAgt${n}Acct`;
+            const acctEl = getT(acctTag, tx);
+            if (acctEl) {
+                const id = getT('Id', acctEl);
+                if (id) {
+                    const ibanVal = tval('IBAN', id);
+                    const othrVal = tval('Id', id);
+                    const val = ibanVal || othrVal;
+                    if (val) {
+                        setVal(`prvsInstgAgt${n}Acct`, val);
+                        setVal(`prvsInstgAgt${n}AcctType`, ibanVal ? 'iban' : 'other');
+                    }
+                }
+            }
+        });
+
+        // Parse InitgPty (Initiating Party)
+        const initgPtyEl = getT('InitgPty', tx);
+        if (initgPtyEl) {
+            setVal('initgPtyName', tval('Nm', initgPtyEl));
+            const initgId = getT('Id', initgPtyEl);
+            if (initgId) {
+                const orgEl = getT('OrgId', initgId);
+                if (orgEl) {
+                    setVal('initgPtyIdType', 'org');
+                    setVal('initgPtyOrgAnyBIC', tval('AnyBIC', orgEl));
+                    setVal('initgPtyOrgLEI', tval('LEI', orgEl));
+                    const othr = getT('Othr', orgEl);
+                    if (othr) {
+                        setVal('initgPtyOrgOthrId', tval('Id', othr));
+                        const sch = getT('SchmeNm', othr);
+                        if (sch) setVal('initgPtyOrgOthrSchmeNmCd', tval('Cd', sch));
+                    }
+                }
+                const prvtEl = getT('PrvtId', initgId);
+                if (prvtEl) {
+                    setVal('initgPtyIdType', 'prvt');
+                    const othr = getT('Othr', prvtEl);
+                    if (othr) {
+                        setVal('initgPtyPrvtOthrId', tval('Id', othr));
+                        const sch = getT('SchmeNm', othr);
+                        if (sch) setVal('initgPtyPrvtOthrSchmeNmCd', tval('Cd', sch));
+                    }
+                }
+            }
+        }
+
         this.partyPrefixes.forEach(p => {
             mapParty(p.charAt(0).toUpperCase() + p.slice(1), p, tx);
         });

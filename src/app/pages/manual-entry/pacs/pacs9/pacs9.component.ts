@@ -345,13 +345,18 @@ export class Pacs9Component implements OnInit, OnDestroy {
             toMmbId: ['', [Validators.maxLength(35)]], toClrSysId: ['', [Validators.maxLength(5)]], toLei: ['', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
             rltd: [''], rltdCharSet: [''],
             clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
-            sttlmPrty: ['', [Validators.pattern(/^(HIGH|NORM)$/)]],
-            instdAmt: [''], instdAmtCcy: [''],
-            xchgRate: [''],
-            rgltryRptg1Code: [''], rgltryRptg1Inf: [''],
-            rgltryRptg2Code: [''], rgltryRptg2Inf: [''],
-            rgltryRptg3Code: [''], rgltryRptg3Inf: [''],
-            rltdRmtInf1Ref: [''], rltdRmtInf2Ref: [''], rltdRmtInf3Ref: [''],
+            sttlmPrty: ['', [Validators.pattern(/^(HIGH|NORM|URGT)$/)]],
+            // Settlement Account (GrpHdr/SttlmInf — spec page 272 §5.113.2)
+            sttlmAcct: [''],
+            sttlmAcctType: ['none'],
+            // Settlement Time Indication (§5.23.6)
+            sttlmTmDbtDtTm: [''],
+            sttlmTmCdtDtTm: [''],
+            // Settlement Time Request (§5.23.7)
+            sttlmTmReqClsTm: [''],
+            sttlmTmReqTillTm: [''],
+            sttlmTmReqFrTm: [''],
+            sttlmTmReqRjctTm: [''],
             amount: ['50000.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
             sttlmDt: [new Date().toISOString().split('T')[0], [Validators.required, Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]],
             // Debtor FI (required)
@@ -374,11 +379,6 @@ export class Pacs9Component implements OnInit, OnDestroy {
             dbtrAgtAcctType: ['none'],
             cdtrAgtAcct: [''],
             cdtrAgtAcctType: ['none'],
-            // InstgAgt / InstdAgt accounts
-            instgAgtAcct: [''],
-            instgAgtAcctType: ['none'],
-            instdAgtAcct: [''],
-            instdAgtAcctType: ['none'],
             // PrvsInstgAgt accounts
             prvsInstgAgt1Acct: [''],
             prvsInstgAgt1AcctType: ['none'],
@@ -389,14 +389,12 @@ export class Pacs9Component implements OnInit, OnDestroy {
             // Instructions for Creditor Agent (0..2)
             instrForCdtrAgt1Cd: [''], instrForCdtrAgt1InfTxt: ['', [Validators.minLength(1), Validators.maxLength(140), ADDR_PATTERN]],
             instrForCdtrAgt2Cd: [''], instrForCdtrAgt2InfTxt: ['', [Validators.minLength(1), Validators.maxLength(140), ADDR_PATTERN]],
-            // Instructions for Next Agent (0..6)
+            // Instructions for Next Agent (0..6) — CBPR+ removes Code; only InstrInf allowed
             instrForNxtAgt1InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
             instrForNxtAgt2InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
             instrForNxtAgt3InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
             instrForNxtAgt4InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
-            instrForNxtAgt5Cd: [''],
             instrForNxtAgt5InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
-            instrForNxtAgt6Cd: [''],
             instrForNxtAgt6InfTxt: ['', [Validators.minLength(1), Validators.maxLength(35), ADDR_PATTERN]],
             // Remittance (Optional)
             rmtInfType: ['none'],
@@ -504,7 +502,7 @@ export class Pacs9Component implements OnInit, OnDestroy {
             if (f === 'clrSysRef') return 'Alphanumeric only (1-35 characters, no special chars).';
             if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Must be a valid ISO 20022 code (4 uppercase letters).';
             if (f === 'instrPrty') return 'Invalid Priority. Must be HIGH or NORM.';
-            if (f === 'sttlmPrty') return 'Invalid Settlement Priority. Must be HIGH or NORM.';
+            if (f === 'sttlmPrty') return 'Invalid Settlement Priority. Must be HIGH, NORM, or URGT.';
             if (f === 'clrChanl') return 'Invalid Clearing Channel. Must be BOOK, MPNS, RTGS, or RTNS.';
             if (f === 'svcLvlCd') return 'Invalid Service Level Code. Must be 1-4 alphanumeric characters.';
             if (f === 'svcLvlPrtry') return 'Invalid Proprietary Service Level. Up to 35 characters allowed.';
@@ -740,21 +738,29 @@ export class Pacs9Component implements OnInit, OnDestroy {
         tx += this.el('IntrBkSttlmDt', v.sttlmDt, 4);
         if (v.sttlmPrty?.trim()) tx += this.el('SttlmPrty', v.sttlmPrty, 4);
 
-        const formatAcct = (val: string, tabs: number) => {
-            if (!val) return '';
-            const ibanCountries = ['AD', 'AE', 'AL', 'AT', 'AZ', 'BA', 'BE', 'BG', 'BH', 'BR', 'BY', 'CH', 'CR', 'CY', 'CZ', 'DE', 'DK', 'DO', 'EE', 'EG', 'ES', 'FI', 'FO', 'FR', 'GB', 'GE', 'GI', 'GL', 'GR', 'GT', 'HR', 'HU', 'IE', 'IL', 'IQ', 'IS', 'IT', 'JO', 'KW', 'KZ', 'LB', 'LI', 'LT', 'LU', 'LV', 'MC', 'MD', 'ME', 'MK', 'MR', 'MT', 'MU', 'NL', 'NO', 'PK', 'PL', 'PS', 'PT', 'QA', 'RO', 'RS', 'RU', 'SA', 'SC', 'SE', 'SI', 'SK', 'SM', 'ST', 'SV', 'TL', 'TN', 'TR', 'UA', 'VA', 'VG', 'XK'];
-            if (val.length >= 14 && ibanCountries.includes(val.substring(0, 2).toUpperCase()) && /^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/i.test(val)) {
-                return this.el('IBAN', val, tabs + 1);
-            } else {
-                return `\n${'\t'.repeat(tabs + 1)}<Othr>\n${'\t'.repeat(tabs + 2)}<Id>${this.e(val)}</Id>\n${'\t'.repeat(tabs + 1)}</Othr>\n${'\t'.repeat(tabs)}`;
-            }
-        };
-
-        if (v.instdAmt && v.instdAmtCcy) {
-            const formattedInstdAmt = this.formatting.formatAmount(v.instdAmt, v.instdAmtCcy);
-            tx += `\t\t\t\t<InstdAmt Ccy="${this.e(v.instdAmtCcy)}">${formattedInstdAmt}</InstdAmt>\n`;
+        // SettlementTimeIndication (§5.23.6, CBPR_DateTime with UTC offset)
+        const dbt = v.sttlmTmDbtDtTm?.trim() ? this.formatCbprDateTime(v.sttlmTmDbtDtTm) : '';
+        const cdt = v.sttlmTmCdtDtTm?.trim() ? this.formatCbprDateTime(v.sttlmTmCdtDtTm) : '';
+        if (dbt || cdt) {
+            let sttlmTmXml = '';
+            if (dbt) sttlmTmXml += this.el('DbtDtTm', dbt, 5);
+            if (cdt) sttlmTmXml += this.el('CdtDtTm', cdt, 5);
+            tx += this.tag('SttlmTmIndctn', sttlmTmXml, 4);
         }
-        if (v.xchgRate) tx += this.el('XchgRate', v.xchgRate, 4);
+
+        // SettlementTimeRequest (§5.23.7, CBPR_Time with UTC offset)
+        const clsTm = v.sttlmTmReqClsTm?.trim();
+        const tillTm = v.sttlmTmReqTillTm?.trim();
+        const frTm = v.sttlmTmReqFrTm?.trim();
+        const rjctTm = v.sttlmTmReqRjctTm?.trim();
+        if (clsTm || tillTm || frTm || rjctTm) {
+            let tmReqXml = '';
+            if (clsTm) tmReqXml += this.el('CLSTm', clsTm, 5);
+            if (tillTm) tmReqXml += this.el('TillTm', tillTm, 5);
+            if (frTm) tmReqXml += this.el('FrTm', frTm, 5);
+            if (rjctTm) tmReqXml += this.el('RjctTm', rjctTm, 5);
+            tx += this.tag('SttlmTmReq', tmReqXml, 4);
+        }
         // PrvsInstgAgts
         tx += this.agtWithAcct('PrvsInstgAgt1', 'prvsInstgAgt1', v, 4);
         tx += this.agtWithAcct('PrvsInstgAgt2', 'prvsInstgAgt2', v, 4);
@@ -790,42 +796,15 @@ export class Pacs9Component implements OnInit, OnDestroy {
                 tx += this.tag('InstrForCdtrAgt', inner, 4);
             }
         }
-        // Instructions for Next Agent (0..6)
-        const seenNxtAgtCds = new Set<string>();
+        // Instructions for Next Agent (0..6) — CBPR+ removes <Cd>; only InstrInf emitted
         for (let i = 1; i <= 6; i++) {
-            const cd = v[`instrForNxtAgt${i}Cd`]?.trim();
             const txt = v[`instrForNxtAgt${i}InfTxt`]?.trim();
-            if (cd && seenNxtAgtCds.has(cd)) continue;  // skip duplicates
-            if (cd) seenNxtAgtCds.add(cd);
-            if (cd || txt) {
-                let inner = '';
-                if (cd) inner += this.el('Cd', cd, 6);
-                if (txt) inner += this.el('InstrInf', txt, 6);
-                tx += this.tag('InstrForNxtAgt', inner, 5);
+            if (txt) {
+                tx += this.tag('InstrForNxtAgt', this.el('InstrInf', txt, 5), 4);
             }
         }
 
         if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 5), 4);
-
-        // Regulatory Reporting (0..3)
-        for (let i = 1; i <= 3; i++) {
-            const cd = v[`rgltryRptg${i}Code`]?.trim();
-            const inf = v[`rgltryRptg${i}Inf`]?.trim();
-            if (cd || inf) {
-                let dtls = '';
-                if (cd) dtls += this.el('Cd', cd, 6);
-                if (inf) dtls += this.el('Inf', inf, 6);
-                tx += this.tag('RgltryRptg', this.tag('Dtls', dtls, 5), 4);
-            }
-        }
-
-        // Related Remittance Information (0..10)
-        for (let i = 1; i <= 3; i++) {
-            const ref = v[`rltdRmtInf${i}Ref`]?.trim();
-            if (ref) {
-                tx += this.tag('RltdRmtInf', this.el('Ref', ref, 5), 4);
-            }
-        }
 
         // Remittance Information
         if (v.rmtInfType === 'ustrd' && v.rmtInfUstrd?.trim()) {
@@ -867,6 +846,19 @@ export class Pacs9Component implements OnInit, OnDestroy {
             return `\t\t\t<FIId>\n\t\t\t\t<FinInstnId>\n${res}\t\t\t\t</FinInstnId>\n\t\t\t</FIId>\n`;
         };
 
+        // Build SttlmInf block — SttlmAcct goes after SttlmMtd (§5.113.2)
+        const sttlmAcctType = (v.sttlmAcct || '').trim() ? (v.sttlmAcctType || 'none') : 'none';
+        let sttlmAcctXml = '';
+        if (sttlmAcctType !== 'none' && v.sttlmAcct?.trim()) {
+            let acctIdXml = '';
+            if (sttlmAcctType === 'IBAN') {
+                acctIdXml = this.el('IBAN', v.sttlmAcct, 7);
+            } else {
+                acctIdXml = `${this.tabs(7)}<Othr>\n${this.tabs(8)}<Id>${this.e(v.sttlmAcct)}</Id>\n${this.tabs(7)}</Othr>\n`;
+            }
+            sttlmAcctXml = `\t\t\t\t\t<SttlmAcct>\n\t\t\t\t\t\t<Id>\n${acctIdXml}\t\t\t\t\t\t</Id>\n\t\t\t\t\t</SttlmAcct>\n`;
+        }
+
         this.generatedXml =
             `<?xml version="1.0" encoding="UTF-8"?>
 <BusMsgEnvlp xmlns="urn:swift:xsd:envelope">
@@ -888,7 +880,7 @@ ${appHdrFi(v.toBic, v.toMmbId, v.toClrSysId, v.toLei)}\t\t</To>
 \t\t\t\t<NbOfTxs>${v.nbOfTxs}</NbOfTxs>
 \t\t\t\t<SttlmInf>
 \t\t\t\t\t<SttlmMtd>${this.e(v.sttlmMtd)}</SttlmMtd>
-\t\t\t\t</SttlmInf>
+${sttlmAcctXml}\t\t\t\t</SttlmInf>
 \t\t\t</GrpHdr>
 \t\t\t<CdtTrfTxInf>
 ${tx}\t\t\t</CdtTrfTxInf>
@@ -1273,7 +1265,21 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 patch.msgId = tval('MsgId', grpHdr);
                 patch.creDtTm = tval('CreDtTm', grpHdr);
                 patch.nbOfTxs = tval('NbOfTxs', grpHdr);
-                patch.sttlmMtd = tval('SttlmMtd', getT('SttlmInf', grpHdr) || grpHdr);
+                const sttlmInf = getT('SttlmInf', grpHdr);
+                if (sttlmInf) {
+                    patch.sttlmMtd = tval('SttlmMtd', sttlmInf);
+                    // Parse SettlementAccount
+                    const sttlmAcctEl = getT('SttlmAcct', sttlmInf);
+                    if (sttlmAcctEl) {
+                        const idEl = getT('Id', sttlmAcctEl) || sttlmAcctEl;
+                        const ibanVal = tval('IBAN', idEl);
+                        const othrEl = getT('Othr', idEl);
+                        const othrId = othrEl ? tval('Id', othrEl) : '';
+                        if (ibanVal) { patch.sttlmAcct = ibanVal; patch.sttlmAcctType = 'IBAN'; }
+                        else if (othrId) { patch.sttlmAcct = othrId; patch.sttlmAcctType = 'Othr'; }
+                        else { patch.sttlmAcctType = 'none'; }
+                    }
+                }
             }
 
             const tx = getT('CdtTrfTxInf');
@@ -1316,12 +1322,21 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 patch.sttlmDt = tval('IntrBkSttlmDt', tx);
                 patch.sttlmPrty = tval('SttlmPrty', tx);
 
-                const instdAmt = getT('InstdAmt', tx);
-                if (instdAmt) {
-                    patch.instdAmt = instdAmt.textContent?.trim() || '';
-                    patch.instdAmtCcy = instdAmt.getAttribute('Ccy') || '';
+                // SettlementTimeIndication
+                const sttlmTmIndctn = getT('SttlmTmIndctn', tx);
+                if (sttlmTmIndctn) {
+                    patch.sttlmTmDbtDtTm = tval('DbtDtTm', sttlmTmIndctn);
+                    patch.sttlmTmCdtDtTm = tval('CdtDtTm', sttlmTmIndctn);
                 }
-                patch.xchgRate = tval('XchgRate', tx);
+
+                // SettlementTimeRequest
+                const sttlmTmReq = getT('SttlmTmReq', tx);
+                if (sttlmTmReq) {
+                    patch.sttlmTmReqClsTm  = tval('CLSTm', sttlmTmReq);
+                    patch.sttlmTmReqTillTm = tval('TillTm', sttlmTmReq);
+                    patch.sttlmTmReqFrTm   = tval('FrTm', sttlmTmReq);
+                    patch.sttlmTmReqRjctTm = tval('RjctTm', sttlmTmReq);
+                }
 
                 const mapAgt = (p: string, tag: string) => {
                     const el = getT(tag, tx);
@@ -1397,31 +1412,15 @@ ${tx}\t\t\t</CdtTrfTxInf>
                     }
                 });
 
+                // InstrForNxtAgt — CBPR+ removes <Cd>; only parse InstrInf
                 const instrN = tx.querySelectorAll(':scope > InstrForNxtAgt');
                 instrN.forEach((el, i) => {
                     if (i < 6) {
-                        patch[`instrForNxtAgt${i+1}Cd`] = tval('Cd', el);
                         patch[`instrForNxtAgt${i+1}InfTxt`] = tval('InstrInf', el);
                     }
                 });
 
                 patch.purpCd = tval('Cd', getT('Purp', tx) || tx);
-
-                const rgltry = tx.querySelectorAll(':scope > RgltryRptg');
-                rgltry.forEach((el, i) => {
-                    if (i < 3) {
-                        const dtls = getT('Dtls', el);
-                        if (dtls) {
-                            patch[`rgltryRptg${i+1}Code`] = tval('Cd', dtls);
-                            patch[`rgltryRptg${i+1}Inf`] = tval('Inf', dtls);
-                        }
-                    }
-                });
-
-                const rltdRmt = tx.querySelectorAll(':scope > RltdRmtInf');
-                rltdRmt.forEach((el, i) => {
-                    if (i < 3) patch[`rltdRmtInf${i+1}Ref`] = tval('Ref', el);
-                });
 
                 const rmtInf = getT('RmtInf', tx);
                 if (rmtInf) {
