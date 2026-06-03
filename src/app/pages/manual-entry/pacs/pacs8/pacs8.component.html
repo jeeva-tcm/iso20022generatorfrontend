@@ -544,7 +544,7 @@
                                         <div class="party-group">
                                                 <div class="party-group-title mandatory">Debtor</div>
                                                 <ng-container
-                                                        *ngTemplateOutlet="partyForm; context:{prefix:'dbtr',isAgent:false, title:'Debtor', required: true, group: form}"></ng-container>
+                                                        *ngTemplateOutlet="partyForm; context:{prefix:'dbtr',isAgent:false, title:'Debtor', required: isBicRequired('dbtr', false), group: form}"></ng-container>
                                         </div>
 
                                         <!-- Debtor Account -->
@@ -574,7 +574,7 @@
                                         <div class="party-group">
                                                 <div class="party-group-title mandatory">Debtor Agent</div>
                                                 <ng-container
-                                                        *ngTemplateOutlet="partyForm; context:{prefix:'dbtrAgt',isAgent:true, title:'Debtor Agent', required: true, group: form}"></ng-container>
+                                                        *ngTemplateOutlet="partyForm; context:{prefix:'dbtrAgt',isAgent:true, title:'Debtor Agent', required: isBicRequired('dbtrAgt', true), group: form}"></ng-container>
                                         </div>
 
                                         <!-- Debtor Agent Account -->
@@ -604,7 +604,7 @@
                                         <div class="party-group">
                                                 <div class="party-group-title mandatory">Creditor Agent</div>
                                                 <ng-container
-                                                        *ngTemplateOutlet="partyForm; context:{prefix:'cdtrAgt',isAgent:true, title:'Creditor Agent', required: true, group: form}"></ng-container>
+                                                        *ngTemplateOutlet="partyForm; context:{prefix:'cdtrAgt',isAgent:true, title:'Creditor Agent', required: isBicRequired('cdtrAgt', true), group: form}"></ng-container>
                                         </div>
 
                                         <!-- Creditor Agent Account -->
@@ -634,7 +634,7 @@
                                         <div class="party-group">
                                                 <div class="party-group-title mandatory">Creditor</div>
                                                 <ng-container
-                                                        *ngTemplateOutlet="partyForm; context:{prefix:'cdtr',isAgent:false, title:'Creditor', required: true, group: form}"></ng-container>
+                                                        *ngTemplateOutlet="partyForm; context:{prefix:'cdtr',isAgent:false, title:'Creditor', required: isBicRequired('cdtr', false), group: form}"></ng-container>
                                         </div>
 
                                         <!-- Creditor Account -->

@@ -541,7 +541,7 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
                     const val = defaults[f] || '';
                     // Only require TwnNm/Ctry for prefixes that actually use an address
                     // (i.e., those with addrMap data). For optional prefixes defaulting to
-                    // 'none', no required validator — users shouldn't see errors on unused agents.
+                    // 'none', no required validator ï¿½ users shouldn't see errors on unused agents.
                     const validators = (hasAddrData && (f === 'TwnNm' || f === 'Ctry')) ? Validators.required : null;
                     if (!c[p + f]) c[p + f] = [val, validators];
                 });
@@ -781,7 +781,7 @@ ${this.rmtInf(v)}
         }
         if (lei) finInstnId += this.el('LEI', lei, indent + 2);
         // CBPR_COM_R9 (strict): only InstgAgt/InstdAgt must omit Nm + PstlAdr when BICFI is set.
-        // For every other agent BICFI + Nm + PstlAdr may be emitted together — let user-entered Name/Address through.
+        // For every other agent BICFI + Nm + PstlAdr may be emitted together ï¿½ let user-entered Name/Address through.
         const strictR9 = tag === 'InstgAgt' || tag === 'InstdAgt';
         if (!onlyBic && (!strictR9 || !bic)) {
             const addr = this.addrXml(v, prefix, indent + 2);
@@ -1151,7 +1151,7 @@ ${this.rmtInf(v)}
 
                     // Recompute per-layer status so layer cards reflect the filtered details
                     // (e.g. if Layer 3 was FAIL solely because of R9 errors we just removed,
-                    // it should now read PASS or WARN — not still show a red ?).
+                    // it should now read PASS or WARN ï¿½ not still show a red ?).
                     if (data.layer_status && typeof data.layer_status === 'object') {
                         Object.keys(data.layer_status).forEach((lk: string) => {
                             const layerNum = parseInt(lk, 10);
@@ -1160,7 +1160,7 @@ ${this.rmtInf(v)}
                             const ls = data.layer_status[lk];
                             if (ls && typeof ls === 'object') {
                                 const oldStatus: string = ls.status || '';
-                                // Only soften a layer that was previously marked failed/warned —
+                                // Only soften a layer that was previously marked failed/warned ï¿½
                                 // never escalate a passing layer.
                                 if (oldStatus.includes('?') || oldStatus.includes('FAIL')) {
                                     if (layerErrors === 0) {
@@ -1183,7 +1183,7 @@ ${this.rmtInf(v)}
                 this.validationReport = {
                     status: 'FAIL', errors: 1, warnings: 0, message: 'pacs.010.001.03', total_time_ms: 0,
                     layer_status: {},
-                    details: [{ severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR', path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'), fix_suggestion: 'Ensure the validation server is running.' }]
+                    details: [{ severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR', path: '', message: 'Validation failed ï¿½ ' + (err.error?.detail?.message || 'backend not reachable.'), fix_suggestion: 'Ensure the validation server is running.' }]
                 };
                 this.validationStatus = 'done';
             }

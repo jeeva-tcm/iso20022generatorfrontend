@@ -370,12 +370,6 @@ export class Pacs9AdvComponent implements OnInit, OnDestroy {
             // Remittance (Optional)
             rmtInfType: ['none'],
             rmtInfUstrd: ['', [Validators.maxLength(140), ADDR_PATTERN]],
-            rmtInfStrdCdtrRefType: [''],
-            rmtInfStrdCdtrRef: ['', Validators.maxLength(35)],
-            rmtInfStrdAddtlRmtInf: ['', [Validators.maxLength(140), ADDR_PATTERN]],
-            rmtInfStrdRfrdDocNb: ['', Validators.maxLength(35)],
-            rmtInfStrdRfrdDocCd: [''],
-            rmtInfStrdRfrdDocAmt: ['', [Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]]
         };
         // Address prefixes for agents
         // Only the mandatory parties that ship with full address data default to 'hybrid'.
@@ -753,29 +747,7 @@ export class Pacs9AdvComponent implements OnInit, OnDestroy {
         // Remittance Information
         if (v.rmtInfType === 'ustrd' && v.rmtInfUstrd?.trim()) {
             tx += this.tag('RmtInf', this.el('Ustrd', v.rmtInfUstrd, 4), 3);
-        } else if (v.rmtInfType === 'strd') {
-            let inner = '';
-            if (v.rmtInfStrdCdtrRefType || v.rmtInfStrdCdtrRef) {
-                let ref = '';
-                if (v.rmtInfStrdCdtrRefType) ref += this.tag('Tp', this.tag('CdOrPrtry', this.el('Cd', v.rmtInfStrdCdtrRefType, 7), 6), 5);
-                if (v.rmtInfStrdCdtrRef) ref += this.el('Ref', v.rmtInfStrdCdtrRef, 5);
-                inner += this.tag('CdtrRefInf', ref, 4);
-            }
-            if (v.rmtInfStrdAddtlRmtInf?.trim()) {
-                inner += this.el('AddtlRmtInf', v.rmtInfStrdAddtlRmtInf, 4);
-            }
-            if (v.rmtInfStrdRfrdDocNb || v.rmtInfStrdRfrdDocCd) {
-                let rdi = '';
-                if (v.rmtInfStrdRfrdDocNb) rdi += this.el('Nb', v.rmtInfStrdRfrdDocNb, 5);
-                if (v.rmtInfStrdRfrdDocCd) rdi += this.tag('Tp', this.tag('CdOrPrtry', this.el('Cd', v.rmtInfStrdRfrdDocCd, 7), 6), 5);
-                inner += this.tag('RfrdDocInf', rdi, 4);
-            }
-            if (v.rmtInfStrdRfrdDocAmt) {
-                inner += this.tag('RfrdDocAmt', this.tag('RmtAmt', this.el('DuePyblAmt Ccy="' + this.e(v.currency) + '"', v.rmtInfStrdRfrdDocAmt, 6), 5), 4);
-            }
-            if (inner) tx += this.tag('RmtInf', this.tag('Strd', inner, 4), 3);
         }
-
 
         const frBic = v.fromBic;
         const toBic = v.toBic;
@@ -1370,22 +1342,6 @@ ${tx}\t\t\t</CdtTrfTxInf>
                     if (ustrd) {
                         patch.rmtInfType = 'ustrd';
                         patch.rmtInfUstrd = ustrd.textContent || '';
-                    } else {
-                        const strd = getT('Strd', rmtInf);
-                        if (strd) {
-                            patch.rmtInfType = 'strd';
-                            const ref = getT('CdtrRefInf', strd);
-                            if (ref) {
-                                patch.rmtInfStrdCdtrRefType = tval('Cd', getT('Tp', ref) || ref);
-                                patch.rmtInfStrdCdtrRef = tval('Ref', ref);
-                            }
-                            patch.rmtInfStrdAddtlRmtInf = tval('AddtlRmtInf', strd);
-                            const rfrd = getT('RfrdDocInf', strd);
-                            if (rfrd) {
-                                patch.rmtInfStrdRfrdDocNb = tval('Nb', rfrd);
-                                patch.rmtInfStrdRfrdDocCd = tval('Cd', getT('Tp', rfrd) || rfrd);
-                            }
-                        }
                     }
                 } else {
                     patch.rmtInfType = 'none';

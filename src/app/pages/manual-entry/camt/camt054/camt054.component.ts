@@ -696,7 +696,7 @@ export class Camt054Component implements OnInit, OnDestroy {
           layer_status: {},
           details: [{
             severity: 'ERROR', layer: 0, code: 'SERVER_ERROR',
-            path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'),
+            path: '', message: 'Validation failed ï¿½ ' + (err.error?.detail?.message || 'backend not reachable.'),
             fix_suggestion: 'Ensure the validation server is running.'
           }]
         };

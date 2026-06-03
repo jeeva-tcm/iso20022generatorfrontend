@@ -1156,7 +1156,7 @@ export class Pacs3Component implements OnInit, OnDestroy {
     // Purp (Sequence: 34)
     if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 4), 3);
 
-    // Instr (Sequence: 35-36) — CBPR+ R36: each <Cd> value must appear at most once
+    // Instr (Sequence: 35-36) ï¿½ CBPR+ R36: each <Cd> value must appear at most once
     const seenCdtrAgtCds = new Set<string>();
     for (let i = 1; i <= 2; i++) {
       const cd = v[`instrForCdtrAgt${i}Cd`]?.trim();
@@ -1381,7 +1381,7 @@ ${tx}\t\t\t</DrctDbtTxInf>
     if (lei) content += `${t}<LEI>${this.e(lei)}</LEI>\n`;
     // CBPR_COM_R9 (strict): only InstgAgt/InstdAgt must omit Nm + PstlAdr when BICFI is set.
     // For every other agent (Dbtr, Cdtr, DbtrAgt, CdtrAgt, IntrmyAgt*, PrvsInstgAgt*)
-    // BICFI + Nm + PstlAdr are permitted together — let user-entered Name/Address through.
+    // BICFI + Nm + PstlAdr are permitted together ï¿½ let user-entered Name/Address through.
     const strictR9 = tag === 'InstgAgt' || tag === 'InstdAgt';
     if (!strictR9 || !bic) {
       if (name) content += `${t}<Nm>${this.e(name)}</Nm>\n`;
@@ -1574,7 +1574,7 @@ ${tx}\t\t\t</DrctDbtTxInf>
       this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
       return;
     }
-    // Always regenerate from the form before validating — guarantees the validator
+    // Always regenerate from the form before validating ï¿½ guarantees the validator
     // sees a clean, generator-produced XML rather than stale pasted/edited content
     // (which may contain forbidden elements like Nm/PstlAdr inside AppHdr.Fr).
     this.generateXml();

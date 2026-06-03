@@ -628,8 +628,8 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
         setV('TwnLctnNm', 'TwnLctnNm');
         setV('DstrctNm', 'DstrctNm');
         const adrLines = Array.from(pstl.getElementsByTagName('AdrLine'));
-        // Any structured field counts — including BldgNb/BldgNm/Dept/SubDept/Flr/etc.
-        // — so the form doesn't snap back to 'unstructured' when the user has only
+        // Any structured field counts ï¿½ including BldgNb/BldgNm/Dept/SubDept/Flr/etc.
+        // ï¿½ so the form doesn't snap back to 'unstructured' when the user has only
         // filled secondary structured fields.
         const hasStructured = !!(getV('StrtNm') || getV('TwnNm') || getV('Ctry') || getV('PstCd')
           || getV('BldgNb') || getV('BldgNm') || getV('Dept') || getV('SubDept')
@@ -796,7 +796,7 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
     const idXml = this.partyIdXml(v, p, indent);
     if (!nm && !idXml && !this.hasAddr(v, p)) return '';
 
-    // Mirror form value exactly — don't inject 'DEFAULT NAME' when the user
+    // Mirror form value exactly ï¿½ don't inject 'DEFAULT NAME' when the user
     // cleared the field. The XML must match what's in the form so the round
     // trip stays predictable and the user can see their own data.
     let content = nm ? this.el('Nm', nm, indent + 1) : '';
@@ -809,7 +809,7 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
     // Any address field the user has filled should keep the PstlAdr block alive.
     // Previously this only checked Ctry/TwnNm/AdrLine1/StrtNm, which silently
     // dropped the entire <PstlAdr> when only BldgNb/BldgNm/PstCd/Dept/etc. were
-    // filled — a frequent source of "data isn't appearing in the XML" bug reports.
+    // filled ï¿½ a frequent source of "data isn't appearing in the XML" bug reports.
     const fields = [
       'Ctry', 'TwnNm', 'StrtNm', 'BldgNb', 'BldgNm', 'PstCd',
       'Dept', 'SubDept', 'Flr', 'PstBx', 'Room',
@@ -828,7 +828,7 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
     if (!type) type = 'structured';
     const t = this.tabs(indent + 1);
     let lines: string[] = [];
-    // Structured-only fields — not emitted in hybrid
+    // Structured-only fields ï¿½ not emitted in hybrid
     if (type === 'structured') {
       if (v[p + 'Dept']) lines.push(`${t}<Dept>${this.e(v[p + 'Dept'])}</Dept>`);
       if (v[p + 'SubDept']) lines.push(`${t}<SubDept>${this.e(v[p + 'SubDept'])}</SubDept>`);
@@ -844,7 +844,7 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
     if (v[p + 'TwnNm']) lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'])}</TwnNm>`);
     if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
 
-    // AdrLine — hybrid: TwnNm + Ctry + AdrLines (SR2026: unstructured deprecated)
+    // AdrLine ï¿½ hybrid: TwnNm + Ctry + AdrLines (SR2026: unstructured deprecated)
     if (type === 'hybrid' || type === 'unstructured') {
       if (v[p + 'AdrLine1']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine1'])}</AdrLine>`);
       if (v[p + 'AdrLine2']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine2'])}</AdrLine>`);
@@ -917,7 +917,7 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
                     patch[key] = '';
                 }
             });
-      // Only patch fields the parser actually reads — wiping all controls to '' here
+      // Only patch fields the parser actually reads ï¿½ wiping all controls to '' here
       // silently dropped any form value the parser didn't explicitly repopulate
       // (e.g. mandate, regulatory reporting, tax fields), and the next generateXml
       // would emit XML missing the user's data.
@@ -1217,7 +1217,7 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
           layer_status: {},
           details: [{
             severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
-            path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'),
+            path: '', message: 'Validation failed ï¿½ ' + (err.error?.detail?.message || 'backend not reachable.'),
             fix_suggestion: 'Ensure the validation server is running.'
           }]
         };

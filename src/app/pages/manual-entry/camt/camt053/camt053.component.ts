@@ -157,7 +157,7 @@ export class Camt053Component implements OnInit, OnDestroy {
 
     private buildPostalAddr(prefix: string, v: any, t: (i: number) => string, indent: number) {
         // CBPR+ modes: hybrid = TwnNm + Ctry + AdrLine. Detail structured fields (StrtNm,
-        // BldgNb, …) must NOT coexist with <AdrLine>.
+        // BldgNb, ï¿½) must NOT coexist with <AdrLine>.
         const get = (f: string) => v[prefix + f]?.toString().trim();
         const detailStructured = ['StrtNm', 'BldgNb', 'BldgNm', 'PstCd', 'Dept', 'SubDept', 'Flr', 'PstBx', 'Room', 'CtrySubDvsn', 'TwnLctnNm', 'DstrctNm'];
         const hasDetailStructured = detailStructured.some(f => get(f));

@@ -692,7 +692,7 @@
                                 <select formControlName="rmtInfType" [attr.formControlName]="'rmtInfType'">
                                     <option value="none">None (No Remittance)</option>
                                     <option value="ustrd">Unstructured Remittance</option>
-                                    <option value="strd">Structured Remittance</option>
+                                    
                                 </select>
                                 <div class="validation-msg" *ngIf="err('rmtInfType') as e">{{e}}</div>
                             </div>
@@ -707,52 +707,7 @@
                             </ng-container>
 
                             <!-- Structured Remittance -->
-                            <ng-container *ngIf="form.get('rmtInfType')?.value === 'strd'">
-                                <div class="form-group">
-                                    <label>Creditor Reference Type</label>
-                                    <select formControlName="rmtInfStrdCdtrRefType" [attr.formControlName]="'rmtInfStrdCdtrRefType'">
-                                        <option value="">None</option>
-                                        <option value="SCOR">SCOR (Structured Creditor Ref)</option>
-                                        <option value="CUST">CUST (Customer Ref)</option>
-                                    </select>
-                                    <div class="validation-msg" *ngIf="err('rmtInfStrdCdtrRefType') as e">{{e}}</div>
-                                </div>
-                                <div class="form-group">
-                                    <label>Creditor Reference</label>
-                                    <input formControlName="rmtInfStrdCdtrRef" [attr.formControlName]="'rmtInfStrdCdtrRef'" maxlength="35" placeholder="Reference Number">
-                                    <div class="validation-msg" *ngIf="err('rmtInfStrdCdtrRef') as e">{{e}}</div>
-                                    <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdCdtrRef', 35) as h">{{h}}</div>
-                                </div>
-                                <div class="form-group intermediary-field">
-                                    <label>Additional Remittance Info</label>
-                                    <input formControlName="rmtInfStrdAddtlRmtInf" [attr.formControlName]="'rmtInfStrdAddtlRmtInf'" maxlength="140" placeholder="Extra info">
-                                    <div class="validation-msg" *ngIf="err('rmtInfStrdAddtlRmtInf') as e">{{e}}</div>
-                                    <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdAddtlRmtInf', 140) as h">{{h}}</div>
-                                </div>                                 <div class="form-group">
-                                     <label>Referred Doc Number</label>
-                                     <input formControlName="rmtInfStrdRfrdDocNb" [attr.formControlName]="'rmtInfStrdRfrdDocNb'" maxlength="35" placeholder="Document Number">
-                                     <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocNb') as e">{{e}}</div>
-                                     <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdRfrdDocNb', 35) as h">{{h}}</div>
-                                 </div>
-                                 <div class="form-group">
-                                     <label>Referred Doc Code</label>
-                                     <select formControlName="rmtInfStrdRfrdDocCd" [attr.formControlName]="'rmtInfStrdRfrdDocCd'">
-                                         <option value="">None</option>
-                                         <option value="CINV">CINV (Commercial Invoice)</option>
-                                         <option value="CNFA">CNFA (Credit Note)</option>
-                                         <option value="DNFA">DNFA (Debit Note)</option>
-                                         <option value="VCHR">VCHR (Voucher)</option>
-                                     </select>
-                                     <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocCd') as e">{{e}}</div>
-                                 </div>
-                                 <div class="form-group">
-                                     <label>Referred Doc Amount</label>
-                                     <input formControlName="rmtInfStrdRfrdDocAmt" [attr.formControlName]="'rmtInfStrdRfrdDocAmt'" type="text" maxlength="18" placeholder="Due Payable Amount">
-                                     <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmt') as e">{{e}}</div>
-                                     <div class="field-hint at-limit" *ngIf="hint('rmtInfStrdRfrdDocAmt', 18) as h">{{h}}</div>
-                                 </div>
-
-                            </ng-container>
+                            
                         </div>
                     </div>
 

@@ -148,7 +148,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
       this.generateXml();
     }
 
-    // No debounce — every form change immediately regenerates XML so every field is reflected live
+    // No debounce ï¿½ every form change immediately regenerates XML so every field is reflected live
     this.form.valueChanges.subscribe(() => {
       this.updateConditionalValidators();
       this.generateXml();
@@ -251,6 +251,11 @@ export class Pacs8Component implements OnInit, OnDestroy {
       delete errors['forbidden'];
       clrRefCtrl.setErrors(Object.keys(errors).length ? errors : null);
     }
+  }
+
+  isBicRequired(prefix: string, isAgent: boolean): boolean {
+    const field = isAgent ? prefix + 'Bic' : prefix + 'OrgAnyBIC';
+    return this.form.get(field)?.hasValidator(Validators.required) ?? false;
   }
 
   fetchCodelists() {
@@ -440,7 +445,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
     ustrd?.updateValueAndValidity({ emitEvent: false });
     strdRef?.updateValueAndValidity({ emitEvent: false });
 
-    // ChrgsInf validators — mandatory only when ChrgBr=CRED
+    // ChrgsInf validators ï¿½ mandatory only when ChrgBr=CRED
     const chrgBr = this.form.get('chrgBr')?.value;
     const chrgsAmtCtrl = this.form.get('chrgsInfAmt');
     const chrgsCcyCtrl = this.form.get('chrgsInfCcy');
@@ -511,100 +516,58 @@ export class Pacs8Component implements OnInit, OnDestroy {
         if (this.form.get(p + 'IdType')?.value === 'org') {
           if (!name?.value?.trim() && !bic?.trim() && !lei?.value?.trim() && !clrMmb?.value?.trim() && !otherId?.trim()) {
             if (this.form.get(p + 'Acct')?.value?.trim()) {
-              name?.setErrors({ noIdentifier: true });
+        name?.setErrors({ noIdentifier: true });
             }
           }
         }
       }
     });
 
-    // DbtrAgt-specific validation: BIC optional if Name + Postal Address provided
-    const dbtrAgtBic = this.form.get('dbtrAgtBic');
-    const dbtrAgtName = this.form.get('dbtrAgtName');
-    const dbtrAgtTwnNm = this.form.get('dbtrAgtTwnNm');
-    const dbtrAgtCtry = this.form.get('dbtrAgtCtry');
+    // DbtrAgt and CdtrAgt validation: BIC optional if Alt ID provided (Name+Ctry, LEI, or ClrSysMmbId)
+    ['dbtrAgt', 'cdtrAgt'].forEach(p => {
+      const bic = this.form.get(p + 'Bic');
+      const name = this.form.get(p + 'Name');
+      const twnNm = this.form.get(p + 'TwnNm');
+      const ctry = this.form.get(p + 'Ctry');
+      const lei = this.form.get(p + 'Lei');
+      const clrMmbId = this.form.get(p + 'ClrSysMmbId');
 
-    if (dbtrAgtName || dbtrAgtTwnNm) {
-      // If Name is entered, Postal Address (Country + Town) becomes mandatory
-      if (dbtrAgtName?.value?.trim()) {
-        dbtrAgtTwnNm?.setValidators([Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/)]);
-        dbtrAgtCtry?.setValidators([Validators.required, Validators.pattern(/^[A-Z]{2,2}$/)]);
-      } else {
-        dbtrAgtTwnNm?.clearValidators();
-        dbtrAgtCtry?.clearValidators();
-        dbtrAgtTwnNm?.setValidators([Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/)]);
-        dbtrAgtCtry?.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
+      if (name || twnNm) {
+        // If Name is entered, Postal Address (Country + Town) becomes mandatory
+        if (name?.value?.trim()) {
+          twnNm?.setValidators([Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/)]);
+          ctry?.setValidators([Validators.required, Validators.pattern(/^[A-Z]{2,2}$/)]);
+        } else {
+          twnNm?.clearValidators();
+          ctry?.clearValidators();
+          twnNm?.setValidators([Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/)]);
+          ctry?.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
+        }
+
+        // If Postal Address (Country or Town) is entered, Name becomes mandatory
+        if (twnNm?.value?.trim() || ctry?.value?.trim()) {
+          name?.setValidators([Validators.required, Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9 .,()'\-]+$/)]);
+        } else {
+          name?.clearValidators();
+          name?.setValidators([Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9 .,()'\-]+$/)]);
+        }
       }
 
-      // If Postal Address (Country or Town) is entered, Name becomes mandatory
-      if ((dbtrAgtTwnNm?.value?.trim() || dbtrAgtCtry?.value?.trim())) {
-        dbtrAgtName?.setValidators([Validators.required, Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9 .,()'\-]+$/)]);
+      // BIC is optional if an alternative identifier is provided: Name + Country, LEI, or Clearing System Member ID
+      const hasAltId = (name?.value?.trim() && ctry?.value?.trim()) || lei?.value?.trim() || clrMmbId?.value?.trim();
+      
+      if (hasAltId) {
+        bic?.clearValidators();
+        bic?.setValidators([Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]);
       } else {
-        dbtrAgtName?.clearValidators();
-        dbtrAgtName?.setValidators([Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9 .,()'\-]+$/)]);
+        bic?.setValidators([Validators.required, Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]);
       }
 
-      // If both Name and Postal Address (Country + Town) are provided, BIC is optional
-      if (dbtrAgtName?.value?.trim() && dbtrAgtTwnNm?.value?.trim() && dbtrAgtCtry?.value?.trim()) {
-        dbtrAgtBic?.clearValidators();
-        dbtrAgtBic?.setValidators([Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]);
-      } else {
-        // BIC is mandatory if Name + Postal Address are not both provided
-        dbtrAgtBic?.setValidators([Validators.required, Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]);
-      }
-    } else {
-      // If neither Name nor Postal Address fields have values, BIC is mandatory
-      dbtrAgtBic?.setValidators([Validators.required, Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]);
-    }
-
-    dbtrAgtBic?.updateValueAndValidity({ emitEvent: false });
-    dbtrAgtName?.updateValueAndValidity({ emitEvent: false });
-    dbtrAgtTwnNm?.updateValueAndValidity({ emitEvent: false });
-    dbtrAgtCtry?.updateValueAndValidity({ emitEvent: false });
-
-    // CdtrAgt-specific validation: BIC optional if Name + Postal Address provided
-    const cdtrAgtBic = this.form.get('cdtrAgtBic');
-    const cdtrAgtName = this.form.get('cdtrAgtName');
-    const cdtrAgtTwnNm = this.form.get('cdtrAgtTwnNm');
-    const cdtrAgtCtry = this.form.get('cdtrAgtCtry');
-
-    if (cdtrAgtName || cdtrAgtTwnNm) {
-      // If Name is entered, Postal Address (Country + Town) becomes mandatory
-      if (cdtrAgtName?.value?.trim()) {
-        cdtrAgtTwnNm?.setValidators([Validators.required, Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/)]);
-        cdtrAgtCtry?.setValidators([Validators.required, Validators.pattern(/^[A-Z]{2,2}$/)]);
-      } else {
-        cdtrAgtTwnNm?.clearValidators();
-        cdtrAgtCtry?.clearValidators();
-        cdtrAgtTwnNm?.setValidators([Validators.maxLength(35), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/)]);
-        cdtrAgtCtry?.setValidators([Validators.pattern(/^[A-Z]{2,2}$/)]);
-      }
-
-      // If Postal Address (Country or Town) is entered, Name becomes mandatory
-      if ((cdtrAgtTwnNm?.value?.trim() || cdtrAgtCtry?.value?.trim())) {
-        cdtrAgtName?.setValidators([Validators.required, Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9 .,()'\-]+$/)]);
-      } else {
-        cdtrAgtName?.clearValidators();
-        cdtrAgtName?.setValidators([Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9 .,()'\-]+$/)]);
-      }
-
-      // If both Name and Postal Address (Country + Town) are provided, BIC is optional
-      if (cdtrAgtName?.value?.trim() && cdtrAgtTwnNm?.value?.trim() && cdtrAgtCtry?.value?.trim()) {
-        cdtrAgtBic?.clearValidators();
-        cdtrAgtBic?.setValidators([Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]);
-      } else {
-        // BIC is mandatory if Name + Postal Address are not both provided
-        cdtrAgtBic?.setValidators([Validators.required, Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]);
-      }
-    } else {
-      // If neither Name nor Postal Address fields have values, BIC is mandatory
-      cdtrAgtBic?.setValidators([Validators.required, Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]);
-    }
-
-    cdtrAgtBic?.updateValueAndValidity({ emitEvent: false });
-    cdtrAgtName?.updateValueAndValidity({ emitEvent: false });
-    cdtrAgtTwnNm?.updateValueAndValidity({ emitEvent: false });
-    cdtrAgtCtry?.updateValueAndValidity({ emitEvent: false });
+      bic?.updateValueAndValidity({ emitEvent: false });
+      name?.updateValueAndValidity({ emitEvent: false });
+      twnNm?.updateValueAndValidity({ emitEvent: false });
+      ctry?.updateValueAndValidity({ emitEvent: false });
+    });
 
     // UltmtCdtr-specific validation: OrgAnyBIC optional if Name + Postal Address provided
     const ultmtCdtrBic = this.form.get('ultmtCdtrOrgAnyBIC');
@@ -746,7 +709,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
   }
 
   private buildForm() {
-    // BIC per ISO 9362 / CBPR+ BICFIDec2014Identifier — first 4 chars are alphanumeric.
+    // BIC per ISO 9362 / CBPR+ BICFIDec2014Identifier ï¿½ first 4 chars are alphanumeric.
     const BIC = [Validators.required, Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
     const BIC_OPT = [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
     // Safe character set: letters, digits, space, . , ( ) ' - only. No & @ ! # $ etc.
@@ -779,7 +742,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
       rltd: [''],
       // SttlmPrty lives in CdtTrfTxInf (after IntrBkSttlmDt), NOT in GrpHdr/SttlmInf
       sttlmPrty: ['', [Validators.pattern(/^(HIGH|NORM|URGT)$/)]],
-      // Settlement Time Request (§CdtTrfTxInf — after SttlmTmIndctn)
+      // Settlement Time Request (ï¿½CdtTrfTxInf ï¿½ after SttlmTmIndctn)
       sttlmTmReqClsTm: [''],
       sttlmTmReqTillTm: [''],
       sttlmTmReqFrTm: [''],
@@ -814,7 +777,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
       cdtrAgtBic: ['RCVRLU2AXXX', BIC_OPT],
       ultmtDbtrName: ['', [Validators.maxLength(140), SAFE_NAME]],
       ultmtCdtrName: ['', [Validators.maxLength(140), SAFE_NAME]],
-      // Initiating Party (InitgPty) — between UltmtDbtr and Dbtr in CdtTrfTxInf
+      // Initiating Party (InitgPty) ï¿½ between UltmtDbtr and Dbtr in CdtTrfTxInf
       initgPtyName: ['', [Validators.maxLength(140), SAFE_NAME]],
       initgPtyIdType: ['none'],
       initgPtyOrgAnyBIC: ['', BIC_OPT],
@@ -1425,16 +1388,16 @@ export class Pacs8Component implements OnInit, OnDestroy {
     const formattedAmt = this.formatting.formatAmount(v.amount, v.currency);
     tx += `\t\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${formattedAmt}</IntrBkSttlmAmt>\n`;
     tx += this.el('IntrBkSttlmDt', v.sttlmDt, 4);
-    // SttlmPrty — at CdtTrfTxInf level (not in GrpHdr/SttlmInf)
+    // SttlmPrty ï¿½ at CdtTrfTxInf level (not in GrpHdr/SttlmInf)
     if (v.sttlmPrty?.trim()) tx += this.el('SttlmPrty', v.sttlmPrty, 4);
-    // SttlmTmIndctn — after IntrBkSttlmDt per pacs.008.001.08 XSD sequence
+    // SttlmTmIndctn ï¿½ after IntrBkSttlmDt per pacs.008.001.08 XSD sequence
     if (v.dbtDtTm || v.cdtDtTm) {
         let stind = '';
         if (v.dbtDtTm) stind += this.el('DbtDtTm', this.fdt(v.dbtDtTm), 5);
         if (v.cdtDtTm) stind += this.el('CdtDtTm', this.fdt(v.cdtDtTm), 5);
         tx += this.tag('SttlmTmIndctn', stind, 4);
     }
-    // SttlmTmReq — after SttlmTmIndctn
+    // SttlmTmReq ï¿½ after SttlmTmIndctn
     const clsTm = v.sttlmTmReqClsTm?.trim();
     const tillTm = v.sttlmTmReqTillTm?.trim();
     const frTm = v.sttlmTmReqFrTm?.trim();
@@ -1447,7 +1410,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
         if (rjctTm) tmReq += this.el('RjctTm', rjctTm, 5);
         tx += this.tag('SttlmTmReq', tmReq, 4);
     }
-    // AccptncDtTm — pacs.008-specific, after SttlmTmReq
+    // AccptncDtTm ï¿½ pacs.008-specific, after SttlmTmReq
     if (v.accptncDtTm?.trim()) tx += this.el('AccptncDtTm', this.fdt(v.accptncDtTm), 4);
     let instdAmtVal = v.instdAmt;
     let instdAmtCcyVal = v.instdAmtCcy;
@@ -1521,7 +1484,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
     // ISO 20022 pacs.008.001.08 CdtTrfTxInf schema order:
     // UltmtDbtr ? InitgPty ? Dbtr ? DbtrAcct ? DbtrAgt ? DbtrAgtAcct ? CdtrAgt ? CdtrAgtAcct ? Cdtr ? CdtrAcct ? UltmtCdtr
     tx += this.partyAgentXml('UltmtDbtr', 'ultmtDbtr', v, 4);
-    // InitgPty — Initiating Party (between UltmtDbtr and Dbtr)
+    // InitgPty ï¿½ Initiating Party (between UltmtDbtr and Dbtr)
     if (v.initgPtyName?.trim() || v.initgPtyOrgAnyBIC?.trim() || v.initgPtyOrgOthrId?.trim() || v.initgPtyPrvtOthrId?.trim()) {
         let initgContent = '';
         if (v.initgPtyName?.trim()) initgContent += `${this.tabs(5)}<Nm>${this.e(v.initgPtyName)}</Nm>\n`;
@@ -1555,7 +1518,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
     if (v.cdtrAcct?.trim()) tx += this.tag('CdtrAcct', this.tag('Id', formatAcct(v.cdtrAcct, 5, v.cdtrAcctType), 5), 4);
     tx += this.partyAgentXml('UltmtCdtr', 'ultmtCdtr', v, 4);
 
-    // InstrForCdtrAgt (0..2) — CBPR+ R36: each <Cd> value must appear at most once
+    // InstrForCdtrAgt (0..2) ï¿½ CBPR+ R36: each <Cd> value must appear at most once
     const seenCdtrAgtCds = new Set<string>();
     for (let i = 1; i <= 2; i++) {
       const cd = v[`instrForCdtrAgt${i}Cd`]?.trim();
@@ -1570,7 +1533,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
       }
     }
 
-    // InstrForNxtAgt (0..6) — CBPR+ R36: each <Cd> value must appear at most once
+    // InstrForNxtAgt (0..6) ï¿½ CBPR+ R36: each <Cd> value must appear at most once
     const seenNxtAgtCds = new Set<string>();
     for (let i = 1; i <= 6; i++) {
       const cd = v[`instrForNxtAgt${i}Cd`]?.trim();
@@ -1586,7 +1549,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
     }
 
 
-    // Purp — Purpose (must appear BEFORE RgltryRptg per pacs.008 XSD order)
+    // Purp ï¿½ Purpose (must appear BEFORE RgltryRptg per pacs.008 XSD order)
     if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 5), 4);
 
     // Regulatory Reporting (0..3)
@@ -1740,7 +1703,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
     if (lei) content += `${t}<LEI>${this.e(lei)}</LEI>\n`;
     // CBPR_COM_R9 (strict): only InstgAgt/InstdAgt must omit Nm + PstlAdr when BICFI is set.
     // For every other agent (Dbtr, Cdtr, DbtrAgt, CdtrAgt, IntrmyAgt*, PrvsInstgAgt*)
-    // BICFI + Nm + PstlAdr are permitted together — let user-entered Name/Address through.
+    // BICFI + Nm + PstlAdr are permitted together ï¿½ let user-entered Name/Address through.
     const strictR9 = tag === 'InstgAgt' || tag === 'InstdAgt';
     if (!strictR9 || !bic) {
       if (name) content += `${t}<Nm>${this.e(name)}</Nm>\n`;
@@ -1863,7 +1826,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
       this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
       return;
     }
-    // Always regenerate from the form before validating — guarantees the validator
+    // Always regenerate from the form before validating ï¿½ guarantees the validator
     // sees a clean, generator-produced XML rather than stale pasted/edited content
     // (which may contain forbidden elements like Nm/PstlAdr inside AppHdr.Fr).
     this.generateXml();
@@ -2086,6 +2049,9 @@ ${tx}\t\t\t</CdtTrfTxInf>
       }
 
       const patch: any = {};
+    Object.keys(this.form.controls).forEach(key => {
+      patch[key] = this.form.get(key)?.value || (key.endsWith('Cd') ? 'none' : '');
+    });
             Object.keys(this.form.controls).forEach(key => {
                 if (key.endsWith('AddrType') || key.endsWith('AcctType') || key === 'rmtInfType' || key.endsWith('IdType')) {
                     patch[key] = 'none';
@@ -2572,7 +2538,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
             mapParty(p.charAt(0).toUpperCase() + p.slice(1), p, tx);
         });
 
-        // Extra Accounts check — also detect IBAN vs Other for dbtr/cdtr/dbtrAgt/cdtrAgt/intrmyAgt1/intrmyAgt2/intrmyAgt3 AcctType dropdown
+        // Extra Accounts check ï¿½ also detect IBAN vs Other for dbtr/cdtr/dbtrAgt/cdtrAgt/intrmyAgt1/intrmyAgt2/intrmyAgt3 AcctType dropdown
         ['instgAgt', 'instdAgt', 'dbtrAgt', 'cdtrAgt', 'dbtr', 'cdtr', 'ultmtDbtr', 'ultmtCdtr', 'intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'].forEach(p => {
             const tag = p.charAt(0).toUpperCase() + p.slice(1) + 'Acct';
             const acctParent = getT(tag, tx);

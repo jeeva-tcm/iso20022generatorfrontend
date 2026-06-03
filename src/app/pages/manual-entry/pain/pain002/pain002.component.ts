@@ -776,7 +776,7 @@ ${doc.trimEnd()}
     if (!pa || pa.addrType === 'none') return '';
     let a = '';
     const t = ind + 1;
-    // Detail structured fields — pure structured mode only (must not coexist with <AdrLine>).
+    // Detail structured fields ï¿½ pure structured mode only (must not coexist with <AdrLine>).
     if (pa.addrType === 'structured') {
       if (pa.dept) a += this.leaf('Dept', pa.dept, t);
       if (pa.subDept) a += this.leaf('SubDept', pa.subDept, t);
@@ -788,7 +788,7 @@ ${doc.trimEnd()}
       if (pa.room) a += this.leaf('Room', pa.room, t);
       if (pa.pstCd) a += this.leaf('PstCd', pa.pstCd, t);
     }
-    // TwnNm + Ctry — emitted in structured and hybrid (hybrid = TwnNm + Ctry + AdrLine).
+    // TwnNm + Ctry ï¿½ emitted in structured and hybrid (hybrid = TwnNm + Ctry + AdrLine).
     if ((pa.addrType === 'structured' || pa.addrType === 'hybrid') && pa.town) {
       a += this.leaf('TwnNm', pa.town, t);
     }
@@ -1068,7 +1068,7 @@ ${doc.trimEnd()}
     }).subscribe({
       next: (data: any) => { this.validationReport = data; this.validationStatus = 'done'; this.clearDraft(); },
       error: (err) => {
-        this.validationReport = { status: 'FAIL', errors: 1, warnings: 0, details: [{ severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR', path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'), fix_suggestion: 'Ensure the validation server is running.' }] };
+        this.validationReport = { status: 'FAIL', errors: 1, warnings: 0, details: [{ severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR', path: '', message: 'Validation failed ï¿½ ' + (err.error?.detail?.message || 'backend not reachable.'), fix_suggestion: 'Ensure the validation server is running.' }] };
         this.validationStatus = 'done';
       }
     });

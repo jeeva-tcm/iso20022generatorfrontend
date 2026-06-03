@@ -832,7 +832,7 @@ ${txInf.trimEnd()}
     if (type === 'none') return '';
 
     let content = `${this.tabs(indent)}<PstlAdr>\n`;
-    // Structured-only fields — not emitted in hybrid
+    // Structured-only fields ï¿½ not emitted in hybrid
     if (type === 'structured') {
       content += this.leaf('StrtNm', v[prefix + 'StrtNm'], indent + 1);
       content += this.leaf('BldgNb', v[prefix + 'BldgNb'], indent + 1);
@@ -842,7 +842,7 @@ ${txInf.trimEnd()}
     // TwnNm + Ctry in all modes
     content += this.leaf('TwnNm', v[prefix + 'TwnNm'], indent + 1);
     content += this.leaf('Ctry', v[prefix + 'Ctry'], indent + 1);
-    // AdrLine — hybrid: TwnNm + Ctry + AdrLines (SR2026: unstructured deprecated)
+    // AdrLine ï¿½ hybrid: TwnNm + Ctry + AdrLines (SR2026: unstructured deprecated)
     if (type === 'hybrid' || type === 'unstructured') {
       if (v[prefix + 'AdrLine1']) content += this.leaf('AdrLine', v[prefix + 'AdrLine1'], indent + 1);
       if (v[prefix + 'AdrLine2']) content += this.leaf('AdrLine', v[prefix + 'AdrLine2'], indent + 1);

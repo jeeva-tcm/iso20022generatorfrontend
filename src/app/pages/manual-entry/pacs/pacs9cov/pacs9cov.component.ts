@@ -404,12 +404,6 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
             rmtInfType: ['none'],
             rmtInfUstrd: ['', [Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/)]],
             rmtInfUstrd2: ['', [Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/)]],
-            rmtInfStrdCdtrRefType: [''],
-            rmtInfStrdCdtrRef: ['', Validators.maxLength(35)],
-            rmtInfStrdAddtlRmtInf: ['', [Validators.maxLength(140), Validators.pattern(/^[0-9a-zA-Z\/\-\?:\(\)\.,\'\+ !#$%&\*=\^_`\{\|\}~";<>@\[\\\]]+$/)]],
-            rmtInfStrdRfrdDocNb: ['', Validators.maxLength(35)],
-            rmtInfStrdRfrdDocCd: [''],
-            rmtInfStrdRfrdDocAmt: ['', [Validators.maxLength(18), Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],
             rmtInfStrdInvcrNm: ['', Validators.maxLength(140)],
             rmtInfStrdInvceeNm: ['', Validators.maxLength(140)],
             rmtInfStrdTaxRmtId: ['', Validators.maxLength(35)],
@@ -1274,28 +1268,6 @@ ${tx}\t\t\t</CdtTrfTxInf>
             if (ustrdContent) {
                 b += `\t\t\t\t<RmtInf>\n${ustrdContent}\t\t\t\t</RmtInf>\n`;
             }
-        } else if (v.rmtInfType === 'strd') {
-            let cdtrRef = '';
-            if (v.rmtInfStrdCdtrRefType && v.rmtInfStrdCdtrRef) {
-                cdtrRef = `\n\t\t\t\t\t\t<CdtrRefInf>\n\t\t\t\t\t\t\t<Tp>\n\t\t\t\t\t\t\t\t<CdOrPrtry>\n\t\t\t\t\t\t\t\t\t<Cd>${this.e(v.rmtInfStrdCdtrRefType)}</Cd>\n\t\t\t\t\t\t\t\t</CdOrPrtry>\n\t\t\t\t\t\t\t</Tp>\n\t\t\t\t\t\t\t<Ref>${this.e(v.rmtInfStrdCdtrRef)}</Ref>\n\t\t\t\t\t\t</CdtrRefInf>`;
-            }
-            let addtl = v.rmtInfStrdAddtlRmtInf ? `\n\t\t\t\t\t\t<AddtlRmtInf>${this.e(v.rmtInfStrdAddtlRmtInf)}</AddtlRmtInf>` : '';
-            let rfrdDoc = '';
-            if (v.rmtInfStrdRfrdDocNb?.trim() || v.rmtInfStrdRfrdDocCd?.trim()) {
-                rfrdDoc = `\n\t\t\t\t\t\t<RfrdDocInf>\n`;
-                if (v.rmtInfStrdRfrdDocNb?.trim()) rfrdDoc += `\t\t\t\t\t\t\t<Nb>${this.e(v.rmtInfStrdRfrdDocNb)}</Nb>\n`;
-                if (v.rmtInfStrdRfrdDocCd?.trim()) {
-                    rfrdDoc += `\t\t\t\t\t\t\t<Tp>\n\t\t\t\t\t\t\t\t<CdOrPrtry>\n\t\t\t\t\t\t\t\t\t<Cd>${this.e(v.rmtInfStrdRfrdDocCd)}</Cd>\n\t\t\t\t\t\t\t\t</CdOrPrtry>\n\t\t\t\t\t\t\t</Tp>\n`;
-                }
-                rfrdDoc += `\t\t\t\t\t\t</RfrdDocInf>`;
-            }
-            let rfrdAmt = '';
-            if (v.rmtInfStrdRfrdDocAmt) {
-                rfrdAmt = `\n\t\t\t\t\t\t<RfrdDocAmt>\n\t\t\t\t\t\t\t<RmtAmt>\n\t\t\t\t\t\t\t\t<DuePyblAmt Ccy="${this.e(v.currency)}">${this.formatting.formatAmount(v.rmtInfStrdRfrdDocAmt, v.currency)}</DuePyblAmt>\n\t\t\t\t\t\t\t</RmtAmt>\n\t\t\t\t\t\t</RfrdDocAmt>`;
-            }
-            if (cdtrRef || addtl || rfrdDoc || rfrdAmt) {
-                b += `\t\t\t\t<RmtInf>\n\t\t\t\t\t<Strd>${cdtrRef}${addtl}${rfrdDoc}${rfrdAmt}\n\t\t\t\t\t</Strd>\n\t\t\t\t</RmtInf>\n`;
-            }
         }
 
         // InstdAmt (optional)
@@ -1748,22 +1720,6 @@ ${tx}\t\t\t</CdtTrfTxInf>
                         patch.rmtInfType = 'ustrd';
                         patch.rmtInfUstrd = ustrd.textContent || '';
                         if (coreRmts.length > 1) patch.rmtInfUstrd2 = tval('Ustrd', coreRmts[1]);
-                    } else {
-                        const strd = getT('Strd', coreRmts[0]);
-                        if (strd) {
-                            patch.rmtInfType = 'strd';
-                            const ref = getT('CdtrRefInf', strd);
-                            if (ref) {
-                                patch.rmtInfStrdCdtrRefType = tval('Cd', getT('Tp', ref) || ref);
-                                patch.rmtInfStrdCdtrRef = tval('Ref', ref);
-                            }
-                            patch.rmtInfStrdAddtlRmtInf = tval('AddtlRmtInf', strd);
-                            const rfrd = getT('RfrdDocInf', strd);
-                            if (rfrd) {
-                                patch.rmtInfStrdRfrdDocNb = tval('Nb', rfrd);
-                                patch.rmtInfStrdRfrdDocCd = tval('Cd', getT('Tp', rfrd) || rfrd);
-                            }
-                        }
                     }
                 }
 

@@ -143,7 +143,7 @@ export class Pacs2Component implements OnInit, OnDestroy {
       // GrpHdr
       msgId: ['MSG-2026-FI-S-001-GH', [Validators.required, Validators.maxLength(35)]],
 
-      // OrgnlGrpInf — OrgnlGrpInf is mandatory; OrgnlMsgId+OrgnlMsgNmId are [1..1] mandatory
+      // OrgnlGrpInf ï¿½ OrgnlGrpInf is mandatory; OrgnlMsgId+OrgnlMsgNmId are [1..1] mandatory
       orgnlMsgId: ['MSG-' + Date.now() + '-ORG', [Validators.required, Validators.maxLength(35)]],
       orgnlMsgNmId: ['pacs.008.001.08', [Validators.required, Validators.maxLength(35)]],
       orgnlCreDtTm: [this.isoNow(), []],   // [0..1] optional
@@ -201,7 +201,7 @@ export class Pacs2Component implements OnInit, OnDestroy {
       stsRsnCd: [''],
       stsRsnPrtry: ['', [Validators.maxLength(35)]],
 
-      // AddtlInf (max 2 per CBPR+ §5.98.3)
+      // AddtlInf (max 2 per CBPR+ ï¿½5.98.3)
       stsRsnAddtlInf: ['', [Validators.maxLength(105)]],
       stsRsnAddtlInf2: ['', [Validators.maxLength(105)]],
 
@@ -214,8 +214,8 @@ export class Pacs2Component implements OnInit, OnDestroy {
 
     };
 
-    // CBPR+ §5.39: For InstgAgt/InstdAgt in TxInfAndSts, Name/PostalAddress/Other are REMOVED.
-    // Only BICFI (mandatory per §5.39.1), ClrSysMmbId (optional), and LEI (optional) are allowed.
+    // CBPR+ ï¿½5.39: For InstgAgt/InstdAgt in TxInfAndSts, Name/PostalAddress/Other are REMOVED.
+    // Only BICFI (mandatory per ï¿½5.39.1), ClrSysMmbId (optional), and LEI (optional) are allowed.
     this.agentPrefixes.forEach(p => {
       if (!c[p + 'Bic']) c[p + 'Bic'] = [p === 'instgAgt' ? 'BBBBUS33XXX' : 'CCCCGB2LXXX', BIC];
       if (!c[p + 'Lei']) c[p + 'Lei'] = ['', Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)];
@@ -415,7 +415,7 @@ ${txInf.trimEnd()}
     else if (v.stsRsnPrtry?.trim()) rsn += this.leaf('Prtry', v.stsRsnPrtry, 7);
     if (rsn) inner += this.branch('Rsn', rsn, 6);
 
-    // AddtlInf (max 2 occurrences per CBPR+ §5.98.3)
+    // AddtlInf (max 2 occurrences per CBPR+ ï¿½5.98.3)
     if (v.stsRsnAddtlInf?.trim()) inner += this.leaf('AddtlInf', v.stsRsnAddtlInf, 5);
     if (v.stsRsnAddtlInf2?.trim()) inner += this.leaf('AddtlInf', v.stsRsnAddtlInf2, 5);
 
@@ -431,7 +431,7 @@ ${txInf.trimEnd()}
   }
 
   buildAgt(tag: string, v: any, prefix: string): string {
-    // CBPR+ §5.39: Name, PostalAddress, Other are REMOVED for InstgAgt/InstdAgt in TxInfAndSts.
+    // CBPR+ ï¿½5.39: Name, PostalAddress, Other are REMOVED for InstgAgt/InstdAgt in TxInfAndSts.
     // Only BICFI (mandatory), ClrSysMmbId, and LEI are allowed.
     let inner = '';
     if (v[prefix + 'Bic']?.trim()) inner += this.leaf('BICFI', v[prefix + 'Bic'], 6);
@@ -766,7 +766,7 @@ ${txInf.trimEnd()}
       this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
       return;
     }
-    // Always regenerate from the form before validating — guarantees the validator
+    // Always regenerate from the form before validating ï¿½ guarantees the validator
     // sees a clean, generator-produced XML rather than stale pasted/edited content
     // (which may contain forbidden elements like Nm/PstlAdr inside AppHdr.Fr).
     this.generateXml();

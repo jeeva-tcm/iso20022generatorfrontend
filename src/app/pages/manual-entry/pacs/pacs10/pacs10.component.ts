@@ -781,7 +781,7 @@ ${this.rmtInf(v)}
         }
         if (v[p + 'AcctCcy'] && /^[A-Z]{3}$/.test(v[p + 'AcctCcy'])) res += this.el('Ccy', v[p + 'AcctCcy'], indent + 1);
         if (v[p + 'AcctNm']) res += this.el('Nm', v[p + 'AcctNm'], indent + 1);
-        // Proxy (Prxy) — optional
+        // Proxy (Prxy) ï¿½ optional
         const prxyId = v[p + 'AcctPrxyId'];
         if (prxyId) {
             let prxyRes = '';

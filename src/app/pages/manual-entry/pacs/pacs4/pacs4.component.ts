@@ -662,7 +662,7 @@ ${tx}\t\t\t</TxInf>
                     patch[key] = '';
                 }
             });
-            // Only patch fields the parser explicitly reads — previously this wiped
+            // Only patch fields the parser explicitly reads ï¿½ previously this wiped
             // every control to '' on each XML edit, silently dropping user data for
             // any form field not covered by the parser.
 
@@ -880,7 +880,7 @@ ${tx}\t\t\t</TxInf>
 
     validateMessage() {
                 if (this.bicSameWarning) return;
-        // Always regenerate from the form before validating — guarantees the validator
+        // Always regenerate from the form before validating ï¿½ guarantees the validator
         // sees a clean, generator-produced XML rather than stale pasted/edited content
         // (which may contain forbidden elements like Nm/PstlAdr inside AppHdr.Fr).
         this.generateXml();
