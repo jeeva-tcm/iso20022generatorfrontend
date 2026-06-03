@@ -1,4 +1,4 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -54,7 +54,7 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
     // COV address prefixes for UndrlygCstmrCdtTrf parties
     covPartyPrefixes = ['covDbtr', 'covCdtr', 'covUltmtDbtr', 'covUltmtCdtr'];
 
-    instrForCdtrAgtCodes = ['', 'CHQB', 'HOLD', 'PHOB', 'TELB'];
+    instrForCdtrAgtCodes = ['', 'PHOB', 'TELB'];
 
     private readonly DRAFT_KEY = 'draft_pacs009cov';
     private draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -344,6 +344,26 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
             ctryCtrl?.updateValueAndValidity({ emitEvent: false });
             twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
             adrLine1Ctrl?.updateValueAndValidity({ emitEvent: false });
+
+            // Party Identification Validation (CBPR+ rules)
+            if (['dbtrFi', 'dbtrAgt', 'cdtrAgt', 'cdtrFi', 'covDbtr', 'covDbtrAgt', 'covCdtrAgt', 'covCdtr'].includes(p)) {
+                const bicCtrl = this.form.get(p + 'Bic') || this.form.get(p + 'OrgAnyBIC');
+                if (bicCtrl) {
+                    const name = this.form.get(p + 'Name')?.value?.trim();
+                    const ctry = this.form.get(p + 'Ctry')?.value?.trim();
+                    const lei = this.form.get(p + 'Lei')?.value?.trim() || this.form.get(p + 'OrgLEI')?.value?.trim();
+                    const clrSysMmbId = this.form.get(p + 'ClrSysMmbId')?.value?.trim();
+                    
+                    const hasAltId = (name && ctry) || clrSysMmbId || lei;
+                    
+                    if (hasAltId) {
+                        bicCtrl.setValidators([Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]);
+                    } else {
+                        bicCtrl.setValidators([Validators.required, Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]);
+                    }
+                    bicCtrl.updateValueAndValidity({ emitEvent: false });
+                }
+            }
         });
     }
 
@@ -411,22 +431,22 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
             amount: ['1500000', [Validators.required, Validators.maxLength(18), Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['EUR', Validators.required],
             sttlmDt: [new Date().toISOString().split('T')[0], [Validators.required, Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]],
             // Debtor FI (required)
-            dbtrFiBic: ['BBBBUS33XXX', BIC],
+            dbtrFiBic: ['BBBBUS33XXX', BIC_OPT],
             dbtrFiAcct: ['DE89370400440532013000'],
             dbtrFiAcctType: ['IBAN'],
             dbtrFiAcctOthrId: [''],
             // Debtor Agent (mandatory)
-            dbtrAgtBic: ['BBBBUS33XXX', BIC],
+            dbtrAgtBic: ['BBBBUS33XXX', BIC_OPT],
             dbtrAgtAcct: [''],
             dbtrAgtAcctType: ['none'],
             dbtrAgtAcctOthrId: [''],
             // Creditor Agent (mandatory)
-            cdtrAgtBic: ['CCCCGB2LXXX', BIC],
+            cdtrAgtBic: ['CCCCGB2LXXX', BIC_OPT],
             cdtrAgtAcct: [''],
             cdtrAgtAcctType: ['none'],
             cdtrAgtAcctOthrId: [''],
             // Creditor FI (required)
-            cdtrFiBic: ['CCCCGB2LXXX', BIC],
+            cdtrFiBic: ['CCCCGB2LXXX', BIC_OPT],
             cdtrFiAcct: ['GB82WEST12345698765432'],
             cdtrFiAcctType: ['IBAN'],
             cdtrFiAcctOthrId: [''],
@@ -446,17 +466,17 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
             covDbtrAcct: ['DE89370400440532013000'],
             covDbtrAcctType: ['IBAN'],
             covDbtrAcctOthrId: [''],
-            covDbtrOrgAnyBIC: ['BBBBUS33XXX', BIC],
-            covDbtrAgtBic: ['BBBBUS33XXX', BIC],
+            covDbtrOrgAnyBIC: ['BBBBUS33XXX', BIC_OPT],
+            covDbtrAgtBic: ['BBBBUS33XXX', BIC_OPT],
             covDbtrAgtAcct: [''],
             covDbtrAgtAcctType: ['none'],
             covDbtrAgtAcctOthrId: [''],
-            covCdtrAgtBic: ['CCCCGB2LXXX', BIC],
+            covCdtrAgtBic: ['CCCCGB2LXXX', BIC_OPT],
             covCdtrAgtAcct: [''],
             covCdtrAgtAcctType: ['none'],
             covCdtrAgtAcctOthrId: [''],
             covCdtrName: ['Creditor Name', [Validators.required, Validators.maxLength(140), SAFE_NAME]],
-            covCdtrOrgAnyBIC: ['CCCCGB2LXXX', BIC],
+            covCdtrOrgAnyBIC: ['CCCCGB2LXXX', BIC_OPT],
             covCdtrAcct: ['GB82WEST12345698765432'],
             covCdtrAcctType: ['IBAN'],
             covCdtrAcctOthrId: [''],

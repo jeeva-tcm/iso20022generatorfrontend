@@ -1,4 +1,4 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -296,6 +296,26 @@ export class Pacs9Component implements OnInit, OnDestroy {
             ctryCtrl?.updateValueAndValidity({ emitEvent: false });
             twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
             adrLine1Ctrl?.updateValueAndValidity({ emitEvent: false });
+
+            // Party Identification Validation (CBPR+ rules)
+            if (['dbtrFi', 'dbtrAgt', 'cdtrAgt', 'cdtrFi'].includes(p)) {
+                const bicCtrl = this.form.get(p + 'Bic');
+                if (bicCtrl) {
+                    const name = this.form.get(p + 'Name')?.value?.trim();
+                    const ctry = this.form.get(p + 'Ctry')?.value?.trim();
+                    const lei = this.form.get(p + 'Lei')?.value?.trim();
+                    const clrSysMmbId = this.form.get(p + 'ClrSysMmbId')?.value?.trim();
+                    
+                    const hasAltId = (name && ctry) || clrSysMmbId || lei;
+                    
+                    if (hasAltId) {
+                        bicCtrl.setValidators([Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]);
+                    } else {
+                        bicCtrl.setValidators([Validators.required, Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)]);
+                    }
+                    bicCtrl.updateValueAndValidity({ emitEvent: false });
+                }
+            }
         });
     }
 
@@ -360,13 +380,13 @@ export class Pacs9Component implements OnInit, OnDestroy {
             amount: ['50000.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]], currency: ['USD', Validators.required],
             sttlmDt: [new Date().toISOString().split('T')[0], [Validators.required, Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]],
             // Debtor FI (required)
-            dbtrFiBic: ['BBBBUS33XXX', BIC],
+            dbtrFiBic: ['BBBBUS33XXX', BIC_OPT],
             // Debtor Agent (mandatory)
-            dbtrAgtBic: ['BBBBUS33XXX', BIC],
+            dbtrAgtBic: ['BBBBUS33XXX', BIC_OPT],
             // Creditor Agent (mandatory)
-            cdtrAgtBic: ['CCCCGB2LXXX', BIC],
+            cdtrAgtBic: ['CCCCGB2LXXX', BIC_OPT],
             // Creditor FI (required)
-            cdtrFiBic: ['CCCCGB2LXXX', BIC],
+            cdtrFiBic: ['CCCCGB2LXXX', BIC_OPT],
             // Optional agents
             prvsInstgAgt1Bic: ['', BIC_OPT], prvsInstgAgt2Bic: ['', BIC_OPT], prvsInstgAgt3Bic: ['', BIC_OPT],
             intrmyAgt1Bic: ['', BIC_OPT], intrmyAgt2Bic: ['', BIC_OPT], intrmyAgt3Bic: ['', BIC_OPT],
