@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -354,7 +354,7 @@ export class Camt055Component implements OnInit, OnDestroy {
         errors['orgnlReqdExctnDt_duplicate'] = true;
       }
 
-      // OrgnlReqdExctnDt vs OrgnlReqdColltnDt â€” mutually exclusive in camt.055 TxInf
+      // OrgnlReqdExctnDt vs OrgnlReqdColltnDt — mutually exclusive in camt.055 TxInf
       const hasExctn = !!(group.get('orgnlReqdExctnDt')?.value?.trim() || group.get('orgnlReqdExctnDtTm')?.value?.trim());
       const hasColltn = !!(group.get('orgnlReqdColltnDt')?.value?.trim());
       if (hasExctn && hasColltn) {
@@ -435,7 +435,7 @@ export class Camt055Component implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     });
 
-    // Auto-format: BIC fields â†’ uppercase
+    // Auto-format: BIC fields → uppercase
     const bicFields = ['head_fromBic', 'head_toBic', 'head_rltd_fromBic', 'head_rltd_toBic'];
     bicFields.forEach(f => {
       this.form.get(f)?.valueChanges.subscribe(val => {
@@ -445,14 +445,14 @@ export class Camt055Component implements OnInit, OnDestroy {
       });
     });
 
-    // Auto-format: UETR â†’ lowercase
+    // Auto-format: UETR → lowercase
     this.form.get('orgnlUETR')?.valueChanges.subscribe(val => {
       if (val && val !== val.toLowerCase()) {
         this.form.get('orgnlUETR')?.setValue(val.toLowerCase(), { emitEvent: false });
       }
     });
 
-    // Auto-format: Currency â†’ uppercase
+    // Auto-format: Currency → uppercase
     this.form.get('orgnlInstdAmt_ccy')?.valueChanges.subscribe(val => {
       if (val && val !== val.toUpperCase()) {
         this.form.get('orgnlInstdAmt_ccy')?.setValue(val.toUpperCase(), { emitEvent: false });
@@ -463,7 +463,7 @@ export class Camt055Component implements OnInit, OnDestroy {
     // OrgnlReqdExctnDt: Dt vs DtTm are mutually exclusive within that choice field
     this.setupDateXor('orgnlReqdExctnDt', 'orgnlReqdExctnDtTm');
 
-    // OrgnlReqdExctnDt vs OrgnlReqdColltnDt â€” mutually exclusive at TxInf level
+    // OrgnlReqdExctnDt vs OrgnlReqdColltnDt — mutually exclusive at TxInf level
     // When any ExctnDt field is filled, clear ColltnDt and vice versa
     const clearColltn = () => {
       if (this.isParsingXml || this.isInternalChange) return;
@@ -569,7 +569,7 @@ export class Camt055Component implements OnInit, OnDestroy {
     appHdr += this.leaf('BizMsgIdr', v.head_bizMsgIdr, 2);
     appHdr += this.leaf('MsgDefIdr', v.head_msgDefIdr, 2);
     appHdr += this.leaf('BizSvc', v.head_bizSvc, 2);
-    // MktPrctc requires Regy before Id per schema â€” only emit when both are present
+    // MktPrctc requires Regy before Id per schema — only emit when both are present
     if (v.head_mktPrctcId && v.head_mktPrctcRegy) {
         let mkt = this.leaf('Regy', v.head_mktPrctcRegy, 3);
         mkt += this.leaf('Id', v.head_mktPrctcId, 3);
@@ -625,7 +625,7 @@ export class Camt055Component implements OnInit, OnDestroy {
     let caseIdVal = (v.case_id || 'CASE-' + Date.now().toString().slice(-10)).substring(0, 16);
     let caseInner = this.leaf('Id', caseIdVal, 7);
     // Cretr must contain ONLY Pty (Agt is NOT allowed under Cretr per ISO 20022)
-    // Ensure only ONE <Id> at this level (Case/Id) â€” party Id is nested deeper in Cretr/Pty/Id
+    // Ensure only ONE <Id> at this level (Case/Id) — party Id is nested deeper in Cretr/Pty/Id
     // Nm + PstlAdr (with TwnNm, Ctry, AdrLine x2) must always be present together per CBPR+ rule
     let cretrPty = this.partyAgentXml('Pty', 'cretr', v, 8);
     const cretrFallback = this.branch('Pty',
@@ -652,7 +652,7 @@ export class Camt055Component implements OnInit, OnDestroy {
     }
 
     // Dates
-    // OrgnlReqdExctnDt is DateAndDateTime2Choice â€” uses Dt or DtTm child elements
+    // OrgnlReqdExctnDt is DateAndDateTime2Choice — uses Dt or DtTm child elements
     // OrgnlReqdExctnDt and OrgnlReqdColltnDt are mutually exclusive in camt.055 TxInf.
     // Only ONE of these blocks may appear. Use if/else-if to guarantee this.
     if (v.orgnlReqdExctnDt && v.orgnlReqdExctnDt.trim()) txInf += this.branch('OrgnlReqdExctnDt', this.leaf('Dt', v.orgnlReqdExctnDt.trim(), 7), 6);
@@ -758,7 +758,7 @@ ${txInf.trimEnd()}
         if (name) content += this.leaf('Nm', name, indent + 2);
         content += this.addrXml(v, prefix, indent + 2);
         // NOTE: CtryOfRes is added AFTER idBlock below (ISO 20022 PartyIdentification135 sequence:
-        // Nm â†’ PstlAdr â†’ Id â†’ CtryOfRes). Adding it before Id violates schema order.
+        // Nm → PstlAdr → Id → CtryOfRes). Adding it before Id violates schema order.
 
         let idBlock = '';
         // IdType determines whether OrgId or PrvtId is emitted (mutually exclusive per ISO 20022)
@@ -832,7 +832,7 @@ ${txInf.trimEnd()}
     if (type === 'none') return '';
 
     let content = `${this.tabs(indent)}<PstlAdr>\n`;
-    // Structured-only fields — not emitted in hybrid
+    // Structured-only fields � not emitted in hybrid
     if (type === 'structured') {
       content += this.leaf('StrtNm', v[prefix + 'StrtNm'], indent + 1);
       content += this.leaf('BldgNb', v[prefix + 'BldgNb'], indent + 1);
@@ -842,7 +842,7 @@ ${txInf.trimEnd()}
     // TwnNm + Ctry in all modes
     content += this.leaf('TwnNm', v[prefix + 'TwnNm'], indent + 1);
     content += this.leaf('Ctry', v[prefix + 'Ctry'], indent + 1);
-    // AdrLine — hybrid: TwnNm + Ctry + AdrLines (SR2026: unstructured deprecated)
+    // AdrLine � hybrid: TwnNm + Ctry + AdrLines (SR2026: unstructured deprecated)
     if (type === 'hybrid' || type === 'unstructured') {
       if (v[prefix + 'AdrLine1']) content += this.leaf('AdrLine', v[prefix + 'AdrLine1'], indent + 1);
       if (v[prefix + 'AdrLine2']) content += this.leaf('AdrLine', v[prefix + 'AdrLine2'], indent + 1);
@@ -896,8 +896,13 @@ ${txInf.trimEnd()}
       const tval = (tag: string, p: Element | Document = doc) => getT(tag, p)?.textContent?.trim() || '';
       
       const patch: any = {};
-      // Only patch fields the parser explicitly reads — previously this wiped
-      // every control to '' on each XML edit, silently dropping user data.
+            Object.keys(this.form.controls).forEach(key => {
+                if (key.endsWith('AddrType') || key.endsWith('AcctType') || key === 'rmtInfType' || key.endsWith('IdType')) {
+                    patch[key] = 'none';
+                } else {
+                    patch[key] = '';
+                }
+            });
       const setVal = (f: string, v: string) => { if (v) patch[f] = v; };
 
       // 1. AppHdr (head.001)
@@ -1246,7 +1251,7 @@ ${txInf.trimEnd()}
       if (fl.includes('amount') || fl.includes('amt') || f === 'orgnlInstdAmt_val') return 'Max 18 digits, up to 5 decimals.';
       if (fl.includes('bldgnb') || fl.includes('pstcd') || fl.includes('pstbx')) return 'Invalid character. Only ISO 20022 MX allowed characters permitted.';
       if (fl.includes('name') || fl.includes('nm') || fl.includes('strtnm') || fl.includes('twnnm') || fl.includes('dept') || fl.includes('flr') || fl.includes('room') || fl.includes('adrline')) return 'Invalid characters. Only ISO 20022 MX allowed characters permitted.';
-      if (fl.includes('dttm') || fl === 'head_credt' || fl === 'assgnmt_credttm' || fl === 'orgnlcredttm') return 'Invalid DateTime format. Use YYYY-MM-DDThh:mm:ssÂ±hh:mm.';
+      if (fl.includes('dttm') || fl === 'head_credt' || fl === 'assgnmt_credttm' || fl === 'orgnlcredttm') return 'Invalid DateTime format. Use YYYY-MM-DDThh:mm:ss±hh:mm.';
       if (fl.includes('dt')) return 'Invalid Date format. Use YYYY-MM-DD.';
       return 'Invalid format.';
     }
@@ -1366,7 +1371,7 @@ ${txInf.trimEnd()}
           layer_status: {},
           details: [{
             severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
-            path: '', message: 'Validation failed â€” ' + (err.error?.detail?.message || 'backend error.'),
+            path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend error.'),
             fix_suggestion: 'Verify network or service status.'
           }]
         };
@@ -1385,25 +1390,25 @@ ${txInf.trimEnd()}
   isLayerPass(k: string) {
     const s = this.getLayerStatus(k);
     if (!s || s.trim() === '') return false;
-    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
-    if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return false;
-    // Also check: if layer status is PASS/✅ but details has warnings for this layer, treat as warn not pass
+    if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return false;
+    // Also check: if layer status is PASS/? but details has warnings for this layer, treat as warn not pass
     const layerNum = Number(k);
     const hasLayerWarnings = (this.validationReport?.details ?? []).some(
         (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
     );
     if (hasLayerWarnings) return false;
-    return s.includes('✅') || s.includes('PASS');
+    return s.includes('?') || s.includes('PASS');
   }
   isLayerFail(k: string) {
     const s = this.getLayerStatus(k);
-    return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
+    return s.includes('?') || s.includes('FAIL') || s.includes('ERROR');
   }
   isLayerWarn(k: string) {
     const s = this.getLayerStatus(k);
-    if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return true;
-    // Also treat as warn if layer status is PASS/✅ but has warnings in details
-    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return true;
+    // Also treat as warn if layer status is PASS/? but has warnings in details
+    if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
     if (!s || s.trim() === '') return false;
     const layerNum = Number(k);
     return (this.validationReport?.details ?? []).some(

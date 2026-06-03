@@ -1,4 +1,4 @@
-﻿import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
+import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -969,6 +969,13 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
       };
       const tval = (t: string, p: Element | Document = doc) => getT(t, p)?.textContent?.trim() || '';
       const patch: Record<string, string> = {};
+      Object.keys(this.form.controls).forEach(key => {
+          if (key.endsWith('AddrType') || key.endsWith('AcctType') || key === 'rmtInfType' || key.endsWith('IdType')) {
+              patch[key] = 'none';
+          } else {
+              patch[key] = '';
+          }
+      });
       const setV = (f: string, v: string) => { if (v) patch[f] = v; };
 
       const appHdr = getT('AppHdr');

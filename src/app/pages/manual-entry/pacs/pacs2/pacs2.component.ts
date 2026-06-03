@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -143,7 +143,7 @@ export class Pacs2Component implements OnInit, OnDestroy {
       // GrpHdr
       msgId: ['MSG-2026-FI-S-001-GH', [Validators.required, Validators.maxLength(35)]],
 
-      // OrgnlGrpInf — OrgnlGrpInf is mandatory; OrgnlMsgId+OrgnlMsgNmId are [1..1] mandatory
+      // OrgnlGrpInf � OrgnlGrpInf is mandatory; OrgnlMsgId+OrgnlMsgNmId are [1..1] mandatory
       orgnlMsgId: ['MSG-' + Date.now() + '-ORG', [Validators.required, Validators.maxLength(35)]],
       orgnlMsgNmId: ['pacs.008.001.08', [Validators.required, Validators.maxLength(35)]],
       orgnlCreDtTm: [this.isoNow(), []],   // [0..1] optional
@@ -201,7 +201,7 @@ export class Pacs2Component implements OnInit, OnDestroy {
       stsRsnCd: [''],
       stsRsnPrtry: ['', [Validators.maxLength(35)]],
 
-      // AddtlInf (max 2 per CBPR+ §5.98.3)
+      // AddtlInf (max 2 per CBPR+ �5.98.3)
       stsRsnAddtlInf: ['', [Validators.maxLength(105)]],
       stsRsnAddtlInf2: ['', [Validators.maxLength(105)]],
 
@@ -214,8 +214,8 @@ export class Pacs2Component implements OnInit, OnDestroy {
 
     };
 
-    // CBPR+ §5.39: For InstgAgt/InstdAgt in TxInfAndSts, Name/PostalAddress/Other are REMOVED.
-    // Only BICFI (mandatory per §5.39.1), ClrSysMmbId (optional), and LEI (optional) are allowed.
+    // CBPR+ �5.39: For InstgAgt/InstdAgt in TxInfAndSts, Name/PostalAddress/Other are REMOVED.
+    // Only BICFI (mandatory per �5.39.1), ClrSysMmbId (optional), and LEI (optional) are allowed.
     this.agentPrefixes.forEach(p => {
       if (!c[p + 'Bic']) c[p + 'Bic'] = [p === 'instgAgt' ? 'BBBBUS33XXX' : 'CCCCGB2LXXX', BIC];
       if (!c[p + 'Lei']) c[p + 'Lei'] = ['', Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)];
@@ -415,7 +415,7 @@ ${txInf.trimEnd()}
     else if (v.stsRsnPrtry?.trim()) rsn += this.leaf('Prtry', v.stsRsnPrtry, 7);
     if (rsn) inner += this.branch('Rsn', rsn, 6);
 
-    // AddtlInf (max 2 occurrences per CBPR+ §5.98.3)
+    // AddtlInf (max 2 occurrences per CBPR+ �5.98.3)
     if (v.stsRsnAddtlInf?.trim()) inner += this.leaf('AddtlInf', v.stsRsnAddtlInf, 5);
     if (v.stsRsnAddtlInf2?.trim()) inner += this.leaf('AddtlInf', v.stsRsnAddtlInf2, 5);
 
@@ -431,7 +431,7 @@ ${txInf.trimEnd()}
   }
 
   buildAgt(tag: string, v: any, prefix: string): string {
-    // CBPR+ §5.39: Name, PostalAddress, Other are REMOVED for InstgAgt/InstdAgt in TxInfAndSts.
+    // CBPR+ �5.39: Name, PostalAddress, Other are REMOVED for InstgAgt/InstdAgt in TxInfAndSts.
     // Only BICFI (mandatory), ClrSysMmbId, and LEI are allowed.
     let inner = '';
     if (v[prefix + 'Bic']?.trim()) inner += this.leaf('BICFI', v[prefix + 'Bic'], 6);
@@ -605,8 +605,13 @@ ${txInf.trimEnd()}
       const tval = (t: string, p: any = doc) => getT(t, p)?.textContent?.trim() || '';
 
       const patch: any = {};
-      // Only patch fields the parser explicitly reads — previously this wiped
-      // every control to '' on each XML edit, silently dropping user data.
+            Object.keys(this.form.controls).forEach(key => {
+                if (key.endsWith('AddrType') || key.endsWith('AcctType') || key === 'rmtInfType' || key.endsWith('IdType')) {
+                    patch[key] = 'none';
+                } else {
+                    patch[key] = '';
+                }
+            });
 
       // BAH
       const appHdr = getT('AppHdr');
@@ -761,7 +766,7 @@ ${txInf.trimEnd()}
       this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
       return;
     }
-    // Always regenerate from the form before validating — guarantees the validator
+    // Always regenerate from the form before validating � guarantees the validator
     // sees a clean, generator-produced XML rather than stale pasted/edited content
     // (which may contain forbidden elements like Nm/PstlAdr inside AppHdr.Fr).
     this.generateXml();
@@ -797,7 +802,7 @@ ${txInf.trimEnd()}
           layer_status: {},
           details: [{
             severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
-            path: '', message: 'Validation failed â€” ' + (err.error?.detail?.message || 'backend error.'),
+            path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend error.'),
             fix_suggestion: 'Verify your network or if the validation service is up.'
           }]
         };
@@ -873,25 +878,25 @@ ${txInf.trimEnd()}
   isLayerPass(k: string) {
     const s = this.getLayerStatus(k);
     if (!s || s.trim() === '') return false;
-    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
-    if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return false;
-    // Also check: if layer status is PASS/✅ but details has warnings for this layer, treat as warn not pass
+    if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return false;
+    // Also check: if layer status is PASS/? but details has warnings for this layer, treat as warn not pass
     const layerNum = Number(k);
     const hasLayerWarnings = (this.validationReport?.details ?? []).some(
         (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
     );
     if (hasLayerWarnings) return false;
-    return s.includes('✅') || s.includes('PASS');
+    return s.includes('?') || s.includes('PASS');
   }
   isLayerFail(k: string) {
     const s = this.getLayerStatus(k);
-    return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
+    return s.includes('?') || s.includes('FAIL') || s.includes('ERROR');
   }
   isLayerWarn(k: string) {
     const s = this.getLayerStatus(k);
-    if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return true;
-    // Also treat as warn if layer status is PASS/✅ but has warnings in details
-    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return true;
+    // Also treat as warn if layer status is PASS/? but has warnings in details
+    if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
     if (!s || s.trim() === '') return false;
     const layerNum = Number(k);
     return (this.validationReport?.details ?? []).some(

@@ -1,4 +1,4 @@
-﻿import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
+import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -776,7 +776,7 @@ ${doc.trimEnd()}
     if (!pa || pa.addrType === 'none') return '';
     let a = '';
     const t = ind + 1;
-    // Detail structured fields — pure structured mode only (must not coexist with <AdrLine>).
+    // Detail structured fields � pure structured mode only (must not coexist with <AdrLine>).
     if (pa.addrType === 'structured') {
       if (pa.dept) a += this.leaf('Dept', pa.dept, t);
       if (pa.subDept) a += this.leaf('SubDept', pa.subDept, t);
@@ -788,7 +788,7 @@ ${doc.trimEnd()}
       if (pa.room) a += this.leaf('Room', pa.room, t);
       if (pa.pstCd) a += this.leaf('PstCd', pa.pstCd, t);
     }
-    // TwnNm + Ctry — emitted in structured and hybrid (hybrid = TwnNm + Ctry + AdrLine).
+    // TwnNm + Ctry � emitted in structured and hybrid (hybrid = TwnNm + Ctry + AdrLine).
     if ((pa.addrType === 'structured' || pa.addrType === 'hybrid') && pa.town) {
       a += this.leaf('TwnNm', pa.town, t);
     }
@@ -852,6 +852,13 @@ ${doc.trimEnd()}
       };
       const tval = (t: string, p: any = doc) => getT(t, p)?.textContent?.trim() || '';
       const patch: any = {};
+            Object.keys(this.form.controls).forEach(key => {
+                if (key.endsWith('AddrType') || key.endsWith('AcctType') || key === 'rmtInfType' || key.endsWith('IdType')) {
+                    patch[key] = 'none';
+                } else {
+                    patch[key] = '';
+                }
+            });
       const setIf = (key: string, value: any) => { if (value !== '' && value !== undefined && value !== null) patch[key] = value; };
 
       // AppHdr
@@ -1061,7 +1068,7 @@ ${doc.trimEnd()}
     }).subscribe({
       next: (data: any) => { this.validationReport = data; this.validationStatus = 'done'; this.clearDraft(); },
       error: (err) => {
-        this.validationReport = { status: 'FAIL', errors: 1, warnings: 0, details: [{ severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR', path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'), fix_suggestion: 'Ensure the validation server is running.' }] };
+        this.validationReport = { status: 'FAIL', errors: 1, warnings: 0, details: [{ severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR', path: '', message: 'Validation failed � ' + (err.error?.detail?.message || 'backend not reachable.'), fix_suggestion: 'Ensure the validation server is running.' }] };
         this.validationStatus = 'done';
       }
     });
@@ -1083,25 +1090,25 @@ ${doc.trimEnd()}
   isLayerPass(k: string) {
     const s = this.getLayerStatus(k);
     if (!s || s.trim() === '') return false;
-    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
-    if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return false;
-    // Also check: if layer status is PASS/✅ but details has warnings for this layer, treat as warn not pass
+    if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return false;
+    // Also check: if layer status is PASS/? but details has warnings for this layer, treat as warn not pass
     const layerNum = Number(k);
     const hasLayerWarnings = (this.validationReport?.details ?? []).some(
         (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
     );
     if (hasLayerWarnings) return false;
-    return s.includes('✅') || s.includes('PASS');
+    return s.includes('?') || s.includes('PASS');
   }
   isLayerFail(k: string) {
     const s = this.getLayerStatus(k);
-    return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
+    return s.includes('?') || s.includes('FAIL') || s.includes('ERROR');
   }
   isLayerWarn(k: string) {
     const s = this.getLayerStatus(k);
-    if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return true;
-    // Also treat as warn if layer status is PASS/✅ but has warnings in details
-    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return true;
+    // Also treat as warn if layer status is PASS/? but has warnings in details
+    if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
     if (!s || s.trim() === '') return false;
     const layerNum = Number(k);
     return (this.validationReport?.details ?? []).some(

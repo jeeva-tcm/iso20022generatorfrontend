@@ -1,4 +1,4 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -286,7 +286,7 @@ export class Camt057Component implements OnInit, OnDestroy {
     }
 
     private buildForm() {
-        // BICFIDec2014Identifier — first 4 chars are alphanumeric per ISO 9362 / CBPR+
+        // BICFIDec2014Identifier � first 4 chars are alphanumeric per ISO 9362 / CBPR+
         const BIC = [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
         const BIC_REQ = [Validators.required, ...BIC];
 
@@ -349,9 +349,9 @@ export class Camt057Component implements OnInit, OnDestroy {
             this.form.addControl(p + 'Bic', this.fb.control('', BIC_OPT));
             this.form.addControl(p + 'Lei', this.fb.control('', Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)));
             this.form.addControl(p + 'ClrSysCd', this.fb.control('', [Validators.maxLength(5), Validators.pattern(/^[A-Z0-9]{1,5}$/)]));
-            // CBPR_RestrictedFINXMax28Text — MmbId capped at 28 + FIN-X charset
+            // CBPR_RestrictedFINXMax28Text � MmbId capped at 28 + FIN-X charset
             this.form.addControl(p + 'ClrSysMmbId', this.fb.control('', [Validators.maxLength(28), ADDR_PATTERN]));
-            // CBPR_RestrictedFINXMax34Text — Acct FIN-X charset
+            // CBPR_RestrictedFINXMax34Text � Acct FIN-X charset
             this.form.addControl(p + 'Acct', this.fb.control('', [Validators.maxLength(34), ADDR_PATTERN]));
 
             // Address fields
@@ -411,7 +411,7 @@ export class Camt057Component implements OnInit, OnDestroy {
             if (f.toLowerCase().includes('amount') || f.toLowerCase().includes('amt')) return 'Max 18 digits, up to 5 decimals.';
             if (f === 'bizMsgId' || f === 'msgId' || f === 'ntfctnId' || f === 'itmId' || f === 'instrId' || f === 'endToEndId') return 'Invalid Pattern.';
             if (f === 'clrSysRef') return 'Invalid Pattern (Alphanumeric only, max 35 chars).';
-            if (f.toLowerCase().endsWith('clrsyscd')) return 'Invalid clearing code. Must be 1–5 uppercase alphanumeric characters (e.g. T2, USFW, CHIPS).';
+            if (f.toLowerCase().endsWith('clrsyscd')) return 'Invalid clearing code. Must be 1�5 uppercase alphanumeric characters (e.g. T2, USFW, CHIPS).';
             if (f === 'ctgyPurpCd') return 'Invalid Category Purpose Code. Must be a valid ISO 20022 code (4 uppercase letters).';
             if (f.toLowerCase().includes('name') || f.toLowerCase().includes('nm')) return "Invalid characters. Only letters, numbers, spaces and . , ( ) ' - are allowed (no &, @, !, etc.)";
             if (f.toLowerCase().includes('ustrd') || f.toLowerCase().includes('adtlrmtinf')) return "Invalid character in remittance field. Only ISO 20022 MX allowed chars permitted.";
@@ -437,7 +437,7 @@ export class Camt057Component implements OnInit, OnDestroy {
     }
 
     /**
-     * UETR Refresh — generates a new UUID v4, validates, updates form.
+     * UETR Refresh � generates a new UUID v4, validates, updates form.
      */
     refreshUetr(): void {
         this.uetrError = null;
@@ -950,8 +950,13 @@ ${ntfctnPartiesXml}${itmXml}
             }
 
             const patch: any = {};
-            // Only patch fields the parser explicitly reads — previously this wiped
-            // every control to '' on each XML edit, silently dropping user data.
+            Object.keys(this.form.controls).forEach(key => {
+                if (key.endsWith('AddrType') || key.endsWith('AcctType') || key === 'rmtInfType' || key.endsWith('IdType')) {
+                    patch[key] = 'none';
+                } else {
+                    patch[key] = '';
+                }
+            });
             const tval = (t: string) => doc.getElementsByTagName(t)[0]?.textContent || '';
             const setVal = (key: string, val: string) => { patch[key] = val; };
 
@@ -1237,7 +1242,7 @@ ${ntfctnPartiesXml}${itmXml}
     addrXml(v: any, p: string, indent = 4): string {
         const type = v[p + 'AddrType']; if (!type || type === 'none') return '';
         const lines: string[] = []; const t = this.tabs(indent + 1);
-        // Structured-only fields — not emitted in hybrid
+        // Structured-only fields � not emitted in hybrid
         if (type === 'structured') {
             if (v[p + 'Dept']) lines.push(`${t}<Dept>${this.e(v[p + 'Dept'])}</Dept>`);
             if (v[p + 'SubDept']) lines.push(`${t}<SubDept>${this.e(v[p + 'SubDept'])}</SubDept>`);
@@ -1253,7 +1258,7 @@ ${ntfctnPartiesXml}${itmXml}
         // TwnNm + Ctry in all modes
         if (v[p + 'TwnNm']) lines.push(`${t}<TwnNm>${this.e(v[p + 'TwnNm'])}</TwnNm>`);
         if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
-        // AdrLine — hybrid: TwnNm + Ctry + AdrLines (SR2026: unstructured deprecated)
+        // AdrLine � hybrid: TwnNm + Ctry + AdrLines (SR2026: unstructured deprecated)
         if (type === 'hybrid' || type === 'unstructured') {
             if (v[p + 'AdrLine1']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine1'])}</AdrLine>`);
             if (v[p + 'AdrLine2']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine2'])}</AdrLine>`);
@@ -1294,7 +1299,7 @@ ${ntfctnPartiesXml}${itmXml}
                     layer_status: {},
                     details: [{
                         severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
-                        path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'),
+                        path: '', message: 'Validation failed � ' + (err.error?.detail?.message || 'backend not reachable.'),
                         fix_suggestion: 'Ensure the validation server is running.'
                     }]
                 };
@@ -1354,25 +1359,25 @@ ${ntfctnPartiesXml}${itmXml}
     isLayerPass(k: string) {
         const s = this.getLayerStatus(k);
         if (!s || s.trim() === '') return false;
-        if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
-        if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return false;
-        // Also check: if layer status is PASS/✅ but details has warnings for this layer, treat as warn not pass
+        if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
+        if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return false;
+        // Also check: if layer status is PASS/? but details has warnings for this layer, treat as warn not pass
         const layerNum = Number(k);
         const hasLayerWarnings = (this.validationReport?.details ?? []).some(
             (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
         );
         if (hasLayerWarnings) return false;
-        return s.includes('✅') || s.includes('PASS');
+        return s.includes('?') || s.includes('PASS');
     }
     isLayerFail(k: string) {
         const s = this.getLayerStatus(k);
-        return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
+        return s.includes('?') || s.includes('FAIL') || s.includes('ERROR');
     }
     isLayerWarn(k: string) {
         const s = this.getLayerStatus(k);
-        if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return true;
-        // Also treat as warn if layer status is PASS/✅ but has warnings in details
-        if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+        if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return true;
+        // Also treat as warn if layer status is PASS/? but has warnings in details
+        if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
         if (!s || s.trim() === '') return false;
         const layerNum = Number(k);
         return (this.validationReport?.details ?? []).some(

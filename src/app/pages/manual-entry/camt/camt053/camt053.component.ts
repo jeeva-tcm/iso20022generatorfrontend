@@ -1,4 +1,4 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -157,7 +157,7 @@ export class Camt053Component implements OnInit, OnDestroy {
 
     private buildPostalAddr(prefix: string, v: any, t: (i: number) => string, indent: number) {
         // CBPR+ modes: hybrid = TwnNm + Ctry + AdrLine. Detail structured fields (StrtNm,
-        // BldgNb, …) must NOT coexist with <AdrLine>.
+        // BldgNb, �) must NOT coexist with <AdrLine>.
         const get = (f: string) => v[prefix + f]?.toString().trim();
         const detailStructured = ['StrtNm', 'BldgNb', 'BldgNm', 'PstCd', 'Dept', 'SubDept', 'Flr', 'PstBx', 'Room', 'CtrySubDvsn', 'TwnLctnNm', 'DstrctNm'];
         const hasDetailStructured = detailStructured.some(f => get(f));
@@ -260,7 +260,7 @@ export class Camt053Component implements OnInit, OnDestroy {
     }
 
     /**
-     * UETR Refresh Ã¢â‚¬â€ Rule 1-8 implementation.
+     * UETR Refresh â€” Rule 1-8 implementation.
      */
     refreshUetr(): void {
         this.uetrError = null;
@@ -748,7 +748,7 @@ export class Camt053Component implements OnInit, OnDestroy {
             ntryXml += t(5) + '<Intrst>\n' + t(6) + '<TtlIntrstAndTaxAmt Ccy="' + this.e(v.currency) + '">' + this.formatting.formatAmount(v.ntryIntrstAmt, v.currency) + '</TtlIntrstAndTaxAmt>\n' + t(5) + '</Intrst>\n';
         }
 
-        // CardTx Ã¢â‚¬â€ PlainCardData requires XpryDt per SR2025; simple YYYY-MM format
+        // CardTx â€” PlainCardData requires XpryDt per SR2025; simple YYYY-MM format
         if (v.ntryCardTxPan?.trim()) {
             ntryXml += t(5) + '<CardTx>\n' + t(6) + '<Card>\n' + t(7) + '<PlainCardData>\n'
                 + t(8) + '<PAN>' + this.e(v.ntryCardTxPan) + '</PAN>\n'
@@ -810,7 +810,7 @@ export class Camt053Component implements OnInit, OnDestroy {
             const hasRltdAgts = v.txDbtrAgtBic?.trim() || v.txIntrmyAgtBic?.trim() || v.txCdtrAgtBic?.trim();
             if (hasRltdAgts) {
                 ntryXml += t(7) + '<RltdAgts>\n';
-                // camt.053 RltdAgts schema order: DbtrAgt Ã¢â€ â€™ CdtrAgt Ã¢â€ â€™ IntrmyAgt1
+                // camt.053 RltdAgts schema order: DbtrAgt â†’ CdtrAgt â†’ IntrmyAgt1
                 if (v.txDbtrAgtBic?.trim()) ntryXml += t(8) + '<DbtrAgt>\n' + t(9) + '<FinInstnId>\n' + t(10) + '<BICFI>' + this.e(v.txDbtrAgtBic) + '</BICFI>\n' + t(9) + '</FinInstnId>\n' + t(8) + '</DbtrAgt>\n';
                 if (v.txCdtrAgtBic?.trim()) ntryXml += t(8) + '<CdtrAgt>\n' + t(9) + '<FinInstnId>\n' + t(10) + '<BICFI>' + this.e(v.txCdtrAgtBic) + '</BICFI>\n' + t(9) + '</FinInstnId>\n' + t(8) + '</CdtrAgt>\n';
                 if (v.txIntrmyAgtBic?.trim()) ntryXml += t(8) + '<IntrmyAgt1>\n' + t(9) + '<FinInstnId>\n' + t(10) + '<BICFI>' + this.e(v.txIntrmyAgtBic) + '</BICFI>\n' + t(9) + '</FinInstnId>\n' + t(8) + '</IntrmyAgt1>\n';
@@ -895,7 +895,7 @@ export class Camt053Component implements OnInit, OnDestroy {
             this.generatedXml += t(2) + '<MktPrctc>\n' + t(3) + '<Regy>' + this.e(v.appHdrMktPrctcRegy) + '</Regy>\n' + t(3) + '<Id>' + this.e(v.appHdrMktPrctcId || 'N/A') + '</Id>\n' + t(2) + '</MktPrctc>\n';
         }
         // head.001.001.02 sequence: CreDt (mandatory), then CpyDplct, PssblDplct, Prty
-        // BizPrcgDt does NOT exist in head.001.001.02 Ã¢â‚¬â€ omitted
+        // BizPrcgDt does NOT exist in head.001.001.02 â€” omitted
         this.generatedXml += t(2) + '<CreDt>' + creDtTm + '</CreDt>\n';
         if (v.appHdrCpyDplct?.trim()) this.generatedXml += t(2) + '<CpyDplct>' + this.e(v.appHdrCpyDplct) + '</CpyDplct>\n';
         if (v.appHdrPssblDplct === 'true' || v.appHdrPssblDplct === 'false') this.generatedXml += t(2) + '<PssblDplct>' + v.appHdrPssblDplct + '</PssblDplct>\n';
@@ -908,7 +908,7 @@ export class Camt053Component implements OnInit, OnDestroy {
             + t(4) + '<MsgId>' + this.e(v.msgId) + '</MsgId>\n'
             + t(4) + '<CreDtTm>' + creDtTm + '</CreDtTm>\n';
 
-        // MsgRcpt: PartyIdentification type Ã¢â‚¬â€ Nm, PstlAdr, Id, CtctDtls directly (no Pty wrapper)
+        // MsgRcpt: PartyIdentification type â€” Nm, PstlAdr, Id, CtctDtls directly (no Pty wrapper)
         if (v.grpHdrMsgRcptNm?.trim() || v.grpHdrMsgRcptBic?.trim()) {
             this.generatedXml += t(4) + '<MsgRcpt>\n';
             if (v.grpHdrMsgRcptNm?.trim()) this.generatedXml += t(5) + '<Nm>' + this.e(v.grpHdrMsgRcptNm) + '</Nm>\n';
@@ -1109,7 +1109,7 @@ export class Camt053Component implements OnInit, OnDestroy {
                     layer_status: {},
                     details: [{
                         severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
-                        path: '', message: 'Validation failed ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ' + (err.error?.detail?.message || 'backend not reachable.'),
+                        path: '', message: 'Validation failed Ã¢â‚¬â€ ' + (err.error?.detail?.message || 'backend not reachable.'),
                         fix_suggestion: 'Ensure the validation server is running.'
                     }]
                 };
@@ -1142,25 +1142,25 @@ export class Camt053Component implements OnInit, OnDestroy {
     isLayerPass(k: string) {
         const s = this.getLayerStatus(k);
         if (!s || s.trim() === '') return false;
-        if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
-        if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return false;
-        // Also check: if layer status is PASS/✅ but details has warnings for this layer, treat as warn not pass
+        if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
+        if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return false;
+        // Also check: if layer status is PASS/? but details has warnings for this layer, treat as warn not pass
         const layerNum = Number(k);
         const hasLayerWarnings = (this.validationReport?.details ?? []).some(
             (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
         );
         if (hasLayerWarnings) return false;
-        return s.includes('✅') || s.includes('PASS');
+        return s.includes('?') || s.includes('PASS');
     }
     isLayerFail(k: string) {
         const s = this.getLayerStatus(k);
-        return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
+        return s.includes('?') || s.includes('FAIL') || s.includes('ERROR');
     }
     isLayerWarn(k: string) {
         const s = this.getLayerStatus(k);
-        if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return true;
-        // Also treat as warn if layer status is PASS/✅ but has warnings in details
-        if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+        if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return true;
+        // Also treat as warn if layer status is PASS/? but has warnings in details
+        if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
         if (!s || s.trim() === '') return false;
         const layerNum = Number(k);
         return (this.validationReport?.details ?? []).some(
@@ -1217,8 +1217,13 @@ export class Camt053Component implements OnInit, OnDestroy {
       const tval = (t: string, p: any = doc) => getT(t, p)?.textContent?.trim() || '';
 
       const patch: any = {};
-      // Only patch fields the parser explicitly reads — previously this wiped
-      // every control to '' on each XML edit, silently dropping user data.
+            Object.keys(this.form.controls).forEach(key => {
+                if (key.endsWith('AddrType') || key.endsWith('AcctType') || key === 'rmtInfType' || key.endsWith('IdType')) {
+                    patch[key] = 'none';
+                } else {
+                    patch[key] = '';
+                }
+            });
       const setVal = (f: string, v: string) => { if (v) patch[f] = v; };
 
       // 1. AppHdr

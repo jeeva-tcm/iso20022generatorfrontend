@@ -1,4 +1,4 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -30,7 +30,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
     editorLineCount: number[] = [];
     isParsingXml = false;
 
-    // ── Standards Release version ─────────────────────────────────────────────
+    // -- Standards Release version ---------------------------------------------
     private versionSub!: Subscription;
     /** Exposed to template for version badge display */
     get srVersion(): string { return this.srVersionSvc.currentVersion; }
@@ -92,7 +92,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
         this.fetchCodelists();
         this.buildForm();
 
-        // ── Subscribe to SR version changes → re-sync form defaults + regenerate XML ──
+        // -- Subscribe to SR version changes ? re-sync form defaults + regenerate XML --
         this.versionSub = this.srVersionSvc.version$.subscribe(() => {
             this.applyVersionDefaults();
             this.generateXml();
@@ -781,7 +781,7 @@ ${this.rmtInf(v)}
         }
         if (v[p + 'AcctCcy'] && /^[A-Z]{3}$/.test(v[p + 'AcctCcy'])) res += this.el('Ccy', v[p + 'AcctCcy'], indent + 1);
         if (v[p + 'AcctNm']) res += this.el('Nm', v[p + 'AcctNm'], indent + 1);
-        // Proxy (Prxy) — optional
+        // Proxy (Prxy) � optional
         const prxyId = v[p + 'AcctPrxyId'];
         if (prxyId) {
             let prxyRes = '';
@@ -897,11 +897,11 @@ ${this.rmtInf(v)}
 
     addrXml(v: any, p: string, indent = 4): string {
         // CBPR+ POSTAL ADDRESS RULES (R17, R18, R19, R20 from Interbank Direct Debit PDF):
-        //   R17 (Structured): If AdrLine absent → TwnNm + Country mandatory
+        //   R17 (Structured): If AdrLine absent ? TwnNm + Country mandatory
         //   R18 (Hybrid):     If AdrLine present AND any other element present
-        //                     → TwnNm + Country mandatory, max 2 AdrLine
+        //                     ? TwnNm + Country mandatory, max 2 AdrLine
         //   R19:              Structured elements must NOT be repeated in AdrLine
-        //   R20 (Unstructured): If only AdrLine present → each AdrLine max 35 chars
+        //   R20 (Unstructured): If only AdrLine present ? each AdrLine max 35 chars
         //
         // Strategy: honour the AddrType selection strictly.
         const lines: string[] = [];
@@ -909,7 +909,7 @@ ${this.rmtInf(v)}
         const val = (f: string) => { const x = v[p + f]; return (typeof x === 'string' ? x.trim() : x) || ''; };
         const addrType = val('AddrType');
 
-        // 'none' or no address type → no PostalAddress element
+        // 'none' or no address type ? no PostalAddress element
         if (!addrType || addrType === 'none') return '';
 
         if (addrType === 'structured') {
@@ -1154,8 +1154,13 @@ ${this.rmtInf(v)}
             if (doc.querySelector('parsererror')) return;
 
             const patch: any = {};
-            // Only patch fields the parser explicitly reads — previously this wiped
-            // every control to '' on each XML edit, silently dropping user data.
+            Object.keys(this.form.controls).forEach(key => {
+                if (key.endsWith('AddrType') || key.endsWith('AcctType') || key === 'rmtInfType' || key.endsWith('IdType')) {
+                    patch[key] = 'none';
+                } else {
+                    patch[key] = '';
+                }
+            });
 
             const tval = (el: Element | Document, tag: string) =>
                 el.getElementsByTagName(tag)[0]?.textContent?.trim() || '';
@@ -1358,13 +1363,13 @@ ${this.rmtInf(v)}
                             const ls = data.layer_status[lk];
                             if (ls && typeof ls === 'object') {
                                 const oldStatus: string = ls.status || '';
-                                if (oldStatus.includes('❌') || oldStatus.includes('FAIL')) {
+                                if (oldStatus.includes('?') || oldStatus.includes('FAIL')) {
                                     if (layerErrors === 0) {
-                                        ls.status = layerWarns > 0 ? '⚠ WARN' : '✅ PASS';
+                                        ls.status = layerWarns > 0 ? '? WARN' : '? PASS';
                                     }
-                                } else if (oldStatus.includes('⚠') || oldStatus.includes('WARN')) {
+                                } else if (oldStatus.includes('?') || oldStatus.includes('WARN')) {
                                     if (layerErrors === 0 && layerWarns === 0) {
-                                        ls.status = '✅ PASS';
+                                        ls.status = '? PASS';
                                     }
                                 }
                             }
@@ -1382,7 +1387,7 @@ ${this.rmtInf(v)}
                     layer_status: {},
                     details: [{
                         severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
-                        path: '', message: 'Validation failed â€” ' + (err.error?.detail?.message || 'backend not reachable.'),
+                        path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'),
                         fix_suggestion: 'Ensure the validation server is running.'
                     }]
                 };
@@ -1413,25 +1418,25 @@ ${this.rmtInf(v)}
     isLayerPass(k: string) {
         const s = this.getLayerStatus(k);
         if (!s || s.trim() === '') return false;
-        if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
-        if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return false;
-        // Also check: if layer status is PASS/✅ but details has warnings for this layer, treat as warn not pass
+        if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
+        if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return false;
+        // Also check: if layer status is PASS/? but details has warnings for this layer, treat as warn not pass
         const layerNum = Number(k);
         const hasLayerWarnings = (this.validationReport?.details ?? []).some(
             (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
         );
         if (hasLayerWarnings) return false;
-        return s.includes('✅') || s.includes('PASS');
+        return s.includes('?') || s.includes('PASS');
     }
     isLayerFail(k: string) {
         const s = this.getLayerStatus(k);
-        return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
+        return s.includes('?') || s.includes('FAIL') || s.includes('ERROR');
     }
     isLayerWarn(k: string) {
         const s = this.getLayerStatus(k);
-        if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return true;
-        // Also treat as warn if layer status is PASS/✅ but has warnings in details
-        if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+        if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return true;
+        // Also treat as warn if layer status is PASS/? but has warnings in details
+        if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
         if (!s || s.trim() === '') return false;
         const layerNum = Number(k);
         return (this.validationReport?.details ?? []).some(
@@ -1662,7 +1667,7 @@ ${this.rmtInf(v)}
             target.value = val;
             if (start !== null && end !== null) target.setSelectionRange(start, end);
             this.form.get(name)?.setValue(val, { emitEvent: false });
-            // emitEvent:false suppresses form.valueChanges → manually sync XML
+            // emitEvent:false suppresses form.valueChanges ? manually sync XML
             if (!this.isParsingXml && !this.isInternalChange) this.generateXml();
         }
 

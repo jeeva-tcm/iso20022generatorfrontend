@@ -1,4 +1,4 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -46,7 +46,7 @@ export class Pacs3Component implements OnInit, OnDestroy {
   purposes: string[] = [];
   sttlmMethods = ['INDA', 'INGA'];
   chargeBearers = ['SHAR', 'DEBT', 'CRED', 'SLEV'];
-  // Duplicate import and component definition removed â€“ kept earlier import and @Component
+  // Duplicate import and component definition removed – kept earlier import and @Component
 
   isAddressValid = true;
 
@@ -575,7 +575,7 @@ export class Pacs3Component implements OnInit, OnDestroy {
       // Common fields for all agents and parties (used in partyForm template)
       // Only the mandatory parties that ship with full address data default to 'hybrid'.
       // Everyone else defaults to 'none' so the address section is hidden until the user
-      // explicitly opts in â€” avoids spurious "Town/Country required" errors on unused agents.
+      // explicitly opts in — avoids spurious "Town/Country required" errors on unused agents.
       if (!c[p + 'AddrType']) {
         c[p + 'AddrType'] = ['dbtr', 'cdtr'].includes(p) ? 'structured' : 'none';
       }
@@ -662,7 +662,7 @@ export class Pacs3Component implements OnInit, OnDestroy {
   }
 
   /**
-   * UETR Refresh â€” Rule 1-8 implementation.
+   * UETR Refresh — Rule 1-8 implementation.
    * Generates a new UUID v4, validates format, checks session uniqueness,
    * patches the form control, shows success/error feedback.
    */
@@ -693,7 +693,7 @@ export class Pacs3Component implements OnInit, OnDestroy {
     this.form.get('uetr')?.setValue(newUetr);
     this.form.get('uetr')?.markAsTouched();
 
-    // Rule 2: Immediate UI update â€” success feedback (auto-clears after 3s)
+    // Rule 2: Immediate UI update — success feedback (auto-clears after 3s)
     this.uetrSuccess = 'UETR refreshed successfully';
     this.uetrSuccessTimer = setTimeout(() => { this.uetrSuccess = null; }, 3000);
   }
@@ -986,7 +986,7 @@ export class Pacs3Component implements OnInit, OnDestroy {
     const v = this.form.value;
     const creDtTm = this.fdt(v.creDtTm || this.isoNow());
 
-    // DrctDbtTxInf â€” strict XSD element order for pacs.003.001.08
+    // DrctDbtTxInf — strict XSD element order for pacs.003.001.08
     let tx = '';
     let pmtIdXml = this.el('InstrId', v.instrId, 5) + this.el('EndToEndId', v.endToEndId, 5) + this.el('TxId', v.txId, 5) + this.el('UETR', v.uetr, 5);
     if (v.clrSysRef?.trim()) pmtIdXml += this.el('ClrSysRef', v.clrSysRef, 5);
@@ -1156,7 +1156,7 @@ export class Pacs3Component implements OnInit, OnDestroy {
     // Purp (Sequence: 34)
     if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 4), 3);
 
-    // Instr (Sequence: 35-36) — CBPR+ R36: each <Cd> value must appear at most once
+    // Instr (Sequence: 35-36) � CBPR+ R36: each <Cd> value must appear at most once
     const seenCdtrAgtCds = new Set<string>();
     for (let i = 1; i <= 2; i++) {
       const cd = v[`instrForCdtrAgt${i}Cd`]?.trim();
@@ -1381,7 +1381,7 @@ ${tx}\t\t\t</DrctDbtTxInf>
     if (lei) content += `${t}<LEI>${this.e(lei)}</LEI>\n`;
     // CBPR_COM_R9 (strict): only InstgAgt/InstdAgt must omit Nm + PstlAdr when BICFI is set.
     // For every other agent (Dbtr, Cdtr, DbtrAgt, CdtrAgt, IntrmyAgt*, PrvsInstgAgt*)
-    // BICFI + Nm + PstlAdr are permitted together — let user-entered Name/Address through.
+    // BICFI + Nm + PstlAdr are permitted together � let user-entered Name/Address through.
     const strictR9 = tag === 'InstgAgt' || tag === 'InstdAgt';
     if (!strictR9 || !bic) {
       if (name) content += `${t}<Nm>${this.e(name)}</Nm>\n`;
@@ -1505,7 +1505,7 @@ ${tx}\t\t\t</DrctDbtTxInf>
   /**
    * Generic XML builder for any party block (InitgPty, InstgPty, etc.).
    * Renders ALL available identifiers: Name, Address, AnyBIC, LEI,
-   * Clearing System Member ID, Other ID, Account â€” regardless of idType.
+   * Clearing System Member ID, Other ID, Account — regardless of idType.
    */
   initgPtyXml(v: any, p: string, indent = 4): string {
     let content = '';
@@ -1574,7 +1574,7 @@ ${tx}\t\t\t</DrctDbtTxInf>
       this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
       return;
     }
-    // Always regenerate from the form before validating — guarantees the validator
+    // Always regenerate from the form before validating � guarantees the validator
     // sees a clean, generator-produced XML rather than stale pasted/edited content
     // (which may contain forbidden elements like Nm/PstlAdr inside AppHdr.Fr).
     this.generateXml();
@@ -1610,7 +1610,7 @@ ${tx}\t\t\t</DrctDbtTxInf>
           layer_status: {},
           details: [{
             severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
-            path: '', message: 'Validation failed â€” ' + (err.error?.detail?.message || 'backend not reachable.'),
+            path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'),
             fix_suggestion: 'Ensure the validation server is running.'
           }]
         };
@@ -1797,8 +1797,13 @@ ${tx}\t\t\t</DrctDbtTxInf>
       const tval = (t: string, p: any = doc) => getT(t, p)?.textContent?.trim() || '';
 
       const patch: any = {};
-      // Only patch fields the parser explicitly reads — previously this wiped
-      // every control to '' on each XML edit, silently dropping user data.
+            Object.keys(this.form.controls).forEach(key => {
+                if (key.endsWith('AddrType') || key.endsWith('AcctType') || key === 'rmtInfType' || key.endsWith('IdType')) {
+                    patch[key] = 'none';
+                } else {
+                    patch[key] = '';
+                }
+            });
 
       // BAH
       const appHdr = getT('AppHdr');
@@ -2042,25 +2047,25 @@ ${tx}\t\t\t</DrctDbtTxInf>
   isLayerPass(k: string) {
     const s = this.getLayerStatus(k);
     if (!s || s.trim() === '') return false;
-    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
-    if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return false;
-    // Also check: if layer status is PASS/✅ but details has warnings for this layer, treat as warn not pass
+    if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return false;
+    // Also check: if layer status is PASS/? but details has warnings for this layer, treat as warn not pass
     const layerNum = Number(k);
     const hasLayerWarnings = (this.validationReport?.details ?? []).some(
         (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
     );
     if (hasLayerWarnings) return false;
-    return s.includes('✅') || s.includes('PASS');
+    return s.includes('?') || s.includes('PASS');
   }
   isLayerFail(k: string) {
     const s = this.getLayerStatus(k);
-    return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
+    return s.includes('?') || s.includes('FAIL') || s.includes('ERROR');
   }
   isLayerWarn(k: string) {
     const s = this.getLayerStatus(k);
-    if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return true;
-    // Also treat as warn if layer status is PASS/✅ but has warnings in details
-    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return true;
+    // Also treat as warn if layer status is PASS/? but has warnings in details
+    if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
     if (!s || s.trim() === '') return false;
     const layerNum = Number(k);
     return (this.validationReport?.details ?? []).some(

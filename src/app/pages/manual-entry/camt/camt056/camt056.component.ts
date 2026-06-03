@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -321,6 +321,13 @@ export class Camt056Component implements OnInit, OnDestroy {
       });
 
       const patch: any = {};
+            Object.keys(this.form.controls).forEach(key => {
+                if (key.endsWith('AddrType') || key.endsWith('AcctType') || key === 'rmtInfType' || key.endsWith('IdType')) {
+                    patch[key] = 'none';
+                } else {
+                    patch[key] = '';
+                }
+            });
 
       // AppHdr
       const head = getT('AppHdr');
@@ -896,25 +903,25 @@ export class Camt056Component implements OnInit, OnDestroy {
   isLayerPass(k: string) {
     const s = this.getLayerStatus(k);
     if (!s || s.trim() === '') return false;
-    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
-    if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return false;
-    // Also check: if layer status is PASS/✅ but details has warnings for this layer, treat as warn not pass
+    if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return false;
+    // Also check: if layer status is PASS/? but details has warnings for this layer, treat as warn not pass
     const layerNum = Number(k);
     const hasLayerWarnings = (this.validationReport?.details ?? []).some(
         (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
     );
     if (hasLayerWarnings) return false;
-    return s.includes('✅') || s.includes('PASS');
+    return s.includes('?') || s.includes('PASS');
   }
   isLayerFail(k: string) {
     const s = this.getLayerStatus(k);
-    return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
+    return s.includes('?') || s.includes('FAIL') || s.includes('ERROR');
   }
   isLayerWarn(k: string) {
     const s = this.getLayerStatus(k);
-    if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return true;
-    // Also treat as warn if layer status is PASS/✅ but has warnings in details
-    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return true;
+    // Also treat as warn if layer status is PASS/? but has warnings in details
+    if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
     if (!s || s.trim() === '') return false;
     const layerNum = Number(k);
     return (this.validationReport?.details ?? []).some(

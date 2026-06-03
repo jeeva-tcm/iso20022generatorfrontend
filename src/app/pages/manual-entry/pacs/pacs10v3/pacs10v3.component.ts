@@ -1,4 +1,4 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -30,7 +30,7 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
     editorLineCount: number[] = [];
     isParsingXml = false;
 
-    // ── Standards Release version ─────────────────────────────────────────────
+    // -- Standards Release version ---------------------------------------------
     private versionSub!: Subscription;
     get srVersion(): string { return this.srVersionSvc.currentVersion; }
     get srConfig(): SrVersionConfig { return this.srVersionSvc.config; }
@@ -90,7 +90,7 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
     ngOnInit() {
         this.fetchCodelists();
 
-        // ── Subscribe to SR version changes ──────────────────────────────────
+        // -- Subscribe to SR version changes ----------------------------------
         this.versionSub = this.srVersionSvc.version$.subscribe(() => {
             const cfg = this.srVersionSvc.getMessageRules('pacs010MarginCollection');
             this.form.patchValue({ msgDefIdr: cfg.msgDefIdr, bizSvc: cfg.bizSvc }, { emitEvent: false });
@@ -541,7 +541,7 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
                     const val = defaults[f] || '';
                     // Only require TwnNm/Ctry for prefixes that actually use an address
                     // (i.e., those with addrMap data). For optional prefixes defaulting to
-                    // 'none', no required validator — users shouldn't see errors on unused agents.
+                    // 'none', no required validator � users shouldn't see errors on unused agents.
                     const validators = (hasAddrData && (f === 'TwnNm' || f === 'Ctry')) ? Validators.required : null;
                     if (!c[p + f]) c[p + f] = [val, validators];
                 });
@@ -781,7 +781,7 @@ ${this.rmtInf(v)}
         }
         if (lei) finInstnId += this.el('LEI', lei, indent + 2);
         // CBPR_COM_R9 (strict): only InstgAgt/InstdAgt must omit Nm + PstlAdr when BICFI is set.
-        // For every other agent BICFI + Nm + PstlAdr may be emitted together — let user-entered Name/Address through.
+        // For every other agent BICFI + Nm + PstlAdr may be emitted together � let user-entered Name/Address through.
         const strictR9 = tag === 'InstgAgt' || tag === 'InstdAgt';
         if (!onlyBic && (!strictR9 || !bic)) {
             const addr = this.addrXml(v, prefix, indent + 2);
@@ -829,8 +829,13 @@ ${this.rmtInf(v)}
             if (doc.querySelector('parsererror')) return;
 
             const patch: any = {};
-            // Only patch fields the parser explicitly reads — previously this wiped
-            // every control to '' on each XML edit, silently dropping user data.
+            Object.keys(this.form.controls).forEach(key => {
+                if (key.endsWith('AddrType') || key.endsWith('AcctType') || key === 'rmtInfType' || key.endsWith('IdType')) {
+                    patch[key] = 'none';
+                } else {
+                    patch[key] = '';
+                }
+            });
 
             const tval = (el: Element | Document, tag: string) =>
                 el.getElementsByTagName(tag)[0]?.textContent?.trim() || '';
@@ -1073,25 +1078,25 @@ ${this.rmtInf(v)}
     isLayerPass(k: string) {
         const s = this.getLayerStatus(k);
         if (!s || s.trim() === '') return false;
-        if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
-        if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return false;
-        // Also check: if layer status is PASS/✅ but details has warnings for this layer, treat as warn not pass
+        if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
+        if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return false;
+        // Also check: if layer status is PASS/? but details has warnings for this layer, treat as warn not pass
         const layerNum = Number(k);
         const hasLayerWarnings = (this.validationReport?.details ?? []).some(
             (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
         );
         if (hasLayerWarnings) return false;
-        return s.includes('✅') || s.includes('PASS');
+        return s.includes('?') || s.includes('PASS');
     }
     isLayerFail(k: string) {
         const s = this.getLayerStatus(k);
-        return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
+        return s.includes('?') || s.includes('FAIL') || s.includes('ERROR');
     }
     isLayerWarn(k: string) {
         const s = this.getLayerStatus(k);
-        if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return true;
-        // Also treat as warn if layer status is PASS/✅ but has warnings in details
-        if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+        if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return true;
+        // Also treat as warn if layer status is PASS/? but has warnings in details
+        if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
         if (!s || s.trim() === '') return false;
         const layerNum = Number(k);
         return (this.validationReport?.details ?? []).some(
@@ -1146,7 +1151,7 @@ ${this.rmtInf(v)}
 
                     // Recompute per-layer status so layer cards reflect the filtered details
                     // (e.g. if Layer 3 was FAIL solely because of R9 errors we just removed,
-                    // it should now read PASS or WARN — not still show a red ❌).
+                    // it should now read PASS or WARN � not still show a red ?).
                     if (data.layer_status && typeof data.layer_status === 'object') {
                         Object.keys(data.layer_status).forEach((lk: string) => {
                             const layerNum = parseInt(lk, 10);
@@ -1155,15 +1160,15 @@ ${this.rmtInf(v)}
                             const ls = data.layer_status[lk];
                             if (ls && typeof ls === 'object') {
                                 const oldStatus: string = ls.status || '';
-                                // Only soften a layer that was previously marked failed/warned —
+                                // Only soften a layer that was previously marked failed/warned �
                                 // never escalate a passing layer.
-                                if (oldStatus.includes('❌') || oldStatus.includes('FAIL')) {
+                                if (oldStatus.includes('?') || oldStatus.includes('FAIL')) {
                                     if (layerErrors === 0) {
-                                        ls.status = layerWarns > 0 ? '⚠ WARN' : '✅ PASS';
+                                        ls.status = layerWarns > 0 ? '? WARN' : '? PASS';
                                     }
-                                } else if (oldStatus.includes('⚠') || oldStatus.includes('WARN')) {
+                                } else if (oldStatus.includes('?') || oldStatus.includes('WARN')) {
                                     if (layerErrors === 0 && layerWarns === 0) {
-                                        ls.status = '✅ PASS';
+                                        ls.status = '? PASS';
                                     }
                                 }
                             }
@@ -1178,7 +1183,7 @@ ${this.rmtInf(v)}
                 this.validationReport = {
                     status: 'FAIL', errors: 1, warnings: 0, message: 'pacs.010.001.03', total_time_ms: 0,
                     layer_status: {},
-                    details: [{ severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR', path: '', message: 'Validation failed — ' + (err.error?.detail?.message || 'backend not reachable.'), fix_suggestion: 'Ensure the validation server is running.' }]
+                    details: [{ severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR', path: '', message: 'Validation failed � ' + (err.error?.detail?.message || 'backend not reachable.'), fix_suggestion: 'Ensure the validation server is running.' }]
                 };
                 this.validationStatus = 'done';
             }

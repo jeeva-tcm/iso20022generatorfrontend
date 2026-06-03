@@ -1,4 +1,4 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -50,7 +50,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
   purposes: string[] = [];
   sttlmMethods = ['INDA', 'INGA', 'COVE', 'CLRG'];
   chargeBearers = ['SHAR', 'DEBT', 'CRED', 'SLEV'];
-  // Duplicate import and component definition removed ï¿½ kept earlier import and @Component
+  // Duplicate import and component definition removed � kept earlier import and @Component
 
   isAddressValid = true;
 
@@ -148,7 +148,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
       this.generateXml();
     }
 
-    // No debounce — every form change immediately regenerates XML so every field is reflected live
+    // No debounce � every form change immediately regenerates XML so every field is reflected live
     this.form.valueChanges.subscribe(() => {
       this.updateConditionalValidators();
       this.generateXml();
@@ -440,7 +440,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
     ustrd?.updateValueAndValidity({ emitEvent: false });
     strdRef?.updateValueAndValidity({ emitEvent: false });
 
-    // ChrgsInf validators — mandatory only when ChrgBr=CRED
+    // ChrgsInf validators � mandatory only when ChrgBr=CRED
     const chrgBr = this.form.get('chrgBr')?.value;
     const chrgsAmtCtrl = this.form.get('chrgsInfAmt');
     const chrgsCcyCtrl = this.form.get('chrgsInfCcy');
@@ -746,29 +746,29 @@ export class Pacs8Component implements OnInit, OnDestroy {
   }
 
   private buildForm() {
-    // BIC per ISO 9362 / CBPR+ BICFIDec2014Identifier — first 4 chars are alphanumeric.
+    // BIC per ISO 9362 / CBPR+ BICFIDec2014Identifier � first 4 chars are alphanumeric.
     const BIC = [Validators.required, Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
     const BIC_OPT = [Validators.pattern(/^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
     // Safe character set: letters, digits, space, . , ( ) ' - only. No & @ ! # $ etc.
     const SAFE_NAME = Validators.pattern(/^[a-zA-Z0-9 .,()'\-]+$/);
     // ISO 20022 MX allowed character pattern for address fields
     const ADDR_PATTERN = Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/);    const c: any = {
-      // â”€â”€ AppHdr fields â”€â”€
+      // ── AppHdr fields ──
       fromBic: ['SNDRBEBBXXX', BIC], toBic: ['RCVRLU2AXXX', BIC],
       bizMsgId: ['MSGID-20260515-PACS008-001', [Validators.required, Validators.maxLength(35)]],
-      // â”€â”€ GrpHdr fields â”€â”€
+      // ── GrpHdr fields ──
       msgId: ['MSGID-20260515-PACS008-001', [Validators.required, Validators.maxLength(35)]],
       creDtTm: [this.isoNow(), Validators.required],
       nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]],
       sttlmMtd: ['INDA', Validators.required],
       instgAgtBic: ['SNDRBEBBXXX', BIC], instdAgtBic: ['RCVRLU2AXXX', BIC],
-      // â”€â”€ CdtTrfTxInf Identification â”€â”€
+      // ── CdtTrfTxInf Identification ──
       instrId: ['INSTR-20260515-1', [Validators.required, Validators.maxLength(35)]],
       endToEndId: ['E2E-20260515-SALARY-001', [Validators.required, Validators.maxLength(35)]],
       txId: ['TXN-20260515-001', [Validators.maxLength(35)]],
       uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
       clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
-      // â”€â”€ Amount and Settlement â”€â”€
+      // ── Amount and Settlement ──
       amount: ['15000.00', [Validators.required, Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/)]],
       currency: ['EUR', Validators.required],
       sttlmDt: [new Date().toISOString().split('T')[0], [Validators.required, Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]],
@@ -779,7 +779,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
       rltd: [''],
       // SttlmPrty lives in CdtTrfTxInf (after IntrBkSttlmDt), NOT in GrpHdr/SttlmInf
       sttlmPrty: ['', [Validators.pattern(/^(HIGH|NORM|URGT)$/)]],
-      // Settlement Time Request (§CdtTrfTxInf — after SttlmTmIndctn)
+      // Settlement Time Request (�CdtTrfTxInf � after SttlmTmIndctn)
       sttlmTmReqClsTm: [''],
       sttlmTmReqTillTm: [''],
       sttlmTmReqFrTm: [''],
@@ -804,17 +804,17 @@ export class Pacs8Component implements OnInit, OnDestroy {
       svcLvlCd: ['G001', [Validators.pattern(/^[A-Z0-9]{1,4}$/)]],
       svcLvlPrtry: ['', [Validators.pattern(/^[A-Za-z0-9 .\-]{1,35}$/)]],
       chrgBr: ['SHAR', Validators.required],
-      // â”€â”€ Debtor â”€â”€
+      // ── Debtor ──
       dbtrName: ['Meridian Global Trading GmbH', [Validators.required, Validators.maxLength(140), SAFE_NAME]],
       dbtrOrgAnyBIC: ['', BIC_OPT],
       dbtrAgtBic: ['SNDRBEBBXXX', BIC_OPT],
-      // â”€â”€ Creditor â”€â”€
+      // ── Creditor ──
       cdtrName: ['Northwind Financial Services Ltd', [Validators.required, Validators.maxLength(140), SAFE_NAME]],
       cdtrOrgAnyBIC: ['', BIC_OPT],
       cdtrAgtBic: ['RCVRLU2AXXX', BIC_OPT],
       ultmtDbtrName: ['', [Validators.maxLength(140), SAFE_NAME]],
       ultmtCdtrName: ['', [Validators.maxLength(140), SAFE_NAME]],
-      // Initiating Party (InitgPty) — between UltmtDbtr and Dbtr in CdtTrfTxInf
+      // Initiating Party (InitgPty) � between UltmtDbtr and Dbtr in CdtTrfTxInf
       initgPtyName: ['', [Validators.maxLength(140), SAFE_NAME]],
       initgPtyIdType: ['none'],
       initgPtyOrgAnyBIC: ['', BIC_OPT],
@@ -934,7 +934,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
     c['cdtrAdrLine1'] = ['Boulevard Royal 18', [Validators.maxLength(70), ADDR_PATTERN]];
     c['cdtrAdrLine2'] = ['L-2449 Luxembourg', [Validators.maxLength(70), ADDR_PATTERN]];
 
-    // CBPR+: DbtrAgt and CdtrAgt use BICFI → Nm and PstlAdr must be absent
+    // CBPR+: DbtrAgt and CdtrAgt use BICFI ? Nm and PstlAdr must be absent
     c['dbtrAgtAddrType'] = ['none'];
     c['dbtrAgtCtry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
     c['dbtrAgtTwnNm'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
@@ -1033,7 +1033,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
   }
 
   /**
-   * UETR Refresh ï¿½ Rule 1-8 implementation.
+   * UETR Refresh � Rule 1-8 implementation.
    * Generates a new UUID v4, validates format, checks session uniqueness,
    * patches the form control, shows success/error feedback.
    */
@@ -1064,7 +1064,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
     this.form.get('uetr')?.setValue(newUetr);
     this.form.get('uetr')?.markAsTouched();
 
-    // Rule 2: Immediate UI update ï¿½ success feedback (auto-clears after 3s)
+    // Rule 2: Immediate UI update � success feedback (auto-clears after 3s)
     this.uetrSuccess = 'UETR refreshed successfully';
     this.uetrSuccessTimer = setTimeout(() => { this.uetrSuccess = null; }, 3000);
   }
@@ -1395,7 +1395,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
     const v = this.form.value;
     const creDtTm = this.fdt(v.creDtTm || this.isoNow());
 
-    // CdtTrfTxInf ï¿½ strict XSD element order
+    // CdtTrfTxInf � strict XSD element order
     let tx = '';
     let pmtIdXml = this.el('InstrId', v.instrId, 5) + this.el('EndToEndId', v.endToEndId, 5) + this.el('TxId', v.txId, 5) + this.el('UETR', v.uetr, 5);
     if (v.clrSysRef?.trim()) pmtIdXml += this.el('ClrSysRef', v.clrSysRef, 5);
@@ -1425,16 +1425,16 @@ export class Pacs8Component implements OnInit, OnDestroy {
     const formattedAmt = this.formatting.formatAmount(v.amount, v.currency);
     tx += `\t\t\t\t<IntrBkSttlmAmt Ccy="${this.e(v.currency)}">${formattedAmt}</IntrBkSttlmAmt>\n`;
     tx += this.el('IntrBkSttlmDt', v.sttlmDt, 4);
-    // SttlmPrty — at CdtTrfTxInf level (not in GrpHdr/SttlmInf)
+    // SttlmPrty � at CdtTrfTxInf level (not in GrpHdr/SttlmInf)
     if (v.sttlmPrty?.trim()) tx += this.el('SttlmPrty', v.sttlmPrty, 4);
-    // SttlmTmIndctn — after IntrBkSttlmDt per pacs.008.001.08 XSD sequence
+    // SttlmTmIndctn � after IntrBkSttlmDt per pacs.008.001.08 XSD sequence
     if (v.dbtDtTm || v.cdtDtTm) {
         let stind = '';
         if (v.dbtDtTm) stind += this.el('DbtDtTm', this.fdt(v.dbtDtTm), 5);
         if (v.cdtDtTm) stind += this.el('CdtDtTm', this.fdt(v.cdtDtTm), 5);
         tx += this.tag('SttlmTmIndctn', stind, 4);
     }
-    // SttlmTmReq — after SttlmTmIndctn
+    // SttlmTmReq � after SttlmTmIndctn
     const clsTm = v.sttlmTmReqClsTm?.trim();
     const tillTm = v.sttlmTmReqTillTm?.trim();
     const frTm = v.sttlmTmReqFrTm?.trim();
@@ -1447,7 +1447,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
         if (rjctTm) tmReq += this.el('RjctTm', rjctTm, 5);
         tx += this.tag('SttlmTmReq', tmReq, 4);
     }
-    // AccptncDtTm — pacs.008-specific, after SttlmTmReq
+    // AccptncDtTm � pacs.008-specific, after SttlmTmReq
     if (v.accptncDtTm?.trim()) tx += this.el('AccptncDtTm', this.fdt(v.accptncDtTm), 4);
     let instdAmtVal = v.instdAmt;
     let instdAmtCcyVal = v.instdAmtCcy;
@@ -1519,9 +1519,9 @@ export class Pacs8Component implements OnInit, OnDestroy {
     });
 
     // ISO 20022 pacs.008.001.08 CdtTrfTxInf schema order:
-    // UltmtDbtr → InitgPty → Dbtr → DbtrAcct → DbtrAgt → DbtrAgtAcct → CdtrAgt → CdtrAgtAcct → Cdtr → CdtrAcct → UltmtCdtr
+    // UltmtDbtr ? InitgPty ? Dbtr ? DbtrAcct ? DbtrAgt ? DbtrAgtAcct ? CdtrAgt ? CdtrAgtAcct ? Cdtr ? CdtrAcct ? UltmtCdtr
     tx += this.partyAgentXml('UltmtDbtr', 'ultmtDbtr', v, 4);
-    // InitgPty — Initiating Party (between UltmtDbtr and Dbtr)
+    // InitgPty � Initiating Party (between UltmtDbtr and Dbtr)
     if (v.initgPtyName?.trim() || v.initgPtyOrgAnyBIC?.trim() || v.initgPtyOrgOthrId?.trim() || v.initgPtyPrvtOthrId?.trim()) {
         let initgContent = '';
         if (v.initgPtyName?.trim()) initgContent += `${this.tabs(5)}<Nm>${this.e(v.initgPtyName)}</Nm>\n`;
@@ -1555,7 +1555,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
     if (v.cdtrAcct?.trim()) tx += this.tag('CdtrAcct', this.tag('Id', formatAcct(v.cdtrAcct, 5, v.cdtrAcctType), 5), 4);
     tx += this.partyAgentXml('UltmtCdtr', 'ultmtCdtr', v, 4);
 
-    // InstrForCdtrAgt (0..2) — CBPR+ R36: each <Cd> value must appear at most once
+    // InstrForCdtrAgt (0..2) � CBPR+ R36: each <Cd> value must appear at most once
     const seenCdtrAgtCds = new Set<string>();
     for (let i = 1; i <= 2; i++) {
       const cd = v[`instrForCdtrAgt${i}Cd`]?.trim();
@@ -1570,7 +1570,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
       }
     }
 
-    // InstrForNxtAgt (0..6) — CBPR+ R36: each <Cd> value must appear at most once
+    // InstrForNxtAgt (0..6) � CBPR+ R36: each <Cd> value must appear at most once
     const seenNxtAgtCds = new Set<string>();
     for (let i = 1; i <= 6; i++) {
       const cd = v[`instrForNxtAgt${i}Cd`]?.trim();
@@ -1586,7 +1586,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
     }
 
 
-    // Purp — Purpose (must appear BEFORE RgltryRptg per pacs.008 XSD order)
+    // Purp � Purpose (must appear BEFORE RgltryRptg per pacs.008 XSD order)
     if (v.purpCd?.trim()) tx += this.tag('Purp', this.el('Cd', v.purpCd, 5), 4);
 
     // Regulatory Reporting (0..3)
@@ -1718,7 +1718,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
 
   grpAgt(tag: string, prefix: string, v: any) {
     const bic = v[prefix + 'Bic']; if (!bic) return '';
-    // CBPR+: BICFI present → no Nm/PstlAdr allowed
+    // CBPR+: BICFI present ? no Nm/PstlAdr allowed
     return `\t\t\t\t<${tag}>\n\t\t\t\t\t<FinInstnId>\n\t\t\t\t\t\t<BICFI>${this.e(bic)}</BICFI>\n\t\t\t\t\t</FinInstnId>\n\t\t\t\t</${tag}>\n`;
   }
   agt(tag: string, prefix: string, v: any, indent = 4) {
@@ -1740,7 +1740,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
     if (lei) content += `${t}<LEI>${this.e(lei)}</LEI>\n`;
     // CBPR_COM_R9 (strict): only InstgAgt/InstdAgt must omit Nm + PstlAdr when BICFI is set.
     // For every other agent (Dbtr, Cdtr, DbtrAgt, CdtrAgt, IntrmyAgt*, PrvsInstgAgt*)
-    // BICFI + Nm + PstlAdr are permitted together — let user-entered Name/Address through.
+    // BICFI + Nm + PstlAdr are permitted together � let user-entered Name/Address through.
     const strictR9 = tag === 'InstgAgt' || tag === 'InstdAgt';
     if (!strictR9 || !bic) {
       if (name) content += `${t}<Nm>${this.e(name)}</Nm>\n`;
@@ -1863,7 +1863,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
       this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
       return;
     }
-    // Always regenerate from the form before validating — guarantees the validator
+    // Always regenerate from the form before validating � guarantees the validator
     // sees a clean, generator-produced XML rather than stale pasted/edited content
     // (which may contain forbidden elements like Nm/PstlAdr inside AppHdr.Fr).
     this.generateXml();
@@ -1900,7 +1900,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
           layer_status: {},
           details: [{
             severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
-            path: '', message: 'Validation failed ï¿½ ' + (err.error?.detail?.message || 'backend not reachable.'),
+            path: '', message: 'Validation failed � ' + (err.error?.detail?.message || 'backend not reachable.'),
             fix_suggestion: 'Ensure the validation server is running.'
           }]
         };
@@ -2086,8 +2086,13 @@ ${tx}\t\t\t</CdtTrfTxInf>
       }
 
       const patch: any = {};
-      // Only patch fields the parser explicitly reads — previously this wiped
-      // every control to '' on each XML edit, silently dropping user data.
+            Object.keys(this.form.controls).forEach(key => {
+                if (key.endsWith('AddrType') || key.endsWith('AcctType') || key === 'rmtInfType' || key.endsWith('IdType')) {
+                    patch[key] = 'none';
+                } else {
+                    patch[key] = '';
+                }
+            });
       const getT = (t: string, p: any = doc): Element | null => {
         const els = p.getElementsByTagName(t);
         if (els.length > 0) return els[0];
@@ -2567,7 +2572,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
             mapParty(p.charAt(0).toUpperCase() + p.slice(1), p, tx);
         });
 
-        // Extra Accounts check — also detect IBAN vs Other for dbtr/cdtr/dbtrAgt/cdtrAgt/intrmyAgt1/intrmyAgt2/intrmyAgt3 AcctType dropdown
+        // Extra Accounts check � also detect IBAN vs Other for dbtr/cdtr/dbtrAgt/cdtrAgt/intrmyAgt1/intrmyAgt2/intrmyAgt3 AcctType dropdown
         ['instgAgt', 'instdAgt', 'dbtrAgt', 'cdtrAgt', 'dbtr', 'cdtr', 'ultmtDbtr', 'ultmtCdtr', 'intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'].forEach(p => {
             const tag = p.charAt(0).toUpperCase() + p.slice(1) + 'Acct';
             const acctParent = getT(tag, tx);
@@ -2631,25 +2636,25 @@ ${tx}\t\t\t</CdtTrfTxInf>
   isLayerPass(k: string) {
     const s = this.getLayerStatus(k);
     if (!s || s.trim() === '') return false;
-    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
-    if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return false;
-    // Also check: if layer status is PASS/✅ but details has warnings for this layer, treat as warn not pass
+    if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return false;
+    // Also check: if layer status is PASS/? but details has warnings for this layer, treat as warn not pass
     const layerNum = Number(k);
     const hasLayerWarnings = (this.validationReport?.details ?? []).some(
         (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
     );
     if (hasLayerWarnings) return false;
-    return s.includes('✅') || s.includes('PASS');
+    return s.includes('?') || s.includes('PASS');
   }
   isLayerFail(k: string) {
     const s = this.getLayerStatus(k);
-    return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
+    return s.includes('?') || s.includes('FAIL') || s.includes('ERROR');
   }
   isLayerWarn(k: string) {
     const s = this.getLayerStatus(k);
-    if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return true;
-    // Also treat as warn if layer status is PASS/✅ but has warnings in details
-    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return true;
+    // Also treat as warn if layer status is PASS/? but has warnings in details
+    if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
     if (!s || s.trim() === '') return false;
     const layerNum = Number(k);
     return (this.validationReport?.details ?? []).some(

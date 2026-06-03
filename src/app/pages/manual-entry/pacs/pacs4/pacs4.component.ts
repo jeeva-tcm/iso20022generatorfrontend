@@ -1,4 +1,4 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -655,7 +655,14 @@ ${tx}\t\t\t</TxInf>
             const tval = (t: string, p: any = doc) => getT(t, p)?.textContent?.trim() || '';
 
             const patch: any = {};
-            // Only patch fields the parser explicitly reads — previously this wiped
+            Object.keys(this.form.controls).forEach(key => {
+                if (key.endsWith('AddrType') || key.endsWith('AcctType') || key === 'rmtInfType' || key.endsWith('IdType')) {
+                    patch[key] = 'none';
+                } else {
+                    patch[key] = '';
+                }
+            });
+            // Only patch fields the parser explicitly reads � previously this wiped
             // every control to '' on each XML edit, silently dropping user data for
             // any form field not covered by the parser.
 
@@ -873,7 +880,7 @@ ${tx}\t\t\t</TxInf>
 
     validateMessage() {
                 if (this.bicSameWarning) return;
-        // Always regenerate from the form before validating — guarantees the validator
+        // Always regenerate from the form before validating � guarantees the validator
         // sees a clean, generator-produced XML rather than stale pasted/edited content
         // (which may contain forbidden elements like Nm/PstlAdr inside AppHdr.Fr).
         this.generateXml();
@@ -903,25 +910,25 @@ ${tx}\t\t\t</TxInf>
     isLayerPass(k: string) {
         const s = this.getLayerStatus(k);
         if (!s || s.trim() === '') return false;
-        if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
-        if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return false;
-        // Also check: if layer status is PASS/✅ but details has warnings for this layer, treat as warn not pass
+        if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
+        if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return false;
+        // Also check: if layer status is PASS/? but details has warnings for this layer, treat as warn not pass
         const layerNum = Number(k);
         const hasLayerWarnings = (this.validationReport?.details ?? []).some(
             (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
         );
         if (hasLayerWarnings) return false;
-        return s.includes('✅') || s.includes('PASS');
+        return s.includes('?') || s.includes('PASS');
     }
     isLayerFail(k: string) {
         const s = this.getLayerStatus(k);
-        return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
+        return s.includes('?') || s.includes('FAIL') || s.includes('ERROR');
     }
     isLayerWarn(k: string) {
         const s = this.getLayerStatus(k);
-        if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return true;
-        // Also treat as warn if layer status is PASS/✅ but has warnings in details
-        if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+        if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return true;
+        // Also treat as warn if layer status is PASS/? but has warnings in details
+        if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
         if (!s || s.trim() === '') return false;
         const layerNum = Number(k);
         return (this.validationReport?.details ?? []).some(

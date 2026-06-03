@@ -1539,8 +1539,13 @@ ${tx}\t\t\t</CdtTrfTxInf>
             const tval = (t: string, p: any = doc) => getT(t, p)?.textContent?.trim() || '';
 
             const patch: any = {};
-            // Only patch fields the parser explicitly reads — previously this wiped
-            // every control to '' on each XML edit, silently dropping user data.
+            Object.keys(this.form.controls).forEach(key => {
+                if (key.endsWith('AddrType') || key.endsWith('AcctType') || key === 'rmtInfType' || key.endsWith('IdType')) {
+                    patch[key] = 'none';
+                } else {
+                    patch[key] = '';
+                }
+            });
 
             // BAH
             const appHdr = getT('AppHdr');
