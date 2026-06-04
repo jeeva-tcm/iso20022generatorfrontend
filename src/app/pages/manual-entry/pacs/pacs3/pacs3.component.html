@@ -224,16 +224,26 @@
                                                         min="0001-01-01" max="9999-12-31">
                                                 <div class="validation-msg" *ngIf="err('sttlmDt') as e">{{e}}</div>
                                         </div>
-                                        <div class="form-group intermediary-field"><label>Instructed Amount</label>
+                                        <div class="form-group intermediary-field">
+                                                <label>Instructed Amount
+                                                        <span class="req" *ngIf="isSR2026" matTooltip="Mandatory in SR2026 — auto-fills from settlement amount if blank">*</span>
+                                                        <span class="opt" *ngIf="!isSR2026">Optional</span>
+                                                </label>
                                                 <input formControlName="instdAmt" pattern="^\d{1,18}(\.\d{1,5})?$">
                                                 <div class="validation-msg" *ngIf="err('instdAmt') as e">{{e}}</div>
+                                                <div class="field-hint" *ngIf="isSR2026 && !form.get('instdAmt')?.value?.trim()">SR2026: Auto-uses settlement amount as InstdAmt.</div>
                                         </div>
-                                        <div class="form-group intermediary-field"><label>Instructed Currency</label>
+                                        <div class="form-group intermediary-field">
+                                                <label>Instructed Currency
+                                                        <span class="req" *ngIf="isSR2026">*</span>
+                                                        <span class="opt" *ngIf="!isSR2026">Optional</span>
+                                                </label>
                                                 <select formControlName="instdAmtCcy">
                                                         <option value="">None</option>
                                                         <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
                                                 </select>
                                                 <div class="validation-msg" *ngIf="err('instdAmtCcy') as e">{{e}}</div>
+                                                <div class="field-hint" *ngIf="isSR2026 && !form.get('instdAmtCcy')?.value?.trim()">SR2026: Auto-uses settlement currency.</div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>Exchange Rate</label>
                                                 <input formControlName="xchgRate" pattern="^\d{1,11}(\.\d{1,10})?$">

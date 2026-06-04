@@ -17,6 +17,12 @@
                                                 </button>
                                         </div>
 
+                                        <!-- SR2026 active indicator banner -->
+                                        <div class="sr-version-banner sr-2026-banner" *ngIf="isSR2026">
+                                                <mat-icon>new_releases</mat-icon>
+                                                <span><strong>SR2026 Mode</strong> — BizSvc updated to <strong>{{srVersion.getBizSvc('pacs009')}}</strong>. SR2026 rules: stricter BIC validation, Proxy/Type mandatory, GPI service level enforced.</span>
+                                        </div>
+
                                          <div class="section-title">Message Header</div>
                                         <div class="form-group"><label>From BIC <span
                                                                 class="req">*</span></label>

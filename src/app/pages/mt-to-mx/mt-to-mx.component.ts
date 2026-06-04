@@ -1131,11 +1131,33 @@ export class MtToMxComponent implements OnInit {
         return this.validationReport?.layer_status?.[k]?.time ?? 0;
     }
 
-    isLayerPass(k: string) { return this.getLayerStatus(k).includes('✅'); }
-    isLayerFail(k: string) { return this.getLayerStatus(k).includes('❌'); }
+    isLayerPass(k: string) {
+        const s = this.getLayerStatus(k);
+        if (!s || s.trim() === '') return false;
+        if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+        if (s.includes('⚠️') || s.includes('WARN') || s.includes('WARNING') || s.includes('⚠')) return false;
+        const layerNum = Number(k);
+        const hasLayerWarnings = (this.validationReport?.details ?? []).some(
+            (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+        );
+        if (hasLayerWarnings) return false;
+        return s.includes('✅') || s.includes('PASS') || s.includes('SUCCESS');
+    }
+
+    isLayerFail(k: string) {
+        const s = this.getLayerStatus(k);
+        return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
+    }
+
     isLayerWarn(k: string) {
         const s = this.getLayerStatus(k);
-        return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+        if (s.includes('⚠️') || s.includes('WARN') || s.includes('WARNING') || s.includes('⚠')) return true;
+        if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+        if (!s || s.trim() === '') return false;
+        const layerNum = Number(k);
+        return (this.validationReport?.details ?? []).some(
+            (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+        );
     }
 
     getValidationIssues(): any[] { return this.validationReport?.details ?? []; }

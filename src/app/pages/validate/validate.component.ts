@@ -1389,11 +1389,38 @@ export class ValidateComponent implements OnInit {
     return report?.layer_status?.[k]?.time ?? 0;
   }
 
-  isLayerPass(report: any, k: string) { return this.getLayerStatus(report, k).includes('✅'); }
-  isLayerFail(report: any, k: string) { return this.getLayerStatus(report, k).includes('❌'); }
+  getLayerDisplayTime(report: any, k: string): string {
+    const time = this.getLayerTime(report, k);
+    return time > 0 ? `${time.toFixed(0)}ms` : '';
+  }
+
+  isLayerPass(report: any, k: string) {
+    const s = this.getLayerStatus(report, k);
+    if (!s || s.trim() === '') return false;
+    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('⚠️') || s.includes('WARN') || s.includes('WARNING') || s.includes('⚠')) return false;
+    const layerNum = Number(k);
+    const hasLayerWarnings = (report?.details ?? []).some(
+      (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+    );
+    if (hasLayerWarnings) return false;
+    return s.includes('✅') || s.includes('PASS') || s.includes('SUCCESS');
+  }
+
+  isLayerFail(report: any, k: string) {
+    const s = this.getLayerStatus(report, k);
+    return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
+  }
+
   isLayerWarn(report: any, k: string) {
     const s = this.getLayerStatus(report, k);
-    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+    if (s.includes('⚠️') || s.includes('WARN') || s.includes('WARNING') || s.includes('⚠')) return true;
+    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (!s || s.trim() === '') return false;
+    const layerNum = Number(k);
+    return (report?.details ?? []).some(
+      (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+    );
   }
 
   getIssues(report: any): any[] { return report?.details ?? []; }

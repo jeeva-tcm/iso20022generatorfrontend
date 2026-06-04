@@ -6,10 +6,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { ConfigService } from '../../../../services/config.service';
 import { FormattingService } from '../../../../services/formatting.service';
 import { AddressValidatorService, AddressValidationResult } from '../../../../services/address-validator.service';
 import { UetrService } from '../../../../services/uetr.service';
+import { SrVersionService } from '../../../../services/sr-version.service';
 import { ISO_PURPOSE_CODES } from '../../../../constants/purpose-codes';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
@@ -66,6 +68,11 @@ export class Pacs8Component implements OnInit, OnDestroy {
 
   partyPrefixes = ['dbtr', 'cdtr', 'ultmtDbtr', 'ultmtCdtr'];
 
+  private versionSub?: Subscription;
+
+  /** True when SR2026 is active — used in the template for conditional indicators. */
+  get isSR2026(): boolean { return this.srVersion.isSR2026; }
+
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
@@ -76,12 +83,21 @@ export class Pacs8Component implements OnInit, OnDestroy {
     private uetrService: UetrService,
     private formatting: FormattingService,
     private dialog: MatDialog,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    public srVersion: SrVersionService
   ) { }
 
   ngOnInit() {
     this.fetchCodelists();
     this.buildForm();
+
+    // React to Standards Release switching (SR2025 ↔ SR2026) without page reload
+    this.versionSub = this.srVersion.version$.subscribe(() => {
+      this.fetchCodelists();                 // reload version-specific codelists
+      this.updateSrVersionValidators();      // enforce SR2026 mandatory fields
+      this.generateXml();                    // regenerate XML with correct namespace/BizSvc
+      this.cdr.detectChanges();
+    });
         const bizMsgIdCtrl = this.form.get('bizMsgId');
         const msgIdCtrl = this.form.get('msgId');
         if (bizMsgIdCtrl && msgIdCtrl) {
@@ -1334,6 +1350,31 @@ export class Pacs8Component implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+    this.versionSub?.unsubscribe();
+  }
+
+  /** Apply or remove SR2026-specific validators without rebuilding the whole form. */
+  private updateSrVersionValidators(): void {
+    const isSR2026 = this.srVersion.isSR2026;
+    const amtPattern = Validators.pattern(/^\d{1,13}(\.\d{1,5})?$/);
+
+    // InstdAmt: optional in SR2025, mandatory in SR2026
+    const instdAmtCtrl = this.form.get('instdAmt');
+    if (instdAmtCtrl) {
+      instdAmtCtrl.setValidators(isSR2026 ? [Validators.required, amtPattern] : [amtPattern]);
+      instdAmtCtrl.updateValueAndValidity({ emitEvent: false });
+    }
+
+    // SR2026: Unstructured address (AdrLine-only) and hybrid address are not permitted.
+    // Reset any AddrType to 'none' if it was 'unstructured' or 'hybrid' when switching to SR2026.
+    if (isSR2026) {
+      for (const prefix of [...this.agentPrefixes, ...this.partyPrefixes]) {
+        const addrTypeCtrl = this.form.get(prefix + 'AddrType');
+        if (addrTypeCtrl?.value === 'unstructured' || addrTypeCtrl?.value === 'hybrid') {
+          addrTypeCtrl.setValue('none', { emitEvent: false });
+        }
+      }
+    }
   }
 
   generateXml() {
@@ -1423,6 +1464,9 @@ export class Pacs8Component implements OnInit, OnDestroy {
         instdAmtCcyVal = v.currency;
       }
     }
+    // InstdAmt: optional in SR2025, mandatory [1..1] in SR2026 XSD
+    if (!instdAmtVal && this.srVersion.isSR2026) instdAmtVal = v.amount;
+    if (!instdAmtCcyVal && this.srVersion.isSR2026) instdAmtCcyVal = v.currency;
     if (instdAmtVal !== null && instdAmtVal !== undefined && instdAmtVal !== '' &&
         instdAmtCcyVal !== null && instdAmtCcyVal !== undefined && instdAmtCcyVal !== '') {
         const formattedInstdAmt = this.formatting.formatAmount(instdAmtVal, instdAmtCcyVal);
@@ -1635,11 +1679,11 @@ ${appHdrFi(v.fromBic, v.fromMmbId, v.fromClrSysId, v.fromLei)}\t\t</Fr>
 \t\t<To>
 ${appHdrFi(v.toBic, v.toMmbId, v.toClrSysId, v.toLei)}\t\t</To>
 \t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>
-\t\t<MsgDefIdr>pacs.008.001.08</MsgDefIdr>
-\t\t<BizSvc>swift.cbprplus.02</BizSvc>
+\t\t<MsgDefIdr>${this.srVersion.getMsgDefIdr('pacs008')}</MsgDefIdr>
+\t\t<BizSvc>${this.srVersion.getBizSvc('pacs008')}</BizSvc>
 \t\t<CreDt>${creDtTm}</CreDt>${v.appHdrPriority?.trim() ? `\n\t\t<Prty>${v.appHdrPriority}</Prty>` : ''}${v.rltd ? `\n\t\t<Rltd>\n\t\t\t<BizMsgIdr>${this.e(v.rltd)}</BizMsgIdr>\n\t\t</Rltd>` : ''}
 \t</AppHdr>
-\t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08">
+\t<Document xmlns="${this.srVersion.getNamespace('pacs008')}">
 \t\t<FIToFICstmrCdtTrf>
 \t\t\t<GrpHdr>
 \t\t\t\t<MsgId>${this.e(v.msgId)}</MsgId>
@@ -1741,8 +1785,10 @@ ${tx}\t\t\t</CdtTrfTxInf>
     if (val('DstrctNm')) lines.push(`${t}<DstrctNm>${this.e(val('DstrctNm'))}</DstrctNm>`);
     if (val('CtrySubDvsn')) lines.push(`${t}<CtrySubDvsn>${this.e(val('CtrySubDvsn'))}</CtrySubDvsn>`);
     if (val('Ctry')) lines.push(`${t}<Ctry>${this.e(val('Ctry'))}</Ctry>`);
-    if (val('AdrLine1')) lines.push(`${t}<AdrLine>${this.e(val('AdrLine1'))}</AdrLine>`);
-    if (val('AdrLine2')) lines.push(`${t}<AdrLine>${this.e(val('AdrLine2'))}</AdrLine>`);
+    if (!this.isSR2026) {
+      if (val('AdrLine1')) lines.push(`${t}<AdrLine>${this.e(val('AdrLine1'))}</AdrLine>`);
+      if (val('AdrLine2')) lines.push(`${t}<AdrLine>${this.e(val('AdrLine2'))}</AdrLine>`);
+    }
 
     if (!lines.length) return '';
     return `${this.tabs(indent)}<PstlAdr>\n${lines.join('\n')}\n${this.tabs(indent)}</PstlAdr>\n`;
@@ -1848,7 +1894,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
     this.http.post(this.config.getApiUrl('/validate'), {
       xml_content: sanitized,
       mode: 'Full 1-3',
-      message_type: 'pacs.008.001.08',
+      message_type: this.srVersion.getMsgDefIdr('pacs008'),
       store_in_history: true
     }).subscribe({
       next: (data: any) => {
@@ -1859,7 +1905,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
       error: (err) => {
         this.validationReport = {
           status: 'FAIL', errors: 1, warnings: 0,
-          message: 'pacs.008.001.08', total_time_ms: 0,
+          message: this.srVersion.getMsgDefIdr('pacs008'), total_time_ms: 0,
           layer_status: {},
           details: [{
             severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
@@ -2311,7 +2357,11 @@ ${tx}\t\t\t</CdtTrfTxInf>
               if (lines[1]) setVal(prefix + 'AdrLine2', lines[1].textContent || '');
               // Hybrid if TwnNm/Ctry present alongside AdrLine, else pure unstructured.
               const hasTwnOrCtry = !!(tval('TwnNm', addr) || tval('Ctry', addr));
-              setVal(prefix + 'AddrType', hasTwnOrCtry ? 'hybrid' : 'unstructured');
+              if (this.isSR2026) {
+                setVal(prefix + 'AddrType', hasTwnOrCtry ? 'structured' : 'none');
+              } else {
+                setVal(prefix + 'AddrType', hasTwnOrCtry ? 'hybrid' : 'unstructured');
+              }
               // Detail structured fields must NOT coexist with <AdrLine>; wipe them.
               ['StrtNm','BldgNb','BldgNm','Flr','PstBx','Room','PstCd','Dept','SubDept','TwnLctnNm','DstrctNm','CtrySubDvsn'].forEach(f =>
                 setVal(prefix + f, ''));
@@ -2602,29 +2652,27 @@ ${tx}\t\t\t</CdtTrfTxInf>
   isLayerPass(k: string) {
     const s = this.getLayerStatus(k);
     if (!s || s.trim() === '') return false;
-    if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
-    if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return false;
-    // Also check: if layer status is PASS/? but details has warnings for this layer, treat as warn not pass
+    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('⚠️') || s.includes('WARN') || s.includes('WARNING') || s.includes('⚠')) return false;
     const layerNum = Number(k);
     const hasLayerWarnings = (this.validationReport?.details ?? []).some(
-        (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+      (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
     );
     if (hasLayerWarnings) return false;
-    return s.includes('?') || s.includes('PASS');
+    return s.includes('✅') || s.includes('PASS') || s.includes('SUCCESS');
   }
   isLayerFail(k: string) {
     const s = this.getLayerStatus(k);
-    return s.includes('?') || s.includes('FAIL') || s.includes('ERROR');
+    return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
   }
   isLayerWarn(k: string) {
     const s = this.getLayerStatus(k);
-    if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return true;
-    // Also treat as warn if layer status is PASS/? but has warnings in details
-    if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('⚠️') || s.includes('WARN') || s.includes('WARNING') || s.includes('⚠')) return true;
+    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
     if (!s || s.trim() === '') return false;
     const layerNum = Number(k);
     return (this.validationReport?.details ?? []).some(
-        (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+      (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
     );
   }
 

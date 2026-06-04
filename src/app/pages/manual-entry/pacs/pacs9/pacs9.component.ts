@@ -6,9 +6,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { ConfigService } from '../../../../services/config.service';
 import { FormattingService } from '../../../../services/formatting.service';
 import { UetrService } from '../../../../services/uetr.service';
+import { SrVersionService } from '../../../../services/sr-version.service';
 import { ISO_PURPOSE_CODES } from '../../../../constants/purpose-codes';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
@@ -57,6 +59,11 @@ export class Pacs9Component implements OnInit, OnDestroy {
     showDraftBanner = false;
     isClearingDraft = false;
 
+    private versionSub?: Subscription;
+
+    /** True when SR2026 is active — used in the template for conditional indicators. */
+    get isSR2026(): boolean { return this.srVersion.isSR2026; }
+
     constructor(
         private fb: FormBuilder,
         private http: HttpClient,
@@ -66,12 +73,20 @@ export class Pacs9Component implements OnInit, OnDestroy {
         private uetrService: UetrService,
         private formatting: FormattingService,
         private dialog: MatDialog,
-        private cdr: ChangeDetectorRef
+        private cdr: ChangeDetectorRef,
+        public srVersion: SrVersionService
     ) { }
 
     ngOnInit() {
         this.fetchCodelists();
         this.buildForm();
+
+        // React to Standards Release switching (SR2025 ↔ SR2026) without page reload
+        this.versionSub = this.srVersion.version$.subscribe(() => {
+            this.fetchCodelists();            // reload version-specific codelists
+            this.generateXml();              // regenerate XML with correct namespace/BizSvc
+            this.cdr.detectChanges();
+        });
         const bizMsgIdCtrl = this.form.get('bizMsgId');
         const msgIdCtrl = this.form.get('msgId');
         if (bizMsgIdCtrl && msgIdCtrl) {
@@ -860,11 +875,11 @@ ${appHdrFi(v.fromBic, v.fromMmbId, v.fromClrSysId, v.fromLei)}\t\t</Fr>
 \t\t<To>
 ${appHdrFi(v.toBic, v.toMmbId, v.toClrSysId, v.toLei)}\t\t</To>
 \t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>
-\t\t<MsgDefIdr>pacs.009.001.08</MsgDefIdr>
-\t\t<BizSvc>swift.cbprplus.03</BizSvc>
+\t\t<MsgDefIdr>${this.srVersion.getMsgDefIdr('pacs009')}</MsgDefIdr>
+\t\t<BizSvc>${this.srVersion.getBizSvc('pacs009')}</BizSvc>
 \t\t<CreDt>${creDtTm}</CreDt>${v.appHdrPriority?.trim() ? `\n\t\t<Prty>${v.appHdrPriority}</Prty>` : ''}${v.rltd ? `\n\t\t<Rltd>\n\t\t\t<BizMsgIdr>${this.e(v.rltd)}</BizMsgIdr>\n\t\t</Rltd>` : ''}
 \t</AppHdr>
-\t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.009.001.08">
+\t<Document xmlns="${this.srVersion.getNamespace('pacs009')}">
 \t\t<FICdtTrf>
 \t\t\t<GrpHdr>
 \t\t\t\t<MsgId>${this.e(v.msgId)}</MsgId>
@@ -1006,7 +1021,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
         this.http.post(this.config.getApiUrl('/validate'), {
             xml_content: sanitized,
             mode: 'Full 1-3',
-            message_type: 'pacs.009.001.08',
+            message_type: this.srVersion.getMsgDefIdr('pacs009'),
             store_in_history: true
         }).subscribe({
             next: (data: any) => {
@@ -1017,7 +1032,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
             error: (err) => {
                 this.validationReport = {
                     status: 'FAIL', errors: 1, warnings: 0,
-                    message: 'pacs.009.001.08', total_time_ms: 0,
+                    message: this.srVersion.getMsgDefIdr('pacs009'), total_time_ms: 0,
                     layer_status: {},
                     details: [{
                         severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR',
@@ -1469,33 +1484,31 @@ ${tx}\t\t\t</CdtTrfTxInf>
     getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
     getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
     isLayerPass(k: string) {
-        const s = this.getLayerStatus(k);
-        if (!s || s.trim() === '') return false;
-        if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
-        if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return false;
-        // Also check: if layer status is PASS/✅ but details has warnings for this layer, treat as warn not pass
-        const layerNum = Number(k);
-        const hasLayerWarnings = (this.validationReport?.details ?? []).some(
-            (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
-        );
-        if (hasLayerWarnings) return false;
-        return s.includes('✅') || s.includes('PASS');
-    }
+    const s = this.getLayerStatus(k);
+    if (!s || s.trim() === '') return false;
+    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('⚠️') || s.includes('WARN') || s.includes('WARNING') || s.includes('⚠')) return false;
+    const layerNum = Number(k);
+    const hasLayerWarnings = (this.validationReport?.details ?? []).some(
+      (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+    );
+    if (hasLayerWarnings) return false;
+    return s.includes('✅') || s.includes('PASS') || s.includes('SUCCESS');
+  }
     isLayerFail(k: string) {
-        const s = this.getLayerStatus(k);
-        return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
-    }
+    const s = this.getLayerStatus(k);
+    return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
+  }
     isLayerWarn(k: string) {
-        const s = this.getLayerStatus(k);
-        if (s.includes('⚠') || s.includes('WARN') || s.includes('WARNING')) return true;
-        // Also treat as warn if layer status is PASS/✅ but has warnings in details
-        if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
-        if (!s || s.trim() === '') return false;
-        const layerNum = Number(k);
-        return (this.validationReport?.details ?? []).some(
-            (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
-        );
-    }
+    const s = this.getLayerStatus(k);
+    if (s.includes('⚠️') || s.includes('WARN') || s.includes('WARNING') || s.includes('⚠')) return true;
+    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (!s || s.trim() === '') return false;
+    const layerNum = Number(k);
+    return (this.validationReport?.details ?? []).some(
+      (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+    );
+  }
 
     getValidationIssues(): any[] { return this.validationReport?.details ?? []; }
 
@@ -1574,5 +1587,6 @@ ${tx}\t\t\t</CdtTrfTxInf>
 
     ngOnDestroy(): void {
         if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+        this.versionSub?.unsubscribe();
     }
 }

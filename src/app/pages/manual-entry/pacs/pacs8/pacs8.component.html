@@ -24,6 +24,12 @@
                                                 </button>
                                         </div>
 
+                                        <!-- SR2026 active indicator banner -->
+                                        <div class="sr-version-banner sr-2026-banner" *ngIf="isSR2026">
+                                                <mat-icon>new_releases</mat-icon>
+                                                <span><strong>SR2026 Mode</strong> — BizSvc updated to <strong>{{srVersion.getBizSvc('pacs008')}}</strong>. Fields marked <span class="req">*</span> are newly mandatory (InstdAmt, TwnNm, Ctry). Unstructured address not permitted.</span>
+                                        </div>
+
                                         <div class="section-title">Message Header</div>
                                         <div class="form-group intermediary-field"><label>Sender Member ID</label><input
                                                         formControlName="fromMmbId" maxlength="35">
@@ -211,7 +217,10 @@
                                                 <div class="validation-msg" *ngIf="err('sttlmDt') as e">{{e}}</div>
                                         </div>
                                         <div class="form-group intermediary-field">
-                                                <label>Instructed Amount <span class="opt">Optional</span></label>
+                                                <label>Instructed Amount
+                                                        <span class="req" *ngIf="isSR2026" matTooltip="Mandatory in SR2026 (InstdAmt [1..1])">*</span>
+                                                        <span class="opt" *ngIf="!isSR2026">Optional</span>
+                                                </label>
                                                 <input formControlName="instdAmt">
                                                 <div class="validation-msg" *ngIf="err('instdAmt') as e">{{e}}</div>
                                                 <div class="field-hint at-limit" *ngIf="hint('instdAmt', 18) as h">{{h}}
@@ -246,9 +255,12 @@
                                                         max="9999-12-31">
                                                 <div class="validation-msg" *ngIf="err('sttlmDt') as e">{{e}}</div>
                                         </div>
-                                        <div class="form-group intermediary-field"><label>Instructed
-                                                        Amount</label><input formControlName="instdAmt"
-                                                        pattern="^\d{1,18}(\.\d{1,5})?$">
+                                        <div class="form-group intermediary-field">
+                                                <label>Instructed Amount
+                                                        <span class="req" *ngIf="isSR2026" matTooltip="Mandatory in SR2026">*</span>
+                                                        <span class="opt" *ngIf="!isSR2026">Optional</span>
+                                                </label>
+                                                <input formControlName="instdAmt" pattern="^\d{1,18}(\.\d{1,5})?$">
                                                 <div class="validation-msg" *ngIf="err('instdAmt') as e">{{e}}</div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>Instructed Currency</label>
@@ -1303,15 +1315,19 @@
                 </div>
 
                 <!-- Address Type. Hybrid = TwnNm + Ctry + AdrLine (CBPR+ preferred). -->
+                <!-- SR2026: Unstructured (AdrLine-only) removed — TwnNm+Ctry mandatory per spec. -->
                 <div class="form-group" *ngIf="prefix !== 'instgAgt' && prefix !== 'instdAgt'">
                         <label>{{title}} Address Type</label>
                         <select [formControlName]="prefix+'AddrType'">
                                 <option value="none">None (BIC/ID Only)</option>
-                                <option value="hybrid">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
+                                <option value="hybrid" *ngIf="!isSR2026">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
                                 <option value="structured">Structured (TwnNm + Ctry + detail fields)</option>
-                                <option value="unstructured">Unstructured (AdrLine only)</option>
+                                <option value="unstructured" *ngIf="!isSR2026">Unstructured (AdrLine only)</option>
                         </select>
                         <div class="validation-msg" *ngIf="err(prefix+'AddrType') as e">{{e}}</div>
+                        <div class="field-hint" *ngIf="isSR2026 && (prefix === 'dbtr' || prefix === 'cdtr')">
+                                SR2026: TwnNm &amp; Ctry are mandatory when PostalAddress is provided. Unstructured (AdrLine-only) not permitted.
+                        </div>
                 </div>
 
                 <!-- Dynamic Address Fields -->

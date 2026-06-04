@@ -728,29 +728,27 @@ export class Camt054Component implements OnInit, OnDestroy {
   isLayerPass(k: string) {
     const s = this.getLayerStatus(k);
     if (!s || s.trim() === '') return false;
-    if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
-    if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return false;
-    // Also check: if layer status is PASS/? but details has warnings for this layer, treat as warn not pass
+    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('⚠️') || s.includes('WARN') || s.includes('WARNING') || s.includes('⚠')) return false;
     const layerNum = Number(k);
     const hasLayerWarnings = (this.validationReport?.details ?? []).some(
-        (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+      (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
     );
     if (hasLayerWarnings) return false;
-    return s.includes('?') || s.includes('PASS');
+    return s.includes('✅') || s.includes('PASS') || s.includes('SUCCESS');
   }
   isLayerFail(k: string) {
     const s = this.getLayerStatus(k);
-    return s.includes('?') || s.includes('FAIL') || s.includes('ERROR');
+    return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
   }
   isLayerWarn(k: string) {
     const s = this.getLayerStatus(k);
-    if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return true;
-    // Also treat as warn if layer status is PASS/? but has warnings in details
-    if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('⚠️') || s.includes('WARN') || s.includes('WARNING') || s.includes('⚠')) return true;
+    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
     if (!s || s.trim() === '') return false;
     const layerNum = Number(k);
     return (this.validationReport?.details ?? []).some(
-        (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+      (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
     );
   }
 

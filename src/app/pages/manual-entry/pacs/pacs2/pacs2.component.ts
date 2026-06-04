@@ -3,10 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { HttpClient } from '@angular/common/http';
+import { Subscription } from 'rxjs';
 import { ConfigService } from '../../../../services/config.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { UetrService } from '../../../../services/uetr.service';
+import { SrVersionService } from '../../../../services/sr-version.service';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
 import { debounceTime } from 'rxjs/operators';
@@ -44,6 +46,9 @@ export class Pacs2Component implements OnInit, OnDestroy {
   showDraftBanner = false;
   isClearingDraft = false;
 
+  private versionSub?: Subscription;
+  get isSR2026(): boolean { return this.srVersion.isSR2026; }
+
   countries: string[] = [];
   agentPrefixes = ['instgAgt', 'instdAgt'];
   // CBPR+ SR2025 valid TxSts codes (ExternalPaymentTransactionStatus1Code)
@@ -76,12 +81,23 @@ export class Pacs2Component implements OnInit, OnDestroy {
     private router: Router,
     private uetrService: UetrService,
     private dialog: MatDialog,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    public srVersion: SrVersionService
   ) {}
 
   ngOnInit() {
     this.fetchCountries();
     this.buildForm();
+
+    // On version switch: patch bizSvc + msgDefIdr form fields and regenerate XML
+    this.versionSub = this.srVersion.version$.subscribe(() => {
+      this.form.patchValue({
+        bizSvc:    this.srVersion.getBizSvc('pacs002'),
+        msgDefIdr: this.srVersion.getMsgDefIdr('pacs002'),
+      }, { emitEvent: false });
+      this.generateXml();
+      this.cdr.detectChanges();
+    });
         const bizMsgIdCtrl = this.form.get('bizMsgId');
         const msgIdCtrl = this.form.get('msgId');
         if (bizMsgIdCtrl && msgIdCtrl) {
@@ -331,7 +347,7 @@ export class Pacs2Component implements OnInit, OnDestroy {
 \t\t<BizSvc>${this.esc(v.bizSvc)}</BizSvc>
 \t\t<CreDt>${this.fdt(v.creDtTm)}</CreDt>${v.prty ? `\n\t\t<Prty>${this.esc(v.prty)}</Prty>` : ''}
 \t</AppHdr>
-\t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.002.001.10">
+\t<Document xmlns="${this.srVersion.getNamespace('pacs002')}">
 \t\t<FIToFIPmtStsRpt>
 \t\t\t<GrpHdr>
 \t\t\t\t<MsgId>${this.esc(v.msgId)}</MsgId>
@@ -787,7 +803,7 @@ ${txInf.trimEnd()}
     this.http.post(this.config.getApiUrl('/validate'), {
       xml_content: sanitized,
       mode: 'Full 1-3',
-      message_type: 'pacs.002.001.10',
+      message_type: this.srVersion.getMsgDefIdr('pacs002'),
       store_in_history: true
     }).subscribe({
       next: (data: any) => {
@@ -878,29 +894,27 @@ ${txInf.trimEnd()}
   isLayerPass(k: string) {
     const s = this.getLayerStatus(k);
     if (!s || s.trim() === '') return false;
-    if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
-    if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return false;
-    // Also check: if layer status is PASS/? but details has warnings for this layer, treat as warn not pass
+    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('⚠️') || s.includes('WARN') || s.includes('WARNING') || s.includes('⚠')) return false;
     const layerNum = Number(k);
     const hasLayerWarnings = (this.validationReport?.details ?? []).some(
-        (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+      (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
     );
     if (hasLayerWarnings) return false;
-    return s.includes('?') || s.includes('PASS');
+    return s.includes('✅') || s.includes('PASS') || s.includes('SUCCESS');
   }
   isLayerFail(k: string) {
     const s = this.getLayerStatus(k);
-    return s.includes('?') || s.includes('FAIL') || s.includes('ERROR');
+    return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
   }
   isLayerWarn(k: string) {
     const s = this.getLayerStatus(k);
-    if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return true;
-    // Also treat as warn if layer status is PASS/? but has warnings in details
-    if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('⚠️') || s.includes('WARN') || s.includes('WARNING') || s.includes('⚠')) return true;
+    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
     if (!s || s.trim() === '') return false;
     const layerNum = Number(k);
     return (this.validationReport?.details ?? []).some(
-        (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+      (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
     );
   }
   getLayerName(k: string) { const m: any = { '1': 'Syntax & Format', '2': 'Schema Validation', '3': 'Business Rules' }; return m[k] || `Layer ${k}`; }
@@ -1019,5 +1033,6 @@ ${txInf.trimEnd()}
 
   ngOnDestroy(): void {
     if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+    this.versionSub?.unsubscribe();
   }
 }

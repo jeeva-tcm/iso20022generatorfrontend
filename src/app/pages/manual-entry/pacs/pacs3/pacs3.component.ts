@@ -6,11 +6,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { ConfigService } from '../../../../services/config.service';
 import { FormattingService } from '../../../../services/formatting.service';
 import { AddressValidatorService, AddressValidationResult } from '../../../../services/address-validator.service';
 import { UetrService } from '../../../../services/uetr.service';
-
+import { SrVersionService } from '../../../../services/sr-version.service';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
 import { debounceTime } from 'rxjs/operators';
@@ -61,6 +62,9 @@ export class Pacs3Component implements OnInit, OnDestroy {
   showDraftBanner = false;
   isClearingDraft = false;
 
+  private versionSub?: Subscription;
+  get isSR2026(): boolean { return this.srVersion.isSR2026; }
+
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
@@ -71,12 +75,19 @@ export class Pacs3Component implements OnInit, OnDestroy {
     private uetrService: UetrService,
     private formatting: FormattingService,
     private dialog: MatDialog,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    public srVersion: SrVersionService
   ) { }
 
   ngOnInit() {
     this.fetchCodelists();
     this.buildForm();
+
+    this.versionSub = this.srVersion.version$.subscribe(() => {
+      this.fetchCodelists();
+      this.generateXml();
+      this.cdr.detectChanges();
+    });
         const bizMsgIdCtrl = this.form.get('bizMsgId');
         const msgIdCtrl = this.form.get('msgId');
         if (bizMsgIdCtrl && msgIdCtrl) {
@@ -1029,10 +1040,14 @@ export class Pacs3Component implements OnInit, OnDestroy {
       tx += this.tag('SttlmTmIndctn', stind, 4);
     }
     
-    // InstdAmt
-    if (v.instdAmt?.trim() && v.instdAmtCcy?.trim()) {
-      const formInstdAmt = Number(v.instdAmt).toFixed(this.getD(v.instdAmtCcy));
-      tx += `\t\t\t\t<InstdAmt Ccy="${this.e(v.instdAmtCcy)}">${formInstdAmt}</InstdAmt>\n`;
+    // InstdAmt: optional in SR2025, mandatory [1..1] in SR2026 XSD (DirectDebitTransactionInformation24__1)
+    {
+      const iaVal = v.instdAmt?.trim() || (this.srVersion.isSR2026 ? v.amount : '');
+      const iaCcy = v.instdAmtCcy?.trim() || (this.srVersion.isSR2026 ? v.currency : '');
+      if (iaVal && iaCcy) {
+        const formInstdAmt = Number(iaVal).toFixed(this.getD(iaCcy));
+        tx += `\t\t\t\t<InstdAmt Ccy="${this.e(iaCcy)}">${formInstdAmt}</InstdAmt>\n`;
+      }
     }
     
     if (v.xchgRate?.trim()) tx += this.el('XchgRate', v.xchgRate, 4);
@@ -1264,11 +1279,11 @@ ${appHdrFi(v.fromBic, v.fromMmbId, v.fromClrSysId, v.fromLei)}\t\t</Fr>
 \t\t<To>
 ${appHdrFi(v.toBic, v.toMmbId, v.toClrSysId, v.toLei)}\t\t</To>
 \t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>
-\t\t<MsgDefIdr>pacs.003.001.08</MsgDefIdr>
-\t\t<BizSvc>swift.cbprplus.02</BizSvc>
+\t\t<MsgDefIdr>${this.srVersion.getMsgDefIdr('pacs003')}</MsgDefIdr>
+\t\t<BizSvc>${this.srVersion.getBizSvc('pacs003')}</BizSvc>
 ${v.mktPrctc?`\t\t<MktPrctc><Regy>${this.e(v.regyId||'SWIFT')}</Regy><Id>${this.e(v.mktPrctc)}</Id></MktPrctc>\n`:''}\t\t<CreDt>${creDtTm}</CreDt>
 ${v.charSet?`\t\t<CharSet>${this.e(v.charSet)}</CharSet>\n`:''}${v.cpyDplct?`\t\t<CpyDplct>${this.e(v.cpyDplct)}</CpyDplct>\n`:''}${v.pssblDplct==='true'?`\t\t<PssblDplct>true</PssblDplct>\n`:''}${v.appHdrPrty?`\t\t<Prty>${this.e(v.appHdrPrty)}</Prty>\n`:''}${v.rltd ? `\n\t\t<Rltd>${v.rltdCharSet?`<CharSet>${this.e(v.rltdCharSet)}</CharSet>`:''}<Id>${this.e(v.rltd)}</Id></Rltd>` : ''}\n\t</AppHdr>
-\t<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.003.001.08">
+\t<Document xmlns="${this.srVersion.getNamespace('pacs003')}">
 \t\t<FIToFICstmrDrctDbt>
 \t\t\t<GrpHdr>
 \t\t\t\t<MsgId>${this.e(v.msgId)}</MsgId>
@@ -1595,7 +1610,7 @@ ${tx}\t\t\t</DrctDbtTxInf>
     this.http.post(this.config.getApiUrl('/validate'), {
       xml_content: sanitized,
       mode: 'Full 1-3',
-      message_type: 'pacs.003.001.08',
+      message_type: this.srVersion.getMsgDefIdr('pacs003'),
       store_in_history: true
     }).subscribe({
       next: (data: any) => {
@@ -2047,29 +2062,27 @@ ${tx}\t\t\t</DrctDbtTxInf>
   isLayerPass(k: string) {
     const s = this.getLayerStatus(k);
     if (!s || s.trim() === '') return false;
-    if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
-    if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return false;
-    // Also check: if layer status is PASS/? but details has warnings for this layer, treat as warn not pass
+    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('⚠️') || s.includes('WARN') || s.includes('WARNING') || s.includes('⚠')) return false;
     const layerNum = Number(k);
     const hasLayerWarnings = (this.validationReport?.details ?? []).some(
-        (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+      (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
     );
     if (hasLayerWarnings) return false;
-    return s.includes('?') || s.includes('PASS');
+    return s.includes('✅') || s.includes('PASS') || s.includes('SUCCESS');
   }
   isLayerFail(k: string) {
     const s = this.getLayerStatus(k);
-    return s.includes('?') || s.includes('FAIL') || s.includes('ERROR');
+    return s.includes('❌') || s.includes('FAIL') || s.includes('ERROR');
   }
   isLayerWarn(k: string) {
     const s = this.getLayerStatus(k);
-    if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return true;
-    // Also treat as warn if layer status is PASS/? but has warnings in details
-    if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('⚠️') || s.includes('WARN') || s.includes('WARNING') || s.includes('⚠')) return true;
+    if (s.includes('❌') || s.includes('FAIL') || s.includes('ERROR')) return false;
     if (!s || s.trim() === '') return false;
     const layerNum = Number(k);
     return (this.validationReport?.details ?? []).some(
-        (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+      (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
     );
   }
 
@@ -2181,5 +2194,6 @@ ${tx}\t\t\t</DrctDbtTxInf>
 
   ngOnDestroy(): void {
     if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+    this.versionSub?.unsubscribe();
   }
 }

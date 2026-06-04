@@ -229,12 +229,17 @@
                 <div class="layer-summaries-row">
                   <div class="layer-summary-pill" *ngFor="let k of getReportLayers(f.report)"
                        [class.passed-pill]="isLayerPass(f.report, k)"
-                       [class.failed-pill]="isLayerFail(f.report, k)">
+                       [class.failed-pill]="isLayerFail(f.report, k)"
+                       [class.warning-pill]="isLayerWarn(f.report, k)">
                     <div class="pill-left">
-                      <mat-icon [class.success]="isLayerPass(f.report, k)" [class.error]="isLayerFail(f.report, k)"
-                        [style.color]="getLayerStatus(f.report, k).includes('SKIPPED') ? '#94a3b8' : ''">{{
-                        isLayerFail(f.report, k) ? 'cancel' : (getLayerStatus(f.report, k).includes('SKIPPED') ? 'block'
-                        : 'check_circle') }}</mat-icon>
+                      <mat-icon [class.success]="isLayerPass(f.report, k)" 
+                                [class.error]="isLayerFail(f.report, k)"
+                                [class.warning]="isLayerWarn(f.report, k)"
+                                [style.color]="getLayerStatus(f.report, k).includes('SKIPPED') ? '#94a3b8' : ''">{{
+                        isLayerFail(f.report, k) ? 'cancel' : 
+                        (isLayerWarn(f.report, k) ? 'warning' : 
+                        (getLayerStatus(f.report, k).includes('SKIPPED') ? 'block' : 'check_circle')) 
+                      }}</mat-icon>
                       <div class="pill-text-column">
                         <span class="layer-title-text">Layer {{k}}: {{getLayerName(k)}}</span>
                         <span class="layer-time-text">{{getLayerTime(f.report, k)}}ms</span>
@@ -243,6 +248,10 @@
                     <div class="pill-right fail-text" *ngIf="isLayerFail(f.report, k)">
                       <mat-icon>close</mat-icon>
                       <span>Failed</span>
+                    </div>
+                    <div class="pill-right warning-text" *ngIf="isLayerWarn(f.report, k)" style="color: var(--validation-warn-text); display: flex; align-items: center; gap: 4px; margin-left: auto; font-weight: 600;">
+                      <mat-icon style="font-size: 16px; width: 16px; height: 16px;">warning</mat-icon>
+                      <span>Warning</span>
                     </div>
                     <div class="pill-right skipped-text" *ngIf="getLayerStatus(f.report, k).includes('SKIPPED')"
                       style="color: #94a3b8; display: flex; align-items: center; gap: 4px; margin-left: auto;">

@@ -108,7 +108,7 @@ const SR2025: SrVersionConfig = {
     pacs009: {
       msgDefIdr: 'pacs.009.001.08',
       namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.009.001.08',
-      bizSvc: 'swift.cbprplus.02',
+      bizSvc: 'swift.cbprplus.03',   // original pacs9 hardcoded value restored
       liveDate: 'November 2025',
     },
     pacs009Adv: {
@@ -138,7 +138,7 @@ const SR2025: SrVersionConfig = {
     pacs002: {
       msgDefIdr: 'pacs.002.001.10',
       namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.002.001.10',
-      bizSvc: 'swift.cbprplus.02',
+      bizSvc: 'swift.cbprplus.03',   // original pacs2 form default value restored
       liveDate: 'November 2025',
     },
     camt057: {
@@ -224,59 +224,61 @@ const SR2026: SrVersionConfig = {
   badgeColor: '#7b1fa2',   // Material purple
 
   messages: {
-    // Anticipated pacs.010 version upgrade for SR2026
+    // SR2026 uses the same XSD version numbers as SR2025 for pacs/camt/pain messages.
+    // The CBPR+ collection version changes: BizSvc suffix .03 → .04.
+    // Source: CBPR+ SR2026 XSD files in xsds sr2026/ and pacs SR2026 Changes comparison docs.
     pacs010Interbank: {
-      msgDefIdr: 'pacs.010.001.06',
-      namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.010.001.06',
-      bizSvc: 'swift.cbprplus.03',
+      msgDefIdr: 'pacs.010.001.03',           // same version, confirmed by SR2026 XSD filename
+      namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.010.001.03',
+      bizSvc: 'swift.cbprplus.04',            // .03 → .04 per SR2026 BizSvc comparison
       liveDate: 'November 2026',
     },
     pacs010MarginCollection: {
-      msgDefIdr: 'pacs.010.001.06',
-      namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.010.001.06',
-      bizSvc: 'swift.cbprplus.col.02',
+      msgDefIdr: 'pacs.010.001.03',
+      namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.010.001.03',
+      bizSvc: 'swift.cbprplus.col.02',        // margin collection keeps .col.02
       liveDate: 'November 2026',
     },
     pacs008: {
-      msgDefIdr: 'pacs.008.001.13',
-      namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.008.001.13',
-      bizSvc: 'swift.cbprplus.02',
+      msgDefIdr: 'pacs.008.001.08',           // same version, confirmed by SR2026 XSD filename
+      namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08',
+      bizSvc: 'swift.cbprplus.04',            // .03 → .04 per SR2026 BizSvc comparison
       liveDate: 'November 2026',
     },
     pacs009: {
-      msgDefIdr: 'pacs.009.001.12',
-      namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.009.001.12',
-      bizSvc: 'swift.cbprplus.02',
+      msgDefIdr: 'pacs.009.001.08',           // same version, confirmed by SR2026 XSD filename
+      namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.009.001.08',
+      bizSvc: 'swift.cbprplus.04',            // .03 → .04 per SR2026 CORE comparison
       liveDate: 'November 2026',
     },
     pacs009Adv: {
-      msgDefIdr: 'pacs.009.001.12',
-      namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.009.001.12',
-      bizSvc: 'swift.cbprplus.adv.03',
+      msgDefIdr: 'pacs.009.001.08',           // same version, confirmed by SR2026 XSD filename
+      namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.009.001.08',
+      bizSvc: 'swift.cbprplus.adv.04',        // .adv.03 → .adv.04 per SR2026 ADV comparison
       liveDate: 'November 2026',
     },
     pacs009Cov: {
-      msgDefIdr: 'pacs.009.001.12',
-      namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.009.001.12',
-      bizSvc: 'swift.cbprplus.cov.03',
+      msgDefIdr: 'pacs.009.001.08',           // same version, confirmed by SR2026 XSD filename
+      namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.009.001.08',
+      bizSvc: 'swift.cbprplus.cov.04',        // .cov.03 → .cov.04 per SR2026 COV comparison
       liveDate: 'November 2026',
     },
     pacs004: {
-      msgDefIdr: 'pacs.004.001.14',
-      namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.004.001.14',
-      bizSvc: 'swift.cbprplus.02',
+      msgDefIdr: 'pacs.004.001.09',           // same version per xsds sr2026/ filename
+      namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.004.001.09',
+      bizSvc: 'swift.cbprplus.04',            // .02 → .04 per SR2026 collection version
       liveDate: 'November 2026',
     },
     pacs003: {
-      msgDefIdr: 'pacs.003.001.11',
-      namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.003.001.11',
-      bizSvc: 'swift.cbprplus.02',
+      msgDefIdr: 'pacs.003.001.08',           // same version per xsds sr2026/ filename
+      namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.003.001.08',
+      bizSvc: 'swift.cbprplus.04',            // .02 → .04 per SR2026 collection version
       liveDate: 'November 2026',
     },
     pacs002: {
-      msgDefIdr: 'pacs.002.001.15',
-      namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.002.001.15',
-      bizSvc: 'swift.cbprplus.02',
+      msgDefIdr: 'pacs.002.001.10',           // same version per xsds sr2026/ filename
+      namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.002.001.10',
+      bizSvc: 'swift.cbprplus.04',            // .03 → .04 per SR2026 collection version
       liveDate: 'November 2026',
     },
     camt057: {
