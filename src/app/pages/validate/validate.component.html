@@ -161,6 +161,17 @@
           </button>
         </div>
 
+        <button class="btn-fix-all-global"
+                *ngIf="hasFixableFiles"
+                (click)="fixAllMessagesAI()"
+                [disabled]="fixingAllMessages"
+                [title]="fixingAllMessages ? 'Fixing files…' : 'Run AI fix on all failed files'">
+          <mat-icon *ngIf="!fixingAllMessages">auto_fix_high</mat-icon>
+          <mat-icon *ngIf="fixingAllMessages" class="spin-slow">progress_activity</mat-icon>
+          <span *ngIf="!fixingAllMessages">Fix All</span>
+          <span *ngIf="fixingAllMessages">{{ fixAllProgressDone }}/{{ fixAllProgressTotal }}</span>
+        </button>
+
         <button class="btn-download" (click)="downloadReport()">
           <mat-icon>file_download</mat-icon>
           Download Report
@@ -518,6 +529,7 @@
   [issue]="activeFixIssue"
   [issues]="activeFixIssues"
   [mode]="fixMode"
+  [fileName]="fixTarget.name"
   (applied)="onFixApplied(fixTarget, $event)"
   (dismissed)="closeFix()">
 </app-fix-suggester>

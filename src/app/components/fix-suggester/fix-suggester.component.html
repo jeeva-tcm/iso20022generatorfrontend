@@ -3,33 +3,32 @@
 
     <!-- Header ─────────────────────────────────────────────────────── -->
     <header class="fs-header">
-      <div class="fs-header-main">
-        <div class="fs-header-icon-wrap">
-          <mat-icon class="fs-header-icon">auto_fix_high</mat-icon>
+      <div class="fs-header-top">
+        <div class="fs-header-title-row">
+          <mat-icon class="fs-header-icon-sm">auto_fix_high</mat-icon>
+          <h2 class="fs-title">{{ mode === 'batch' ? 'AI Fix All Issues' : 'AI Fix Issue' }}</h2>
         </div>
-        <div class="fs-header-text">
-          <h2 class="fs-title">
-            {{ mode === 'batch' ? 'Resolve issues with AI' : 'Suggested fix' }}
-          </h2>
-          <p class="fs-subtitle" *ngIf="!loading">
-            <ng-container *ngIf="mode === 'batch'">
-              <span>{{ total }} issue{{ total === 1 ? '' : 's' }} analysed</span>
-              <span class="dot-sep">·</span>
-              <span class="muted">{{ actionableCount }} actionable</span>
-              <ng-container *ngIf="unavailableCount > 0">
-                <span class="dot-sep">·</span>
-                <span class="warn-text">{{ unavailableCount }} unavailable</span>
-              </ng-container>
-            </ng-container>
-            <ng-container *ngIf="mode === 'single' && suggestion">
-              <span class="muted">{{ confidenceLabel(suggestion.confidence) }}</span>
-            </ng-container>
-          </p>
-        </div>
+        <button class="fs-icon-btn" (click)="dismiss()" matTooltip="Close (Esc)" aria-label="Close">
+          <mat-icon>close</mat-icon>
+        </button>
       </div>
-      <button class="fs-icon-btn" (click)="dismiss()" matTooltip="Close (Esc)" aria-label="Close">
-        <mat-icon>close</mat-icon>
-      </button>
+      <div class="fs-header-meta" *ngIf="!loading">
+        <span class="fs-file-pill" *ngIf="fileName">
+          <mat-icon>insert_drive_file</mat-icon>{{ fileName }}
+        </span>
+        <ng-container *ngIf="mode === 'batch'">
+          <span class="fs-meta-stat">{{ total }} analysed</span>
+          <span class="fs-meta-dot">·</span>
+          <span class="fs-meta-stat fs-meta-accent">{{ actionableCount }} fixable</span>
+          <ng-container *ngIf="unavailableCount > 0">
+            <span class="fs-meta-dot">·</span>
+            <span class="fs-meta-stat fs-meta-warn">{{ unavailableCount }} unavailable</span>
+          </ng-container>
+        </ng-container>
+        <ng-container *ngIf="mode === 'single' && suggestion">
+          <span class="fs-meta-stat">{{ confidenceLabel(suggestion.confidence) }}</span>
+        </ng-container>
+      </div>
     </header>
 
     <!-- Progress strip — batch mode -->

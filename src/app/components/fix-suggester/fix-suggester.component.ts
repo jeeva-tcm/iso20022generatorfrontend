@@ -43,6 +43,7 @@ export class FixSuggesterComponent implements OnInit, OnChanges, OnDestroy, Afte
   @Input() issue?: IssueRef;
   @Input() issues?: IssueRef[];
   @Input() mode: 'single' | 'batch' = 'single';
+  @Input() fileName?: string;
 
   @Output() applied = new EventEmitter<string>();
   @Output() dismissed = new EventEmitter<void>();

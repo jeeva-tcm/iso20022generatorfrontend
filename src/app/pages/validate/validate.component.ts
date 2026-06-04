@@ -120,6 +120,65 @@ export class ValidateComponent implements OnInit {
   activeFixIssues: IssueRef[] | undefined = undefined;
   fixMode: 'single' | 'batch' = 'single';
 
+  // ── Fix All Messages (global automated AI fix) ──────────────────────────────
+  fixingAllMessages = false;
+  fixAllProgressDone = 0;
+  fixAllProgressTotal = 0;
+
+  get hasFixableFiles(): boolean {
+    return this.files.some(f =>
+      f.status === 'failed' &&
+      (f.fixedXml != null || this.getFixableCount(f.report) > 0)
+    );
+  }
+
+  async fixAllMessagesAI() {
+    const targets = this.files.filter(f =>
+      f.status === 'failed' &&
+      (f.fixedXml != null || this.getFixableCount(f.report) > 0)
+    );
+    if (!targets.length || this.fixingAllMessages) return;
+
+    this.fixingAllMessages = true;
+    this.fixAllProgressDone = 0;
+    this.fixAllProgressTotal = targets.length;
+    this.cdr.markForCheck();
+
+    for (const entry of targets) {
+      try {
+        if (entry.fixedXml) {
+          entry.content = this.formatXmlString(entry.fixedXml);
+          entry.fixedXml = undefined;
+          this.validateFile(entry);
+        } else {
+          const msgType = entry.report?.message ?? 'Auto-detect';
+          await new Promise<void>((resolve) => {
+            this.http.post<any>(this.config.getApiUrl('/fixes/auto-fix'), {
+              xml: entry.content,
+              message_type: msgType
+            }).subscribe({
+              next: (data) => {
+                if (data?.new_xml) {
+                  entry.content = this.formatXmlString(data.new_xml);
+                }
+                this.validateFile(entry);
+                resolve();
+              },
+              error: () => resolve()
+            });
+          });
+        }
+      } catch { /* continue to next file */ }
+      this.fixAllProgressDone++;
+      this.cdr.markForCheck();
+    }
+
+    this.fixingAllMessages = false;
+    this.cdr.markForCheck();
+    const n = targets.length;
+    this.snackBar.open(`AI fix applied to ${n} file${n !== 1 ? 's' : ''} — re-validating…`, '', { duration: 3000 });
+  }
+
   openFix(issue: any, entry: FileEntry, event: Event) {
     event.stopPropagation();
     this.fixTarget = entry;

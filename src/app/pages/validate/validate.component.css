@@ -1752,6 +1752,39 @@
   border-color: #ef4444;
 }
 
+/* ── Fix All Messages global button ── */
+.btn-fix-all-global {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid oklch(62% 0.14 250 / 0.50);
+  background: oklch(62% 0.14 250 / 0.09);
+  color: oklch(72% 0.12 250);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.btn-fix-all-global:hover:not(:disabled) {
+  background: oklch(62% 0.14 250 / 0.16);
+  border-color: oklch(62% 0.14 250 / 0.75);
+  color: oklch(78% 0.12 250);
+}
+.btn-fix-all-global:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-fix-all-global mat-icon { font-size: 16px; width: 16px; height: 16px; }
+
+.spin-slow {
+  animation: vp-spin-slow 1.1s linear infinite;
+  transform-origin: center;
+}
+@keyframes vp-spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 .btn-download {
   background: white;
   border: 1px solid var(--border-light);
