@@ -1786,7 +1786,7 @@
 }
 
 .btn-download {
-  background: white;
+  background: var(--bg-card);
   border: 1px solid var(--border-light);
   color: var(--accent-color);
   cursor: pointer;
@@ -1801,7 +1801,7 @@
 }
 
 body.light-theme .btn-download {
-  background: white;
+  background: #ffffff;
 }
 
 .btn-download:hover {
@@ -2043,6 +2043,10 @@ body.light-theme .btn-download {
 
 .status-badge.warnings {
   background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+body.light-theme .status-badge.warnings {
   color: #d97706;
 }
 
@@ -2109,11 +2113,21 @@ body.light-theme .btn-download {
 }
 
 .layer-summary-pill.passed-pill {
+  background: rgba(34, 197, 94, 0.07);
+  border-color: rgba(34, 197, 94, 0.22);
+}
+
+.layer-summary-pill.failed-pill {
+  background: rgba(239, 68, 68, 0.07);
+  border-color: rgba(239, 68, 68, 0.22);
+}
+
+body.light-theme .layer-summary-pill.passed-pill {
   background: #f0fdf4;
   border-color: #bbf7d0;
 }
 
-.layer-summary-pill.failed-pill {
+body.light-theme .layer-summary-pill.failed-pill {
   background: #fef2f2;
   border-color: #fecaca;
 }
@@ -2133,6 +2147,10 @@ body.light-theme .btn-download {
 .layer-title-text {
   font-size: 14px;
   font-weight: 700;
+  color: var(--text-main);
+}
+
+body.light-theme .layer-title-text {
   color: #111827;
 }
 
@@ -3270,11 +3288,11 @@ body.light-theme .btn-download {
 }
 
 /* dark-theme overrides for structural fix banner */
-body.dark-theme .structural-fix-banner {
+body:not(.light-theme).structural-fix-banner {
   background: linear-gradient(135deg, rgba(20, 184, 166, 0.06) 0%, rgba(16, 185, 129, 0.04) 100%);
   border-color: rgba(20, 184, 166, 0.25);
 }
-body.dark-theme .sfb-text strong {
+body:not(.light-theme).sfb-text strong {
   color: #2dd4bf;
 }
 
@@ -3284,179 +3302,180 @@ body.dark-theme .sfb-text strong {
    ══════════════════════════════════════════════ */
 
 /* Layer summary pills */
-body.dark-theme .layer-summary-pill {
+body:not(.light-theme).layer-summary-pill {
   background: #0f0f11;
   border-color: rgba(255, 255, 255, 0.1);
 }
-body.dark-theme .layer-summary-pill:has(.error) {
+body:not(.light-theme).layer-summary-pill:has(.error) {
   border-color: rgba(239, 68, 68, 0.25);
   background: rgba(239, 68, 68, 0.06);
 }
-body.dark-theme .layer-summary-pill:has(.success) {
+body:not(.light-theme).layer-summary-pill:has(.success) {
   border-color: rgba(34, 197, 94, 0.2);
   background: rgba(34, 197, 94, 0.05);
 }
-body.dark-theme .layer-summary-pill .pill-right.fail-text {
+body:not(.light-theme).layer-summary-pill .pill-right.fail-text {
   color: #f87171;
   background: rgba(239, 68, 68, 0.15);
 }
-body.dark-theme .layer-summary-pill .pill-right.pass-text {
+body:not(.light-theme).layer-summary-pill .pill-right.pass-text {
   color: #4ade80;
   background: rgba(34, 197, 94, 0.12);
 }
 
 /* Accordion */
-body.dark-theme .layer-detail-item {
+body:not(.light-theme).layer-detail-item {
   background: #0d0d0f;
   border-color: rgba(255, 255, 255, 0.09);
 }
-body.dark-theme .layer-title {
+body:not(.light-theme).layer-title {
   background: #0d0d0f;
 }
-body.dark-theme .layer-title.layer-expanded {
+body:not(.light-theme).layer-title.layer-expanded {
   background: rgba(99, 102, 241, 0.06);
   border-bottom-color: rgba(99, 102, 241, 0.18);
 }
-body.dark-theme .layer-toggle:hover {
+body:not(.light-theme).layer-toggle:hover {
   background: rgba(99, 102, 241, 0.09);
 }
-body.dark-theme .layer-label {
+body:not(.light-theme).layer-label {
   color: #e2e8f0;
 }
 
 /* Filter pills — dark */
-body.dark-theme .all-pill {
+body:not(.light-theme).all-pill {
   color: #94a3b8;
   background: rgba(148, 163, 184, 0.08);
   border-color: rgba(148, 163, 184, 0.12);
 }
-body.dark-theme .all-pill:hover,
-body.dark-theme .all-pill.active {
+body:not(.light-theme).all-pill:hover,
+body:not(.light-theme).all-pill.active {
   background: rgba(148, 163, 184, 0.16);
   border-color: rgba(148, 163, 184, 0.35);
 }
-body.dark-theme .error-pill {
+body:not(.light-theme).error-pill {
   color: #f87171;
   background: rgba(248, 113, 113, 0.1);
   border-color: rgba(248, 113, 113, 0.18);
 }
-body.dark-theme .error-pill:hover,
-body.dark-theme .error-pill.active {
+body:not(.light-theme).error-pill:hover,
+body:not(.light-theme).error-pill.active {
   background: rgba(248, 113, 113, 0.18);
   border-color: rgba(248, 113, 113, 0.4);
 }
-body.dark-theme .warning-pill {
+body:not(.light-theme).warning-pill {
   color: #fbbf24;
   background: rgba(251, 191, 36, 0.1);
   border-color: rgba(251, 191, 36, 0.18);
 }
-body.dark-theme .warning-pill:hover,
-body.dark-theme .warning-pill.active {
+body:not(.light-theme).warning-pill:hover,
+body:not(.light-theme).warning-pill.active {
   background: rgba(251, 191, 36, 0.18);
   border-color: rgba(251, 191, 36, 0.4);
 }
 
 /* Issues container */
-body.dark-theme .layer-issues {
+body:not(.light-theme).layer-issues {
   background: #080809;
 }
 
 /* Issue cards */
-body.dark-theme .issue-card {
+body:not(.light-theme).issue-card {
   background: #111114;
   border-color: rgba(255, 255, 255, 0.07);
 }
-body.dark-theme .issue-card:hover {
+body:not(.light-theme).issue-card:hover {
   border-color: rgba(99, 102, 241, 0.35);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
 }
-body.dark-theme .issue-card.expanded {
+body:not(.light-theme).issue-card.expanded {
   border-color: rgba(99, 102, 241, 0.45);
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.5);
 }
-body.dark-theme .issue-card.issue-error {
+body:not(.light-theme).issue-card.issue-error {
   border-left-color: #ef4444;
 }
-body.dark-theme .issue-card.issue-warn {
+body:not(.light-theme).issue-card.issue-warn {
   border-left-color: #f59e0b;
 }
-body.dark-theme .issue-message-text {
+body:not(.light-theme).issue-message-text {
   color: #e2e8f0;
 }
-body.dark-theme .meta-item {
+body:not(.light-theme).meta-item {
   color: #94a3b8;
   background: rgba(255, 255, 255, 0.04);
   border-color: rgba(255, 255, 255, 0.08);
 }
-body.dark-theme .issue-chevron {
+body:not(.light-theme).issue-chevron {
   color: #475569;
 }
-body.dark-theme .issue-chevron.rotated {
+body:not(.light-theme).issue-chevron.rotated {
   color: #818cf8;
 }
-body.dark-theme .issue-error .issue-sev-icon { color: #f87171; }
-body.dark-theme .issue-warn .issue-sev-icon { color: #fbbf24; }
+body:not(.light-theme).issue-error .issue-sev-icon { color: #f87171; }
+body:not(.light-theme).issue-warn .issue-sev-icon { color: #fbbf24; }
 
 /* Detail panel */
-body.dark-theme .issue-details-panel {
+body:not(.light-theme).issue-details-panel {
   background: #0a0a0c;
   border-top-color: rgba(255, 255, 255, 0.06);
 }
-body.dark-theme .di-label {
+body:not(.light-theme).di-label {
   color: #475569;
 }
-body.dark-theme .di-val {
+body:not(.light-theme).di-val {
   background: #111113;
   border-color: rgba(255, 255, 255, 0.07);
   color: #e2e8f0;
 }
-body.dark-theme .di-val.mono {
+body:not(.light-theme).di-val.mono {
   color: #818cf8;
   background: rgba(99, 102, 241, 0.08);
   border-color: rgba(99, 102, 241, 0.2);
 }
 
 /* Fix suggestion box */
-body.dark-theme .detail-fix-box {
+body:not(.light-theme).detail-fix-box {
   background: #0e0e10;
   border-color: rgba(234, 179, 8, 0.18);
 }
-body.dark-theme .df-header {
+body:not(.light-theme).df-header {
   background: rgba(234, 179, 8, 0.06);
   border-bottom-color: rgba(234, 179, 8, 0.1);
 }
-body.dark-theme .df-header mat-icon {
+body:not(.light-theme).df-header mat-icon {
   color: #ca8a04;
 }
-body.dark-theme .df-header span {
+body:not(.light-theme).df-header span {
   color: #a16207;
 }
-body.dark-theme .df-text {
+body:not(.light-theme).df-text {
   color: #cbd5e1;
 }
-body.dark-theme .df-body {
+body:not(.light-theme).df-body {
   background: #0e0e10;
 }
-body.dark-theme .df-copy-btn {
+body:not(.light-theme).df-copy-btn {
   color: #475569;
   border-color: rgba(255, 255, 255, 0.08);
   background: transparent;
 }
-body.dark-theme .df-copy-btn:hover {
+body:not(.light-theme).df-copy-btn:hover {
   background: #4f46e5;
   border-color: #4f46e5;
   color: white;
 }
 
 /* AI Fix button */
-body.dark-theme .df-ai-fix-btn {
+body:not(.light-theme).df-ai-fix-btn {
   color: #818cf8;
   background: rgba(99, 102, 241, 0.1);
   border-color: rgba(129, 140, 248, 0.22);
 }
-body.dark-theme .df-ai-fix-btn:hover {
+body:not(.light-theme).df-ai-fix-btn:hover {
   background: #4f46e5;
   border-color: #4f46e5;
   color: white;
   box-shadow: 0 2px 10px rgba(79, 70, 229, 0.4);
 }
+
