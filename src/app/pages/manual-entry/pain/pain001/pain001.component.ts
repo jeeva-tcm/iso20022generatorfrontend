@@ -10,7 +10,7 @@ import { ConfigService } from '../../../../services/config.service';
 import { FormattingService } from '../../../../services/formatting.service';
 import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
 import { debounceTime } from 'rxjs/operators';
-import { getValidationErrorMessage } from '../../../../utils/validation-utils';
+import { getValidationErrorMessage, ibanValidator } from '../../../../utils/validation-utils';
 
 @Component({
   selector: 'app-pain001',
@@ -145,6 +145,149 @@ export class Pain001Component implements OnInit, OnDestroy {
       twnNm.updateValueAndValidity({ emitEvent: false });
       adrLine1?.updateValueAndValidity({ emitEvent: false });
     });
+
+    // ─── TOP LEVEL ACCOUNT VALIDATORS ───
+    const dbtrAcctType = this.form.get('dbtrAcctType')?.value || 'none';
+    const dbtrIbanCtrl = this.form.get('dbtrIban');
+    const dbtrOthrCtrl = this.form.get('dbtrAcctOthrId');
+    if (dbtrIbanCtrl && dbtrOthrCtrl) {
+      dbtrIbanCtrl.clearValidators();
+      dbtrOthrCtrl.clearValidators();
+      if (dbtrAcctType === 'IBAN') {
+        dbtrIbanCtrl.setValidators([Validators.required, ibanValidator]);
+      } else if (dbtrAcctType === 'Othr') {
+        dbtrOthrCtrl.setValidators([Validators.required, Validators.maxLength(34)]);
+      }
+      dbtrIbanCtrl.updateValueAndValidity({ emitEvent: false });
+      dbtrOthrCtrl.updateValueAndValidity({ emitEvent: false });
+    }
+
+    const dbtrAgtAcctType = this.form.get('dbtrAgtAcctType')?.value || 'none';
+    const dbtrAgtIbanCtrl = this.form.get('dbtrAgtAcctIban');
+    const dbtrAgtOthrCtrl = this.form.get('dbtrAgtAcctOthrId');
+    if (dbtrAgtIbanCtrl && dbtrAgtOthrCtrl) {
+      dbtrAgtIbanCtrl.clearValidators();
+      dbtrAgtOthrCtrl.clearValidators();
+      if (dbtrAgtAcctType === 'IBAN') {
+        dbtrAgtIbanCtrl.setValidators([ibanValidator]);
+      } else if (dbtrAgtAcctType === 'Othr') {
+        dbtrAgtOthrCtrl.setValidators([Validators.maxLength(34)]);
+      }
+      dbtrAgtIbanCtrl.updateValueAndValidity({ emitEvent: false });
+      dbtrAgtOthrCtrl.updateValueAndValidity({ emitEvent: false });
+    }
+
+    const chrgsAcctType = this.form.get('chrgsAcctType')?.value || 'none';
+    const chrgsIbanCtrl = this.form.get('chrgsAcctIban');
+    const chrgsOthrCtrl = this.form.get('chrgsAcctOthrId');
+    if (chrgsIbanCtrl && chrgsOthrCtrl) {
+      chrgsIbanCtrl.clearValidators();
+      chrgsOthrCtrl.clearValidators();
+      if (chrgsAcctType === 'IBAN') {
+        chrgsIbanCtrl.setValidators([ibanValidator]);
+      } else if (chrgsAcctType === 'Othr') {
+        chrgsOthrCtrl.setValidators([Validators.maxLength(34)]);
+      }
+      chrgsIbanCtrl.updateValueAndValidity({ emitEvent: false });
+      chrgsOthrCtrl.updateValueAndValidity({ emitEvent: false });
+    }
+
+    // ─── TRANSACTION ACCOUNT VALIDATORS ───
+    const txs = this.transactions;
+    if (txs) {
+      txs.controls.forEach(control => {
+        if (control instanceof FormGroup) {
+          this.updateTransactionGroupConditionalValidators(control);
+        }
+      });
+    }
+  }
+
+  private updateTransactionGroupConditionalValidators(group: FormGroup) {
+    // Intermediary Agents 1, 2, 3
+    for (let i = 1; i <= 3; i++) {
+      const type = group.get(`intrmyAgt${i}AcctType`)?.value || 'none';
+      const acctCtrl = group.get(`intrmyAgt${i}Acct`);
+      const othrCtrl = group.get(`intrmyAgt${i}AcctOthrId`);
+      if (acctCtrl && othrCtrl) {
+        acctCtrl.clearValidators();
+        othrCtrl.clearValidators();
+        if (type === 'IBAN') {
+          acctCtrl.setValidators([ibanValidator]);
+        } else if (type === 'Othr') {
+          othrCtrl.setValidators([Validators.maxLength(34)]);
+        }
+        acctCtrl.updateValueAndValidity({ emitEvent: false });
+        othrCtrl.updateValueAndValidity({ emitEvent: false });
+      }
+    }
+
+    // Creditor Agent Account
+    const cdtrAgtAcctType = group.get('cdtrAgtAcctType')?.value || 'none';
+    const cdtrAgtAcctCtrl = group.get('cdtrAgtAcct');
+    const cdtrAgtOthrCtrl = group.get('cdtrAgtAcctOthrId');
+    if (cdtrAgtAcctCtrl && cdtrAgtOthrCtrl) {
+      cdtrAgtAcctCtrl.clearValidators();
+      cdtrAgtOthrCtrl.clearValidators();
+      if (cdtrAgtAcctType === 'IBAN') {
+        cdtrAgtAcctCtrl.setValidators([ibanValidator]);
+      } else if (cdtrAgtAcctType === 'Othr') {
+        cdtrAgtOthrCtrl.setValidators([Validators.maxLength(34)]);
+      }
+      cdtrAgtAcctCtrl.updateValueAndValidity({ emitEvent: false });
+      cdtrAgtOthrCtrl.updateValueAndValidity({ emitEvent: false });
+    }
+
+    // Creditor Account
+    const cdtrAcctType = group.get('cdtrAcctType')?.value || 'none';
+    const cdtrIbanCtrl = group.get('cdtrIban');
+    const cdtrOthrCtrl = group.get('cdtrAcctOthrId');
+    if (cdtrIbanCtrl && cdtrOthrCtrl) {
+      cdtrIbanCtrl.clearValidators();
+      cdtrOthrCtrl.clearValidators();
+      if (cdtrAcctType === 'IBAN') {
+        cdtrIbanCtrl.setValidators([Validators.required, ibanValidator]);
+      } else if (cdtrAcctType === 'Othr') {
+        cdtrOthrCtrl.setValidators([Validators.required, Validators.maxLength(34)]);
+      }
+      cdtrIbanCtrl.updateValueAndValidity({ emitEvent: false });
+      cdtrOthrCtrl.updateValueAndValidity({ emitEvent: false });
+    }
+  }
+
+  private getFirstIbanError(): { name: string; message: string } | null {
+    const fields = [
+      { name: 'dbtrIban', label: 'Debtor IBAN' },
+      { name: 'dbtrAgtAcctIban', label: 'Debtor Agent Account IBAN' },
+      { name: 'chrgsAcctIban', label: 'Charges Account IBAN' }
+    ];
+    for (const f of fields) {
+      const ctrl = this.form.get(f.name);
+      if (ctrl && ctrl.errors && ctrl.errors['iban']) {
+        return { name: f.label, message: ctrl.errors['iban'].message };
+      }
+    }
+
+    const txs = this.transactions;
+    if (txs) {
+      for (let i = 0; i < txs.length; i++) {
+        const txGroup = txs.at(i) as FormGroup;
+        const txFields = [
+          { name: 'intrmyAgt1Acct', label: `Transaction ${i + 1} Intermediary Agent 1 Account` },
+          { name: 'intrmyAgt2Acct', label: `Transaction ${i + 1} Intermediary Agent 2 Account` },
+          { name: 'intrmyAgt3Acct', label: `Transaction ${i + 1} Intermediary Agent 3 Account` },
+          { name: 'cdtrAgtAcct', label: `Transaction ${i + 1} Creditor Agent Account` },
+          { name: 'cdtrIban', label: `Transaction ${i + 1} Creditor IBAN` }
+        ];
+        for (const f of txFields) {
+          const ctrl = txGroup.get(f.name);
+          if (ctrl && ctrl.errors && ctrl.errors['iban']) {
+            return { name: f.label, message: ctrl.errors['iban'].message };
+          }
+        }
+      }
+    }
+    return null;
   }
 
   private buildForm() {
@@ -209,7 +352,7 @@ export class Pain001Component implements OnInit, OnDestroy {
       fwdgAgtBic: ['FWDGUS33XXX', [Validators.maxLength(11)]],
       initnSrc: ['ERP-X-SYSTEM', [Validators.maxLength(35)]],
       dbtrName: ['Holding Account One', [Validators.required, Validators.maxLength(140)]],
-      dbtrIban: ['60161331926819', [Validators.required, Validators.maxLength(34)]],
+      dbtrIban: ['GB29NWBK60161331926819', [Validators.required, ibanValidator]],
       dbtrAddrType: ['hybrid'],
       dbtrCtry: ['US', [Validators.pattern(/^[A-Z]{2,2}$/)]],
       dbtrTwnNm: ['New York', [Validators.maxLength(35)]],
@@ -225,7 +368,7 @@ export class Pain001Component implements OnInit, OnDestroy {
       dbtrAcctType: ['IBAN'],
       dbtrAcctOthrId: [''],
       dbtrAgtAcctType: ['IBAN'],
-      dbtrAgtAcctIban: ['11112222333344', [Validators.maxLength(34)]],
+      dbtrAgtAcctIban: ['GB29NWBK60161331926819', [ibanValidator]],
       dbtrAgtAcctOthrId: [''],
       dbtrAgtBic: ['CHASUS33XXX', [Validators.maxLength(11)]],
       dbtrAgtClrSysCd: ['USABA', [Validators.maxLength(5)]],
@@ -259,7 +402,7 @@ export class Pain001Component implements OnInit, OnDestroy {
       ultmtDbtrAdrLine2: ['', [Validators.maxLength(70)]],
       relMsgId: ['REL-' + Date.now(), [Validators.maxLength(35)]],
       chrgsAcctType: ['IBAN'],
-      chrgsAcctIban: ['US12345678901231', [Validators.maxLength(34)]],
+      chrgsAcctIban: ['GB29NWBK60161331926819', [ibanValidator]],
       chrgsAcctOthrId: [''],
       chrgsAcctAgtBic: ['CHASUS33XXX', [Validators.pattern(/^([A-Z0-9]{8}|[A-Z0-9]{11})$/)]],
 
@@ -274,7 +417,7 @@ export class Pain001Component implements OnInit, OnDestroy {
     const LEI = [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)];
 
     return this.fb.group({
-      instrId:['INSTR-' + Date.now(), [Validators.required, Validators.maxLength(16)]],
+      instrId:['INSTR-' + Date.now().toString().slice(-9), [Validators.required, Validators.maxLength(16)]],
       endToEndId: ['E2E-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
       uetr: [crypto.randomUUID ? crypto.randomUUID() : '550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)]],
       amount: ['12500.00', [Validators.required, Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],
@@ -335,11 +478,11 @@ export class Pain001Component implements OnInit, OnDestroy {
       cdtrAgtClrSysCd: ['', Validators.maxLength(5)],
       cdtrAgtClrSysMmbId: ['', Validators.maxLength(35)],
       cdtrAgtAcctType: ['IBAN'],
-      cdtrAgtAcct: ['GB73BARC20000012345678'],
+      cdtrAgtAcct: ['GB33BUKB20201555555555', [ibanValidator]],
       cdtrAgtAcctOthrId: [''],
       cdtrName: ['Precision Engineering Ltd', [Validators.required, Validators.maxLength(140)]],
       cdtrAcctType: ['IBAN'],
-      cdtrIban: ['GB73BARC20000012345678', [Validators.required, Validators.maxLength(34)]],
+      cdtrIban: ['GB33BUKB20201555555555', [Validators.required, ibanValidator]],
       cdtrAcctOthrId: [''],
       cdtrAddrType: ['hybrid'],
       cdtrCtry: ['GB', [Validators.pattern(/^[A-Z]{2,2}$/)]],
@@ -434,6 +577,15 @@ export class Pain001Component implements OnInit, OnDestroy {
 
   generateXml() {
     if (this.isParsingXml) return;
+
+    // Check for IBAN errors
+    const ibanErr = this.getFirstIbanError();
+    if (ibanErr) {
+      this.generatedXml = `<!-- VALIDATION ERROR: ${ibanErr.name} has an invalid IBAN format. ${ibanErr.message} -->`;
+      this.refreshLineCount();
+      return;
+    }
+
     const v = this.form.getRawValue();
     const creDtTm = v.creDtTm || this.isoNow();
 
