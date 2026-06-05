@@ -43,6 +43,7 @@ export class AppComponent implements OnInit {
     isBulkGenerateActive = false;
     isFullWidthPage = false;
     isMenuForcedClosed = false;
+    isSRMenuForcedClosed = false;
     srDropdownOpen = false;
 
     constructor(
@@ -63,6 +64,15 @@ export class AppComponent implements OnInit {
     }
 
     // ─── SR Version ───────────────────────────────────────────────────────────
+
+    get activeSR(): string {
+        return this.srVersion.currentVersion;
+    }
+
+    setActiveSR(v: string) {
+        this.srVersion.setVersion(v as SrVersion);
+        this.isSRMenuForcedClosed = true;
+    }
 
     get selectedVersion(): SrVersion {
         return this.srVersion.currentVersion;

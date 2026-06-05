@@ -1053,10 +1053,7 @@ textarea.code-editor {
     transition: all 0.15s;
 }
 
-.vm-layer.layer-pass {
-    border-color: rgba(34, 197, 94, 0.3);
-    background: rgba(34, 197, 94, 0.05);
-}
+.vm-layer.layer-pass { border-color: rgba(34, 197, 94, 0.4); background: rgba(34, 197, 94, 0.15); }
 
 .vm-layer.layer-fail {
     border-color: rgba(239, 68, 68, 0.3);
@@ -1678,3 +1675,4 @@ body.light-theme .tx-grid .form-group select:focus {
     margin-left: 0 !important;
     width: 100% !important;
 }
+

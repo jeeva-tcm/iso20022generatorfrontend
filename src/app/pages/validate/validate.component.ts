@@ -1592,12 +1592,24 @@ export class ValidateComponent implements OnInit {
     // UI always shows a clean 2-decimal millisecond value.
     return Math.round((Number(t) || 0) * 100) / 100;
   }
+  isLayerPass(report: any, k: string) {
+    const s = (this.getLayerStatus(report, k) || '').toUpperCase();
+    if (!s || s.trim() === '') return false;
+    if (s.includes('FAIL') || s.includes('ERROR')) return false;
+    if (s.includes('WARN') || s.includes('WARNING')) return false;
+    return s.includes('PASS') || s.includes('SUCCESS') || s.includes('VALID');
+  }
+  isLayerFail(report: any, k: string) {
+    const s = (this.getLayerStatus(report, k) || '').toUpperCase();
+    return s.includes('FAIL') || s.includes('ERROR');
+  }
 
-  isLayerPass(report: any, k: string) { return this.getLayerStatus(report, k).includes('✅'); }
-  isLayerFail(report: any, k: string) { return this.getLayerStatus(report, k).includes('❌'); }
   isLayerWarn(report: any, k: string) {
-    const s = this.getLayerStatus(report, k);
-    return s.includes('⚠') || s.includes('WARNING') || s.includes('WARN');
+    const s = (this.getLayerStatus(report, k) || '').toUpperCase();
+    if (s.includes('WARN') || s.includes('⚠')) return true;
+    if (s.includes('FAIL') || s.includes('ERROR') || s.includes('❌') || s.includes('?')) return false;
+    if (!s || s.trim() === '') return false;
+    return false;
   }
 
   getIssues(report: any): any[] { return report?.details ?? []; }

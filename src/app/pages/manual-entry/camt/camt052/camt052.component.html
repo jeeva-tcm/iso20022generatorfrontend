@@ -1120,7 +1120,7 @@
                                         </div>
                                         <textarea class="code-editor" [(ngModel)]="generatedXml"
                                                 (ngModelChange)="onEditorChange($event)"
-                                                onscroll="this.parentElement.querySelector('.editor-line-numbers').scrollTop = this.scrollTop; var hl = this.parentElement.querySelector('.editor-highlights-inner'); if(hl) hl.style.transform = 'translateY(-' + this.scrollTop + 'px)';" #xmlEditor
+                                                onscroll="this.parentElement.querySelector('.line-numbers').scrollTop = this.scrollTop; var hl = this.parentElement.querySelector('.editor-highlights-inner'); if(hl) hl.style.transform = 'translateY(-' + this.scrollTop + 'px)';" #xmlEditor
                                                 spellcheck="false" wrap="off"></textarea>
                                 </div>
                         </div>
@@ -1330,8 +1330,8 @@
                 <!-- Results -->
                 <div class="vm-body" *ngIf="validationStatus === 'done' && validationReport">
                         <div class="vm-status-banner"
-                                [class.pass]="(validationReport.errors || 0) === 0 && (validationReport.warnings || 0) === 0"
-                                [class.warn]="(validationReport.errors || 0) === 0 && (validationReport.warnings || 0) > 0"
+                                [class.pass]="(validationReport.errors || 0) === 0"
+                                [class.warn]="false"
                                 [class.fail]="(validationReport.errors || 0) > 0">
                                 <mat-icon>{{
                                     (validationReport.errors || 0) > 0 ? 'cancel' :

@@ -20,7 +20,6 @@
     gap: 10px;
     white-space: nowrap;
     flex-shrink: 0;
-    min-width: 120px;
     text-decoration: none;
     cursor: pointer;
     margin-left: 0;
@@ -65,7 +64,7 @@ body.light-theme .logo-secondary {
 }
 
 .spacer {
-    display: none;
+    flex: 1 1 auto;
 }
 
 .nav-links {
@@ -88,13 +87,13 @@ body.light-theme .logo-secondary {
 
 .theme-toggle {
     color: var(--text-muted) !important;
+    margin-left: 4px;
     width: 36px !important;
     height: 36px !important;
     display: flex !important;
     align-items: center;
     justify-content: center;
     overflow: visible !important;
-    flex-shrink: 0;
 }
 
 .theme-toggle:hover {
@@ -518,21 +517,29 @@ body.light-theme .msg-tag.pain {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-left: 4px;
+    margin-left: 16px;
     flex-shrink: 0;
 }
 
 .user-info img {
-    height: 52px;
-    width: 180px;
-    min-width: 80px;
+    height: 36px;
+    width: auto;
+    max-width: 160px;
     object-fit: contain;
-    background: #ffffff;
-    padding: 5px 12px;
-    border-radius: 8px;
-    border: none;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     display: block;
-    opacity: 0.92;
+    opacity: 0.95;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.user-info img:hover {
+    opacity: 1;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 body.light-theme .user-info img {
@@ -664,14 +671,6 @@ body.light-theme .user-info img {
 
     .spacer {
         display: none;
-    }
-
-    .header-actions {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        flex-shrink: 0;
-        order: 2;
     }
 
     .user-info {

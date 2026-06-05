@@ -780,10 +780,9 @@ ${this.rmtInf(v)}
             finInstnId += this.tag('ClrSysMmbId', clr, indent + 2);
         }
         if (lei) finInstnId += this.el('LEI', lei, indent + 2);
-        // CBPR_COM_R9 (strict): only InstgAgt/InstdAgt must omit Nm + PstlAdr when BICFI is set.
-        // For every other agent BICFI + Nm + PstlAdr may be emitted together � let user-entered Name/Address through.
-        const strictR9 = tag === 'InstgAgt' || tag === 'InstdAgt';
-        if (!onlyBic && (!strictR9 || !bic)) {
+        // CBPR_COM_R9: If BICFI is present, Nm + PstlAdr are NOT allowed.
+        // This applies to ALL Financial Institutions in CBPR+.
+        if (!onlyBic && !bic) {
             const addr = this.addrXml(v, prefix, indent + 2);
             if (name && addr) {
                 finInstnId += this.el('Nm', name, indent + 2);
@@ -1076,33 +1075,28 @@ ${this.rmtInf(v)}
     getLayerStatus(k: string): string { return this.validationReport?.layer_status?.[k]?.status ?? ''; }
     getLayerTime(k: string): number { return this.validationReport?.layer_status?.[k]?.time ?? 0; }
     isLayerPass(k: string) {
-        const s = this.getLayerStatus(k);
-        if (!s || s.trim() === '') return false;
-        if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
-        if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return false;
-        // Also check: if layer status is PASS/? but details has warnings for this layer, treat as warn not pass
         const layerNum = Number(k);
-        const hasLayerWarnings = (this.validationReport?.details ?? []).some(
-            (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
+        const hasErrors = (this.validationReport?.details ?? []).some(
+            (d: any) => Number(d?.layer) === layerNum && d?.severity === 'ERROR'
         );
-        if (hasLayerWarnings) return false;
-        return s.includes('?') || s.includes('PASS');
+        if (hasErrors) return false;
+        const s = (this.getLayerStatus(k) || '').toUpperCase();
+        if (s.includes('FAIL') || s.includes('ERROR')) return false;
+        return true;
     }
     isLayerFail(k: string) {
-        const s = this.getLayerStatus(k);
-        return s.includes('?') || s.includes('FAIL') || s.includes('ERROR');
+        const layerNum = Number(k);
+        const hasErrors = (this.validationReport?.details ?? []).some(
+            (d: any) => Number(d?.layer) === layerNum && d?.severity === 'ERROR'
+        );
+        if (hasErrors) return true;
+        const s = (this.getLayerStatus(k) || '').toUpperCase();
+        return s.includes('FAIL') || s.includes('ERROR');
     }
     isLayerWarn(k: string) {
-        const s = this.getLayerStatus(k);
-        if (s.includes('?') || s.includes('WARN') || s.includes('WARNING')) return true;
-        // Also treat as warn if layer status is PASS/? but has warnings in details
-        if (s.includes('?') || s.includes('FAIL') || s.includes('ERROR')) return false;
-        if (!s || s.trim() === '') return false;
-        const layerNum = Number(k);
-        return (this.validationReport?.details ?? []).some(
-            (d: any) => Number(d?.layer) === layerNum && d?.severity === 'WARNING'
-        );
+        return false;
     }
+
     getValidationIssues(): any[] { return this.validationReport?.details ?? []; }
     toggleValidationIssue(issue: any) { this.validationExpandedIssue = (this.validationExpandedIssue === issue) ? null : issue; }
     copyFix(txt: string, e: MouseEvent) { e.stopPropagation(); if (txt) { navigator.clipboard.writeText(txt).then(() => this.snackBar.open('Fix suggestion copied!', '', { duration: 1500 })); } }
