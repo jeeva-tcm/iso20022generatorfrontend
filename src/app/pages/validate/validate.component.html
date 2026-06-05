@@ -219,9 +219,15 @@
               <div class="td-col td-pass wrap-text-centered">
                 <span class="pass-val-text">{{getFilePassRate(f)}}%</span>
               </div>
-              <div class="td-col td-action" style="justify-content: center;">
+              <div class="td-col td-action" style="justify-content: center; gap: 6px; display: flex;">
                 <button class="btn-table-action" (click)="openEditor(f, $event)" matTooltip="View / Edit XML">
                   View XML
+                </button>
+                <button class="btn-table-action btn-copy-xml" (click)="copyXml(f, $event)"
+                  [matTooltip]="copiedFileId === f.id ? 'Copied!' : 'Copy XML to clipboard'">
+                  <mat-icon style="font-size:15px;width:15px;height:15px;">
+                    {{copiedFileId === f.id ? 'check' : 'content_copy'}}
+                  </mat-icon>
                 </button>
               </div>
               <div class="td-col td-export" style="justify-content: center;">

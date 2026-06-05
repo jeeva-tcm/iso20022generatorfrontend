@@ -119,6 +119,7 @@ export class ValidateComponent implements OnInit {
   activeFixIssue: IssueRef | undefined = undefined;
   activeFixIssues: IssueRef[] | undefined = undefined;
   fixMode: 'single' | 'batch' = 'single';
+  copiedFileId: string | null = null;
 
   // ── Fix All Messages (global automated AI fix) ──────────────────────────────
   fixingAllMessages = false;
@@ -459,6 +460,16 @@ export class ValidateComponent implements OnInit {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  }
+
+  copyXml(f: FileEntry, e: MouseEvent) {
+    e.stopPropagation();
+    const xml = f.fixedXml || f.content || '';
+    if (!xml) return;
+    navigator.clipboard.writeText(xml).then(() => {
+      this.copiedFileId = f.id;
+      setTimeout(() => { this.copiedFileId = null; }, 2000);
+    });
   }
 
   downloadFileReport(f: FileEntry, e: MouseEvent) {

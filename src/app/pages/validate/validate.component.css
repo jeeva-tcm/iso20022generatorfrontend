@@ -2798,6 +2798,21 @@ body.light-theme .layer-title-text {
   justify-content: center;
 }
 
+.btn-copy-xml {
+  padding: 0;
+  width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.btn-copy-xml mat-icon {
+  font-size: 15px !important;
+  width: 15px !important;
+  height: 15px !important;
+}
+
 .view-btn-alt mat-icon {
   font-size: 18px;
   width: 18px;
