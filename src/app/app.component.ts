@@ -43,7 +43,25 @@ export class AppComponent implements OnInit {
     isBulkGenerateActive = false;
     isFullWidthPage = false;
     isMenuForcedClosed = false;
+    isSRMenuForcedClosed = false;
     srDropdownOpen = false;
+
+    get activeSR(): 'SR2025' | 'SR2026' {
+        return this.srVersion.currentVersion as 'SR2025' | 'SR2026';
+    }
+
+    setActiveSR(sr: 'SR2025' | 'SR2026') {
+        if (sr === this.activeSR) {
+            this.isSRMenuForcedClosed = true;
+            return;
+        }
+        const confirmSwitch = window.confirm(`Changing the active version to ${sr} will completely reload the environment and discard any unsaved changes. Proceed?`);
+        if (confirmSwitch) {
+            this.srVersion.setVersion(sr);
+            this.isSRMenuForcedClosed = true;
+            window.location.reload();
+        }
+    }
 
     constructor(
         private router: Router,
