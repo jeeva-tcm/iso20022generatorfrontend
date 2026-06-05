@@ -432,7 +432,10 @@ export class BulkGenerateComponent implements OnInit {
 
   private loadBlocksFromBackend(cfg: MessageTypeConfig) {
     this.loadingBlocks = true;
-    this.http.get<any>(this.config.getApiUrl(`/bulk-generate/blocks/${cfg.bulkId}`)).subscribe({
+    const activeVersion = sessionStorage.getItem('iso_nova_sr_version') || 'SR2025';
+    this.http.get<any>(this.config.getApiUrl(`/bulk-generate/blocks/${cfg.bulkId}`), {
+      headers: { 'x-sr-version': activeVersion }
+    }).subscribe({
       next: (res) => {
         const blocks: MessageBlock[] = (res.blocks || []).map((b: any) => ({
           id: b.id,
@@ -807,10 +810,15 @@ export class BulkGenerateComponent implements OnInit {
       this.streamAbortController = new AbortController();
       let produced = 0;
       let buffer = '';
+      
+      const activeVersion = sessionStorage.getItem('iso_nova_sr_version') || 'SR2025';
 
       fetch(this.config.getApiUrl('/bulk-generate/stream'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json',
+            'x-sr-version': activeVersion
+        },
         body: JSON.stringify(payload),
         signal: this.streamAbortController.signal,
       }).then(async (res) => {

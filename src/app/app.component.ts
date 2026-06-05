@@ -93,6 +93,7 @@ export class AppComponent implements OnInit {
         if (confirmSwitch) {
             this.selectedVersion = v;
             this.srDropdownOpen = false;
+            window.location.reload();
         }
     }
 
