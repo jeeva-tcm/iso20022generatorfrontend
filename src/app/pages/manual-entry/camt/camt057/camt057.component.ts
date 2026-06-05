@@ -332,7 +332,7 @@ export class Camt057Component implements OnInit, OnDestroy {
             valDt: [new Date().toISOString().split('T')[0], [Validators.required, Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]],
 
             // Optional but commonly used
-            instrId: ['', [Validators.maxLength(35), Validators.pattern(/^[A-Za-z0-9\-\/]{1,35}$/)]],
+            instrId:['', [Validators.maxLength(16), Validators.pattern(/^[A-Za-z0-9\-\/]{1,35}$/)]],
             endToEndId: ['E2E-057-001', [Validators.required, Validators.maxLength(35)]],
             uetr: ['550e8400-e29b-41d4-a716-446655440001', [Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
             clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],

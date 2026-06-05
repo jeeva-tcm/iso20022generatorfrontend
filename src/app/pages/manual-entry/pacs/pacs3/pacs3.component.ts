@@ -470,7 +470,7 @@ export class Pacs3Component implements OnInit, OnDestroy {
       nbOfTxs: ['1', [Validators.required, Validators.pattern(/^[1-9]\d{0,14}$/)]], sttlmMtd: ['INDA', Validators.required],
       instgAgtBic: ['BBBBUS33XXX', BIC], instdAgtBic: ['CCCCGB2LXXX', BIC],
       instgAgtAcct: [''], instdAgtAcct: [''],
-      instrId: ['INSTR-001', [Validators.required, Validators.maxLength(35)]], endToEndId: ['E2E-001', [Validators.required, Validators.maxLength(35)]],
+      instrId:['INSTR-001', [Validators.required, Validators.maxLength(16)]], endToEndId: ['E2E-001', [Validators.required, Validators.maxLength(35)]],
       txId: ['TX-001', [Validators.maxLength(35)]],
       uetr: ['550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
       clrSysRef: ['', [Validators.pattern(/^[A-Za-z0-9]{1,35}$/)]],
@@ -761,7 +761,8 @@ export class Pacs3Component implements OnInit, OnDestroy {
       if (fl.includes('birthdt')) return 'Use YYYY-MM-DD format.';
       if (fl.includes('ctry') || fl.includes('country')) return '2-letter ISO code required.';
       if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
-      if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId' || f === 'clrSysRef') return 'Invalid Pattern (Alphanumeric only, max 35 chars).';
+      if ( f === 'orgnlInstrId') return 'Invalid Pattern (Alphanumeric only, max 16 chars).';
+      if (f === 'bizMsgId' || f === 'msgId'  || f === 'endToEndId' || f === 'txId' || f === 'clrSysRef') return 'Invalid Pattern (Alphanumeric only, max 35 chars).';
       // Address field pattern errors (must be before the generic name/nm check)
       if (fl.includes('bldgnb') || fl.includes('pstcd') || fl.includes('pstbx'))
         return 'Invalid character. Only ISO 20022 MX allowed characters permitted.';

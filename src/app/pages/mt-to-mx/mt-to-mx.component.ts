@@ -36,6 +36,16 @@ export class MtToMxComponent implements OnInit {
     isFileLoading = false;
     isFileWarning = false;
     
+    // Editor UI state
+    cursorLineMt: number | null = null;
+    cursorLineMx: number | null = null;
+    targetLineMx: number | null = null;
+    targetLineSeverityMx: 'error' | 'warning' | null = null;
+    lineSeverityMapMx: { [line: number]: 'error' | 'warning' } = {};
+    highlightBandsMx: { top: number; sev: 'error' | 'warning'; target: boolean }[] = [];
+    editorScrollTopMx = 0;
+    private readonly EDITOR_LINE_HEIGHT = 20;
+
     // Bulk Conversion State
     isBulkMode = false;
     bulkMtMessages: { 
@@ -444,6 +454,7 @@ export class MtToMxComponent implements OnInit {
 
                 this.conversionStatus = 'success';
                 this.validationReport = response.validation_report || null;
+                this.buildLineSeverityMapMx();
 
                 // Only show mandatory fields that are actually MISSING after conversion
                 this.activeFieldGuide = this.calculateMissingFields(this.detectedMtType);
@@ -462,6 +473,7 @@ export class MtToMxComponent implements OnInit {
                 this.conversionStatus = 'error';
                 this.missingFields = [];
                 this.validationReport = (err.error?.detail?.validation_report) || null;
+                this.buildLineSeverityMapMx();
 
                 // Show missing fields even on error so user knows what to fix
                 this.activeFieldGuide = this.calculateMissingFields(this.detectedMtType);
@@ -968,72 +980,8 @@ export class MtToMxComponent implements OnInit {
         this.showValidationSummary = true;
 
         // Client-side well-formedness pre-check
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(this.mxOutput, 'text/xml');
-        const parseErrorEl = doc.querySelector('parsererror');
-        if (parseErrorEl) {
-            // Collect ALL errors — don't stop at the first
-            const allDetails: any[] = [];
-            const lines = this.mxOutput.split('\n');
-            const rawAmpRe = /&(?![a-zA-Z#][a-zA-Z0-9#]*;)/g;
-            const nameTagRe = /<(Nm|StrtNm|TwnNm|BldgNm|AdrLine|DstrctNm|CtrySubDvsn|TwnLctnNm)>([^<]+)<\/\1>/g;
-            const safeCharRe = /^[a-zA-Z0-9 .,()'"-]+$/;
-
-            // 1. Find every line with a literal unescaped &
-            lines.forEach((line, idx) => {
-                rawAmpRe.lastIndex = 0;
-                if (rawAmpRe.test(line)) {
-                    const lineNum = String(idx + 1);
-                    allDetails.push({
-                        severity: 'ERROR', layer: 1, code: 'INVALID_CHARSET', path: lineNum,
-                        message: `Invalid character '&' at line ${lineNum}. The ampersand is reserved in XML and is not allowed in name or address fields.`,
-                        fix_suggestion: `Remove or replace '&' at line ${lineNum}. Write 'and' instead.`
-                    });
-                }
-            });
-
-            // 2. Find invalid charset in name/address tags
-            let tagMatch: RegExpExecArray | null;
-            nameTagRe.lastIndex = 0;
-            while ((tagMatch = nameTagRe.exec(this.mxOutput)) !== null) {
-                const tagName = tagMatch[1];
-                const tagValue = tagMatch[2].trim();
-                if (tagValue && !safeCharRe.test(tagValue)) {
-                    const before = this.mxOutput.substring(0, tagMatch.index);
-                    const lineNum = String((before.match(/\n/g) || []).length + 1);
-                    const badChars = [...new Set(tagValue.split('').filter(c => !/[a-zA-Z0-9 .,()'"-]/.test(c)))].join(' ');
-                    allDetails.push({
-                        severity: 'ERROR', layer: 1, code: 'INVALID_CHARSET', path: lineNum,
-                        message: `Field <${tagName}> at line ${lineNum} contains invalid character(s): ${badChars}. Only letters, digits, spaces and . , ( ) ' - are allowed.`,
-                        fix_suggestion: `Remove or replace ${badChars} in <${tagName}> at line ${lineNum}.`
-                    });
-                }
-            }
-
-            // 3. Generic fallback if nothing specific found
-            if (allDetails.length === 0) {
-                const rawError = parseErrorEl.textContent || '';
-                let lineNum = '?';
-                const lineMatch = rawError.match(/[Ll]ine[:\s]+(\d+)/i) || rawError.match(/(\d+):(\d+)/);
-                if (lineMatch) lineNum = lineMatch[1];
-                allDetails.push({
-                    severity: 'ERROR', layer: 1, code: 'XML_SYNTAX', path: lineNum,
-                    message: `Malformed XML at line ${lineNum} — invalid structure or unclosed tags.`,
-                    fix_suggestion: `Check line ${lineNum}: ensure all tags are properly opened and closed.`
-                });
-            }
-
-            this.validationReport = {
-                status: 'FAIL', errors: allDetails.length, warnings: 0,
-                message: this.mappedMxType || 'Unknown',
-                total_time_ms: 0,
-                layer_status: { '1': { status: '❌', time: 0 } },
-                details: allDetails
-            };
-            this.validationStatus = 'done';
-            this.showValidationModal = true;
-            return;
-        }
+        // REMOVED: Now delegating entirely to the backend layer1_validator to handle XML syntax errors
+        // so that the FixSuggester can automatically suggest structural fixes via _try_xml_recovery.
 
         this.validationReport = null;
         this.validationStatus = 'validating';
@@ -1049,6 +997,7 @@ export class MtToMxComponent implements OnInit {
         }).subscribe({
             next: (data: any) => {
                 this.validationReport = data;
+                this.buildLineSeverityMapMx();
                 this.validationStatus = 'done';
             },
             error: () => {
@@ -1062,6 +1011,7 @@ export class MtToMxComponent implements OnInit {
                         fix_suggestion: 'Ensure the validation server is running.'
                     }]
                 };
+                this.buildLineSeverityMapMx();
                 this.validationStatus = 'done';
             }
         });
@@ -1747,5 +1697,69 @@ AND CONFIRM.
             return [exStr];
         }
         return [];
+    }
+
+    lineClassMt(idx: number) {
+        return {
+            'cursor-line': idx === this.cursorLineMt
+        };
+    }
+
+    lineClassMx(idx: number) {
+        const sev = this.lineSeverityMapMx[idx];
+        return {
+            'cursor-line': idx === this.cursorLineMx,
+            'line-error': sev === 'error',
+            'line-warning': sev === 'warning',
+            'target-error': idx === this.targetLineMx && this.targetLineSeverityMx === 'error',
+            'target-warning': idx === this.targetLineMx && this.targetLineSeverityMx === 'warning',
+        };
+    }
+
+    updateCursorLineMt(ev: Event) {
+        const ta = ev.target as HTMLTextAreaElement;
+        if (!ta || ta.selectionStart == null) return;
+        this.cursorLineMt = ta.value.substring(0, ta.selectionStart).split('\n').length;
+    }
+
+    updateCursorLineMx(ev: Event) {
+        const ta = ev.target as HTMLTextAreaElement;
+        if (!ta || ta.selectionStart == null) return;
+        this.cursorLineMx = ta.value.substring(0, ta.selectionStart).split('\n').length;
+    }
+
+    private buildLineSeverityMapMx() {
+        const map: { [line: number]: 'error' | 'warning' } = {};
+        const details = (this.validationReport?.details ?? []) as any[];
+        for (const iss of details) {
+            let ln = null;
+            if (iss.line) ln = Number(iss.line);
+            else if (String(iss.path || '').trim().match(/^\d+$/)) ln = Number(iss.path);
+
+            if (!ln) continue;
+            const sev = iss.severity === 'ERROR' ? 'error'
+                      : iss.severity === 'WARNING' ? 'warning' : null;
+            if (!sev) continue;
+            if (map[ln] === 'error') continue;
+            map[ln] = sev;
+        }
+        this.lineSeverityMapMx = map;
+        this.computeHighlightBandsMx();
+    }
+
+    private computeHighlightBandsMx() {
+        const bands: { top: number; sev: 'error' | 'warning'; target: boolean }[] = [];
+        // Determine starting top based on whether validation banner is showing
+        const padTop = (this.validationReport && this.showValidationSummary) ? 52 : 10;
+        
+        for (const key of Object.keys(this.lineSeverityMapMx)) {
+            const ln = Number(key);
+            bands.push({
+                top: padTop + (ln - 1) * this.EDITOR_LINE_HEIGHT,
+                sev: this.lineSeverityMapMx[ln],
+                target: ln === this.targetLineMx,
+            });
+        }
+        this.highlightBandsMx = bands;
     }
 }

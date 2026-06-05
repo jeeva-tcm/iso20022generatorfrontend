@@ -419,7 +419,7 @@
                                 <div class="tx-grid">
                                     <div class="form-group">
                                         <label>Orgnl Instr ID</label>
-                                        <input formControlName="orgnlInstrId" maxlength="35" (input)="handleInput($event, 'transactions.' + i + '.orgnlInstrId', 'InstrId')">
+                                        <input formControlName="orgnlInstrId" maxlength="16" (input)="handleInput($event, 'transactions.' + i + '.orgnlInstrId', 'InstrId')">
                                         <div class="validation-msg" *ngIf="err('transactions.' + i + '.orgnlInstrId') as e">{{e}}</div>
                                     </div>
                                     <div class="form-group">
@@ -532,7 +532,7 @@
                                         </div>
                                         <textarea class="code-editor" [(ngModel)]="generatedXml"
                                                 (ngModelChange)="onEditorChange($event)"
-                                                (scroll)="syncScroll(xmlEditor, lineNumbers)" #xmlEditor
+                                                onscroll="this.parentElement.querySelector('.editor-line-numbers').scrollTop = this.scrollTop; var hl = this.parentElement.querySelector('.editor-highlights-inner'); if(hl) hl.style.transform = 'translateY(-' + this.scrollTop + 'px)';" #xmlEditor
                                                 spellcheck="false" wrap="off"></textarea>
                                 </div>
                         </div>

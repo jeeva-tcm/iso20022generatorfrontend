@@ -161,6 +161,17 @@
           </button>
         </div>
 
+        <button class="btn-fix-all"
+                *ngIf="hasFixableFiles"
+                (click)="fixAllMessagesAI()"
+                [disabled]="fixingAllMessages"
+                [title]="fixingAllMessages ? 'Fixing all messages…' : 'Run AI fix on all failed messages'">
+          <mat-icon *ngIf="!fixingAllMessages">auto_fix_high</mat-icon>
+          <mat-icon *ngIf="fixingAllMessages" class="spin-slow">progress_activity</mat-icon>
+          <span *ngIf="!fixingAllMessages">Fix All Messages</span>
+          <span *ngIf="fixingAllMessages">{{ fixAllProgressDone }}/{{ fixAllProgressTotal }}</span>
+        </button>
+
         <button class="btn-download" (click)="downloadReport()">
           <mat-icon>file_download</mat-icon>
           Download Report
@@ -208,9 +219,15 @@
               <div class="td-col td-pass wrap-text-centered">
                 <span class="pass-val-text">{{getFilePassRate(f)}}%</span>
               </div>
-              <div class="td-col td-action" style="justify-content: center;">
+              <div class="td-col td-action" style="justify-content: center; gap: 6px; display: flex;">
                 <button class="btn-table-action" (click)="openEditor(f, $event)" matTooltip="View / Edit XML">
                   View XML
+                </button>
+                <button class="btn-table-action btn-copy-xml" (click)="copyXml(f, $event)"
+                  [matTooltip]="copiedFileId === f.id ? 'Copied!' : 'Copy XML to clipboard'">
+                  <mat-icon style="font-size:15px;width:15px;height:15px;">
+                    {{copiedFileId === f.id ? 'check' : 'content_copy'}}
+                  </mat-icon>
                 </button>
               </div>
               <div class="td-col td-export" style="justify-content: center;">
@@ -224,6 +241,31 @@
             <!-- Expanded Row Details -->
             <div class="row-details" *ngIf="expandedFile === f" (click)="$event.stopPropagation()">
               <div class="details-inner" *ngIf="f.report; else noReport">
+
+                <!-- ── Structural Fix Banner (shown when backend recovered malformed XML) ── -->
+                <div class="structural-fix-banner" *ngIf="f.fixedXml">
+                  <div class="sfb-left">
+                    <mat-icon class="sfb-icon">auto_fix_high</mat-icon>
+                    <div class="sfb-text">
+                      <strong>Auto-Repair Available</strong>
+                      <span>The backend detected and repaired structural issues (unclosed tags, missing elements, or reserved characters). Click to apply the fix.</span>
+                    </div>
+                  </div>
+                  <button class="btn-structural-fix" (click)="applyStructuralFix(f, $event)">
+                    <mat-icon>build_circle</mat-icon>
+                    Apply Structural Fix
+                  </button>
+                </div>
+
+                <!-- Fix All button (shown only when there are fixable ERROR-severity issues) -->
+                <div class="fix-all-row" *ngIf="getFixableCount(f.report) > 0">
+                  <button class="btn-fix-all-global"
+                    (click)="openFixAll(f, $event)"
+                    title="Let AI fix all errors in this message at once">
+                    <mat-icon>auto_fix_high</mat-icon>
+                    Fix File Errors ({{ getFixableCount(f.report) }} error{{ getFixableCount(f.report) !== 1 ? 's' : '' }})
+                  </button>
+                </div>
 
                 <!-- Layer Summary (L1, L2, L3) at the top -->
                 <div class="layer-summaries-row">
@@ -254,11 +296,12 @@
 
                 <!-- Issues details grouping below -->
                 <div class="layer-detail-item" *ngFor="let l of getGroupedIssues(f.report); trackBy: trackByLayerName">
-                  <div class="layer-title" (click)="toggleLayer(f, l.name, $event)"
-                    [class.layer-expanded]="isLayerExpanded(f, l.name)">
-                    <mat-icon class="layer-chevron"
-                      [style.transform]="isLayerExpanded(f, l.name) ? 'rotate(90deg)' : 'rotate(0deg)'">chevron_right</mat-icon>
-                    <span class="layer-label">L{{l.layer}} - {{l.name}}</span>
+                  <div class="layer-title" [class.layer-expanded]="isLayerExpanded(f, l.name)">
+                    <div class="layer-toggle" (click)="toggleLayer(f, l.name, $event)" style="display: flex; align-items: center; gap: 12px; cursor: pointer; flex: 1;">
+                      <mat-icon class="layer-chevron"
+                        [style.transform]="isLayerExpanded(f, l.name) ? 'rotate(90deg)' : 'rotate(0deg)'">chevron_right</mat-icon>
+                      <span class="layer-label">L{{l.layer}} - {{l.name}}</span>
+                    </div>
 
                     <div class="layer-stats-pills" style="margin-left: auto; display: flex; gap: 12px;" (click)="$event.stopPropagation()">
                       <span class="layer-stat-pill all-pill" (click)="setIssueFilter(f, l.name, 'ALL', $event)"
@@ -293,7 +336,12 @@
                         <div class="issue-center">
                           <span class="issue-message-text">{{issue.message}}</span>
                           <div class="issue-meta-info" *ngIf="getIssueLine(issue)">
-                            <span class="meta-item">
+                            <span class="meta-item meta-line-link"
+                                  [class.meta-line-error]="issue.severity === 'ERROR'"
+                                  [class.meta-line-warn]="issue.severity === 'WARNING'"
+                                  (click)="jumpToLine(f, issue, $event)"
+                                  matTooltip="Open in editor and jump to this line">
+                              <mat-icon class="meta-line-icon">edit</mat-icon>
                               Line: {{getIssueLine(issue)}}
                             </span>
                           </div>
@@ -311,7 +359,10 @@
 
                           <div class="detail-item" *ngIf="getIssueLine(issue)">
                             <div class="di-label">LINE NUMBER</div>
-                            <div class="di-val mono">
+                            <div class="di-val mono di-line-link"
+                                 (click)="jumpToLine(f, issue, $event)"
+                                 matTooltip="Open in editor and jump to this line">
+                              <mat-icon class="meta-line-icon">edit</mat-icon>
                               {{getIssueLine(issue)}}
                             </div>
                           </div>
@@ -330,6 +381,16 @@
                               <mat-icon>content_copy</mat-icon>
                             </button>
                           </div>
+                        </div>
+
+                        <!-- AI Fix button -->
+                        <div class="df-ai-fix-row">
+                          <button class="df-ai-fix-btn"
+                            (click)="openFix(issue, f, $event)"
+                            title="Let AI generate and apply a fix for this issue">
+                            <mat-icon>auto_fix_high</mat-icon>
+                            AI Fix
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -442,14 +503,42 @@
     </div>
     <div class="editor-body">
       <div class="editor-line-numbers" #lineNumbers>
-        <div *ngFor="let idx of editorLineCount" [class.active-line]="idx === targetLine">{{idx}}</div>
+        <div *ngFor="let idx of editorLineCount" [ngClass]="lineClass(idx)">{{idx}}</div>
+      </div>
+      <!-- Full-width line highlights drawn behind the (transparent) textarea -->
+      <div class="editor-highlights" aria-hidden="true">
+        <div class="editor-highlights-inner" [style.transform]="'translateY(' + (-editorScrollTop) + 'px)'">
+          <div *ngFor="let band of highlightBands" class="hl-band"
+               [class.hl-error]="band.sev === 'error'"
+               [class.hl-warning]="band.sev === 'warning'"
+               [class.hl-target]="band.target"
+               [style.top.px]="band.top"></div>
+        </div>
+      </div>
+      <!-- Legend: explains the line-number colour coding -->
+      <div class="editor-legend">
+        <span class="legend-item"><span class="legend-dot legend-error"></span>Error line</span>
+        <span class="legend-item"><span class="legend-dot legend-warn"></span>Warning line</span>
       </div>
       <textarea class="editor-textarea" [(ngModel)]="editingEntry.content" (ngModelChange)="onEditorChange($event)"
-        (scroll)="syncScroll(xmlEditor, lineNumbers)" (keydown)="handleKeyDown($event)" #xmlEditor wrap="off"
-        spellcheck="false"></textarea>
+        onscroll="this.parentElement.querySelector('.editor-line-numbers').scrollTop = this.scrollTop; var hl = this.parentElement.querySelector('.editor-highlights-inner'); if(hl) hl.style.transform = 'translateY(-' + this.scrollTop + 'px)';" (keydown)="handleKeyDown($event)"
+        (click)="updateCursorLine($event)" (keyup)="updateCursorLine($event)" (focus)="updateCursorLine($event)"
+        #xmlEditor wrap="off" spellcheck="false"></textarea>
     </div>
   </div>
 </div>
+
+<!-- ── AI Fix Suggester Modal ── -->
+<app-fix-suggester
+  *ngIf="fixSuggesterOpen && fixTarget"
+  [xml]="fixTarget.content"
+  [issue]="activeFixIssue"
+  [issues]="activeFixIssues"
+  [mode]="fixMode"
+  [fileName]="fixTarget.name"
+  (applied)="onFixApplied(fixTarget, $event)"
+  (dismissed)="closeFix()">
+</app-fix-suggester>
 
 <!-- Modal: Paste XML -->
 <div class="custom-modal-overlay" *ngIf="showPasteModal" (click)="closePasteModal()">

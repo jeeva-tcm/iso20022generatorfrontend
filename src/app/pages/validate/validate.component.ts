@@ -13,6 +13,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { ConfigService } from '../../services/config.service';
+import { FixSuggesterComponent } from '../../components/fix-suggester/fix-suggester.component';
+import { IssueRef } from '../../services/fix-suggester.service';
 
 export interface FileEntry {
   id: string;
@@ -25,6 +27,8 @@ export interface FileEntry {
   messageType: string;
   handle?: any;
   origin?: 'Pasted' | 'Uploaded' | 'Manual Entry' | 'MT to MX';
+  /** Auto-repaired XML returned by the backend FixSuggester for structural/syntax errors */
+  fixedXml?: string;
 }
 
 @Component({
@@ -40,6 +44,7 @@ export interface FileEntry {
     MatAutocompleteModule,
     MatFormFieldModule,
     MatInputModule,
+    FixSuggesterComponent,
   ],
   templateUrl: './validate.component.html',
   styleUrls: ['./validate.component.css']
@@ -76,6 +81,17 @@ export class ValidateComponent implements OnInit {
   selectedView = 'layer-1'; // Default active view
   editorLineCount: number[] = [];
   targetLine: number | null = null;
+  targetLineSeverity: 'error' | 'warning' | null = null;
+  /** line the text caret currently sits on (1-based) — drives the active-line highlight */
+  cursorLine: number | null = null;
+  /** line number → severity, used to colour error/warning lines in the editor gutter */
+  lineSeverityMap: { [line: number]: 'error' | 'warning' } = {};
+  /** full-width highlight bands drawn behind the textarea (one per flagged line) */
+  highlightBands: { top: number; sev: 'error' | 'warning'; target: boolean }[] = [];
+  editorScrollTop = 0;
+  // Must match the .editor-textarea CSS: font-size 13px × line-height 1.5, padding-top 10px
+  private readonly EDITOR_LINE_HEIGHT = 20;
+  private readonly EDITOR_PAD_TOP = 10;
   private xmlHistory: string[] = [];
   private xmlHistoryIdx: number = -1;
   private maxHistory = 200;
@@ -96,6 +112,164 @@ export class ValidateComponent implements OnInit {
 
   // ── Selected issue (detail view) ───────────────────────────────────────────
   expandedIssue: any = null;
+
+  // ── Inline Fix Suggester state ──────────────────────────────────────────────
+  fixSuggesterOpen = false;
+  fixTarget: FileEntry | null = null;
+  activeFixIssue: IssueRef | undefined = undefined;
+  activeFixIssues: IssueRef[] | undefined = undefined;
+  fixMode: 'single' | 'batch' = 'single';
+  copiedFileId: string | null = null;
+
+  // ── Fix All Messages (global automated AI fix) ──────────────────────────────
+  fixingAllMessages = false;
+  fixAllProgressDone = 0;
+  fixAllProgressTotal = 0;
+
+  get hasFixableFiles(): boolean {
+    return this.files.some(f =>
+      f.status === 'failed' &&
+      (f.fixedXml != null || this.getFixableCount(f.report) > 0)
+    );
+  }
+
+  async fixAllMessagesAI() {
+    const targets = this.files.filter(f =>
+      f.status === 'failed' &&
+      (f.fixedXml != null || this.getFixableCount(f.report) > 0)
+    );
+    if (!targets.length || this.fixingAllMessages) return;
+
+    this.fixingAllMessages = true;
+    this.fixAllProgressDone = 0;
+    this.fixAllProgressTotal = targets.length;
+    this.cdr.markForCheck();
+
+    for (const entry of targets) {
+      try {
+        if (entry.fixedXml) {
+          entry.content = this.formatXmlString(entry.fixedXml);
+          entry.fixedXml = undefined;
+          this.validateFile(entry);
+        } else {
+          const msgType = entry.report?.message ?? 'Auto-detect';
+          await new Promise<void>((resolve) => {
+            this.http.post<any>(this.config.getApiUrl('/fixes/auto-fix'), {
+              xml: entry.content,
+              message_type: msgType
+            }).subscribe({
+              next: (data) => {
+                if (data?.new_xml) {
+                  entry.content = this.formatXmlString(data.new_xml);
+                }
+                this.validateFile(entry);
+                resolve();
+              },
+              error: () => resolve()
+            });
+          });
+        }
+      } catch { /* continue to next file */ }
+      this.fixAllProgressDone++;
+      this.cdr.markForCheck();
+    }
+
+    this.fixingAllMessages = false;
+    this.cdr.markForCheck();
+    const n = targets.length;
+    this.snackBar.open(`AI fix applied to ${n} file${n !== 1 ? 's' : ''} — re-validating…`, '', { duration: 3000 });
+  }
+
+  openFix(issue: any, entry: FileEntry, event: Event) {
+    event.stopPropagation();
+    this.fixTarget = entry;
+    this.activeFixIssue = issue as IssueRef;
+    this.activeFixIssues = undefined;
+    this.fixMode = 'single';
+    this.fixSuggesterOpen = true;
+  }
+
+  openFixAll(entry: FileEntry, event: Event) {
+    event.stopPropagation();
+    this.fixTarget = entry;
+    // Only auto-fix ERROR-severity issues. Warnings (e.g. "BIC not found in
+    // directory") are advisory, not deterministically fixable, so they don't
+    // belong in the batch.
+    this.activeFixIssues = this.getFixableIssues(entry.report) as IssueRef[];
+    this.activeFixIssue = undefined;
+    this.fixMode = 'batch';
+    this.fixSuggesterOpen = true;
+  }
+
+  /** Issues eligible for AI auto-fix: ERROR severity only. */
+  getFixableIssues(report: any): any[] {
+    return (report?.details ?? []).filter((i: any) => i?.severity === 'ERROR');
+  }
+
+  /** Count of fixable (ERROR-severity) issues — drives the Fix All button label. */
+  getFixableCount(report: any): number {
+    return this.getFixableIssues(report).length;
+  }
+
+  /** Indent XML string with 4-space indentation for consistent display after fixes. */
+  private formatXmlString(xml: string): string {
+    try {
+      const tab = '    ';
+      let formatted = '';
+      let indent = '';
+      const cleaned = xml.replace(/>\s+</g, '><').trim();
+      const reg = /(<[^/!?][^>]*>[^<]*<\/[^>]+>)|(<[^>]+\/>)|(<[^>]+>)|(<!--[\s\S]*?-->)|([^<]+)/g;
+      const nodes = cleaned.match(reg) || [];
+      nodes.forEach(node => {
+        const trimmed = node.trim();
+        if (!trimmed) return;
+        if (trimmed.startsWith('</')) {
+          if (indent.length >= tab.length) indent = indent.substring(tab.length);
+          formatted += indent + trimmed + '\n';
+        } else if ((trimmed.startsWith('<') && trimmed.includes('</')) || trimmed.endsWith('/>')) {
+          formatted += indent + trimmed + '\n';
+        } else if (trimmed.startsWith('<') && !trimmed.startsWith('<?')) {
+          formatted += indent + trimmed + '\n';
+          indent += tab;
+        } else {
+          formatted += indent + trimmed + '\n';
+        }
+      });
+      return formatted.trim();
+    } catch {
+      return xml;
+    }
+  }
+
+  onFixApplied(entry: FileEntry, newXml: string) {
+    entry.content = this.formatXmlString(newXml);
+    this.fixSuggesterOpen = false;
+    this.fixTarget = null;
+    this.saveWorkspace();
+    this.validateFile(entry);
+    this.snackBar.open('Fix applied — re-validating…', '', { duration: 2500 });
+  }
+
+  closeFix() {
+    this.fixSuggesterOpen = false;
+    this.fixTarget = null;
+  }
+
+  /**
+   * Applies the backend's auto-repaired XML (fixed_xml from FixSuggester._try_xml_recovery)
+   * directly into the entry content, clears the fixedXml field, and re-validates.
+   * This is the one-click structural fix for malformed XML / unclosed tag errors.
+   */
+  applyStructuralFix(entry: FileEntry, event: Event) {
+    event.stopPropagation();
+    if (!entry.fixedXml) return;
+    entry.content = this.formatXmlString(entry.fixedXml);
+    entry.fixedXml = undefined;
+    this.saveWorkspace();
+    this.validateFile(entry);
+    this.snackBar.open('Structural fix applied — re-validating…', '', { duration: 2500 });
+  }
+
 
   // ── Summary computed from all files ────────────────────────────────────────
   get summary() {
@@ -286,6 +460,16 @@ export class ValidateComponent implements OnInit {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  }
+
+  copyXml(f: FileEntry, e: MouseEvent) {
+    e.stopPropagation();
+    const xml = f.fixedXml || f.content || '';
+    if (!xml) return;
+    navigator.clipboard.writeText(xml).then(() => {
+      this.copiedFileId = f.id;
+      setTimeout(() => { this.copiedFileId = null; }, 2000);
+    });
   }
 
   downloadFileReport(f: FileEntry, e: MouseEvent) {
@@ -832,6 +1016,11 @@ export class ValidateComponent implements OnInit {
     e.stopPropagation();
     this.editingEntry = f;
     this.originalContent = f.content;
+    this.targetLine = null;
+    this.targetLineSeverity = null;
+    this.cursorLine = 1;
+    this.editorScrollTop = 0;
+    this.buildLineSeverityMap(f);
     this.updateEditorLines(f.content);
 
     // Initialize history
@@ -844,6 +1033,64 @@ export class ValidateComponent implements OnInit {
       this.editingEntry.content = this.originalContent;
     }
     this.editingEntry = null;
+    this.targetLine = null;
+    this.targetLineSeverity = null;
+    this.cursorLine = null;
+    this.lineSeverityMap = {};
+    this.highlightBands = [];
+  }
+
+  /** Build a line → severity map from the file's report so the editor can
+   *  colour every error line red and every warning line yellow. */
+  private buildLineSeverityMap(f: FileEntry | null) {
+    const map: { [line: number]: 'error' | 'warning' } = {};
+    const details = ((f as any)?.report?.details ?? []) as any[];
+    for (const iss of details) {
+      const ln = this.getIssueLine(iss);
+      if (!ln) continue;
+      const sev = iss.severity === 'ERROR' ? 'error'
+                : iss.severity === 'WARNING' ? 'warning' : null;
+      if (!sev) continue;
+      // ERROR takes precedence over WARNING when both fall on the same line
+      if (map[ln] === 'error') continue;
+      map[ln] = sev;
+    }
+    this.lineSeverityMap = map;
+    this.computeHighlightBands();
+  }
+
+  /** Position one full-width colour band per flagged line, behind the textarea. */
+  private computeHighlightBands() {
+    const bands: { top: number; sev: 'error' | 'warning'; target: boolean }[] = [];
+    for (const key of Object.keys(this.lineSeverityMap)) {
+      const ln = Number(key);
+      bands.push({
+        top: this.EDITOR_PAD_TOP + (ln - 1) * this.EDITOR_LINE_HEIGHT,
+        sev: this.lineSeverityMap[ln],
+        target: ln === this.targetLine,
+      });
+    }
+    this.highlightBands = bands;
+  }
+
+  /** CSS classes for a gutter line number (severity colouring + active caret line). */
+  lineClass(idx: number) {
+    const sev = this.lineSeverityMap[idx];
+    return {
+      'cursor-line': idx === this.cursorLine,        // active line follows the caret
+      'line-error': sev === 'error',
+      'line-warning': sev === 'warning',
+      'target-error': idx === this.targetLine && this.targetLineSeverity === 'error',
+      'target-warning': idx === this.targetLine && this.targetLineSeverity === 'warning',
+    };
+  }
+
+  /** Track which line the caret is on so the gutter highlights the active line
+   *  (code-editor style). Fired on click / keyup / focus in the textarea. */
+  updateCursorLine(ev: Event) {
+    const ta = ev.target as HTMLTextAreaElement;
+    if (!ta || ta.selectionStart == null) return;
+    this.cursorLine = ta.value.substring(0, ta.selectionStart).split('\n').length;
   }
 
   copyEditorXml() {
@@ -987,6 +1234,8 @@ export class ValidateComponent implements OnInit {
 
   syncScroll(textarea: HTMLTextAreaElement, lineNumbers: HTMLDivElement) {
     lineNumbers.scrollTop = textarea.scrollTop;
+    // Keep the line-highlight overlay aligned with the scrolled text
+    this.editorScrollTop = textarea.scrollTop;
   }
 
   handleKeyDown(e: KeyboardEvent) {
@@ -1109,75 +1358,8 @@ export class ValidateComponent implements OnInit {
     if (!entry.content?.trim()) return;
 
     // Client-side well-formedness pre-check
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(entry.content, 'text/xml');
-    const parseErrorEl = doc.querySelector('parsererror');
-    if (parseErrorEl) {
-      // Collect ALL errors from the raw content — don't stop at the first one
-      const allDetails: any[] = [];
-      const lines = entry.content.split('\n');
-      const rawAmpRe = /&(?![a-zA-Z#][a-zA-Z0-9#]*;)/g;
-      // Safe charset for name/address tags
-      const nameTagRe = /<(Nm|StrtNm|TwnNm|BldgNm|AdrLine|DstrctNm|CtrySubDvsn|TwnLctnNm)>([^<]+)<\/\1>/g;
-      const safeCharRe = /^[a-zA-Z0-9 .,()'"-]+$/;
-
-      // 1. Find every line with a literal unescaped &
-      lines.forEach((line, idx) => {
-        let m: RegExpExecArray | null;
-        rawAmpRe.lastIndex = 0;
-        while ((m = rawAmpRe.exec(line)) !== null) {
-          const lineNum = String(idx + 1);
-          allDetails.push({
-            severity: 'ERROR', layer: 1, code: 'INVALID_CHARSET', path: lineNum,
-            message: `Invalid character '&' at line ${lineNum}. The ampersand is a reserved XML character and is not allowed in name or address fields.`,
-            fix_suggestion: `Remove or replace the '&' at line ${lineNum}. Write 'and' instead of '&'.`
-          });
-          break; // one report per line is enough
-        }
-      });
-
-      // 2. Find invalid charset in name/address tags (works on content even if XML is partially broken)
-      let tagMatch: RegExpExecArray | null;
-      nameTagRe.lastIndex = 0;
-      while ((tagMatch = nameTagRe.exec(entry.content)) !== null) {
-        const tagName = tagMatch[1];
-        const tagValue = tagMatch[2].trim();
-        if (tagValue && !safeCharRe.test(tagValue)) {
-          const before = entry.content.substring(0, tagMatch.index);
-          const lineNum = String((before.match(/\n/g) || []).length + 1);
-          const badChars = [...new Set(tagValue.split('').filter(c => !/[a-zA-Z0-9 .,()'"-]/.test(c)))].join(' ');
-          allDetails.push({
-            severity: 'ERROR', layer: 1, code: 'INVALID_CHARSET', path: lineNum,
-            message: `Field <${tagName}> at line ${lineNum} contains invalid character(s): ${badChars}. Only letters, digits, spaces and . , ( ) ' - are allowed.`,
-            fix_suggestion: `Remove or replace the invalid character(s) ${badChars} in <${tagName}> at line ${lineNum}.`
-          });
-        }
-      }
-
-      // 3. If nothing specific found, fall back to a generic parse error with the browser's line number
-      if (allDetails.length === 0) {
-        const rawError = parseErrorEl.textContent || '';
-        let lineNum = '?';
-        const lineMatch = rawError.match(/[Ll]ine[:\s]+(\d+)/i) || rawError.match(/(\d+):(\d+)/);
-        if (lineMatch) lineNum = lineMatch[1];
-        allDetails.push({
-          severity: 'ERROR', layer: 1, code: 'XML_SYNTAX', path: lineNum,
-          message: `Malformed XML at line ${lineNum} — invalid structure or unclosed tags.`,
-          fix_suggestion: `Check line ${lineNum}: ensure all tags are properly opened and closed and values contain no reserved XML characters.`
-        });
-      }
-
-      const totalErrors = allDetails.length;
-      this.snackBar.open(`${entry.name}: ${totalErrors} error(s) found`, 'Dismiss', { duration: 4000 });
-      entry.status = 'failed';
-      entry.report = {
-        status: 'FAIL', errors: totalErrors, warnings: 0,
-        message: 'Unknown', total_time_ms: 0,
-        layer_status: { '1': { status: '❌', time: 0 } },
-        details: allDetails
-      };
-      return;
-    }
+    // REMOVED: Now delegating entirely to the backend layer1_validator to handle XML syntax errors
+    // so that the FixSuggester can automatically suggest structural fixes via _try_xml_recovery.
 
     entry.status = 'validating';
     entry.report = null;
@@ -1221,6 +1403,25 @@ export class ValidateComponent implements OnInit {
         }
         entry.report = data;
         entry.messageType = data.message ?? '';
+
+        // fixed_xml is no longer computed inline during validation (too slow for errored
+        // messages). Request it in the background now so the validation result is instant.
+        entry.fixedXml = undefined;
+        if (data.errors > 0) {
+          const xmlForFix = entry.content;
+          const msgTypeForFix = data.message ?? 'Auto-detect';
+          this.http.post(this.config.getApiUrl('/fixes/auto-fix'), {
+            xml: xmlForFix,
+            message_type: msgTypeForFix
+          }).subscribe({
+            next: (fixData: any) => {
+              if (fixData?.new_xml && fixData.new_xml !== entry.content) {
+                entry.fixedXml = fixData.new_xml;
+              }
+            },
+            error: () => { /* fix preview optional — ignore failures */ }
+          });
+        }
 
         // Rename pasted files to use the detected message type
         if (entry.name.startsWith('pasted-') && entry.messageType && entry.messageType !== 'Unknown') {
@@ -1386,7 +1587,10 @@ export class ValidateComponent implements OnInit {
   }
 
   getLayerTime(report: any, k: string): number {
-    return report?.layer_status?.[k]?.time ?? 0;
+    const t = report?.layer_status?.[k]?.time ?? 0;
+    // Guard against unrounded backend timings (e.g. 0.3571510314941406) so the
+    // UI always shows a clean 2-decimal millisecond value.
+    return Math.round((Number(t) || 0) * 100) / 100;
   }
 
   isLayerPass(report: any, k: string) { return this.getLayerStatus(report, k).includes('✅'); }
@@ -1449,17 +1653,23 @@ export class ValidateComponent implements OnInit {
     return 'other';
   }
 
-  jumpToLine(f: FileEntry, lineNum: number | null, event: MouseEvent) {
+  jumpToLine(f: FileEntry, issue: any, event: MouseEvent) {
     if (event) {
       event.stopPropagation();
       event.preventDefault();
     }
+    const lineNum = this.getIssueLine(issue);
     if (!lineNum) return;
 
     try {
       this.editingEntry = f;
       this.originalContent = f.content;
       this.targetLine = Number(lineNum);
+      this.targetLineSeverity = issue?.severity === 'ERROR' ? 'error'
+                              : issue?.severity === 'WARNING' ? 'warning' : null;
+      this.cursorLine = Number(lineNum);
+      this.editorScrollTop = 0;
+      this.buildLineSeverityMap(f);
       this.updateEditorLines(f.content || '');
 
       // Initialize history
@@ -1501,7 +1711,10 @@ export class ValidateComponent implements OnInit {
         }
 
         textarea.focus();
-        textarea.setSelectionRange(charPos, charPos + (lines[targetL] || '').length);
+        // Place the cursor at the start of the line (collapsed selection) so the
+        // red/yellow line-highlight band stays visible instead of being covered
+        // by the browser's blue text-selection colour.
+        textarea.setSelectionRange(charPos, charPos);
 
         // Calculate scroll position (font-size 13px * line-height 1.5 = 19.5px)
         const lineHeight = 19.5;

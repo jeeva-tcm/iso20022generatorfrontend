@@ -1104,7 +1104,8 @@ export class Pacs8Component implements OnInit, OnDestroy {
       if (fl.includes('birthdt')) return 'Use YYYY-MM-DD format.';
       if (fl.includes('ctry') || fl.includes('country')) return '2-letter ISO code required.';
       if (f === 'nbOfTxs') return 'Must be 1-15 digits.';
-      if (f === 'bizMsgId' || f === 'msgId' || f === 'instrId' || f === 'endToEndId' || f === 'txId' || f === 'clrSysRef') return 'Invalid Pattern (Alphanumeric only, max 35 chars).';
+      if ( f === 'orgnlInstrId') return 'Invalid Pattern (Alphanumeric only, max 16 chars).';
+      if (f === 'bizMsgId' || f === 'msgId'  || f === 'endToEndId' || f === 'txId' || f === 'clrSysRef') return 'Invalid Pattern (Alphanumeric only, max 35 chars).';
       // Address field pattern errors (must be before the generic name/nm check)
       if (fl.includes('bldgnb') || fl.includes('pstcd') || fl.includes('pstbx'))
         return 'Invalid character. Only ISO 20022 MX allowed characters permitted.';

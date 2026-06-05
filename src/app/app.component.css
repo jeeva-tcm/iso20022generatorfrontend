@@ -1,15 +1,12 @@
 .header {
     display: flex;
     align-items: center;
-    padding: 0 32px 0 24px;
-    gap: 16px;
-    height: 80px;
-    overflow: visible !important;
+    padding: 0 32px;
+    height: 60px;
     background: var(--header-bg);
-    backdrop-filter: blur(24px) saturate(200%);
-    -webkit-backdrop-filter: blur(24px) saturate(200%);
-    box-shadow: none;
-    border-bottom: none;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--border-light);
     position: fixed;
     top: 0;
     left: 0;
@@ -74,50 +71,19 @@ body.light-theme .logo-secondary {
 .nav-links {
     display: flex;
     align-items: center;
-    position: static;
-    left: auto;
-    transform: none;
-    gap: 4px;
-    padding: 6px 8px;
-    border-radius: 18px;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    flex: 1 1 0;
-    justify-content: center;
-    min-width: 0;
-    overflow: visible;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    gap: 2px;
+    padding: 4px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-light);
 }
 
-/* Dark Theme Capsule */
-:host-context(.dark-theme) .nav-links,
-:host:not(.light-theme) .nav-links {
-    background: rgba(15, 23, 42, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-/* Light Theme Capsule - Ultra Clean */
 :host-context(.light-theme) .nav-links {
-    background: rgba(255, 255, 255, 0.5);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-}
-
-/* Right-side header actions (SR dropdown + theme toggle + logo) */
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-    overflow: visible;
-    position: relative;
-    z-index: 1001;
-}
-
-/* Visual divider before theme toggle */
-.header-actions .theme-toggle {
-    margin-left: 4px;
-    padding-left: 4px;
-    border-left: 1px solid rgba(128, 128, 128, 0.2);
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.07);
 }
 
 .theme-toggle {
@@ -146,29 +112,34 @@ body.light-theme .logo-secondary {
 
 .nav-links a {
     color: var(--text-muted);
-    font-weight: 700;
-    border-radius: 12px;
-    padding: 7px 12px;
-    font-size: 0.75rem;
-    letter-spacing: 0.3px;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 600;
+    border-radius: 15px;
+    padding: 5px 11px;
+    font-size: 0.7rem;
+    letter-spacing: 0.6px;
+    transition: all 0.2s ease;
 }
 
 .nav-links a:hover {
     color: var(--text-main);
-    background: var(--bg-card-hover);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+:host-context(.light-theme) .nav-links a:hover {
+    background: rgba(0, 0, 0, 0.05);
 }
 
 .active-link {
-    background: var(--accent-color) !important;
-    color: #ffffff !important;
-    box-shadow: none;
+    background: #3b5bdb !important;
+    color: #fff !important;
+    font-weight: 700 !important;
+    box-shadow: none !important;
 }
 
 :host-context(.light-theme) .active-link {
-    background: #1d4ed8 !important;
-    color: #ffffff !important;
-    box-shadow: none;
+    background: #3b5bdb !important;
+    color: #fff !important;
+    box-shadow: none !important;
 }
 
 /* ===== Dropdown Menu — Banking Grade ===== */
@@ -220,17 +191,17 @@ body.light-theme .logo-secondary {
     gap: 1px;
 }
 
-/* Accent top-line — banking signature */
+/* Accent top-line */
 .dropdown-menu::before {
     content: '';
     position: absolute;
     top: 0;
     left: 16px;
     right: 16px;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, #2563eb, transparent);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
     border-radius: 0 0 2px 2px;
-    opacity: 0.7;
+    opacity: 0.6;
 }
 
 .dropdown-wrapper:hover .dropdown-menu {
@@ -341,17 +312,17 @@ body.light-theme .logo-secondary {
     overflow-y: auto;
 }
 
-/* Accent top-line on submenu too */
+/* Accent top-line on submenu */
 .submenu::before {
     content: '';
     position: absolute;
     top: 0;
     left: 12px;
     right: 12px;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, #2563eb, transparent);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
     border-radius: 0 0 2px 2px;
-    opacity: 0.6;
+    opacity: 0.5;
 }
 
 :host-context(.light-theme) .submenu {
@@ -397,9 +368,9 @@ body.light-theme .logo-secondary {
 }
 
 .submenu a.active-link {
-    background: var(--accent-color) !important;
-    color: #ffffff !important;
-    box-shadow: none;
+    background: #3b5bdb !important;
+    color: #fff !important;
+    box-shadow: none !important;
 }
 
 .submenu a.active-link::after {
@@ -571,14 +542,14 @@ body.light-theme .user-info img {
 
 
 .main-content {
-    margin-top: 80px;
+    margin-top: 60px;
     padding: 24px;
     max-width: 1400px;
     margin-left: auto;
     margin-right: auto;
     width: 100%;
     box-sizing: border-box;
-    min-height: calc(100vh - 80px);
+    min-height: calc(100vh - 60px);
     display: flex;
     flex-direction: column;
 }
@@ -586,14 +557,14 @@ body.light-theme .user-info img {
 /* Full-screen dark override for the validate page */
 .main-content.dark-page {
     margin: 0;
-    margin-top: 80px;
+    margin-top: 60px;
     /* keep below fixed header */
     padding: 0;
     max-width: 100%;
     width: 100%;
     /* Covers from below-header to absolute bottom */
-    min-height: calc(100vh - 80px);
-    height: calc(100vh - 80px);
+    min-height: calc(100vh - 60px);
+    height: calc(100vh - 60px);
     overflow: hidden;
     background: var(--bg-app);
     display: flex;
@@ -611,7 +582,7 @@ body.light-theme .user-info img {
     max-width: 100% !important;
     width: 100% !important;
     padding: 0 !important;
-    margin-top: 80px !important;
+    margin-top: 60px !important;
 }
 
 /* Also kill white on body / html when dark page is shown */
@@ -717,14 +688,14 @@ body.light-theme .user-info img {
     }
 
     .main-content {
-        margin-top: 160px;
+        margin-top: 140px;
         padding: 24px 16px;
     }
 }
 
 @media (max-width: 480px) {
     .header {
-        padding: 16px 14px;
+        padding: 12px 14px;
     }
 
     .nav-links {
@@ -732,167 +703,103 @@ body.light-theme .user-info img {
     }
 
     .nav-links a {
-        padding: 8px 14px;
-        font-size: 0.75rem;
+        padding: 6px 12px;
+        font-size: 0.68rem;
     }
 
     .main-content {
-        margin-top: 160px;
+        margin-top: 140px;
         padding: 20px 12px;
     }
 }
-/* ─── SR Version Dropdown ──────────────────────────────────────────────────── */
-.sr-dropdown-wrapper {
-    position: relative;
-    margin-right: 6px;
+
+/* ===== SR Version Dropdown ===== */
+.sr-dropdown-wrapper .sr-dropdown-menu {
+    width: 160px;
+    left: 50%;
+    padding: 8px;
 }
 
-/* ── Trigger button — adapts to dark/light ── */
-.sr-dropdown-trigger {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 5px 11px 5px 9px;
-    border-radius: 8px;
-    border: 1.5px solid var(--border-light);
-    background: var(--bg-card-hover);
-    color: var(--text-main);
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    cursor: pointer;
-    transition: all 0.18s ease;
-    font-family: inherit;
-    white-space: nowrap;
-    min-width: 106px;
-}
-.sr-dropdown-trigger:hover {
-    background: var(--bg-card);
-    border-color: var(--accent-color);
+.sr-trigger {
+    gap: 4px;
 }
 
-/* SR2025 accent — dark mode */
-.sr-dropdown-trigger.sr-2025 {
-    border-color: rgba(25, 118, 210, 0.6);
-    background: rgba(25, 118, 210, 0.1);
-    color: #90caf9;
-}
-.sr-dropdown-trigger.sr-2026 {
-    border-color: rgba(123, 31, 162, 0.6);
-    background: rgba(123, 31, 162, 0.1);
-    color: #ce93d8;
-}
-
-/* SR2025 accent — light mode */
-body.light-theme .sr-dropdown-trigger.sr-2025 {
-    border-color: rgba(25, 118, 210, 0.5);
-    background: rgba(25, 118, 210, 0.08);
-    color: #1565c0;
-}
-body.light-theme .sr-dropdown-trigger.sr-2026 {
-    border-color: rgba(123, 31, 162, 0.5);
-    background: rgba(123, 31, 162, 0.08);
-    color: #7b1fa2;
-}
-
-.sr-trigger-icon { display: flex; align-items: center; opacity: 0.85; }
-.sr-trigger-label { flex: 1; text-align: left; }
-
-.sr-arrow {
-    font-size: 16px !important;
-    width: 16px !important;
-    height: 16px !important;
-    line-height: 16px !important;
-    opacity: 0.7;
-    transition: transform 0.2s ease;
-}
-.sr-arrow.open { transform: rotate(180deg); }
-
-/* ── Dropdown menu panel ── */
-.sr-dropdown-menu {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    min-width: 200px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: 10px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.15);
-    overflow: hidden;
-    z-index: 9999;
-    animation: srMenuIn 0.15s ease;
-}
-body.light-theme .sr-dropdown-menu {
-    box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
-}
-
-@keyframes srMenuIn {
-    from { opacity: 0; transform: translateY(-6px) scale(0.97); }
-    to   { opacity: 1; transform: translateY(0)    scale(1);    }
-}
-
-.sr-dropdown-header {
-    padding: 8px 14px 6px;
-    font-size: 0.62rem;
+.sr-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
     font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    border-bottom: 1px solid var(--border-light);
+    letter-spacing: 0.5px;
+    color: #a78bfa;
+    background: rgba(139, 92, 246, 0.12);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 5px;
+    padding: 2px 7px;
 }
 
-.sr-dropdown-item {
+.sr-menu-label {
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    padding: 2px 8px 6px;
+    opacity: 0.6;
+}
+
+.sr-option {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     width: 100%;
-    padding: 10px 14px;
+    padding: 8px 10px;
     border: none;
     background: transparent;
-    color: var(--text-muted);
+    color: var(--text-main);
+    font-size: 0.82rem;
+    font-weight: 500;
+    border-radius: 7px;
     cursor: pointer;
-    font-family: inherit;
-    transition: background 0.15s;
+    transition: background 0.15s ease;
     text-align: left;
 }
-.sr-dropdown-item:hover {
-    background: var(--bg-card-hover);
-    color: var(--text-main);
-}
-.sr-dropdown-item.selected {
-    background: var(--accent-light);
-    color: var(--text-main);
+
+.sr-option:hover {
+    background: rgba(255, 255, 255, 0.07);
 }
 
-.sr-item-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-.sr-item-dot.sr-2025 { background: #42a5f5; box-shadow: 0 0 6px rgba(66,165,245,0.6); }
-.sr-item-dot.sr-2026 { background: #ab47bc; box-shadow: 0 0 6px rgba(171,71,188,0.6); }
-
-.sr-item-text { display: flex; flex-direction: column; gap: 1px; flex: 1; }
-
-.sr-item-version {
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: var(--text-main);
-    letter-spacing: 0.03em;
-}
-.sr-dropdown-item.selected .sr-item-version { color: var(--accent-text); }
-
-.sr-item-desc {
-    font-size: 0.67rem;
-    color: var(--text-muted);
-    font-weight: 400;
+:host-context(.light-theme) .sr-option:hover {
+    background: rgba(0, 0, 0, 0.05);
 }
 
-.sr-item-check {
+.sr-option.sr-active {
+    color: #a78bfa;
+    background: rgba(139, 92, 246, 0.1);
+}
+
+.sr-check {
     font-size: 16px !important;
     width: 16px !important;
     height: 16px !important;
-    line-height: 16px !important;
-    color: var(--accent-color);
+    color: inherit;
     flex-shrink: 0;
+}
+
+.sr-option:not(.sr-active) .sr-check {
+    opacity: 0.3;
+}
+
+.sr-year-badge {
+    margin-left: auto;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+}
+
+.sr-year-badge--new {
+    background: rgba(139, 92, 246, 0.15);
+    color: #a78bfa;
 }

@@ -1,14 +1,13 @@
-<div class="container" (click)="$event.stopPropagation()">
+<div class="container">
     <header>
-        <h1>Notification To Receive (camt.057) <mat-icon class="title-icon">account_balance</mat-icon></h1>
-        <!-- <p style="margin-top: -1rem;">Visual camt.057 Message Builder</p> -->
+        <h1>Interbank Direct Debit (pacs.010) <mat-icon class="title-icon">account_balance_wallet</mat-icon></h1>
     </header>
 
     <div class="split-view">
+        <!-- LEFT PANEL: FORM -->
         <div class="left-panel">
             <form [formGroup]="form" class="content-box">
                 <div class="grid">
-
                     <div class="draft-banner" *ngIf="showDraftBanner">
                         <mat-icon>restore</mat-icon>
                         <span>Draft restored from your last session.</span>
@@ -22,7 +21,7 @@
                     <div class="form-group">
                         <label>From BIC <span class="req">*</span></label>
                         <div class="uetr-control-row">
-                            <input formControlName="fromBic" maxlength="11" class="auto-uppercase">
+                            <input formControlName="fromBic" maxlength="11" placeholder="From BIC" class="auto-uppercase">
                             <button type="button" class="uetr-refresh-btn"
                                 (click)="openBicSearch('fromBic')"
                                 matTooltip="Search BIC">
@@ -35,7 +34,7 @@
                     <div class="form-group">
                         <label>To BIC <span class="req">*</span></label>
                         <div class="uetr-control-row">
-                            <input formControlName="toBic" maxlength="11" class="auto-uppercase">
+                            <input formControlName="toBic" maxlength="11" placeholder="To BIC" class="auto-uppercase">
                             <button type="button" class="uetr-refresh-btn"
                                 (click)="openBicSearch('toBic')"
                                 matTooltip="Search BIC">
@@ -50,96 +49,11 @@
                       <span>{{ bicSameWarning }}</span>
                     </div>
                     <div class="form-group">
-                        <label>Business Message ID <span class="req">*</span></label>
+                        <label>Business Msg ID <span class="req">*</span></label>
                         <input formControlName="bizMsgId" maxlength="35">
                         <div class="validation-msg" *ngIf="err('bizMsgId') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('bizMsgId', 35) as h">{{h}}</div>
                     </div>
-                    <div class="form-group">
-                        <label>Business Service <span class="req">*</span></label>
-                        <input formControlName="bizSvc" maxlength="35">
-                        <div class="validation-msg" *ngIf="err('bizSvc') as e">{{e}}</div>
-                        <div class="field-hint at-limit" *ngIf="hint('bizSvc', 35) as h">{{h}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Creation Date <span class="req">*</span></label>
-                        <input formControlName="creDtTm">
-                        <div class="validation-msg" *ngIf="err('creDtTm') as e">{{e}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Priority <span class="opt">Optional</span></label>
-                        <select formControlName="appHdrPriority">
-                            <option value="">None</option>
-                            <option value="NORM">NORM</option>
-                            <option value="HIGH">HIGH</option>
-                        </select>
-                    </div>
-
-                    <div class="section-title">Item Detail</div>
-                    <div class="form-group">
-                        <label>Item ID <span class="req">*</span></label>
-                        <input formControlName="itmId" maxlength="35">
-                        <div class="validation-msg" *ngIf="err('itmId') as e">{{e}}</div>
-                        <div class="field-hint at-limit" *ngIf="hint('itmId', 35) as h">{{h}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Amount <span class="req">*</span></label>
-                        <input formControlName="amount" type="text" placeholder="e.g. 1000.00">
-                        <div class="validation-msg" *ngIf="err('amount') as e">{{e}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Currency <span class="req">*</span></label>
-                        <select formControlName="currency">
-                            <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
-                        </select>
-                        <div class="validation-msg" *ngIf="err('currency') as e">{{e}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Expected Value Date <span class="req">*</span></label>
-                        <input type="date" formControlName="valDt" min="0001-01-01" max="9999-12-31">
-                        <div class="validation-msg" *ngIf="err('valDt') as e">{{e}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>End to End ID <span class="req">*</span></label>
-                        <input formControlName="endToEndId" maxlength="35">
-                        <div class="validation-msg" *ngIf="err('endToEndId') as e">{{e}}</div>
-                        <div class="field-hint at-limit" *ngIf="hint('endToEndId', 35) as h">{{h}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Instruction ID</label>
-                        <input formControlName="instrId" maxlength="16" placeholder="Max 35 chars">
-                        <div class="validation-msg" *ngIf="err('instrId') as e">{{e}}</div>
-                        <div class="field-hint at-limit" *ngIf="hint('instrId', 16) as h">{{h}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Clearing System Reference <span class="opt">Optional</span></label>
-                        <input formControlName="clrSysRef" maxlength="35" placeholder="Alphanumeric (1-35)">
-                        <div class="validation-msg" *ngIf="err('clrSysRef') as e">{{e}}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>UETR <span class="opt">Optional</span></label>
-                        <div class="uetr-control-row">
-                            <input formControlName="uetr" maxlength="36" placeholder="UUID v4 (auto-generated)" class="uetr-input" (blur)="validateManualUetr()" (paste)="onUetrPaste($event)">
-                            <button type="button" class="uetr-refresh-btn" (click)="refreshUetr()" matTooltip="Generate new UETR">
-                                <mat-icon>refresh</mat-icon>
-                            </button>
-                        </div>
-                        <div class="validation-msg" *ngIf="uetrError">{{uetrError}}</div>
-                        <div class="success-msg" *ngIf="uetrSuccess">{{uetrSuccess}}</div>
-                        <div class="validation-msg" *ngIf="err('uetr') as e">{{e}}</div>
-                    </div>
-                    <div class="form-group intermediary-field">
-                        <label [matTooltip]="'Purpose indicates the underlying reason for the payment.'">
-                            Purpose Code <span class="opt">Optional</span>
-                            <mat-icon class="info-icon-small">info</mat-icon>
-                        </label>
-                        <input formControlName="purpCd" [matTooltip]="'Select or enter a 4-character ISO purpose code'" list="purpList" placeholder="Select or enter code">
-                        <datalist id="purpList">
-                            <option *ngFor="let p of purposes" [value]="p">{{p}}</option>
-                        </datalist>
-                        <div class="validation-msg" *ngIf="err('purpCd') as e">{{e}}</div>
-                    </div>
-
                     <div class="form-group">
                         <label>Message ID <span class="req">*</span></label>
                         <input formControlName="msgId" maxlength="35">
@@ -147,200 +61,266 @@
                         <div class="field-hint at-limit" *ngIf="hint('msgId', 35) as h">{{h}}</div>
                     </div>
                     <div class="form-group">
-                        <label>Notification ID <span class="req">*</span></label>
-                        <input formControlName="ntfctnId" maxlength="35">
-                        <div class="validation-msg" *ngIf="err('ntfctnId') as e">{{e}}</div>
-                        <div class="field-hint at-limit" *ngIf="hint('ntfctnId', 35) as h">{{h}}</div>
+                        <label>Creation DateTime <span class="req">*</span></label>
+                        <input formControlName="creDtTm" maxlength="25">
+                        <div class="validation-msg" *ngIf="err('creDtTm') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Number of Transactions <span class="req">*</span></label>
+                        <input formControlName="nbOfTxs" type="number" min="1" maxlength="15" placeholder="1">
+                        <div class="validation-msg" *ngIf="err('nbOfTxs') as e">{{e}}</div>
                     </div>
 
-
-                    <div class="party-group">
-                        <div class="party-group-title mandatory">Expected Debtor Information</div>
-                        <ng-container
-                            *ngTemplateOutlet="partyForm; context:{prefix:'dbtr',isAgent:false, title:'Debtor', group: form}"></ng-container>
+                    <div class="section-title">Header Configuration <span class="opt">Optional</span></div>
+                    <div class="form-group">
+                        <label>Copy / Duplicate</label>
+                        <select formControlName="copyDplct">
+                            <option value=""></option>
+                            <option *ngFor="let c of copyDuplicateEnums" [value]="c">{{c}}</option>
+                        </select>
+                        <div class="validation-msg" *ngIf="err('copyDplct') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Possible Duplicate</label>
+                        <select formControlName="pssblDplct">
+                            <option value=""></option>
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                        <div class="validation-msg" *ngIf="err('pssblDplct') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Priority</label>
+                        <select formControlName="prty">
+                            <option value=""></option>
+                            <option *ngFor="let p of priorityEnums" [value]="p">{{p}}</option>
+                        </select>
+                        <div class="validation-msg" *ngIf="err('prty') as e">{{e}}</div>
                     </div>
 
-                    <div class="party-group">
-                        <div class="party-group-title">Expected Debtor Account</div>
-                        <div [formGroup]="form" class="party-grid">
-                            <div class="form-group">
-                                <label>Debtor Account ID</label>
-                                <input formControlName="dbtrAcct" maxlength="34" placeholder="Account / IBAN">
-                                <div class="validation-msg" *ngIf="err('dbtrAcct') as e">{{e}}</div>
-                            </div>
+                    <div class="section-title">Transaction Details</div>
+                    <div class="form-group intermediary-field">
+                        <label>Instruction Identification <span class="req">*</span></label>
+                        <input formControlName="instrId" maxlength="16">
+                        <div class="validation-msg" *ngIf="err('instrId') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('instrId', 16) as h">{{h}}</div>
+                    </div>
+                    <div class="form-group intermediary-field">
+                        <label>End To End ID <span class="req">*</span></label>
+                        <input formControlName="endToEndId" maxlength="35">
+                        <div class="validation-msg" *ngIf="err('endToEndId') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('endToEndId', 35) as h">{{h}}</div>
+                    </div>
+                    <div class="form-group intermediary-field">
+                        <label>Transaction Identification <span class="opt">Optional</span></label>
+                        <input formControlName="txId" maxlength="35">
+                        <div class="validation-msg" *ngIf="err('txId') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('txId', 35) as h">{{h}}</div>
+                    </div>
+                    <div class="form-group intermediary-field">
+                        <label>UETR <span class="req">*</span></label>
+                        <div class="uetr-control-row">
+                            <input formControlName="uetr" maxlength="36" placeholder="xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx" (blur)="validateManualUetr()" (paste)="onUetrPaste($event)">
+                            <button type="button" class="uetr-refresh-btn" (click)="refreshUetr()" title="Refresh">
+                                <mat-icon>refresh</mat-icon>
+                            </button>
                         </div>
+                        <div class="validation-msg error" *ngIf="uetrError">{{uetrError}}</div>
+                        <div class="uetr-success" *ngIf="uetrSuccess">✔ {{uetrSuccess}}</div>
+                        <div class="validation-msg" *ngIf="err('uetr') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('uetr', 36) as h">{{h}}</div>
+                    </div>
+                    <div class="form-group intermediary-field">
+                        <label>Credit Identification (CdtId) <span class="req">*</span></label>
+                        <input formControlName="cdtId" maxlength="35" placeholder="Collection ID">
+                        <div class="validation-msg" *ngIf="err('cdtId') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('cdtId', 35) as h">{{h}}</div>
+                    </div>
+                    <div class="form-group intermediary-field">
+                        <label>Clearing System Reference <span class="opt">Optional</span></label>
+                        <input formControlName="clrSysRef" maxlength="35">
+                        <div class="validation-msg" *ngIf="err('clrSysRef') as e">{{e}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('clrSysRef', 35) as h">{{h}}</div>
                     </div>
 
-                    <div class="party-group">
-                        <div class="party-group-title mandatory">Debtor Agent</div>
-                        <ng-container
-                            *ngTemplateOutlet="partyForm; context:{prefix:'dbtrAgt',isAgent:true, title:'Debtor Agent', group: form}"></ng-container>
+                    <div class="section-title">Payment Amounts</div>
+                    <div class="form-group intermediary-field">
+                        <label>Amount <span class="req">*</span></label>
+                        <input formControlName="amount" pattern="^\d{1,18}(\.\d{1,5})?$" required type="text" maxlength="19">
+                        <div class="validation-msg" *ngIf="err('amount') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group intermediary-field">
+                        <label>Currency <span class="req">*</span></label>
+                        <select formControlName="currency" required>
+                            <option value="">Select Currency</option>
+                            <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
+                        </select>
+                        <div class="validation-msg" *ngIf="err('currency') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group intermediary-field">
+                        <label>Interbank Settlement Date <span class="req">*</span></label>
+                        <input formControlName="intrBkSttlmDt" type="date">
+                        <div class="validation-msg" *ngIf="err('intrBkSttlmDt') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Settlement Time CLSTm <span class="opt">Optional</span></label>
+                        <input formControlName="clstTm" placeholder="HH:MM:SS+HH:MM" maxlength="15">
+                        <div class="validation-msg" *ngIf="err('clstTm') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Settlement Time TillTm <span class="opt">Optional</span></label>
+                        <input formControlName="tillTm" placeholder="HH:MM:SS+HH:MM" maxlength="15">
+                        <div class="validation-msg" *ngIf="err('tillTm') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Settlement Time FrTm <span class="opt">Optional</span></label>
+                        <input formControlName="frTm" placeholder="HH:MM:SS+HH:MM" maxlength="15">
+                        <div class="validation-msg" *ngIf="err('frTm') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Settlement Time RjctTm <span class="opt">Optional</span></label>
+                        <input formControlName="rjctTm" placeholder="HH:MM:SS+HH:MM" maxlength="15">
+                        <div class="validation-msg" *ngIf="err('rjctTm') as e">{{e}}</div>
                     </div>
 
-                    <div class="party-group">
-                        <div class="party-group-title">Debtor Agent Account</div>
-                        <div [formGroup]="form" class="party-grid">
-                            <div class="form-group">
-                                <label>Debtor Agent Account ID</label>
-                                <input formControlName="dbtrAgtAcct" maxlength="34" placeholder="Account">
-                                <div class="validation-msg" *ngIf="err('dbtrAgtAcct') as e">{{e}}</div>
-                            </div>
-                        </div>
+
+                    <div class="section-title">Payment Type Information</div>
+                    <div class="form-group intermediary-field">
+                        <label>Instruction Priority <span class="opt">Optional</span></label>
+                        <select formControlName="instrPrty">
+                            <option value="">None</option>
+                            <option value="HIGH">High [HIGH]</option>
+                            <option value="NORM">Normal [NORM]</option>
+                        </select>
+                        <div class="validation-msg" *ngIf="err('instrPrty') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group intermediary-field">
+                        <label>Service Level Code <span class="opt">Optional</span></label>
+                        <input formControlName="svcLvlCd" name="svcLvlCd" placeholder="e.g. SEPA" maxlength="4">
+                        <div class="validation-msg" *ngIf="err('svcLvlCd') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group intermediary-field">
+                        <label>Service Level Proprietary <span class="opt">Optional</span></label>
+                        <input formControlName="svcLvlPrtry" name="svcLvlPrtry" placeholder="Max 35 chars" maxlength="35">
+                        <div class="validation-msg" *ngIf="err('svcLvlPrtry') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group intermediary-field">
+                        <label>Local Instrument Code <span class="opt">Optional</span></label>
+                        <input formControlName="lclInstrmCd" name="lclInstrmCd" placeholder="e.g. ONCL" maxlength="4">
+                        <div class="validation-msg" *ngIf="err('lclInstrmCd') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group intermediary-field">
+                        <label>Local Instrument Proprietary <span class="opt">Optional</span></label>
+                        <input formControlName="lclInstrmPrtry" name="lclInstrmPrtry" placeholder="Max 35 chars" maxlength="35">
+                        <div class="validation-msg" *ngIf="err('lclInstrmPrtry') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group intermediary-field">
+                        <label>Category Purpose Code <span class="opt">Optional</span></label>
+                        <select formControlName="ctgyPurpCd">
+                            <option value="">None</option>
+                            <option *ngFor="let p of categoryPurposes" [value]="p">{{p}}</option>
+                        </select>
+                        <div class="validation-msg" *ngIf="err('ctgyPurpCd') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group intermediary-field">
+                        <label>Category Purpose Proprietary <span class="opt">Optional</span></label>
+                        <input formControlName="ctgyPurpPrtry" name="ctgyPurpPrtry" placeholder="Max 35 chars" maxlength="35">
+                        <div class="validation-msg" *ngIf="err('ctgyPurpPrtry') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group intermediary-field">
+                        <label [matTooltip]="'Select or enter a 4-character ISO purpose code indicating the underlying reason for the payment.'">
+                            Purpose Code <span class="opt">Optional</span>
+                            <mat-icon style="font-size: 14px; width: 14px; height: 14px; margin-left: 4px; color: var(--accent-color);">info</mat-icon>
+                        </label>
+                        <select formControlName="purposeCd" name="purposeCd">
+                            <option value="">None</option>
+                            <option *ngFor="let p of purposes" [value]="p">{{p}}</option>
+                        </select>
+                        <div class="validation-msg" *ngIf="err('purposeCd') as e">{{e}}</div>
+                    </div>
+                    <div class="form-group intermediary-field">
+                        <label>Purpose Proprietary <span class="opt">Optional</span></label>
+                        <input formControlName="purposePrtry" name="purposePrtry" placeholder="Max 35 chars" maxlength="35">
+                        <div class="validation-msg" *ngIf="err('purposePrtry') as e">{{e}}</div>
                     </div>
 
-                    <div class="party-group">
-                        <div class="party-group-title mandatory">Intermediary Agent</div>
-                        <ng-container
-                            *ngTemplateOutlet="partyForm; context:{prefix:'intrmyAgt',isAgent:true, title:'Intermediary Agent', group: form}"></ng-container>
-                    </div>
-
-                    <div class="party-group">
-                        <div class="party-group-title">Intermediary Agent Account</div>
-                        <div [formGroup]="form" class="party-grid">
-                            <div class="form-group">
-                                <label>Intermediary Agent Account ID</label>
-                                <input formControlName="intrmyAgtAcct" maxlength="34" placeholder="Account">
-                                <div class="validation-msg" *ngIf="err('intrmyAgtAcct') as e">{{e}}</div>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="section-title">Transaction Agents</div>
 
                     <div class="party-group">
                         <div class="party-group-title mandatory">Instructing Agent</div>
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'instgAgt',isAgent:true, title:'Instructing Agent', group: form}"></ng-container>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'instgAgt', isAgent:true, title:'Instructing Agent', required: true}"></ng-container>
                     </div>
 
                     <div class="party-group">
                         <div class="party-group-title mandatory">Instructed Agent</div>
-                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'instdAgt',isAgent:true, title:'Instructed Agent', group: form}"></ng-container>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'instdAgt', isAgent:true, title:'Instructed Agent', required: true}"></ng-container>
                     </div>
-                </div>
 
-                <div class="form-section" style="margin-top: 2rem;">
-                    <div class="section-header">
-                        <h3>Payment Type Information <span class="opt">Optional</span></h3>
+                    <div class="party-group">
+                        <div class="party-group-title">Creditor Agent</div>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'cdtrAgt', isAgent:true, title:'Creditor Agent'}"></ng-container>
                     </div>
-                    <div class="grid">
-                        <div class="form-group">
-                            <label>Instruction Priority <span class="opt">Optional</span></label>
-                            <select formControlName="instrPrty">
-                                <option value="">None</option>
-                                <option value="HIGH">High [HIGH]</option>
-                                <option value="NORM">Normal [NORM]</option>
-                            </select>
-                            <div class="validation-msg" *ngIf="err('instrPrty') as e">{{e}}</div>
-                        </div>
-                        <div class="form-group">
-                            <label>Clearing Channel <span class="opt">Optional</span></label>
-                            <select formControlName="clrChanl">
-                                <option value="">None</option>
-                                <option value="BOOK">Book Transfer [BOOK]</option>
-                                <option value="MPNS">Mass Payment Net System [MPNS]</option>
-                                <option value="RTGS">Real Time Gross Settlement [RTGS]</option>
-                                <option value="RTNS">Real Time Net Settlement [RTNS]</option>
-                            </select>
-                            <div class="validation-msg" *ngIf="err('clrChanl') as e">{{e}}</div>
-                        </div>
-                        <div class="form-group">
-                            <label>Service Level Code <span class="opt">Optional</span></label>
-                            <input formControlName="svcLvlCd" placeholder="e.g. SEPA" maxlength="4">
-                            <div class="validation-msg" *ngIf="err('svcLvlCd') as e">{{e}}</div>
-                        </div>
-                        <div class="form-group">
-                            <label>Service Level Proprietary <span class="opt">Optional</span></label>
-                            <input formControlName="svcLvlPrtry" placeholder="Max 35 chars" maxlength="35">
-                            <div class="validation-msg" *ngIf="err('svcLvlPrtry') as e">{{e}}</div>
-                        </div>
-                        <div class="form-group">
-                            <label>Local Instrument Code <span class="opt">Optional</span></label>
-                            <input formControlName="lclInstrmCd" placeholder="e.g. ONCL" maxlength="4">
-                            <div class="validation-msg" *ngIf="err('lclInstrmCd') as e">{{e}}</div>
-                        </div>
-                        <div class="form-group">
-                            <label>Local Instrument Proprietary <span class="opt">Optional</span></label>
-                            <input formControlName="lclInstrmPrtry" placeholder="Max 35 chars" maxlength="35">
-                            <div class="validation-msg" *ngIf="err('lclInstrmPrtry') as e">{{e}}</div>
-                        </div>
-                        <div class="form-group">
-                            <label>Category Purpose Code <span class="opt">Optional</span></label>
-                            <select formControlName="ctgyPurpCd">
-                                <option value="">None</option>
-                                <option *ngFor="let c of categoryPurposes" [value]="c">{{c}}</option>
-                            </select>
-                            <div class="validation-msg" *ngIf="err('ctgyPurpCd') as e">{{e}}</div>
-                        </div>
-                        <div class="form-group">
-                            <label>Category Purpose Proprietary <span class="opt">Optional</span></label>
-                            <input formControlName="ctgyPurpPrtry" placeholder="Max 35 chars" maxlength="35">
-                            <div class="validation-msg" *ngIf="err('ctgyPurpPrtry') as e">{{e}}</div>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="form-section" style="margin-top: 2rem;">
-                    <div class="section-header">
-                        <h3>Remittance Information</h3>
+                    <div class="party-group">
+                        <div class="party-group-title">Creditor Agent Account</div>
+                        <ng-container *ngTemplateOutlet="accountForm; context:{prefix:'cdtrAgt', title:'Creditor Agent Account'}"></ng-container>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group full-width">
-                            <label>Type</label>
-                            <select formControlName="rmtInfType">
-                                <option value="none">None</option>
-                                <option value="ustrd">Unstructured</option>
-                                <option value="strd">Structured</option>
-                            </select>
-                            <div class="validation-msg" *ngIf="err('rmtInfType') as e">{{e}}</div>
-                        </div>
+
+                    <div class="party-group">
+                        <div class="party-group-title mandatory">Creditor</div>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'cdtr', isAgent:true, title:'Creditor', required: true}"></ng-container>
                     </div>
-                    <div class="form-row" *ngIf="form.get('rmtInfType')?.value === 'ustrd'">
-                        <div class="form-group full-width"><label>Unstructured Remittance</label><input
-                                formControlName="rmtInfUstrd" maxlength="140"></div>
-                                <div class="validation-msg" *ngIf="err('rmtInfUstrd') as e">{{e}}</div>
+
+                    <div class="party-group">
+                        <div class="party-group-title mandatory">Creditor Account</div>
+                        <ng-container *ngTemplateOutlet="accountForm; context:{prefix:'cdtr', title:'Creditor Account', required: true}"></ng-container>
                     </div>
-                    <!-- Structured Remittance -->
-                    <div class="form-row" *ngIf="form.get('rmtInfType')?.value === 'strd'">
-                        <div class="form-group"><label>Creditor Ref Type</label>
-                            <select formControlName="rmtInfStrdCdtrRefType">
-                                <option value="">None</option>
-                                <option value="SCOR">SCOR</option>
-                                <option value="CUST">CUST</option>
-                            </select>
-                            <div class="validation-msg" *ngIf="err('rmtInfStrdCdtrRefType') as e">{{e}}</div>
-                        </div>
-                        <div class="form-group"><label>Creditor Reference</label><input
-                                formControlName="rmtInfStrdCdtrRef" maxlength="35">
-                            <div class="validation-msg" *ngIf="err('rmtInfStrdCdtrRef') as e">{{e}}</div>
-                        </div>
+
+                    <div class="party-group">
+                        <div class="party-group-title">Debtor Agent</div>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtrAgt', isAgent:true, title:'Debtor Agent'}"></ng-container>
                     </div>
-                    <div class="form-row" *ngIf="form.get('rmtInfType')?.value === 'strd'">
-                        <div class="form-group full-width"><label>Additional Remittance Info</label><input
-                                formControlName="rmtInfStrdAddtlRmtInf" maxlength="140">
-                            <div class="validation-msg" *ngIf="err('rmtInfStrdAddtlRmtInf') as e">{{e}}</div>
-                        </div>
+
+                    <div class="party-group">
+                        <div class="party-group-title">Debtor Agent Account</div>
+                        <ng-container *ngTemplateOutlet="accountForm; context:{prefix:'dbtrAgt', title:'Debtor Agent Account'}"></ng-container>
                     </div>
-                    <div class="form-row" *ngIf="form.get('rmtInfType')?.value === 'strd'">
-                        <div class="form-group"><label>Referred Doc Number</label><input
-                                formControlName="rmtInfStrdRfrdDocNb" maxlength="35">
-                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocNb') as e">{{e}}</div>
-                        </div>
-                        <div class="form-group"><label>Referred Doc Code</label>
-                            <select formControlName="rmtInfStrdRfrdDocCd">
-                                <option value="">None</option>
-                                <option value="CINV">CINV (Commercial Invoice)</option>
-                                <option value="CNFA">CNFA (Credit Note)</option>
-                                <option value="DNFA">DNFA (Debit Note)</option>
-                                <option value="VCHR">VCHR (Voucher)</option>
-                            </select>
-                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocCd') as e">{{e}}</div>
-                        </div>
-                        <div class="form-group"><label>Referred Doc Amount <span class="req">*</span></label><input formControlName="rmtInfStrdRfrdDocAmt" type="text" required>
-                            <div class="validation-msg" *ngIf="err('rmtInfStrdRfrdDocAmt') as e">{{e}}</div>
-                        </div>
+
+                    <div class="section-title">Transaction Parties</div>
+
+
+
+                    <div class="party-group">
+                        <div class="party-group-title mandatory">Debtor</div>
+                        <ng-container *ngTemplateOutlet="partyForm; context:{prefix:'dbtr', isAgent:true, title:'Debtor', required: true}"></ng-container>
                     </div>
+
+                    <div class="party-group">
+                        <div class="party-group-title mandatory">Debtor Account</div>
+                        <ng-container *ngTemplateOutlet="accountForm; context:{prefix:'dbtr', title:'Debtor Account', required: true}"></ng-container>
+                    </div>
+
+
+
+                    <div class="section-title">Instructions & Remittance</div>
+                    
+                    <div class="form-group intermediary-field">
+                        <label>Instruction For Debtor Agent <span class="opt">Optional</span></label>
+                        <input formControlName="instrForDbtrAgt" placeholder="Max 140 chars" maxlength="140">
+                        <div class="validation-msg" *ngIf="err('instrForDbtrAgt') as e">{{e}}</div>
+                    </div>
+
+                    <div class="form-group intermediary-field">
+                        <label>Remittance Information <span class="opt">Optional</span></label>
+                        <textarea formControlName="remittanceInfo" rows="2" placeholder="Max 140 chars" maxlength="140"></textarea>
+                        <div class="validation-msg" *ngIf="err('remittanceInfo') as e">{{e}}</div>
+                    </div>
+
                 </div>
             </form>
         </div>
 
+        <!-- RIGHT PANEL: PREVIEW -->
         <div class="right-panel">
                         <!-- Top Actions -->
                         <div class="bottom-actions" style="margin-top: 0; margin-bottom: 1rem;">
@@ -591,19 +571,12 @@
                 </div>
                 <!-- Results -->
                 <div class="vm-body" *ngIf="validationStatus === 'done' && validationReport">
-                        <div class="vm-status-banner"
-                                [class.pass]="(validationReport.errors || 0) === 0 && (validationReport.warnings || 0) === 0"
-                                [class.warn]="(validationReport.errors || 0) === 0 && (validationReport.warnings || 0) > 0"
-                                [class.fail]="(validationReport.errors || 0) > 0">
-                                <mat-icon>{{
-                                    (validationReport.errors || 0) > 0 ? 'cancel' :
-                                    ((validationReport.warnings || 0) > 0 ? 'warning' : 'check_circle')
-                                }}</mat-icon>
+                        <div class="vm-status-banner" [class.pass]="validationReport.status === 'PASS'"
+                                [class.fail]="validationReport.status !== 'PASS'">
+                                <mat-icon>{{validationReport.status === 'PASS' ? 'check_circle' : 'cancel'}}</mat-icon>
                                 <div class="vm-status-text">
-                                        <strong>{{
-                                            (validationReport.errors || 0) > 0 ? 'VALIDATION FAILED' :
-                                            ((validationReport.warnings || 0) > 0 ? 'PASSED WITH WARNINGS' : 'VALIDATION PASSED')
-                                        }}</strong>
+                                        <strong>{{validationReport.status === 'PASS' ? 'VALIDATION PASSED' : 'VALIDATION
+                                                FAILED'}}</strong>
                                         <span>{{validationReport.errors || 0}} error(s), {{validationReport.warnings ||
                                                 0}} warning(s) &bull; {{validationReport.total_time_ms || 0}}ms</span>
                                 </div>
@@ -679,3 +652,33 @@
                 </div>
         </div>
 </div>
+
+<ng-template #accountForm let-prefix="prefix" let-title="title" let-required="required">
+    <div [formGroup]="form" class="party-grid">
+        <!-- Account Identification: IBAN -->
+        <div class="form-group">
+            <label>IBAN <span class="req" *ngIf="required">*</span></label>
+            <input [formControlName]="prefix+'AcctIBAN'" maxlength="34" placeholder="IBAN (e.g. DE89370400440532013000)">
+            <div class="validation-msg" *ngIf="err(prefix+'AcctIBAN') as e">{{e}}</div>
+            <div class="field-hint at-limit" *ngIf="hint(prefix+'AcctIBAN', 34) as h">{{h}}</div>
+        </div>
+
+        <!-- Account Metadata -->
+        <div class="address-subgrid">
+            <div class="form-group">
+                <label>Currency</label>
+                <select [formControlName]="prefix+'AcctCcy'">
+                    <option value="">Select Currency</option>
+                    <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
+                </select>
+                <div class="validation-msg" *ngIf="err(prefix+'AcctCcy') as e">{{e}}</div>
+            </div>
+
+            <div class="form-group">
+                <label>Account Name</label>
+                <input [formControlName]="prefix+'AcctNm'" maxlength="70">
+                <div class="validation-msg" *ngIf="err(prefix+'AcctNm') as e">{{e}}</div>
+            </div>
+        </div>
+    </div>
+</ng-template>

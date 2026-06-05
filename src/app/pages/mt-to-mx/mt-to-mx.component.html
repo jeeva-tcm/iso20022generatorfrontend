@@ -238,26 +238,27 @@
     <div class="split-view" *ngIf="!isBulkMode">
         <!-- Left: MT Input -->
         <div class="panel">
-            <div class="panel-header">
-                <div class="panel-title">
-                    <mat-icon>input</mat-icon> MT Input (SWIFT FIN)
+            <div class="editor-header">
+                <div class="editor-title">
+                    <mat-icon style="vertical-align: middle; margin-right: 8px;">input</mat-icon> MT Input (SWIFT FIN)
                 </div>
-                <div class="panel-actions">
-                    <button class="icon-btn" data-tooltip="Undo (Ctrl+Z)" (click)="undo('mt')" [disabled]="!canUndo('mt')">
+                <div class="editor-actions">
+                    <button class="icon-btn-sml" data-tooltip="Undo (Ctrl+Z)" (click)="undo('mt')" [disabled]="!canUndo('mt')">
                         <mat-icon>undo</mat-icon>
                     </button>
-                    <button class="icon-btn" data-tooltip="Redo (Ctrl+Y)" (click)="redo('mt')" [disabled]="!canRedo('mt')">
+                    <button class="icon-btn-sml" data-tooltip="Redo (Ctrl+Y)" (click)="redo('mt')" [disabled]="!canRedo('mt')">
                         <mat-icon>redo</mat-icon>
                     </button>
                 </div>
             </div>
-            <div class="editor-wrapper">
-                <div class="line-numbers" #mtLineNumbers>
-                    <div *ngFor="let idx of editorLineCount; let i = index">{{i + 1}}</div>
+            <div class="editor-body">
+                <div class="editor-line-numbers" #mtLineNumbers>
+                    <div *ngFor="let idx of editorLineCount; let i = index" [ngClass]="lineClassMt(idx)">{{i + 1}}</div>
                 </div>
-                <textarea class="code-editor mt-editor" [(ngModel)]="mtInput" (ngModelChange)="onMtChange($event)"
-                    (scroll)="syncScroll(mtEditor, mtLineNumbers)" #mtEditor spellcheck="false" wrap="off"
-                    placeholder="Paste your SWIFT MT message here..."></textarea>
+                <textarea class="editor-textarea mt-editor" [(ngModel)]="mtInput" (ngModelChange)="onMtChange($event)"
+                    onscroll="this.parentElement.querySelector('.editor-line-numbers').scrollTop = this.scrollTop;" 
+                    (click)="updateCursorLineMt($event)" (keyup)="updateCursorLineMt($event)" (focus)="updateCursorLineMt($event)"
+                    placeholder="Paste your SWIFT MT message here..." #mtEditor spellcheck="false" wrap="off"></textarea>
             </div>
         </div>
 
@@ -286,45 +287,60 @@
 
         <!-- Right: MX Output -->
         <div class="panel" *ngIf="!activeFieldGuide || mxOutput.trim()">
-            <div class="panel-header">
-                <div class="panel-title">
-                    <mat-icon>output</mat-icon> MX Output (ISO 20022 XML)
+            <div class="editor-header">
+                <div class="editor-title">
+                    <mat-icon style="vertical-align: middle; margin-right: 8px;">output</mat-icon> MX Output (ISO 20022 XML)
                 </div>
-                <div class="panel-actions" *ngIf="mxOutput.trim()">
-                    <button class="icon-btn" data-tooltip="Undo" (click)="undo('mx')" [disabled]="!canUndo('mx')">
+                <div class="editor-actions" *ngIf="mxOutput.trim()">
+                    <button class="icon-btn-sml" data-tooltip="Undo" (click)="undo('mx')" [disabled]="!canUndo('mx')">
                         <mat-icon>undo</mat-icon>
                     </button>
-                    <button class="icon-btn" data-tooltip="Redo" (click)="redo('mx')" [disabled]="!canRedo('mx')">
+                    <button class="icon-btn-sml" data-tooltip="Redo" (click)="redo('mx')" [disabled]="!canRedo('mx')">
                         <mat-icon>redo</mat-icon>
                     </button>
-                    <button class="icon-btn" data-tooltip="Prettify XML" (click)="formatXml()">
+                    <button class="icon-btn-sml" data-tooltip="Prettify XML" (click)="formatXml()">
                         <mat-icon>format_align_left</mat-icon>
                     </button>
-                    <button class="icon-btn" data-tooltip="Copy XML" (click)="copyMxToClipboard()">
+                    <button class="icon-btn-sml" data-tooltip="Copy XML" (click)="copyMxToClipboard()">
                         <mat-icon>content_copy</mat-icon>
                     </button>
-                    <button class="icon-btn" data-tooltip="Download XML" (click)="downloadMx()">
+                    <button class="icon-btn-sml" data-tooltip="Download XML" (click)="downloadMx()">
                         <mat-icon>download</mat-icon>
                     </button>
-                    <button class="icon-btn validate-icon-btn" data-tooltip="Validate MX" (click)="validateMx()">
-                        <mat-icon>verified</mat-icon>
-                    </button>
+                    <div class="v-sep"></div>
+                    <button class="btn-save-xml" data-tooltip="Validate MX" (click)="validateMx()" style="padding: 4px 12px; font-size: 12px;">Validate</button>
                 </div>
             </div>
-            <div class="editor-wrapper" *ngIf="mxOutput.trim(); else emptyOutput">
-                <!-- Auto-Validation Summary (Only shown after explicit validation) -->
-                <div class="auto-validate-summary" *ngIf="validationReport && showValidationSummary">
+            <div class="editor-body" *ngIf="mxOutput.trim(); else emptyOutput">
+                <!-- Auto-Validation Summary -->
+                <div class="auto-validate-summary" *ngIf="validationReport && showValidationSummary" style="position: absolute; top: 0; left: 0; right: 0; z-index: 10;">
                     <div class="av-layer" *ngFor="let layer of [1,2,3]" [class]="getLayerClass(layer)">
                         <mat-icon>{{getLayerIcon(layer)}}</mat-icon>
                         <span class="av-name">{{getLayerNameForSummary(layer)}}</span>
                     </div>
                 </div>
 
-                <div class="line-numbers" #mxLineNumbers>
-                    <div *ngFor="let idx of outputLineCount; let i = index">{{i + 1}}</div>
+                <div class="editor-line-numbers" #mxLineNumbers [style.paddingTop.px]="(validationReport && showValidationSummary) ? 52 : 10">
+                    <div *ngFor="let idx of outputLineCount; let i = index" [ngClass]="lineClassMx(idx)">{{i + 1}}</div>
                 </div>
-                <textarea class="code-editor mx-editor" [(ngModel)]="mxOutput" (ngModelChange)="onMxChange($event)"
-                    (scroll)="syncScroll(mxEditor, mxLineNumbers)" #mxEditor spellcheck="false" wrap="off"></textarea>
+                <div class="editor-highlights" aria-hidden="true" [style.top.px]="(validationReport && showValidationSummary) ? 42 : 0">
+                    <div class="editor-highlights-inner" [style.transform]="'translateY(' + (-editorScrollTopMx) + 'px)'">
+                        <div *ngFor="let band of highlightBandsMx" class="hl-band"
+                             [class.hl-error]="band.sev === 'error'"
+                             [class.hl-warning]="band.sev === 'warning'"
+                             [class.hl-target]="band.target"
+                             [style.top.px]="band.top"></div>
+                    </div>
+                </div>
+                <div class="editor-legend" *ngIf="highlightBandsMx.length > 0">
+                    <span class="legend-item"><span class="legend-dot legend-error"></span>Error line</span>
+                    <span class="legend-item"><span class="legend-dot legend-warn"></span>Warning line</span>
+                </div>
+                <textarea class="editor-textarea mx-editor" [(ngModel)]="mxOutput" (ngModelChange)="onMxChange($event)"
+                    onscroll="this.parentElement.querySelector('.editor-line-numbers').scrollTop = this.scrollTop; var hl = this.parentElement.querySelector('.editor-highlights-inner'); if(hl) hl.style.transform = 'translateY(-' + this.scrollTop + 'px)';" 
+                    (click)="updateCursorLineMx($event)" (keyup)="updateCursorLineMx($event)" (focus)="updateCursorLineMx($event)"
+                    #mxEditor spellcheck="false" wrap="off"
+                    [style.paddingTop.px]="(validationReport && showValidationSummary) ? 52 : 10"></textarea>
             </div>
             <ng-template #emptyOutput>
                 <div class="empty-state">

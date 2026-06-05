@@ -113,7 +113,7 @@
                         <label>Original Instruction ID <span class="opt">Optional</span></label>
                         <input formControlName="orgnlInstrId" maxlength="35">
                         <div class="validation-msg" *ngIf="err('orgnlInstrId') as e">{{e}}</div>
-                        <div class="field-hint at-limit" *ngIf="hint('orgnlInstrId', 35) as h">{{h}}</div>
+                        <div class="field-hint at-limit" *ngIf="hint('orgnlInstrId', 16) as h">{{h}}</div>
                     </div>
                     <div class="form-group intermediary-field">
                         <label>Original End To End ID <span class="req">*</span></label>
@@ -397,7 +397,7 @@
                                         </div>
                                         <textarea class="code-editor" [(ngModel)]="generatedXml"
                                                 (ngModelChange)="onEditorChange($event)"
-                                                (scroll)="syncScroll(xmlEditor, lineNumbers)" #xmlEditor
+                                                onscroll="this.parentElement.querySelector('.editor-line-numbers').scrollTop = this.scrollTop; var hl = this.parentElement.querySelector('.editor-highlights-inner'); if(hl) hl.style.transform = 'translateY(-' + this.scrollTop + 'px)';" #xmlEditor
                                                 spellcheck="false" wrap="off"></textarea>
                                 </div>
                         </div>

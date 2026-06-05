@@ -114,9 +114,9 @@
                                         <div class="section-title">Transaction Details</div>
                                         <div class="form-group intermediary-field"><label>Instruction ID <span
                                                                 class="req">*</span></label><input
-                                                        formControlName="instrId" maxlength="35">
+                                                        formControlName="instrId" maxlength="16">
                                                 <div class="validation-msg" *ngIf="err('instrId') as e">{{e}}</div>
-                                                <div class="field-hint at-limit" *ngIf="hint('instrId', 35) as h">{{h}}</div>
+                                                <div class="field-hint at-limit" *ngIf="hint('instrId', 16) as h">{{h}}</div>
                                         </div>
                                         <div class="form-group intermediary-field"><label>End To End ID <span
                                                                 class="req">*</span></label><input
@@ -752,7 +752,7 @@
                                         </div>
                                         <textarea class="code-editor" [(ngModel)]="generatedXml"
                                                 (ngModelChange)="onEditorChange($event)"
-                                                (scroll)="syncScroll(xmlEditor, lineNumbers)" #xmlEditor
+                                                onscroll="this.parentElement.querySelector('.editor-line-numbers').scrollTop = this.scrollTop; var hl = this.parentElement.querySelector('.editor-highlights-inner'); if(hl) hl.style.transform = 'translateY(-' + this.scrollTop + 'px)';" #xmlEditor
                                                 spellcheck="false" wrap="off"></textarea>
                                 </div>
                         </div>

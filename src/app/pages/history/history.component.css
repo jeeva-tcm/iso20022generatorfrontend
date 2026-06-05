@@ -300,59 +300,70 @@
 }
 
 .btn-action {
-    height: 44px;
-    padding: 0 16px;
-    border-radius: 12px;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 6px;
     border: 1px solid var(--border-light);
-    background: var(--bg-card);
+    background: transparent;
     color: var(--text-muted);
     font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     cursor: pointer;
-    transition: 0.2s;
+    transition: color 0.15s, background 0.15s, border-color 0.15s;
     font-family: inherit;
 }
 
 .btn-action mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
 }
 
 .btn-action:hover {
-    background: var(--bg-card-hover);
-    border-color: var(--border-light);
+    background: rgba(255, 255, 255, 0.05);
     color: var(--text-main);
-    transform: translateY(-1px);
+}
+
+body.light-theme .btn-action:hover {
+    background: rgba(0, 0, 0, 0.04);
 }
 
 .btn-action.refresh:hover {
-    color: #fbbf24;
+    color: #f59e0b;
+    border-color: rgba(245, 158, 11, 0.3);
 }
 
 .btn-action.delete {
     color: #f87171;
-    background: rgba(239, 68, 68, 0.05);
-    border-color: rgba(239, 68, 68, 0.1);
-}
-
-.btn-action.delete:hover {
-    background: rgba(239, 68, 68, 0.1);
     border-color: rgba(239, 68, 68, 0.2);
 }
 
+.btn-action.delete:hover {
+    background: rgba(239, 68, 68, 0.07);
+    border-color: rgba(239, 68, 68, 0.35);
+}
+
+body.light-theme .btn-action.delete {
+    color: #dc2626;
+    border-color: rgba(220, 38, 38, 0.2);
+}
+
 .btn-action.export {
-    color: #60a5fa;
-    background: rgba(37, 99, 235, 0.05);
-    border-color: rgba(37, 99, 235, 0.1);
+    color: #93c5fd;
+    border-color: rgba(59, 91, 219, 0.2);
 }
 
 .btn-action.export:hover {
-    background: rgba(37, 99, 235, 0.1);
+    background: rgba(59, 91, 219, 0.07);
+    border-color: rgba(59, 91, 219, 0.35);
+}
+
+body.light-theme .btn-action.export {
+    color: #2563eb;
     border-color: rgba(37, 99, 235, 0.2);
 }
 
@@ -394,25 +405,17 @@
 }
 
 .val-id {
-    display: inline-block;
-    background-color: var(--accent-light);
-    padding: 6px 10px;
-    border-radius: 8px;
     font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 500;
-    color: var(--accent-color);
-    border: 1px solid rgba(96, 165, 250, 0.2);
-    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
     word-break: break-all;
     max-width: 100%;
 }
 
 body.light-theme .val-id {
-    background-color: rgba(29, 78, 216, 0.08);
-    /* Sophisticated indigo tint */
-    color: #1d4ed8;
-    border: 1px solid rgba(29, 78, 216, 0.15);
+    color: #64748b;
 }
 
 .status-badge {
@@ -788,13 +791,14 @@ body.light-theme .val-id {
     display: flex;
     position: relative;
     background: var(--bg-card);
-    max-height: 450px;
+    height: 450px;
     border-radius: 8px;
     overflow: hidden;
 }
 
 .editor-line-numbers {
     width: 45px;
+    height: 100%;
     flex-shrink: 0;
     background: var(--bg-card-hover);
     border-right: 1px solid var(--border-light);
@@ -807,10 +811,12 @@ body.light-theme .val-id {
     pointer-events: none;
     line-height: 1.5;
     user-select: none;
+    box-sizing: border-box;
 }
 
 .editor-textarea {
     flex: 1;
+    height: 100%;
     min-width: 0;
     margin: 0;
     background: transparent;
@@ -823,9 +829,10 @@ body.light-theme .val-id {
     outline: none;
     white-space: pre;
     overflow: auto;
+    overflow-x: auto;
     line-height: 1.5;
     tab-size: 4;
-    word-break: break-all;
+    box-sizing: border-box;
 }
 
 .preview-header {
@@ -1485,4 +1492,27 @@ mat-card {
     top: 0;
     z-index: 100;
     background: var(--bg-card) !important;
+}
+
+/* ── No hover effects ── */
+.status-tab:hover,
+.status-tab.active:hover,
+.btn-action:hover,
+.btn-action.refresh:hover,
+.btn-action.delete:hover,
+.btn-action.export:hover,
+.history-row:hover,
+.file-chips .chip:hover,
+.more-issues.clickable-hint:hover,
+.delete-btn:hover,
+.header-actions button[mat-stroked-button]:hover,
+.custom-select-trigger:hover,
+.custom-option:hover,
+.custom-option.selected:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    background: unset !important;
+    color: unset !important;
+    border-color: unset !important;
+    text-decoration: none !important;
 }
