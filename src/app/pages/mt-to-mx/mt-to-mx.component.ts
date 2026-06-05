@@ -36,6 +36,16 @@ export class MtToMxComponent implements OnInit {
     isFileLoading = false;
     isFileWarning = false;
     
+    // Editor UI state
+    cursorLineMt: number | null = null;
+    cursorLineMx: number | null = null;
+    targetLineMx: number | null = null;
+    targetLineSeverityMx: 'error' | 'warning' | null = null;
+    lineSeverityMapMx: { [line: number]: 'error' | 'warning' } = {};
+    highlightBandsMx: { top: number; sev: 'error' | 'warning'; target: boolean }[] = [];
+    editorScrollTopMx = 0;
+    private readonly EDITOR_LINE_HEIGHT = 20;
+
     // Bulk Conversion State
     isBulkMode = false;
     bulkMtMessages: { 
@@ -444,6 +454,7 @@ export class MtToMxComponent implements OnInit {
 
                 this.conversionStatus = 'success';
                 this.validationReport = response.validation_report || null;
+                this.buildLineSeverityMapMx();
 
                 // Only show mandatory fields that are actually MISSING after conversion
                 this.activeFieldGuide = this.calculateMissingFields(this.detectedMtType);
@@ -462,6 +473,7 @@ export class MtToMxComponent implements OnInit {
                 this.conversionStatus = 'error';
                 this.missingFields = [];
                 this.validationReport = (err.error?.detail?.validation_report) || null;
+                this.buildLineSeverityMapMx();
 
                 // Show missing fields even on error so user knows what to fix
                 this.activeFieldGuide = this.calculateMissingFields(this.detectedMtType);
@@ -985,6 +997,7 @@ export class MtToMxComponent implements OnInit {
         }).subscribe({
             next: (data: any) => {
                 this.validationReport = data;
+                this.buildLineSeverityMapMx();
                 this.validationStatus = 'done';
             },
             error: () => {
@@ -998,6 +1011,7 @@ export class MtToMxComponent implements OnInit {
                         fix_suggestion: 'Ensure the validation server is running.'
                     }]
                 };
+                this.buildLineSeverityMapMx();
                 this.validationStatus = 'done';
             }
         });
@@ -1683,5 +1697,69 @@ AND CONFIRM.
             return [exStr];
         }
         return [];
+    }
+
+    lineClassMt(idx: number) {
+        return {
+            'cursor-line': idx === this.cursorLineMt
+        };
+    }
+
+    lineClassMx(idx: number) {
+        const sev = this.lineSeverityMapMx[idx];
+        return {
+            'cursor-line': idx === this.cursorLineMx,
+            'line-error': sev === 'error',
+            'line-warning': sev === 'warning',
+            'target-error': idx === this.targetLineMx && this.targetLineSeverityMx === 'error',
+            'target-warning': idx === this.targetLineMx && this.targetLineSeverityMx === 'warning',
+        };
+    }
+
+    updateCursorLineMt(ev: Event) {
+        const ta = ev.target as HTMLTextAreaElement;
+        if (!ta || ta.selectionStart == null) return;
+        this.cursorLineMt = ta.value.substring(0, ta.selectionStart).split('\n').length;
+    }
+
+    updateCursorLineMx(ev: Event) {
+        const ta = ev.target as HTMLTextAreaElement;
+        if (!ta || ta.selectionStart == null) return;
+        this.cursorLineMx = ta.value.substring(0, ta.selectionStart).split('\n').length;
+    }
+
+    private buildLineSeverityMapMx() {
+        const map: { [line: number]: 'error' | 'warning' } = {};
+        const details = (this.validationReport?.details ?? []) as any[];
+        for (const iss of details) {
+            let ln = null;
+            if (iss.line) ln = Number(iss.line);
+            else if (String(iss.path || '').trim().match(/^\d+$/)) ln = Number(iss.path);
+
+            if (!ln) continue;
+            const sev = iss.severity === 'ERROR' ? 'error'
+                      : iss.severity === 'WARNING' ? 'warning' : null;
+            if (!sev) continue;
+            if (map[ln] === 'error') continue;
+            map[ln] = sev;
+        }
+        this.lineSeverityMapMx = map;
+        this.computeHighlightBandsMx();
+    }
+
+    private computeHighlightBandsMx() {
+        const bands: { top: number; sev: 'error' | 'warning'; target: boolean }[] = [];
+        // Determine starting top based on whether validation banner is showing
+        const padTop = (this.validationReport && this.showValidationSummary) ? 52 : 10;
+        
+        for (const key of Object.keys(this.lineSeverityMapMx)) {
+            const ln = Number(key);
+            bands.push({
+                top: padTop + (ln - 1) * this.EDITOR_LINE_HEIGHT,
+                sev: this.lineSeverityMapMx[ln],
+                target: ln === this.targetLineMx,
+            });
+        }
+        this.highlightBandsMx = bands;
     }
 }

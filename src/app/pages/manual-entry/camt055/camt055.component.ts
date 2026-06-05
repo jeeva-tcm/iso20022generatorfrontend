@@ -347,6 +347,13 @@ export class Camt055Component implements OnInit, OnDestroy {
         }
       });
 
+      // CBPR+ Rule: Case/Id is mandatory in camt.055 TxInf and must precede OrgnlInstrId per schema sequence
+      const caseIdVal = (group.get('case_id')?.value || '').trim();
+      if (!caseIdVal) {
+        if (!errors) errors = {};
+        errors['case_id_missing'] = true;
+      }
+
       // OrgnlReqdExctnDt Choice (Dt OR DtTm) - XOR Rule
       if (group.get('orgnlReqdExctnDt')?.value && group.get('orgnlReqdExctnDtTm')?.value) {
         if (!errors) errors = {};
@@ -1192,6 +1199,9 @@ ${txInf.trimEnd()}
 
   err(f: string, group?: any): string | null {
     // camt055-specific form-level business rules (preserved, emojis removed)
+    if (f === 'case_id' && this.form.errors?.['case_id_missing']) {
+      return 'Case ID is mandatory (CBPR+ rule: Case/Id must appear before OrgnlInstrId in TxInf per camt.055.001.08 schema).';
+    }
     if (f === 'orgnlReqdExctnDt' || f === 'orgnlReqdExctnDtTm') {
       if (this.form.errors?.['orgnlReqdExctnDt_duplicate']) {
         return 'Only one of Date (Dt) or DateTime (DtTm) is allowed.';
@@ -1288,6 +1298,7 @@ ${txInf.trimEnd()}
       { key: 'orgnlMsgNmId', label: 'Original Message Name' },
       { key: 'orgnlCreDtTm', label: 'Original Creation DateTime' },
       { key: 'cxlId', label: 'Cancellation ID' },
+      { key: 'case_id', label: 'Case ID' },
       { key: 'orgnlUETR', label: 'Original UETR' },
       { key: 'orgnlInstdAmt_ccy', label: 'Currency' },
       { key: 'orgnlInstdAmt_val', label: 'Original Amount' },
@@ -1302,6 +1313,7 @@ ${txInf.trimEnd()}
         else if (ctrl.errors?.['maxlength']) errors.push(`${label} exceeds maximum length.`);
       }
     });
+    if (this.form.errors?.['case_id_missing']) errors.push('Case ID is mandatory — Case/Id must precede OrgnlInstrId in TxInf (camt.055 CBPR+ schema rule).');
     if (this.form.errors?.['orgnlReqdExctnDt_duplicate']) errors.push('Only one of Execution Date (Dt) or DateTime (DtTm) is allowed.');
     if (this.form.errors?.['date_choice_conflict']) errors.push('Execution Date and Collection Date are mutually exclusive.');
     return errors;

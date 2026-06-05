@@ -272,12 +272,12 @@
                                                     </div>
                                                 </div>
                                                 <pre *ngIf="!isEditingXml" class="editor-textarea"
-                                                    (scroll)="syncScroll(readOnlyXml, lineNumbers)"
+                                                    onscroll="this.parentElement.querySelector('.editor-line-numbers').scrollTop = this.scrollTop; var hl = this.parentElement.querySelector('.editor-highlights-inner'); if(hl) hl.style.transform = 'translateY(-' + this.scrollTop + 'px)';"
                                                     #readOnlyXml>{{expandedDetail.original_message}}</pre>
                                                 <textarea *ngIf="isEditingXml" class="editor-textarea"
                                                     [(ngModel)]="editedXmlContent"
                                                     (ngModelChange)="onEditorChange($event)"
-                                                    (scroll)="syncScroll(xmlEditor, lineNumbers)"
+                                                    onscroll="this.parentElement.querySelector('.editor-line-numbers').scrollTop = this.scrollTop; var hl = this.parentElement.querySelector('.editor-highlights-inner'); if(hl) hl.style.transform = 'translateY(-' + this.scrollTop + 'px)';"
                                                     (keydown)="handleKeyDown($event)" #xmlEditor wrap="off"
                                                     spellcheck="false"></textarea>
                                             </div>

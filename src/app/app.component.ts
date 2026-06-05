@@ -38,6 +38,8 @@ export class AppComponent implements OnInit {
     isBulkGenerateActive = false;
     isFullWidthPage = false;
     isMenuForcedClosed = false;
+    isSRMenuForcedClosed = false;
+    activeSR: 'SR2025' | 'SR2026' = 'SR2025';
 
     constructor(
         private router: Router,
@@ -66,6 +68,11 @@ export class AppComponent implements OnInit {
 
     get isDarkMode(): boolean {
         return this.themeService.getTheme() === 'dark';
+    }
+
+    setActiveSR(sr: 'SR2025' | 'SR2026') {
+        this.activeSR = sr;
+        this.isSRMenuForcedClosed = true;
     }
 
     private updateState(url: string) {

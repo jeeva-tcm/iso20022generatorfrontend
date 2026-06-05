@@ -362,7 +362,7 @@
                                         </div>
                                         <textarea class="code-editor" [(ngModel)]="generatedXml"
                                                 (ngModelChange)="onEditorChange($event)"
-                                                (scroll)="syncScroll(xmlEditor, lineNumbers)" #xmlEditor
+                                                onscroll="this.parentElement.querySelector('.editor-line-numbers').scrollTop = this.scrollTop; var hl = this.parentElement.querySelector('.editor-highlights-inner'); if(hl) hl.style.transform = 'translateY(-' + this.scrollTop + 'px)';" #xmlEditor
                                                 spellcheck="false" wrap="off"></textarea>
                                 </div>
                         </div>

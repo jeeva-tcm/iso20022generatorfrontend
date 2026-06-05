@@ -883,6 +883,8 @@ header p {
 
 .line-numbers {
     width: 45px;
+    height: 100%;
+    box-sizing: border-box;
     background: var(--editor-gutter);
     color: var(--editor-gutter-text);
     padding: 1rem 0;
@@ -1779,5 +1781,281 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     font-weight: 500;
 }
 
-.vm-examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; } 
+.vm-examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 .vm-example-chip { background-color: #f3f4f6; color: #374151; font-family: monospace; font-size: 12px; padding: 4px 8px; border-radius: 4px; border: 1px solid #e5e7eb; }
+
+/* ── No hover effects ── */
+.sample-btn:hover,
+.action-btn:hover,
+.clear-btn:hover,
+.upload-btn:hover,
+.remove-file-btn:hover,
+.convert-btn:hover,
+.bulk-convert-btn:hover,
+.bulk-convert-btn-large:hover,
+.bulk-file-item:hover,
+.bf-load-btn:hover,
+.icon-btn:hover,
+.validate-icon-btn:hover,
+.vm-action-btn:hover,
+.vm-action-btn.run:hover,
+.vm-close:hover,
+.vm-issue:hover,
+.vm-copy-btn:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  background: unset !important;
+  color: unset !important;
+  border-color: unset !important;
+  opacity: unset !important;
+}
+
+
+/* Imported from Validate View XML Editor */
+.editor-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--header-bg);
+  border-radius: 12px 12px 0 0;
+}
+
+.editor-title {
+  font-weight: 600;
+  color: var(--text-main);
+  font-size: 16px;
+}
+
+.editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-btn-sml {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-light);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.icon-btn-sml:hover:not(:disabled) {
+  background: var(--bg-card-hover);
+  color: var(--text-main);
+  border-color: var(--accent-light);
+}
+
+.icon-btn-sml:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.icon-btn-sml mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.v-sep {
+  width: 1px;
+  height: 24px;
+  background: var(--border-light);
+  margin: 0 4px;
+}
+
+.btn-cancel-xml {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-light);
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-cancel-xml:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-main);
+}
+
+.btn-save-xml {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+.btn-save-xml:hover {
+  background: #1d4ed8;
+}
+
+.editor-body {
+  flex: 1 1 auto;
+  display: flex;
+  height: 500px;
+  max-height: 500px;
+  min-height: 300px;
+  overflow: hidden;
+  position: relative;
+  background: var(--bg-app);
+  border-radius: 0 0 12px 12px;
+}
+
+.editor-line-numbers {
+  width: 50px;
+  background: var(--bg-card-hover);
+  border-right: 1px solid var(--border-light);
+  padding: 10px 0;
+  color: var(--text-muted);
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
+  text-align: right;
+  padding-right: 10px;
+  overflow: hidden;
+  pointer-events: none;
+  line-height: 1.5;
+  user-select: none;
+}
+
+/* Active line — follows the text caret (code-editor style) */
+.editor-line-numbers .cursor-line {
+  color: #2563eb;
+  font-weight: 700;
+  box-shadow: inset 3px 0 0 0 #2563eb;
+}
+.editor-line-numbers .cursor-line:not(.line-error):not(.line-warning) {
+  background-color: rgba(37, 99, 235, 0.16);
+}
+
+/* Severity colouring for every error / warning line in the file */
+.editor-line-numbers .line-error {
+  background-color: rgba(239, 68, 68, 0.16);
+  color: #dc2626;
+  font-weight: 700;
+}
+.editor-line-numbers .line-warning {
+  background-color: rgba(234, 179, 8, 0.20);
+  color: #b45309;
+  font-weight: 700;
+}
+/* The line the user jumped to — strongest emphasis + accent bar */
+.editor-line-numbers .target-error {
+  background-color: rgba(239, 68, 68, 0.38);
+  color: #b91c1c;
+  box-shadow: inset 3px 0 0 0 #dc2626;
+}
+.editor-line-numbers .target-warning {
+  background-color: rgba(234, 179, 8, 0.42);
+  color: #92400e;
+  box-shadow: inset 3px 0 0 0 #d97706;
+}
+
+.editor-textarea {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
+  padding: 10px;
+  resize: none;
+  outline: none;
+  white-space: pre;
+  overflow: auto;
+  line-height: 1.5;
+  tab-size: 4;
+  position: relative;   /* sit above the highlight overlay */
+  z-index: 1;
+}
+
+/* ── Full-line highlight overlay (behind the textarea) ── */
+.editor-highlights {
+  position: absolute;
+  left: 50px;           /* matches .editor-line-numbers width */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.editor-highlights-inner {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  will-change: transform;
+}
+.hl-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 19.5px;       /* font-size 13px × line-height 1.5 */
+}
+.hl-band.hl-error   { background: rgba(239, 68, 68, 0.30); }
+.hl-band.hl-warning { background: rgba(234, 179, 8, 0.34); }
+/* The line the user jumped to gets a stronger tint + a left accent bar */
+.hl-band.hl-target.hl-error   { background: rgba(239, 68, 68, 0.45); box-shadow: inset 3px 0 0 0 #dc2626; }
+.hl-band.hl-target.hl-warning { background: rgba(234, 179, 8, 0.48); box-shadow: inset 3px 0 0 0 #d97706; }
+
+/* Editor colour-coding legend */
+.editor-legend {
+  position: absolute;
+  bottom: 12px;
+  right: 18px;
+  display: flex;
+  gap: 14px;
+  padding: 5px 11px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.legend-item { display: inline-flex; align-items: center; gap: 5px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.legend-error { background: rgba(239, 68, 68, 0.7); }
+.legend-warn { background: rgba(234, 179, 8, 0.8); }
+
+.mt-editor::-webkit-scrollbar {
+    display: none;
+}
+.mt-editor {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.mx-editor::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.mx-editor::-webkit-scrollbar-track {
+    background: var(--bg-app);
+}
+
+.mx-editor::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 5px;
+}
+
+.mx-editor::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}

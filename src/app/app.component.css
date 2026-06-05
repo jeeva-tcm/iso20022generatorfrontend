@@ -1,12 +1,11 @@
 .header {
     display: flex;
     align-items: center;
-    padding: 0 40px;
-    height: 80px;
+    padding: 0 32px;
+    height: 60px;
     background: var(--header-bg);
-    backdrop-filter: blur(24px) saturate(200%);
-    -webkit-backdrop-filter: blur(24px) saturate(200%);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
     border-bottom: 1px solid var(--border-light);
     position: fixed;
     top: 0;
@@ -23,7 +22,7 @@
     flex-shrink: 0;
     text-decoration: none;
     cursor: pointer;
-    margin-left: 60px;
+    margin-left: 0;
 }
 
 .logo-mark {
@@ -75,24 +74,15 @@ body.light-theme .logo-secondary {
     left: 50%;
     transform: translateX(-50%);
     gap: 2px;
-    padding: 5px;
-    border-radius: 18px;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    padding: 4px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-light);
 }
 
-/* Dark Theme Capsule */
-:host-context(.dark-theme) .nav-links,
-:host:not(.light-theme) .nav-links {
-    background: rgba(15, 23, 42, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-/* Light Theme Capsule - Ultra Clean */
 :host-context(.light-theme) .nav-links {
-    background: rgba(255, 255, 255, 0.5);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.07);
 }
 
 .theme-toggle {
@@ -121,29 +111,34 @@ body.light-theme .logo-secondary {
 
 .nav-links a {
     color: var(--text-muted);
-    font-weight: 700;
-    border-radius: 12px;
-    padding: 7px 12px;
-    font-size: 0.75rem;
-    letter-spacing: 0.3px;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 600;
+    border-radius: 15px;
+    padding: 5px 11px;
+    font-size: 0.7rem;
+    letter-spacing: 0.6px;
+    transition: all 0.2s ease;
 }
 
 .nav-links a:hover {
     color: var(--text-main);
-    background: var(--bg-card-hover);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+:host-context(.light-theme) .nav-links a:hover {
+    background: rgba(0, 0, 0, 0.05);
 }
 
 .active-link {
-    background: var(--accent-color) !important;
-    color: #ffffff !important;
-    box-shadow: none;
+    background: #3b5bdb !important;
+    color: #fff !important;
+    font-weight: 700 !important;
+    box-shadow: none !important;
 }
 
 :host-context(.light-theme) .active-link {
-    background: #1d4ed8 !important;
-    color: #ffffff !important;
-    box-shadow: none;
+    background: #3b5bdb !important;
+    color: #fff !important;
+    box-shadow: none !important;
 }
 
 /* ===== Dropdown Menu — Banking Grade ===== */
@@ -195,17 +190,17 @@ body.light-theme .logo-secondary {
     gap: 1px;
 }
 
-/* Accent top-line — banking signature */
+/* Accent top-line */
 .dropdown-menu::before {
     content: '';
     position: absolute;
     top: 0;
     left: 16px;
     right: 16px;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, #2563eb, transparent);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
     border-radius: 0 0 2px 2px;
-    opacity: 0.7;
+    opacity: 0.6;
 }
 
 .dropdown-wrapper:hover .dropdown-menu {
@@ -316,17 +311,17 @@ body.light-theme .logo-secondary {
     overflow-y: auto;
 }
 
-/* Accent top-line on submenu too */
+/* Accent top-line on submenu */
 .submenu::before {
     content: '';
     position: absolute;
     top: 0;
     left: 12px;
     right: 12px;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, #2563eb, transparent);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
     border-radius: 0 0 2px 2px;
-    opacity: 0.6;
+    opacity: 0.5;
 }
 
 :host-context(.light-theme) .submenu {
@@ -372,9 +367,9 @@ body.light-theme .logo-secondary {
 }
 
 .submenu a.active-link {
-    background: var(--accent-color) !important;
-    color: #ffffff !important;
-    box-shadow: none;
+    background: #3b5bdb !important;
+    color: #fff !important;
+    box-shadow: none !important;
 }
 
 .submenu a.active-link::after {
@@ -546,14 +541,14 @@ body.light-theme .user-info img {
 
 
 .main-content {
-    margin-top: 80px;
+    margin-top: 60px;
     padding: 24px;
     max-width: 1400px;
     margin-left: auto;
     margin-right: auto;
     width: 100%;
     box-sizing: border-box;
-    min-height: calc(100vh - 80px);
+    min-height: calc(100vh - 60px);
     display: flex;
     flex-direction: column;
 }
@@ -561,14 +556,14 @@ body.light-theme .user-info img {
 /* Full-screen dark override for the validate page */
 .main-content.dark-page {
     margin: 0;
-    margin-top: 80px;
+    margin-top: 60px;
     /* keep below fixed header */
     padding: 0;
     max-width: 100%;
     width: 100%;
     /* Covers from below-header to absolute bottom */
-    min-height: calc(100vh - 80px);
-    height: calc(100vh - 80px);
+    min-height: calc(100vh - 60px);
+    height: calc(100vh - 60px);
     overflow: hidden;
     background: var(--bg-app);
     display: flex;
@@ -586,7 +581,7 @@ body.light-theme .user-info img {
     max-width: 100% !important;
     width: 100% !important;
     padding: 0 !important;
-    margin-top: 80px !important;
+    margin-top: 60px !important;
 }
 
 /* Also kill white on body / html when dark page is shown */
@@ -684,14 +679,14 @@ body.light-theme .user-info img {
     }
 
     .main-content {
-        margin-top: 160px;
+        margin-top: 140px;
         padding: 24px 16px;
     }
 }
 
 @media (max-width: 480px) {
     .header {
-        padding: 16px 14px;
+        padding: 12px 14px;
     }
 
     .nav-links {
@@ -699,12 +694,103 @@ body.light-theme .user-info img {
     }
 
     .nav-links a {
-        padding: 8px 14px;
-        font-size: 0.75rem;
+        padding: 6px 12px;
+        font-size: 0.68rem;
     }
 
     .main-content {
-        margin-top: 160px;
+        margin-top: 140px;
         padding: 20px 12px;
     }
+}
+
+/* ===== SR Version Dropdown ===== */
+.sr-dropdown-wrapper .sr-dropdown-menu {
+    width: 160px;
+    left: 50%;
+    padding: 8px;
+}
+
+.sr-trigger {
+    gap: 4px;
+}
+
+.sr-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #a78bfa;
+    background: rgba(139, 92, 246, 0.12);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 5px;
+    padding: 2px 7px;
+}
+
+.sr-menu-label {
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    padding: 2px 8px 6px;
+    opacity: 0.6;
+}
+
+.sr-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-main);
+    font-size: 0.82rem;
+    font-weight: 500;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    text-align: left;
+}
+
+.sr-option:hover {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+:host-context(.light-theme) .sr-option:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.sr-option.sr-active {
+    color: #a78bfa;
+    background: rgba(139, 92, 246, 0.1);
+}
+
+.sr-check {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+    color: inherit;
+    flex-shrink: 0;
+}
+
+.sr-option:not(.sr-active) .sr-check {
+    opacity: 0.3;
+}
+
+.sr-year-badge {
+    margin-left: auto;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+}
+
+.sr-year-badge--new {
+    background: rgba(139, 92, 246, 0.15);
+    color: #a78bfa;
 }

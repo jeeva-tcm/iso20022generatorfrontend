@@ -161,14 +161,14 @@
           </button>
         </div>
 
-        <button class="btn-fix-all-global"
+        <button class="btn-fix-all"
                 *ngIf="hasFixableFiles"
                 (click)="fixAllMessagesAI()"
                 [disabled]="fixingAllMessages"
-                [title]="fixingAllMessages ? 'Fixing files…' : 'Run AI fix on all failed files'">
+                [title]="fixingAllMessages ? 'Fixing all messages…' : 'Run AI fix on all failed messages'">
           <mat-icon *ngIf="!fixingAllMessages">auto_fix_high</mat-icon>
           <mat-icon *ngIf="fixingAllMessages" class="spin-slow">progress_activity</mat-icon>
-          <span *ngIf="!fixingAllMessages">Fix All</span>
+          <span *ngIf="!fixingAllMessages">Fix All Messages</span>
           <span *ngIf="fixingAllMessages">{{ fixAllProgressDone }}/{{ fixAllProgressTotal }}</span>
         </button>
 
@@ -253,11 +253,11 @@
 
                 <!-- Fix All button (shown only when there are fixable ERROR-severity issues) -->
                 <div class="fix-all-row" *ngIf="getFixableCount(f.report) > 0">
-                  <button class="btn-fix-all"
+                  <button class="btn-fix-all-global"
                     (click)="openFixAll(f, $event)"
                     title="Let AI fix all errors in this message at once">
                     <mat-icon>auto_fix_high</mat-icon>
-                    AI Fix All ({{ getFixableCount(f.report) }} error{{ getFixableCount(f.report) !== 1 ? 's' : '' }})
+                    Fix File Errors ({{ getFixableCount(f.report) }} error{{ getFixableCount(f.report) !== 1 ? 's' : '' }})
                   </button>
                 </div>
 
@@ -515,7 +515,7 @@
         <span class="legend-item"><span class="legend-dot legend-warn"></span>Warning line</span>
       </div>
       <textarea class="editor-textarea" [(ngModel)]="editingEntry.content" (ngModelChange)="onEditorChange($event)"
-        (scroll)="syncScroll(xmlEditor, lineNumbers)" (keydown)="handleKeyDown($event)"
+        onscroll="this.parentElement.querySelector('.editor-line-numbers').scrollTop = this.scrollTop; var hl = this.parentElement.querySelector('.editor-highlights-inner'); if(hl) hl.style.transform = 'translateY(-' + this.scrollTop + 'px)';" (keydown)="handleKeyDown($event)"
         (click)="updateCursorLine($event)" (keyup)="updateCursorLine($event)" (focus)="updateCursorLine($event)"
         #xmlEditor wrap="off" spellcheck="false"></textarea>
     </div>

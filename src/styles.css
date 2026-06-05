@@ -1,17 +1,18 @@
 /* Angular Material Theme */
 @import '@angular/material/prebuilt-themes/indigo-pink.css';
 
-/* Google Fonts Import */
+/* Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-    /* Premium Corporate Palette - OLED Deep Midnight (Neon Edition) */
-    --primary-gradient: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-    --secondary-gradient: linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%);
-    --success-gradient: linear-gradient(135deg, #10b981 0%, #34d399 100%);
-    --error-gradient: linear-gradient(135deg, #ef4444 0%, #f43f5e 100%);
-    --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+    /* Obsidian + Electric Teal */
+    --primary-gradient: linear-gradient(135deg, #00e5a0 0%, #00b87a 100%);
+    --secondary-gradient: linear-gradient(135deg, #00b87a 0%, #00d4aa 100%);
+    --success-gradient: linear-gradient(135deg, #00e5a0 0%, #00c97a 100%);
+    --error-gradient: linear-gradient(135deg, #ff4d6a 0%, #e63055 100%);
+    --warning-gradient: linear-gradient(135deg, #ffb347 0%, #ffcc44 100%);
 
     /* True Black System */
     --bg-app: #000000;
@@ -19,7 +20,6 @@
     --bg-card-hover: #121214;
     --text-main: #ffffff;
     --text-muted: #a1a1aa;
-    /* Zinc 400 - clean and crisp */
     --border-light: rgba(255, 255, 255, 0.14);
     --header-bg: rgba(0, 0, 0, 0.85);
     --banner-gradient: linear-gradient(135deg, #0f1012 0%, #1e1e21 50%, #2d2d30 100%);
@@ -30,12 +30,12 @@
     --shadow-lg: 0 10px 20px -5px rgba(0, 0, 0, 0.8);
     --shadow-xl: 0 20px 30px -10px rgba(0, 0, 0, 0.9);
 
-    /* Corporate Blue Accents */
-    --accent-color: #3b82f6;
-    --accent-light: rgba(59, 130, 246, 0.1);
+    /* Blue Accents */
+    --accent-color: #3b5bdb;
+    --accent-light: rgba(59, 91, 219, 0.1);
     --accent-text: #93c5fd;
 
-    /* High-End Editor */
+    /* Editor */
     --editor-bg: #050505;
     --editor-gutter: #000000;
     --editor-gutter-text: #52525b;
@@ -46,35 +46,33 @@
     transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease;
 }
 
-/* Light Theme Variables - Premium Silk & Quartz */
-/* Light Theme Variables - Premium Silk & Quartz */
+/* Light Theme — Clean White + Blue */
 body.light-theme {
-    --bg-app: #fcfcfd;
+    --bg-app: #f4f6fb;
     --bg-card: #ffffff;
-    --bg-card-hover: #f9fafb;
-    --text-main: #020617;
+    --bg-card-hover: #f0f3fc;
+    --text-main: #0c1226;
     --text-muted: #64748b;
-    --border-light: #e2e8f0;
-    --header-bg: rgba(255, 255, 255, 0.95);
+    --border-light: #d8e0f0;
+    --header-bg: rgba(255, 255, 255, 0.96);
     --banner-gradient: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
-    --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+    --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.04);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.07);
+    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.08);
 
     --accent-color: #2563eb;
-    --accent-light: rgba(37, 99, 235, 0.08);
+    --accent-light: rgba(37, 99, 235, 0.09);
     --accent-text: #2563eb;
 
-    /* High-End Light Editor - Clean and Crisp */
     --editor-bg: #ffffff;
-    --editor-gutter: #f8fafc;
+    --editor-gutter: #f4f6fb;
     --editor-gutter-text: #94a3b8;
-    --editor-text: #1e293b;
-    --editor-thumb: #e2e8f0;
-    --editor-thumb-hover: #cbd5e1;
+    --editor-text: #0c1226;
+    --editor-thumb: #d8e0f0;
+    --editor-thumb-hover: #c0cce8;
 }
 
 /* Full-width transaction/agent grids used by pain/camt/pacs manual-entry forms. */
@@ -132,7 +130,7 @@ body {
 }
 
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', 'Outfit', sans-serif;
     background-color: var(--bg-app);
     color: var(--text-main);
     -webkit-font-smoothing: antialiased;
@@ -206,12 +204,38 @@ code,
     font-family: 'JetBrains Mono', monospace !important;
 }
 
-/* ── Message-type badge light-theme overrides (global for all pages) ── */
+/* ── Message-type badge light-theme overrides ── */
 body.light-theme .msg-badge.pacs  { background: rgba(29, 78, 216, 0.07)  !important; color: #1e40af !important; }
 body.light-theme .msg-badge.camt  { background: rgba(13, 148, 136, 0.08) !important; color: #0f766e !important; }
 body.light-theme .msg-badge.pain  { background: rgba(159, 18, 57, 0.07)  !important; color: #9f1239 !important; }
 body.light-theme .msg-badge.head  { background: rgba(146, 64, 14, 0.07)  !important; color: #92400e !important; }
 body.light-theme .msg-badge.other { background: rgba(71, 85, 105, 0.07)  !important; color: #475569 !important; }
+
+/* ── msg-tag light-theme overrides (bulk-generate, dropdown, etc.) ── */
+body.light-theme .msg-tag.pacs,
+body.light-theme .suggestion-tag.pacs,
+body.light-theme .family-tag.pacs,
+body.light-theme .cfg-tag.msg-tag-pacs {
+    background: rgba(37, 99, 235, 0.09)   !important;
+    color: #1d4ed8                         !important;
+    border-color: rgba(37, 99, 235, 0.25)  !important;
+}
+body.light-theme .msg-tag.camt,
+body.light-theme .suggestion-tag.camt,
+body.light-theme .family-tag.camt,
+body.light-theme .cfg-tag.msg-tag-camt {
+    background: rgba(14, 165, 233, 0.09)   !important;
+    color: #0369a1                          !important;
+    border-color: rgba(14, 165, 233, 0.25)  !important;
+}
+body.light-theme .msg-tag.pain,
+body.light-theme .suggestion-tag.pain,
+body.light-theme .family-tag.pain,
+body.light-theme .cfg-tag.msg-tag-pain {
+    background: rgba(190, 24, 93, 0.09)    !important;
+    color: #9d174d                          !important;
+    border-color: rgba(190, 24, 93, 0.25)  !important;
+}
 
 /* Hide Scrollbars globally but keep functionality */
 ::-webkit-scrollbar {
@@ -2362,4 +2386,9 @@ body .mandate-grid.mandate-grid .field-hint {
 .mat-mdc-paginator button.mat-mdc-paginator-navigation-previous:disabled,
 .mat-mdc-paginator button.mat-mdc-paginator-navigation-first:disabled {
     visibility: hidden !important;
+}
+
+/* Fix fractional pixel height mismatch between textarea and divs */
+.editor-textarea, .editor-line-numbers, .editor-line-numbers div, .hl-band, .editor-highlights-inner {
+    line-height: 20px !important;
 }

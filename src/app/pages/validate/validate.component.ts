@@ -90,7 +90,7 @@ export class ValidateComponent implements OnInit {
   highlightBands: { top: number; sev: 'error' | 'warning'; target: boolean }[] = [];
   editorScrollTop = 0;
   // Must match the .editor-textarea CSS: font-size 13px × line-height 1.5, padding-top 10px
-  private readonly EDITOR_LINE_HEIGHT = 19.5;
+  private readonly EDITOR_LINE_HEIGHT = 20;
   private readonly EDITOR_PAD_TOP = 10;
   private xmlHistory: string[] = [];
   private xmlHistoryIdx: number = -1;

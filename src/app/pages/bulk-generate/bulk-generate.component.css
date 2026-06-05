@@ -433,9 +433,9 @@ body.light-theme .select-all-msg-btn:hover {
   border: 1px solid rgba(236,72,153,0.25);
 }
 
-body.light-theme .suggestion-tag.pacs { color: #1d4ed8; }
-body.light-theme .suggestion-tag.camt { color: #0369a1; }
-body.light-theme .suggestion-tag.pain { color: #be185d; }
+body.light-theme .suggestion-tag.pacs { color: #1d4ed8; background: rgba(99,102,241,0.09);  border-color: rgba(99,102,241,0.22); }
+body.light-theme .suggestion-tag.camt { color: #0369a1; background: rgba(14,165,233,0.09);  border-color: rgba(14,165,233,0.22); }
+body.light-theme .suggestion-tag.pain { color: #be185d; background: rgba(236,72,153,0.09);  border-color: rgba(236,72,153,0.2);  }
 
 .suggestion-text {
   flex: 1;
@@ -594,9 +594,9 @@ body.light-theme .suggestion-tag.pain { color: #be185d; }
   border: 1px solid rgba(236,72,153,0.25);
 }
 
-body.light-theme .family-tag.pacs { color: #1d4ed8; border-color: rgba(99,102,241,0.25); }
-body.light-theme .family-tag.camt { color: #0369a1; border-color: rgba(14,165,233,0.25); }
-body.light-theme .family-tag.pain { color: #be185d; border-color: rgba(236,72,153,0.2);  }
+body.light-theme .family-tag.pacs { color: #1d4ed8; background: rgba(99,102,241,0.09);  border-color: rgba(99,102,241,0.22); }
+body.light-theme .family-tag.camt { color: #0369a1; background: rgba(14,165,233,0.09);  border-color: rgba(14,165,233,0.22); }
+body.light-theme .family-tag.pain { color: #be185d; background: rgba(236,72,153,0.09);  border-color: rgba(236,72,153,0.2);  }
 
 .family-label {
   font-size: 0.82rem;
@@ -771,9 +771,9 @@ body.light-theme .family-select-all-btn:hover {
 }
 
 /* Light theme overrides */
-body.light-theme .msg-tag.pacs { color: #1d4ed8; border-color: rgba(99,102,241,0.25); }
-body.light-theme .msg-tag.camt { color: #0369a1; border-color: rgba(14,165,233,0.25); }
-body.light-theme .msg-tag.pain { color: #be185d; border-color: rgba(236,72,153,0.2);  }
+body.light-theme .msg-tag.pacs { color: #1d4ed8; background: rgba(99,102,241,0.09);  border-color: rgba(99,102,241,0.22); }
+body.light-theme .msg-tag.camt { color: #0369a1; background: rgba(14,165,233,0.09);  border-color: rgba(14,165,233,0.22); }
+body.light-theme .msg-tag.pain { color: #be185d; background: rgba(236,72,153,0.09);  border-color: rgba(236,72,153,0.2);  }
 
 /* ── Count Row ── */
 .count-row {
@@ -2216,9 +2216,9 @@ body.light-theme .bg-family-pain {
   border: 1px solid rgba(236, 72, 153, 0.2);
 }
 
-body.light-theme .cfg-tag.msg-tag-pacs { color: #1d4ed8; }
-body.light-theme .cfg-tag.msg-tag-camt { color: #0369a1; }
-body.light-theme .cfg-tag.msg-tag-pain { color: #be185d; }
+body.light-theme .cfg-tag.msg-tag-pacs { color: #1d4ed8; background: rgba(99,102,241,0.09);  border-color: rgba(99,102,241,0.22); }
+body.light-theme .cfg-tag.msg-tag-camt { color: #0369a1; background: rgba(14,165,233,0.09);  border-color: rgba(14,165,233,0.22); }
+body.light-theme .cfg-tag.msg-tag-pain { color: #be185d; background: rgba(236,72,153,0.09);  border-color: rgba(236,72,153,0.2);  }
 
 .cfg-id {
   font-family: 'JetBrains Mono', monospace;
@@ -2461,6 +2461,49 @@ body.light-theme .cfg-tag.msg-tag-pain { color: #be185d; }
   font-size: 18px;
   width: 18px;
   height: 18px;
+}
+
+/* ── No hover effects ── */
+.step.clickable:hover,
+.step.clickable.active:hover,
+.step.clickable.done:hover,
+.select-all-msg-btn:hover,
+.search-input-wrap:hover,
+.search-clear-btn:hover,
+.search-suggestion:hover,
+.no-results-clear:hover,
+.family-select-all-btn:hover,
+.msg-card:hover,
+.preset-btn:hover,
+.config-tab:hover,
+.select-all-toggle:hover,
+.block-item:hover,
+.block-item.mandatory:hover,
+.btn-primary:hover,
+.btn-generate:hover,
+.btn-secondary:hover,
+.btn-download:hover,
+.btn-download-zip:hover,
+.icon-btn:hover,
+.action-btn:hover,
+.counter-item:hover,
+.btn-cancel-generation:hover,
+.qty-selector:hover,
+.qty-btn:hover,
+.custom-count-card:hover,
+.custom-count-card.card-family-pacs:hover,
+.custom-count-card.card-family-camt:hover,
+.custom-count-card.card-family-pain:hover,
+.msg-tab-item:hover,
+.xml-action-btn:hover,
+.suggestion-tag:hover,
+.family-tag:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  background: unset !important;
+  color: unset !important;
+  border-color: unset !important;
+  opacity: unset !important;
 }
 
 .xml-editor-body {

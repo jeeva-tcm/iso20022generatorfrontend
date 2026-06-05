@@ -1,0 +1,300 @@
+.editor-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--header-bg);
+  border-radius: 12px 12px 0 0;
+}
+
+.editor-title {
+  font-weight: 600;
+  color: var(--text-main);
+  font-size: 16px;
+}
+
+.editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-btn-sml {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-light);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.icon-btn-sml:hover:not(:disabled) {
+  background: var(--bg-card-hover);
+  color: var(--text-main);
+  border-color: var(--accent-light);
+}
+
+.icon-btn-sml:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.icon-btn-sml mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.v-sep {
+  width: 1px;
+  height: 24px;
+  background: var(--border-light);
+  margin: 0 4px;
+}
+
+.btn-cancel-xml {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-light);
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-cancel-xml:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-main);
+}
+
+.btn-save-xml {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+.btn-save-xml:hover {
+  background: #1d4ed8;
+}
+
+.editor-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+  background: var(--bg-app);
+  border-radius: 0 0 12px 12px;
+}
+
+.editor-line-numbers {
+  width: 50px;
+  background: var(--bg-card-hover);
+  border-right: 1px solid var(--border-light);
+  padding: 10px 0;
+  color: var(--text-muted);
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
+  text-align: right;
+  padding-right: 10px;
+  overflow: hidden;
+  pointer-events: none;
+  line-height: 1.5;
+  user-select: none;
+}
+
+/* Active line — follows the text caret (code-editor style) */
+.editor-line-numbers .cursor-line {
+  color: #2563eb;
+  font-weight: 700;
+  box-shadow: inset 3px 0 0 0 #2563eb;
+}
+.editor-line-numbers .cursor-line:not(.line-error):not(.line-warning) {
+  background-color: rgba(37, 99, 235, 0.16);
+}
+
+/* Severity colouring for every error / warning line in the file */
+.editor-line-numbers .line-error {
+  background-color: rgba(239, 68, 68, 0.16);
+  color: #dc2626;
+  font-weight: 700;
+}
+.editor-line-numbers .line-warning {
+  background-color: rgba(234, 179, 8, 0.20);
+  color: #b45309;
+  font-weight: 700;
+}
+/* The line the user jumped to — strongest emphasis + accent bar */
+.editor-line-numbers .target-error {
+  background-color: rgba(239, 68, 68, 0.38);
+  color: #b91c1c;
+  box-shadow: inset 3px 0 0 0 #dc2626;
+}
+.editor-line-numbers .target-warning {
+  background-color: rgba(234, 179, 8, 0.42);
+  color: #92400e;
+  box-shadow: inset 3px 0 0 0 #d97706;
+}
+
+.editor-textarea {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
+  padding: 10px;
+  resize: none;
+  outline: none;
+  white-space: pre;
+  overflow: auto;
+  line-height: 1.5;
+  tab-size: 4;
+  position: relative;   /* sit above the highlight overlay */
+  z-index: 1;
+}
+
+/* ── Full-line highlight overlay (behind the textarea) ── */
+.editor-highlights {
+  position: absolute;
+  left: 50px;           /* matches .editor-line-numbers width */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.editor-highlights-inner {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  will-change: transform;
+}
+.hl-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 19.5px;       /* font-size 13px × line-height 1.5 */
+}
+.hl-band.hl-error   { background: rgba(239, 68, 68, 0.30); }
+.hl-band.hl-warning { background: rgba(234, 179, 8, 0.34); }
+/* The line the user jumped to gets a stronger tint + a left accent bar */
+.hl-band.hl-target.hl-error   { background: rgba(239, 68, 68, 0.45); box-shadow: inset 3px 0 0 0 #dc2626; }
+.hl-band.hl-target.hl-warning { background: rgba(234, 179, 8, 0.48); box-shadow: inset 3px 0 0 0 #d97706; }
+
+/* Editor colour-coding legend */
+.editor-legend {
+  position: absolute;
+  bottom: 12px;
+  right: 18px;
+  display: flex;
+  gap: 14px;
+  padding: 5px 11px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+.legend-item { display: inline-flex; align-items: center; gap: 5px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.legend-error { background: rgba(239, 68, 68, 0.7); }
+.legend-warn { background: rgba(234, 179, 8, 0.8); }
+
+/* ══════════════════════════════════════════════
+   Table Pagination
+   ══════════════════════════════════════════════ */
+.table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 12px 20px;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-light);
+  font-size: 12px;
+  color: var(--text-muted);
+  gap: 24px;
+}
+
+.page-size-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-size-selector select {
+  background: var(--bg-app);
+  color: var(--text-main);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.page-size-selector select:focus {
+  outline: none;
+  border-color: var(--accent-light);
+}
+
+.page-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.btn-icon:hover:not(:disabled) {
+  background: var(--bg-card-hover);
+}
+
+.btn-icon:disabled {
+  color: #334155;
+  cursor: not-allowed;
+}
+
+.page-counter {
+  margin: 0 8px;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.clickable-line {
+  cursor: pointer;
+  text-decoration: underline;
+  color: #6366f1;
+  transition: color 0.2s ease;
+}
+
+.clickable-line:hover {
+  color: #818cf8;
+}
+
+.di-val.clickable-line mat-icon {
