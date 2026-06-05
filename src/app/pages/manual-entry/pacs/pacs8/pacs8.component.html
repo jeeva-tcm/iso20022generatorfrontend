@@ -24,11 +24,7 @@
                                                 </button>
                                         </div>
 
-                                        <!-- SR2026 active indicator banner -->
-                                        <div class="sr-version-banner sr-2026-banner" *ngIf="isSR2026">
-                                                <mat-icon>new_releases</mat-icon>
-                                                <span><strong>SR2026 Mode</strong> — BizSvc updated to <strong>{{srVersion.getBizSvc('pacs008')}}</strong>. Fields marked <span class="req">*</span> are newly mandatory (InstdAmt, TwnNm, Ctry). Unstructured address not permitted.</span>
-                                        </div>
+
 
                                         <div class="section-title">Message Header</div>
                                         <div class="form-group intermediary-field"><label>Sender Member ID</label><input
@@ -50,6 +46,16 @@
                                                 </select>
                                                 <div class="validation-msg" *ngIf="err('appHdrPriority') as e">{{e}}
                                                 </div>
+                                        </div>
+                                        <div class="form-group intermediary-field" *ngIf="isSR2026">
+                                                <label>Copy Duplicate Indicator</label>
+                                                <select formControlName="cpyDplct">
+                                                        <option [ngValue]="null">None</option>
+                                                        <option value="COPY">COPY</option>
+                                                        <option value="CODU">CODU (Copy Duplicate)</option>
+                                                        <option value="DUPL">DUPL (Duplicate)</option>
+                                                </select>
+                                                <div class="validation-msg" *ngIf="err('cpyDplct') as e">{{e}}</div>
                                         </div>
                                         <div class="form-group"><label>From BIC <span class="req">*</span></label>
                                                 <div class="uetr-control-row">
@@ -1559,8 +1565,8 @@
                                                         </mat-icon>
                                                 </div>
                                                 <div class="vm-issue-detail" *ngIf="validationExpandedIssue === issue">
-                                                        <div class="vm-detail-row" *ngIf="issue.severity === 'ERROR'">
-                                                                <strong>Error Details:</strong>
+                                                        <div class="vm-detail-row" *ngIf="issue.severity === 'ERROR' || issue.severity === 'WARNING'">
+                                                                <strong>{{issue.severity === 'ERROR' ? 'Error' : 'Warning'}} Details:</strong>
                                                                 <span>{{issue.message}}</span>
                                                         </div>
                                                         <div class="vm-detail-row" *ngIf="issue.path">

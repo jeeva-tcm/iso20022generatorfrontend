@@ -15,6 +15,8 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { RouterModule } from '@angular/router';
 import { ConfigService } from '../../services/config.service';
+import { SrVersionService } from '../../services/sr-version.service';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-history',
@@ -79,6 +81,7 @@ export class HistoryComponent implements OnInit {
     editorLineCount: number[] = [1];
 
     paginator!: MatPaginator;
+    private versionSub!: Subscription;
 
     @ViewChild(MatPaginator) set matPaginator(mp: MatPaginator) {
         this.paginator = mp;
@@ -88,12 +91,21 @@ export class HistoryComponent implements OnInit {
     constructor(
         private http: HttpClient,
         private snackBar: MatSnackBar,
-        private config: ConfigService
+        private config: ConfigService,
+        private srVersion: SrVersionService
     ) { }
 
     ngOnInit() {
         this.availableMessageTypes = ['ALL', ...this.ALL_MESSAGE_TYPES];
-        this.loadHistory();
+        this.versionSub = this.srVersion.version$.subscribe(() => {
+            this.loadHistory();
+        });
+    }
+
+    ngOnDestroy() {
+        if (this.versionSub) {
+            this.versionSub.unsubscribe();
+        }
     }
 
     loadHistory() {

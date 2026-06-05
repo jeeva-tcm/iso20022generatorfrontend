@@ -6,9 +6,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { ConfigService } from '../../services/config.service';
+import { SrVersionService } from '../../services/sr-version.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BicSearchDialogComponent } from '../manual-entry/bic-search-dialog/bic-search-dialog.component';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-dashboard',
@@ -30,11 +32,14 @@ export class DashboardComponent implements OnInit {
     // SVG ring: radius 33 inside 80×80 viewBox
     readonly ringCircumference = 2 * Math.PI * 33;
 
+    private versionSub!: Subscription;
+
     constructor(
         private http: HttpClient,
         private config: ConfigService,
         private snackBar: MatSnackBar,
-        private dialog: MatDialog
+        private dialog: MatDialog,
+        private srVersion: SrVersionService
     ) {}
 
     openBicDirectory() {
@@ -56,8 +61,15 @@ export class DashboardComponent implements OnInit {
             try { this.recentActivity = JSON.parse(cachedActivity); } catch (e) {}
         }
 
-        this.loadStats();
-        this.loadRecentActivity();
+        this.versionSub = this.srVersion.version$.subscribe(() => {
+            this.refresh();
+        });
+    }
+
+    ngOnDestroy() {
+        if (this.versionSub) {
+            this.versionSub.unsubscribe();
+        }
     }
 
     get passRateNum(): number {

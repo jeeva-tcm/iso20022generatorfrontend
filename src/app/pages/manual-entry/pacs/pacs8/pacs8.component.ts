@@ -12,6 +12,7 @@ import { FormattingService } from '../../../../services/formatting.service';
 import { AddressValidatorService, AddressValidationResult } from '../../../../services/address-validator.service';
 import { UetrService } from '../../../../services/uetr.service';
 import { SrVersionService } from '../../../../services/sr-version.service';
+import { SrVersion } from '../../../../config/sr-version.config';
 import { ISO_PURPOSE_CODES } from '../../../../constants/purpose-codes';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
@@ -61,6 +62,8 @@ export class Pacs8Component implements OnInit, OnDestroy {
   private draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
   showDraftBanner = false;
   isClearingDraft = false;
+  private activeVersion!: SrVersion;
+  private defaultFormValues: any;
 
   agentPrefixes = ['instgAgt', 'instdAgt', 'dbtrAgt', 'cdtrAgt',
     'prvsInstgAgt1', 'prvsInstgAgt2', 'prvsInstgAgt3',
@@ -88,11 +91,42 @@ export class Pacs8Component implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    this.fetchCodelists();
     this.buildForm();
+    this.defaultFormValues = this.form.getRawValue();
+    this.activeVersion = this.srVersion.currentVersion;
+
+    this.fetchCodelists();
 
     // React to Standards Release switching (SR2025 ↔ SR2026) without page reload
-    this.versionSub = this.srVersion.version$.subscribe(() => {
+    this.versionSub = this.srVersion.version$.subscribe((newVersion) => {
+      if (newVersion === this.activeVersion) {
+        this.updateSrVersionValidators();      // enforce SR2026 mandatory fields
+        this.generateXml();                    // regenerate XML with correct namespace/BizSvc
+        this.cdr.detectChanges();
+        return;
+      }
+
+      // Save draft for previous activeVersion
+      if (this.activeVersion) {
+        this.saveDraft();
+      }
+
+      // Update activeVersion
+      this.activeVersion = newVersion;
+
+      // Reset form to default values
+      if (this.defaultFormValues) {
+        this.form.patchValue(this.defaultFormValues, { emitEvent: false });
+        this.form.markAsPristine();
+        this.form.markAsUntouched();
+      }
+      this.visibleCdtrAgtInstrCount = 1;
+      this.visibleNxtAgtInstrCount = 1;
+
+      // Load draft for the new activeVersion
+      const hadDraft = this.loadDraft();
+      this.showDraftBanner = hadDraft;
+
       this.fetchCodelists();                 // reload version-specific codelists
       this.updateSrVersionValidators();      // enforce SR2026 mandatory fields
       this.generateXml();                    // regenerate XML with correct namespace/BizSvc
@@ -735,6 +769,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
       // ── AppHdr fields ──
       fromBic: ['SNDRBEBBXXX', BIC], toBic: ['RCVRLU2AXXX', BIC],
       bizMsgId: ['MSGID-20260515-PACS008-001', [Validators.required, Validators.maxLength(35)]],
+      cpyDplct: [null],
       // ── GrpHdr fields ──
       msgId: ['MSGID-20260515-PACS008-001', [Validators.required, Validators.maxLength(35)]],
       creDtTm: [this.isoNow(), Validators.required],
@@ -1284,15 +1319,32 @@ export class Pacs8Component implements OnInit, OnDestroy {
       : null;
   }
 
+  private getDraftKey(version: SrVersion): string {
+    return `${this.DRAFT_KEY}_${version}`;
+  }
+
   private saveDraft(): void {
-    try { localStorage.setItem(this.DRAFT_KEY, JSON.stringify(this.form.value)); }
+    try {
+      const key = this.getDraftKey(this.activeVersion);
+      localStorage.setItem(key, JSON.stringify(this.form.value));
+    }
     catch (e) { console.warn('Draft save failed:', e); }
   }
 
   private loadDraft(): boolean {
     try {
-      const saved = localStorage.getItem(this.DRAFT_KEY);
-      if (!saved) return false;
+      const key = this.getDraftKey(this.activeVersion);
+      let saved = localStorage.getItem(key);
+      if (!saved) {
+        // Fallback to migrate legacy draft if it exists
+        saved = localStorage.getItem(this.DRAFT_KEY);
+        if (saved) {
+          localStorage.setItem(key, saved);
+          localStorage.removeItem(this.DRAFT_KEY);
+        } else {
+          return false;
+        }
+      }
       const parsed = JSON.parse(saved);
 
       // Migrate older drafts: optional agents (ultimate parties,
@@ -1338,7 +1390,10 @@ export class Pacs8Component implements OnInit, OnDestroy {
 
   clearDraft(reload = false): void {
     this.isClearingDraft = reload;
-    try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
+    try {
+      const key = this.getDraftKey(this.activeVersion);
+      localStorage.removeItem(key);
+    } catch (e) {}
     this.showDraftBanner = false;
     if (reload) { setTimeout(() => window.location.reload(), 500); }
   }
@@ -1374,6 +1429,8 @@ export class Pacs8Component implements OnInit, OnDestroy {
           addrTypeCtrl.setValue('none', { emitEvent: false });
         }
       }
+    } else {
+      this.form.get('cpyDplct')?.setValue(null, { emitEvent: false });
     }
   }
 
@@ -1681,7 +1738,7 @@ ${appHdrFi(v.toBic, v.toMmbId, v.toClrSysId, v.toLei)}\t\t</To>
 \t\t<BizMsgIdr>${this.e(v.bizMsgId)}</BizMsgIdr>
 \t\t<MsgDefIdr>${this.srVersion.getMsgDefIdr('pacs008')}</MsgDefIdr>
 \t\t<BizSvc>${this.srVersion.getBizSvc('pacs008')}</BizSvc>
-\t\t<CreDt>${creDtTm}</CreDt>${v.appHdrPriority?.trim() ? `\n\t\t<Prty>${v.appHdrPriority}</Prty>` : ''}${v.rltd ? `\n\t\t<Rltd>\n\t\t\t<BizMsgIdr>${this.e(v.rltd)}</BizMsgIdr>\n\t\t</Rltd>` : ''}
+\t\t<CreDt>${creDtTm}</CreDt>${this.isSR2026 && v.cpyDplct ? `\n\t\t<CpyDplct>${this.e(v.cpyDplct)}</CpyDplct>` : ''}${v.appHdrPriority?.trim() ? `\n\t\t<Prty>${v.appHdrPriority}</Prty>` : ''}${v.rltd ? `\n\t\t<Rltd>\n\t\t\t<BizMsgIdr>${this.e(v.rltd)}</BizMsgIdr>\n\t\t</Rltd>` : ''}
 \t</AppHdr>
 \t<Document xmlns="${this.srVersion.getNamespace('pacs008')}">
 \t\t<FIToFICstmrCdtTrf>
@@ -1865,17 +1922,16 @@ ${tx}\t\t\t</CdtTrfTxInf>
   }
 
   validateMessage() {
-    if (this.bicSameWarning) return;
+    if (this.currentTab !== 'preview') {
+      if (this.bicSameWarning) return;
 
-    if (!this.isFormValidForValidation()) {
-      this.form.markAllAsTouched();
-      this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
-      return;
+      if (!this.isFormValidForValidation()) {
+        this.form.markAllAsTouched();
+        this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
+        return;
+      }
+      this.generateXml();
     }
-    // Always regenerate from the form before validating � guarantees the validator
-    // sees a clean, generator-produced XML rather than stale pasted/edited content
-    // (which may contain forbidden elements like Nm/PstlAdr inside AppHdr.Fr).
-    this.generateXml();
 
     if (!this.generatedXml?.trim()) return;
 
@@ -2115,7 +2171,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
         return null;
       };
       const tval = (t: string, p: any = doc) => getT(t, p)?.textContent?.trim() || '';
-      const setVal = (key: string, v: string) => { patch[key] = v; };
+      const setVal = (key: string, v: any) => { patch[key] = v; };
 
       // 1. AppHdr (head.001)
       const appHdr = getT('AppHdr');
@@ -2143,6 +2199,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
         setVal('bizMsgId', tval('BizMsgIdr', appHdr));
         const creDt = tval('CreDt', appHdr);
         if (creDt) setVal('creDtTm', creDt);
+        setVal('cpyDplct', tval('CpyDplct', appHdr) || null);
         setVal('appHdrPriority', tval('Prty', appHdr));
         const rltd = getT('Rltd', appHdr);
         if (rltd) setVal('rltd', tval('BizMsgIdr', rltd));

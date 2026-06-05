@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -10,6 +10,9 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfigService } from '../../services/config.service';
 import { BicSearchDialogComponent } from './bic-search-dialog/bic-search-dialog.component';
 import { POPULAR_MANUAL_ENTRY_MESSAGES } from '../../config/manual-entry-messages';
+import { SrVersionService } from '../../services/sr-version.service';
+import { Subscription } from 'rxjs';
+import { skip } from 'rxjs/operators';
 
 interface SchemaNode {
     name: string;
@@ -28,7 +31,8 @@ interface SchemaNode {
     templateUrl: './manual-entry.component.html',
     styleUrl: './manual-entry.component.css'
 })
-export class ManualEntryComponent implements OnInit {
+export class ManualEntryComponent implements OnInit, OnDestroy {
+    private versionSub!: Subscription;
     viewMode: 'form' | 'xml' = 'form';
     allTypes: string[] = [];
     filteredTypes: string[] = [];
@@ -77,7 +81,8 @@ export class ManualEntryComponent implements OnInit {
         private snackBar: MatSnackBar,
         private route: ActivatedRoute,
         private router: Router,
-        private dialog: MatDialog
+        private dialog: MatDialog,
+        private srVersionService: SrVersionService
     ) { }
 
     ngOnInit() {
@@ -87,6 +92,34 @@ export class ManualEntryComponent implements OnInit {
                 this.selectType(params['type']);
             }
         });
+
+        // Reset the entire form when the SR version changes (skip the initial emit)
+        this.versionSub = this.srVersionService.version$.pipe(skip(1)).subscribe(() => {
+            this.resetForm();
+            this.fetchMessageTypes(); // Re-fetch schemas for the new SR version
+            this.snackBar.open(
+                `Switched to ${this.srVersionService.currentVersion}. Form has been reset.`,
+                'OK',
+                { duration: 3000, horizontalPosition: 'center', verticalPosition: 'bottom' }
+            );
+        });
+    }
+
+    ngOnDestroy() {
+        this.versionSub?.unsubscribe();
+    }
+
+    /** Completely resets the manual entry form to its initial empty state. */
+    private resetForm() {
+        this.selectedType = '';
+        this.schema = null;
+        this.formData = {};
+        this.expandedPaths = {};
+        this.previewXml = '';
+        this.searchQuery = '';
+        this.showSuggestions = false;
+        this.selectedFamily = null;
+        this.viewMode = 'form';
     }
 
     gotoMessage(route: string) {

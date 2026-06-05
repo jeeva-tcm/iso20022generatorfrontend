@@ -226,39 +226,6 @@
 
     <!-- Right side actions — always visible, outside nav-links -->
     <div class="header-actions">
-        <!-- ── Standards Release Dropdown ───────────────────────────── -->
-        <div class="sr-dropdown-wrapper" (mouseleave)="srDropdownOpen = false">
-            <button type="button" class="sr-dropdown-trigger"
-                [class.sr-2025]="selectedVersion === 'SR2025'"
-                [class.sr-2026]="selectedVersion === 'SR2026'"
-                (click)="srDropdownOpen = !srDropdownOpen">
-                <span class="sr-trigger-icon">
-                    <mat-icon style="font-size:14px;width:14px;height:14px;line-height:14px;">verified</mat-icon>
-                </span>
-                <span class="sr-trigger-label">{{ selectedVersion }}</span>
-                <mat-icon class="sr-arrow" [class.open]="srDropdownOpen">expand_more</mat-icon>
-            </button>
-
-            <div class="sr-dropdown-menu" *ngIf="srDropdownOpen">
-                <div class="sr-dropdown-header">Standards Release</div>
-                <button
-                    *ngFor="let v of availableVersions"
-                    type="button"
-                    class="sr-dropdown-item"
-                    [class.selected]="selectedVersion === v"
-                    [class.sr-2025]="v === 'SR2025'"
-                    [class.sr-2026]="v === 'SR2026'"
-                    (click)="selectedVersion = v; srDropdownOpen = false">
-                    <span class="sr-item-dot" [class.sr-2025]="v === 'SR2025'" [class.sr-2026]="v === 'SR2026'"></span>
-                    <span class="sr-item-text">
-                        <span class="sr-item-version">{{ v }}</span>
-                        <span class="sr-item-desc">{{ v === 'SR2025' ? 'Live — Nov 2025' : 'Preview — Nov 2026' }}</span>
-                    </span>
-                    <mat-icon class="sr-item-check" *ngIf="selectedVersion === v">check</mat-icon>
-                </button>
-            </div>
-        </div>
-
         <button mat-icon-button (click)="toggleTheme()"
             [matTooltip]="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
             class="theme-toggle">
@@ -270,6 +237,39 @@
         </div>
     </div>
 </mat-toolbar>
+
+<!-- ── Standards Release Dropdown (Fixed Bottom Right) ───────────────────────────── -->
+<div class="sr-dropdown-wrapper floating-sr-dropdown">
+    <button type="button" class="sr-dropdown-trigger"
+        [class.sr-2025]="selectedVersion === 'SR2025'"
+        [class.sr-2026]="selectedVersion === 'SR2026'"
+        (click)="srDropdownOpen = !srDropdownOpen">
+        <span class="sr-trigger-icon">
+            <mat-icon style="font-size:14px;width:14px;height:14px;line-height:14px;">verified</mat-icon>
+        </span>
+        <span class="sr-trigger-label" style="font-weight: 700; letter-spacing: 0.5px;">ACTIVE VERSION: {{ selectedVersion }}</span>
+        <mat-icon class="sr-arrow" [class.open]="srDropdownOpen">expand_more</mat-icon>
+    </button>
+
+    <div class="sr-dropdown-menu" *ngIf="srDropdownOpen">
+        <div class="sr-dropdown-header">Standards Release</div>
+        <button
+            *ngFor="let v of availableVersions"
+            type="button"
+            class="sr-dropdown-item"
+            [class.selected]="selectedVersion === v"
+            [class.sr-2025]="v === 'SR2025'"
+            [class.sr-2026]="v === 'SR2026'"
+            (click)="onVersionSelect(v)">
+            <span class="sr-item-dot" [class.sr-2025]="v === 'SR2025'" [class.sr-2026]="v === 'SR2026'"></span>
+            <span class="sr-item-text">
+                <span class="sr-item-version">{{ v }}</span>
+                <span class="sr-item-desc">{{ v === 'SR2025' ? 'Live — Nov 2025' : 'Preview — Nov 2026' }}</span>
+            </span>
+            <mat-icon class="sr-item-check" *ngIf="selectedVersion === v">check</mat-icon>
+        </button>
+    </div>
+</div>
 
 <div class="main-content" [class.dark-page]="isValidatePage" [class.me-full-page]="isFullWidthPage">
     <router-outlet></router-outlet>

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -50,7 +50,15 @@ export class AppComponent implements OnInit {
         private themeService: ThemeService,
         private warmup: BackendWarmupService,
         public srVersion: SrVersionService,
+        private elementRef: ElementRef,
     ) { }
+
+    @HostListener('document:click', ['$event'])
+    onDocumentClick(event: MouseEvent): void {
+        if (!this.elementRef.nativeElement.querySelector('.sr-dropdown-wrapper')?.contains(event.target)) {
+            this.srDropdownOpen = false;
+        }
+    }
 
     ngOnInit() {
         this.warmup.start();
@@ -74,6 +82,18 @@ export class AppComponent implements OnInit {
 
     get availableVersions(): SrVersion[] {
         return this.srVersion.availableVersions;
+    }
+
+    onVersionSelect(v: SrVersion) {
+        if (v === this.selectedVersion) {
+            this.srDropdownOpen = false;
+            return;
+        }
+        const confirmSwitch = window.confirm(`Changing the active version to ${v} will completely reload the environment and discard any unsaved changes. Proceed?`);
+        if (confirmSwitch) {
+            this.selectedVersion = v;
+            this.srDropdownOpen = false;
+        }
     }
 
     getVersionBadgeColor(v: SrVersion): string {

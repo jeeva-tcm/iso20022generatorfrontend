@@ -10,6 +10,7 @@ import { Subscription } from 'rxjs';
 import { ConfigService } from '../../../../services/config.service';
 import { UetrService } from '../../../../services/uetr.service';
 import { SrVersionService } from '../../../../services/sr-version.service';
+import { SrVersion } from '../../../../config/sr-version.config';
 import { SrVersionConfig } from '../../../../config/sr-version.config';
 import { ISO_PURPOSE_CODES } from '../../../../constants/purpose-codes';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -74,6 +75,8 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
     private draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
     showDraftBanner = false;
     isClearingDraft = false;
+    private activeVersion!: SrVersion;
+    private defaultFormValues: any;
 
     constructor(
         private fb: FormBuilder,
@@ -88,16 +91,46 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
     ) { }
 
     ngOnInit() {
+        this.buildForm();
+        this.defaultFormValues = this.form.getRawValue();
+        this.activeVersion = this.srVersionSvc.currentVersion as SrVersion;
+
         this.fetchCodelists();
 
         // -- Subscribe to SR version changes ----------------------------------
-        this.versionSub = this.srVersionSvc.version$.subscribe(() => {
+        this.versionSub = this.srVersionSvc.version$.subscribe((newVersion) => {
+            if (newVersion === this.activeVersion) {
+                const cfg = this.srVersionSvc.getMessageRules('pacs010MarginCollection');
+                this.form.patchValue({ msgDefIdr: cfg.msgDefIdr, bizSvc: cfg.bizSvc }, { emitEvent: false });
+                this.generateXml();
+                this.cdr.detectChanges();
+                return;
+            }
+
+            // Save draft for previous activeVersion
+            if (this.activeVersion) {
+                this.saveDraft();
+            }
+
+            // Update activeVersion
+            this.activeVersion = newVersion;
+
+            // Reset form to default values
+            if (this.defaultFormValues) {
+                this.form.patchValue(this.defaultFormValues, { emitEvent: false });
+                this.form.markAsPristine();
+                this.form.markAsUntouched();
+            }
+
+            // Load draft for the new activeVersion
+            const hadDraft = this.loadDraft();
+            this.showDraftBanner = hadDraft;
+
             const cfg = this.srVersionSvc.getMessageRules('pacs010MarginCollection');
             this.form.patchValue({ msgDefIdr: cfg.msgDefIdr, bizSvc: cfg.bizSvc }, { emitEvent: false });
             this.generateXml();
             this.cdr.detectChanges();
         });
-        this.buildForm();
         const bizMsgIdCtrl = this.form.get('bizMsgId');
         const msgIdCtrl = this.form.get('msgId');
         if (bizMsgIdCtrl && msgIdCtrl) {
@@ -1304,26 +1337,45 @@ ${this.rmtInf(v)}
 
     private formatAmount(val: any): string { if (!val) return '0.00'; let numStr = val.toString().trim().replace(/,/g, ''); const num = parseFloat(numStr); return isNaN(num) ? '0.00' : num.toFixed(2); }
 
-    private saveDraft(): void {
-        try { localStorage.setItem(this.DRAFT_KEY, JSON.stringify(this.form.value)); }
-        catch (e) { console.warn('Draft save failed:', e); }
-    }
+  private getDraftKey(version: SrVersion): string {
+    return `${this.DRAFT_KEY}_${version}`;
+  }
 
-    private loadDraft(): boolean {
-        try {
-            const saved = localStorage.getItem(this.DRAFT_KEY);
-            if (!saved) return false;
-            this.form.patchValue(JSON.parse(saved), { emitEvent: false });
-            return true;
-        } catch (e) { console.warn('Draft load failed:', e); return false; }
+  private saveDraft(): void {
+    try {
+      const key = this.getDraftKey(this.activeVersion);
+      localStorage.setItem(key, JSON.stringify(this.form.value));
     }
+    catch (e) { console.warn('Draft save failed:', e); }
+  }
 
-    clearDraft(reload = false): void {
-        this.isClearingDraft = reload;
-        try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
-        this.showDraftBanner = false;
-        if (reload) { setTimeout(() => window.location.reload(), 500); }
-    }
+  private loadDraft(): boolean {
+    try {
+      const key = this.getDraftKey(this.activeVersion);
+      let saved = localStorage.getItem(key);
+      if (!saved) {
+        saved = localStorage.getItem(this.DRAFT_KEY);
+        if (saved) {
+          localStorage.setItem(key, saved);
+          localStorage.removeItem(this.DRAFT_KEY);
+        } else {
+          return false;
+        }
+      }
+      this.form.patchValue(JSON.parse(saved), { emitEvent: false });
+      return true;
+    } catch (e) { console.warn('Draft load failed:', e); return false; }
+  }
+
+  clearDraft(reload = false): void {
+    this.isClearingDraft = reload;
+    try {
+      const key = this.getDraftKey(this.activeVersion);
+      localStorage.removeItem(key);
+    } catch (e) {}
+    this.showDraftBanner = false;
+    if (reload) { setTimeout(() => window.location.reload(), 500); }
+  }
 
     private scheduleDraftSave(): void {
         if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);

@@ -9,6 +9,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { UetrService } from '../../../../services/uetr.service';
 import { SrVersionService } from '../../../../services/sr-version.service';
+import { SrVersion } from '../../../../config/sr-version.config';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
 import { debounceTime } from 'rxjs/operators';
@@ -41,10 +42,13 @@ export class Pacs2Component implements OnInit, OnDestroy {
   xmlHistoryIdx = -1;
   maxHistory = 50;
 
+  // Draft saving
   private readonly DRAFT_KEY = 'draft_pacs002';
   private draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
   showDraftBanner = false;
   isClearingDraft = false;
+  private activeVersion!: SrVersion;
+  private defaultFormValues: any;
 
   private versionSub?: Subscription;
   get isSR2026(): boolean { return this.srVersion.isSR2026; }
@@ -86,11 +90,43 @@ export class Pacs2Component implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.fetchCountries();
     this.buildForm();
+    this.defaultFormValues = this.form.getRawValue();
+    this.activeVersion = this.srVersion.currentVersion;
+
+    this.fetchCountries();
 
     // On version switch: patch bizSvc + msgDefIdr form fields and regenerate XML
-    this.versionSub = this.srVersion.version$.subscribe(() => {
+    this.versionSub = this.srVersion.version$.subscribe((newVersion) => {
+      if (newVersion === this.activeVersion) {
+        this.form.patchValue({
+          bizSvc:    this.srVersion.getBizSvc('pacs002'),
+          msgDefIdr: this.srVersion.getMsgDefIdr('pacs002'),
+        }, { emitEvent: false });
+        this.generateXml();
+        this.cdr.detectChanges();
+        return;
+      }
+
+      // Save draft for previous activeVersion
+      if (this.activeVersion) {
+        this.saveDraft();
+      }
+
+      // Update activeVersion
+      this.activeVersion = newVersion;
+
+      // Reset form to default values
+      if (this.defaultFormValues) {
+        this.form.patchValue(this.defaultFormValues, { emitEvent: false });
+        this.form.markAsPristine();
+        this.form.markAsUntouched();
+      }
+
+      // Load draft for the new activeVersion
+      const hadDraft = this.loadDraft();
+      this.showDraftBanner = hadDraft;
+
       this.form.patchValue({
         bizSvc:    this.srVersion.getBizSvc('pacs002'),
         msgDefIdr: this.srVersion.getMsgDefIdr('pacs002'),
@@ -1005,15 +1041,31 @@ ${txInf.trimEnd()}
     });
   }
 
+  private getDraftKey(version: SrVersion): string {
+    return `${this.DRAFT_KEY}_${version}`;
+  }
+
   private saveDraft(): void {
-    try { localStorage.setItem(this.DRAFT_KEY, JSON.stringify(this.form.value)); }
+    try {
+      const key = this.getDraftKey(this.activeVersion);
+      localStorage.setItem(key, JSON.stringify(this.form.value));
+    }
     catch (e) { console.warn('Draft save failed:', e); }
   }
 
   private loadDraft(): boolean {
     try {
-      const saved = localStorage.getItem(this.DRAFT_KEY);
-      if (!saved) return false;
+      const key = this.getDraftKey(this.activeVersion);
+      let saved = localStorage.getItem(key);
+      if (!saved) {
+        saved = localStorage.getItem(this.DRAFT_KEY);
+        if (saved) {
+          localStorage.setItem(key, saved);
+          localStorage.removeItem(this.DRAFT_KEY);
+        } else {
+          return false;
+        }
+      }
       this.form.patchValue(JSON.parse(saved), { emitEvent: false });
       return true;
     } catch (e) { console.warn('Draft load failed:', e); return false; }
@@ -1021,7 +1073,10 @@ ${txInf.trimEnd()}
 
   clearDraft(reload = false): void {
     this.isClearingDraft = reload;
-    try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
+    try {
+      const key = this.getDraftKey(this.activeVersion);
+      localStorage.removeItem(key);
+    } catch (e) {}
     this.showDraftBanner = false;
     if (reload) { setTimeout(() => window.location.reload(), 500); }
   }

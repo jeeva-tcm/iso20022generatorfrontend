@@ -77,8 +77,8 @@ body.light-theme .logo-secondary {
     position: static;
     left: auto;
     transform: none;
-    gap: 4px;
-    padding: 6px 8px;
+    gap: 12px;
+    padding: 6px 16px;
     border-radius: 18px;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
@@ -106,7 +106,7 @@ body.light-theme .logo-secondary {
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
     flex-shrink: 0;
     overflow: visible;
     position: relative;
@@ -148,9 +148,11 @@ body.light-theme .logo-secondary {
     color: var(--text-muted);
     font-weight: 700;
     border-radius: 12px;
-    padding: 7px 12px;
+    padding: 7px 16px;
     font-size: 0.75rem;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+    white-space: nowrap;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -745,6 +747,8 @@ body.light-theme .user-info img {
 .sr-dropdown-wrapper {
     position: relative;
     margin-right: 6px;
+    display: flex;
+    align-items: center;
 }
 
 /* ── Trigger button — adapts to dark/light ── */
@@ -822,6 +826,31 @@ body.light-theme .sr-dropdown-trigger.sr-2026 {
     z-index: 9999;
     animation: srMenuIn 0.15s ease;
 }
+
+/* Floating fixed styles for top right */
+.floating-sr-dropdown {
+    position: fixed;
+    top: 96px;
+    right: 24px;
+    z-index: 2000;
+    margin-right: 0;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    border-radius: 8px;
+}
+
+.floating-sr-dropdown .sr-dropdown-menu {
+    top: calc(100% + 8px);
+    bottom: auto;
+    right: 0;
+    transform-origin: top right;
+    animation: srMenuIn 0.15s ease;
+}
+
+@keyframes srMenuUp {
+    from { opacity: 0; transform: translateY(6px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
 body.light-theme .sr-dropdown-menu {
     box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
 }
