@@ -317,6 +317,17 @@ export class Pacs9Component implements OnInit, OnDestroy {
                 }
             }
         });
+
+        // Debtor Account validation (IBAN or Other required)
+        const dbtrFiAcctType = this.form.get('dbtrFiAcctType')?.value;
+        const dbtrFiAcctCtrl = this.form.get('dbtrFiAcct');
+        dbtrFiAcctCtrl?.clearValidators();
+        if (dbtrFiAcctType === 'IBAN') {
+            dbtrFiAcctCtrl?.setValidators([Validators.required, Validators.pattern(/^[A-Z0-9]{5,34}$/)]);
+        } else if (dbtrFiAcctType === 'Othr') {
+            dbtrFiAcctCtrl?.setValidators([Validators.required, Validators.pattern(/^[a-zA-Z0-9/:\-\?:\(\)\.,\+' ]{1,34}$/)]);
+        }
+        dbtrFiAcctCtrl?.updateValueAndValidity({ emitEvent: false });
     }
 
     private updateAmountValidator() {
@@ -491,9 +502,17 @@ export class Pacs9Component implements OnInit, OnDestroy {
         // Remove touched/dirty requirement to show errors immediately
         if (!c || c.valid || (!c.touched && !c.dirty)) return null;
 
-        if (c.errors?.['required']) return 'Required field.';
+        if (c.errors?.['required']) {
+            if (f === 'dbtrFiAcct') return 'Debtor Account ID (IBAN/Other) is required.';
+            return 'Required field.';
+        }
         if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
         if (c.errors?.['pattern']) {
+            if (f === 'dbtrFiAcct') {
+                const type = this.form.get('dbtrFiAcctType')?.value;
+                if (type === 'IBAN') return 'Valid 34-char IBAN required.';
+                return 'Invalid characters (Alphanumeric only, max 34 chars).';
+            }
             if (f === 'amount') {
                 const ccy = this.form.get('currency')?.value;
                 const p = this.currencyPrecision[ccy] ?? 2;
@@ -681,6 +700,15 @@ export class Pacs9Component implements OnInit, OnDestroy {
 
     generateXml() {
         if (this.isParsingXml) return;
+
+        // Stop generation if Debtor Account ID is empty
+        const dbtrFiAcctType = this.form.get('dbtrFiAcctType')?.value;
+        if (!this.form.get('dbtrFiAcct')?.value?.trim()) {
+            this.generatedXml = '<!-- VALIDATION ERROR: Debtor Account ID (IBAN/Other) is required. -->';
+            this.formatXml(false);
+            this.onEditorChange(this.generatedXml, true);
+            return;
+        }
 
         // Stop generation if CHIPS rule is violated
         if (this.form.get('currency')?.hasError('chips')) {

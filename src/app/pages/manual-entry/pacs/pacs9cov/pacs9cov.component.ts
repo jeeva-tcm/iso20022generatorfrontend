@@ -365,6 +365,23 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
                 }
             }
         });
+
+        // Debtor Account validation (IBAN or Other required)
+        const dbtrFiAcctType = this.form.get('dbtrFiAcctType')?.value;
+        const ibanCtrl = this.form.get('dbtrFiAcct');
+        const othrCtrl = this.form.get('dbtrFiAcctOthrId');
+        
+        ibanCtrl?.clearValidators();
+        othrCtrl?.clearValidators();
+        
+        if (dbtrFiAcctType === 'IBAN') {
+            ibanCtrl?.setValidators([Validators.required, Validators.pattern(/^[A-Z0-9]{5,34}$/)]);
+        } else if (dbtrFiAcctType === 'Othr') {
+            othrCtrl?.setValidators([Validators.required, Validators.pattern(/^[a-zA-Z0-9/:\-\?:\(\)\.,\+' ]{1,34}$/)]);
+        }
+        
+        ibanCtrl?.updateValueAndValidity({ emitEvent: false });
+        othrCtrl?.updateValueAndValidity({ emitEvent: false });
     }
 
     private updateAmountValidator() {
@@ -623,9 +640,16 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
         // Remove touched/dirty requirement to show errors immediately
         if (!c || c.valid || (!c.touched && !c.dirty)) return null;
 
-        if (c.errors?.['required']) return 'Required field.';
+        if (c.errors?.['required']) {
+            if (f === 'dbtrFiAcct' || f === 'dbtrFiAcctOthrId') {
+                return 'Debtor Account ID (IBAN/Other) is required.';
+            }
+            return 'Required field.';
+        }
         if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
         if (c.errors?.['pattern']) {
+            if (f === 'dbtrFiAcct') return 'Valid 34-char IBAN required.';
+            if (f === 'dbtrFiAcctOthrId') return 'Invalid characters (Alphanumeric only, max 34 chars).';
             if (f === 'amount') {
                 const ccy = this.form.get('currency')?.value;
                 const p = this.currencyPrecision[ccy] ?? 2;
@@ -812,6 +836,18 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
 
     generateXml() {
         if (this.isParsingXml) return;
+
+        // Stop generation if Debtor Account ID is empty
+        const dbtrFiAcctType = this.form.get('dbtrFiAcctType')?.value;
+        const isAcctEmpty = dbtrFiAcctType === 'IBAN'
+            ? !(this.form.get('dbtrFiAcct')?.value || '').trim()
+            : !(this.form.get('dbtrFiAcctOthrId')?.value || '').trim();
+        if (isAcctEmpty) {
+            this.generatedXml = '<!-- VALIDATION ERROR: Debtor Account ID (IBAN/Other) is required. -->';
+            this.formatXml(false);
+            this.onEditorChange(this.generatedXml, true);
+            return;
+        }
 
         // Stop generation if TARGET2 rule is violated
         if (this.form.get('currency')?.hasError('target2')) {

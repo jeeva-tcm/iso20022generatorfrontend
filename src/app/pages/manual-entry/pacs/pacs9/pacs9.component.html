@@ -331,23 +331,22 @@
 
                                         <!-- Debtor FI Account -->
                                         <div class="party-group">
-                                                <div class="party-group-title">Debtor Account</div>
+                                                <div class="party-group-title mandatory">Debtor Account</div>
                                                 <div [formGroup]="form" class="party-grid">
                                                         <div class="form-group intermediary-field">
-                                                                <label>Debtor Account Type</label>
+                                                                <label>Debtor Account Type <span class="req">*</span></label>
                                                                 <select formControlName="dbtrFiAcctType">
-                                                                        <option value="none">None (No Account ID)</option>
                                                                         <option value="IBAN">IBAN</option>
                                                                         <option value="Othr">Other (Othr)</option>
                                                                 </select>
                                                         </div>
                                                         <div class="form-group intermediary-field" *ngIf="form.get('dbtrFiAcctType')?.value === 'IBAN'">
-                                                                <label>Debtor IBAN</label>
+                                                                <label>Debtor IBAN <span class="req">*</span></label>
                                                                 <input formControlName="dbtrFiAcct" maxlength="34" placeholder="e.g. GB29NWBK60161331926819" class="auto-uppercase">
                                                                 <div class="validation-msg" *ngIf="err('dbtrFiAcct') as e">{{e}}</div>
                                                         </div>
                                                         <div class="form-group intermediary-field" *ngIf="form.get('dbtrFiAcctType')?.value === 'Othr'">
-                                                                <label>Debtor Other Account ID</label>
+                                                                <label>Debtor Other Account ID <span class="req">*</span></label>
                                                                 <input formControlName="dbtrFiAcct" maxlength="34" placeholder="Account identifier">
                                                                 <div class="validation-msg" *ngIf="err('dbtrFiAcct') as e">{{e}}</div>
                                                         </div>
