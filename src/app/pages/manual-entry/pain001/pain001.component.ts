@@ -207,7 +207,7 @@ export class Pain001Component implements OnInit, OnDestroy {
       fwdgAgtBic: ['FWDGUS33XXX', [Validators.maxLength(11)]],
       initnSrc: ['ERP-X-SYSTEM', [Validators.maxLength(35)]],
       dbtrName: ['Holding Account One', [Validators.required, Validators.maxLength(140)]],
-      dbtrIban: ['60161331926819', [Validators.required, Validators.maxLength(34)]],
+      dbtrIban: ['GB29NWBK60161331926819', [Validators.required, Validators.maxLength(34)]],
       dbtrAddrType: ['hybrid'],
       dbtrCtry: ['US', [Validators.pattern(/^[A-Z]{2,2}$/)]],
       dbtrTwnNm: ['New York', [Validators.maxLength(35)]],
@@ -220,7 +220,7 @@ export class Pain001Component implements OnInit, OnDestroy {
       dbtrFlr: ['', [Validators.maxLength(70)]],
       dbtrAdrLine1: ['270 Park Avenue', [Validators.maxLength(70)]],
       dbtrAdrLine2: ['', [Validators.maxLength(70)]],
-      dbtrAgtAcctIban: ['11112222333344', [Validators.maxLength(34)]],
+      dbtrAgtAcctIban: ['GB94BARC20201530093459', [Validators.maxLength(34)]],
       dbtrAgtBic: ['CHASUS33XXX', [Validators.maxLength(11)]],
       dbtrAgtClrSysCd: ['USABA', [Validators.maxLength(5)]],
       dbtrAgtClrSysMmbId: ['021000021', [Validators.maxLength(35)]],
@@ -266,7 +266,7 @@ export class Pain001Component implements OnInit, OnDestroy {
     const LEI = [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)];
 
     return this.fb.group({
-      instrId:['INSTR-' + Date.now(), [Validators.required, Validators.maxLength(16)]],
+      instrId:['INSTR-' + Date.now().toString().slice(-10), [Validators.required, Validators.maxLength(16)]],
       endToEndId: ['E2E-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
       uetr: [crypto.randomUUID ? crypto.randomUUID() : '550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)]],
       amount: ['12500.00', [Validators.required, Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],
