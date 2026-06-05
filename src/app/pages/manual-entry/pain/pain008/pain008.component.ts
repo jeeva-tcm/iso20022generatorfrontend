@@ -280,7 +280,7 @@ export class Pain008Component implements OnInit, OnDestroy {
   private createTxGroup(): FormGroup {
     return this.fb.group({
       // PmtId
-      instrId:['INSTR-' + Date.now(), [Validators.required, Validators.maxLength(16)]],
+      instrId: ['INSTR-' + Date.now().toString().slice(-9), [Validators.required, Validators.maxLength(16)]],
       endToEndId: ['E2E-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
       uetr: [crypto.randomUUID ? crypto.randomUUID() : '550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
 
@@ -1201,6 +1201,68 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
 
   copyToClipboard() { navigator.clipboard.writeText(this.generatedXml); this.snackBar.open('Copied!', 'Close', { duration: 3000 }); }
   downloadXml() { const b = new Blob([this.generatedXml], { type: 'application/xml' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `pain008-${Date.now()}.xml`; a.click(); }
+
+  getInvalidControlsList(): string[] {
+    const invalid: string[] = [];
+    const controls = this.form.controls;
+    
+    const friendlyNames: Record<string, string> = {
+      fromBic: 'Sender BIC',
+      toBic: 'Receiver BIC',
+      bizMsgId: 'Business Message Identifier',
+      msgId: 'Message Identifier',
+      creDt: 'Creation Date',
+      creDtTm: 'Creation Date Time',
+      nbOfTxs: 'Number of Transactions',
+      initgPtyName: 'Initiating Party Name',
+      reqdColltnDt: 'Requested Collection Date',
+      cdtrName: 'Creditor Name',
+      cdtrIban: 'Creditor IBAN',
+      cdtrAgtBic: 'Creditor Agent BIC',
+      instrId: 'Instruction Identification',
+      endToEndId: 'End To End Identification',
+      uetr: 'UETR',
+      amount: 'Amount',
+      currency: 'Currency',
+      dbtrAgtBic: 'Debtor Agent BIC',
+      dbtrName: 'Debtor Name',
+      dbtrIban: 'Debtor IBAN',
+      initgPtyCtry: 'Initiating Party Country',
+      initgPtyTwnNm: 'Initiating Party Town Name',
+      initgPtyAdrLine1: 'Initiating Party Address Line 1',
+      cdtrCtry: 'Creditor Country',
+      cdtrTwnNm: 'Creditor Town Name',
+      cdtrAdrLine1: 'Creditor Address Line 1',
+      dbtrCtry: 'Debtor Country',
+      dbtrTwnNm: 'Debtor Town Name',
+      dbtrAdrLine1: 'Debtor Address Line 1'
+    };
+
+    const formatName = (key: string) => {
+      if (friendlyNames[key]) return friendlyNames[key];
+      return key
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/^./, str => str.toUpperCase())
+        .trim();
+    };
+
+    for (const name in controls) {
+      if (controls[name].invalid) {
+        invalid.push(formatName(name));
+      }
+    }
+
+    this.transactions.controls.forEach((txGroup, idx) => {
+      const g = txGroup as FormGroup;
+      for (const name in g.controls) {
+        if (g.controls[name].invalid) {
+          invalid.push(`Transaction ${idx + 1} - ${formatName(name)}`);
+        }
+      }
+    });
+
+    return invalid;
+  }
 
   validateMessage() {
     if (this.bicSameWarning) return;
