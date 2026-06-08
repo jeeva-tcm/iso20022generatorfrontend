@@ -1858,7 +1858,7 @@ body.light-theme .btn-download {
 
 .table-header {
   display: grid;
-  grid-template-columns: 50px minmax(200px, 3fr) 1.5fr 80px 80px 90px 90px;
+  grid-template-columns: 50px minmax(200px, 3fr) 125px 60px 70px 90px 120px;
   gap: 12px;
   background: var(--bg-card-hover);
   padding: 14px 16px;
@@ -1874,7 +1874,7 @@ body.light-theme .btn-download {
 
 .table-row {
   display: grid;
-  grid-template-columns: 50px minmax(200px, 3fr) 1.5fr 80px 80px 90px 90px;
+  grid-template-columns: 50px minmax(200px, 3fr) 125px 60px 70px 90px 120px;
   gap: 12px;
   padding: 14px 16px;
   border-bottom: 1px solid var(--border-light);
@@ -1895,6 +1895,7 @@ body.light-theme .btn-download {
   align-items: center;
   justify-content: center;
   text-align: center;
+  min-width: 0;
 }
 
 .th-name,
@@ -1993,6 +1994,40 @@ body.light-theme .btn-download {
   justify-content: center;
 }
 
+.btn-delete-row {
+  background: var(--bg-card-hover);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+}
+.btn-delete-row:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+.btn-delete-icon {
+  font-size: 14px;
+  color: var(--text-muted, #94a3b8);
+  transition: color 0.2s;
+}
+.btn-delete-row:hover .btn-delete-icon {
+  color: #ef4444;
+}
+
+.fix-computing-pill {
+  display: inline-flex;
+  align-items: center;
+  color: #a78bfa;
+  opacity: 0.85;
+}
+
 .file-ic {
   font-size: 20px !important;
   width: 20px !important;
@@ -2022,6 +2057,9 @@ body.light-theme .btn-download {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .status-badge.passed {

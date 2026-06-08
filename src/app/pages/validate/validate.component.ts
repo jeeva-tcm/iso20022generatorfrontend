@@ -120,6 +120,8 @@ export class ValidateComponent implements OnInit {
   activeFixIssues: IssueRef[] | undefined = undefined;
   fixMode: 'single' | 'batch' = 'single';
   copiedFileId: string | null = null;
+  /** File IDs for which the background structural-fix computation is in progress */
+  computingFixIds = new Set<string>();
 
   // ── Fix All Messages (global automated AI fix) ──────────────────────────────
   fixingAllMessages = false;
@@ -997,6 +999,7 @@ export class ValidateComponent implements OnInit {
     e.stopPropagation();
     const idx = this.files.indexOf(f);
     this.files.splice(idx, 1);
+    this.computingFixIds.delete(f.id);
     if (this.selectedFile === f) {
       this.selectedFile = this.files[idx] ?? this.files[idx - 1] ?? null;
     }
@@ -1008,6 +1011,7 @@ export class ValidateComponent implements OnInit {
     this.selectedFile = null;
     this.expandedIssue = null;
     this.editingEntry = null;
+    this.computingFixIds.clear();
     this.saveWorkspace(); // PERSIST (Clear storage)
   }
 
@@ -1410,16 +1414,23 @@ export class ValidateComponent implements OnInit {
         if (data.errors > 0) {
           const xmlForFix = entry.content;
           const msgTypeForFix = data.message ?? 'Auto-detect';
+          this.computingFixIds.add(entry.id);
+          this.cdr.markForCheck();
           this.http.post(this.config.getApiUrl('/fixes/auto-fix'), {
             xml: xmlForFix,
             message_type: msgTypeForFix
           }).subscribe({
             next: (fixData: any) => {
+              this.computingFixIds.delete(entry.id);
               if (fixData?.new_xml && fixData.new_xml !== entry.content) {
                 entry.fixedXml = fixData.new_xml;
               }
+              this.cdr.markForCheck();
             },
-            error: () => { /* fix preview optional — ignore failures */ }
+            error: () => {
+              this.computingFixIds.delete(entry.id);
+              this.cdr.markForCheck();
+            }
           });
         }
 

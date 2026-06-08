@@ -220,7 +220,7 @@ export class Pain001Component implements OnInit, OnDestroy {
       dbtrFlr: ['', [Validators.maxLength(70)]],
       dbtrAdrLine1: ['270 Park Avenue', [Validators.maxLength(70)]],
       dbtrAdrLine2: ['', [Validators.maxLength(70)]],
-      dbtrAgtAcctIban: ['GB94BARC20201530093459', [Validators.maxLength(34)]],
+      dbtrAgtAcctIban: ['GB77BARC20201530093459', [Validators.maxLength(34)]],
       dbtrAgtBic: ['CHASUS33XXX', [Validators.maxLength(11)]],
       dbtrAgtClrSysCd: ['USABA', [Validators.maxLength(5)]],
       dbtrAgtClrSysMmbId: ['021000021', [Validators.maxLength(35)]],
@@ -252,7 +252,7 @@ export class Pain001Component implements OnInit, OnDestroy {
       ultmtDbtrAdrLine1: ['', [Validators.maxLength(70)]],
       ultmtDbtrAdrLine2: ['', [Validators.maxLength(70)]],
       relMsgId: ['REL-' + Date.now(), [Validators.maxLength(35)]],
-      chrgsAcctIban: ['US12345678901231', [Validators.maxLength(34)]],
+      chrgsAcctIban: ['GB28NWBK60161331926820', [Validators.maxLength(34)]],
       chrgsAcctAgtBic: ['CHASUS33XXX', [Validators.pattern(/^([A-Z0-9]{8}|[A-Z0-9]{11})$/)]],
 
       // Transactions

@@ -195,7 +195,7 @@
           <div class="th-col th-err">Errors</div>
           <div class="th-col th-pass">Pass %</div>
           <div class="th-col th-action">XML</div>
-          <div class="th-col th-export">Export</div>
+          <div class="th-col th-export">Actions</div>
         </div>
         <div class="table-body">
           <ng-container *ngFor="let f of paginatedFiles; let i = index">
@@ -230,11 +230,19 @@
                   </mat-icon>
                 </button>
               </div>
-              <div class="td-col td-export" style="justify-content: center;">
+              <div class="td-col td-export" style="justify-content: center; gap: 4px; display: flex; align-items: center;">
                 <button class="btn-table-action view-btn-alt" (click)="downloadFileReport(f, $event)"
                   matTooltip="Export result as CSV">
                   <mat-icon>file_download</mat-icon>
                 </button>
+                <button class="btn-delete-row" (click)="removeFile(f, $event)"
+                  matTooltip="Remove this file">
+                  <i class="fa fa-trash-o btn-delete-icon"></i>
+                </button>
+                <!-- Structural fix computing spinner -->
+                <span *ngIf="computingFixIds.has(f.id)" class="fix-computing-pill" matTooltip="Computing structural fix…">
+                  <mat-icon class="spin-slow" style="font-size:14px;width:14px;height:14px;">progress_activity</mat-icon>
+                </span>
               </div>
             </div>
 
