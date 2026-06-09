@@ -137,53 +137,6 @@ body:not(.light-theme) .db-error-retry {
     justify-content: center;
 }
 
-/* ── Word/Tag Cloud — transparent, text-only word-cloud style ───────────── */
-.tag-cloud {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 16px 24px;
-    max-width: 160px;
-    padding: 16px 8px;
-    background: transparent;
-    line-height: 1.05;
-}
-
-.tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 0;
-    margin: 0;
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    font-weight: 800;
-    font-family: inherit;
-    letter-spacing: -0.5px;
-    line-height: 1;
-    cursor: default;
-    user-select: none;
-    white-space: nowrap;
-}
-
-.tag mat-icon {
-    font-size: inherit;
-    width: 1em;
-    height: 1em;
-}
-
-/* Size variants — word-cloud style (varied sizes, no padding) */
-.tag-sm  { font-size: 1.4rem; opacity: 0.75; }
-.tag-md  { font-size: 1.35rem; opacity: 0.88; }
-.tag-xl  { font-size: 1.30rem;    opacity: 1; }
-
-/* Light mode — bold saturated colors that sit on the hero background */
-.tag-blue   { color: #1d4ed8; }
-.tag-purple { color: #6d28d9; }
-.tag-cyan   { color: #0e7490; }
-.tag-neutral { color: #475569; }
 
 /* ── (legacy, unused) Feature highlights stack ───────────────────────────── */
 .feature-stack {
@@ -471,8 +424,52 @@ body.light-theme .btn-primary {
     border: 1px solid var(--border-light) !important;
     line-height: 1 !important;
 }
-.btn-ghost mat-icon { font-size: 17px !important; width: 17px !important; height: 17px !important; }
+.btn-ghost mat-icon { font-size: 16px !important; width: 16px !important; height: 16px !important; }
 
+/* ─── Feature Tag Cloud ─── */
+.hero-right {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.tag-cloud {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+}
+
+.tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0;
+    border-radius: 0;
+    font-size: 1.6rem;
+    font-weight: 800;
+    box-shadow: none;
+    background: transparent;
+    border: none;
+    letter-spacing: -0.5px;
+}
+
+.tag mat-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+}
+
+.tag-blue { background: transparent; color: #2563EB; border: none; }
+.tag-purple { background: transparent; color: #7C3AED; border: none; }
+.tag-cyan { background: transparent; color: #0E7490; border: none; }
+
+body.light-theme .tag-blue { background: transparent; color: #1D4ED8; border: none; }
+body.light-theme .tag-purple { background: transparent; color: #6D28D9; border: none; }
+body.light-theme .tag-cyan { background: transparent; color: #0F766E; border: none; }
+
+/* ─── Terminal Window ─── */
 /* ─────────────────────────────────────────────
    KPI GRID
 ───────────────────────────────────────────── */

@@ -1,6 +1,10 @@
 /* Angular Material Theme */
 @import '@angular/material/prebuilt-themes/indigo-pink.css';
 
+/* Google Fonts Import */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+
 /* Kill any default border/shadow under the app header toolbar AND on the dashboard hero */
 mat-toolbar.header,
 mat-toolbar.header::after,
@@ -23,10 +27,6 @@ mat-toolbar.header::before,
 .db-hero::before {
     content: '' !important;
 }
-
-/* Google Fonts Import */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
     /* Premium Corporate Palette - OLED Deep Midnight (Neon Edition) */

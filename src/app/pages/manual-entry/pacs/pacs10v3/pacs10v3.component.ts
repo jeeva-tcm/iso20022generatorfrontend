@@ -295,6 +295,23 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
     }
 
     private validateFullMessageErrors() {
+        ['currency', 'clrSysRef'].forEach(k => {
+            const ctrl = this.form.get(k);
+            if (ctrl && ctrl.errors) {
+                const { target2, chaps, chips, fed, forbidden, ...rest } = ctrl.errors;
+                ctrl.setErrors(Object.keys(rest).length ? rest : null);
+            }
+        });
+        [...this.agentPrefixes, ...this.partyPrefixes].forEach(p => {
+            ['AddrType', 'Name'].forEach(f => {
+                const ctrl = this.form.get(p + f);
+                if (ctrl && ctrl.errors) {
+                    const { linked, ...rest } = ctrl.errors;
+                    ctrl.setErrors(Object.keys(rest).length ? rest : null);
+                }
+            });
+        });
+
         const systems = [...this.agentPrefixes, ...this.partyPrefixes].map(p => {
             return this.form.get(p + 'ClrSysCd')?.value?.trim()?.toUpperCase();
         });
@@ -878,7 +895,10 @@ ${this.rmtInf(v)}
             patch['toBic'] = doc.getElementsByTagName('To')[0]
                 ?.getElementsByTagName('BICFI')[0]?.textContent?.trim() || '';
             patch['bizMsgId'] = tval(doc, 'BizMsgIdr');
+            patch['msgDefIdr'] = tval(doc, 'MsgDefIdr');
+            patch['bizSvc'] = tval(doc, 'BizSvc');
             patch['msgId'] = tval(doc, 'MsgId');
+            patch['nbOfTxs'] = tval(doc, 'NbOfTxs');
             patch['creDtTm'] = tval(doc, 'CreDtTm') || tval(doc, 'CreDt');
 
             const cdtInstr = doc.getElementsByTagName('CdtInstr')[0];
@@ -1098,6 +1118,21 @@ ${this.rmtInf(v)}
 
     closeValidationModal() { this.showValidationModal = false; this.validationReport = null; this.validationStatus = 'idle'; this.validationExpandedIssue = null; }
 
+    private clearBusinessRuleErrors(): void {
+        const ruleKeys = ['target2', 'chaps', 'chips', 'fed', 'forbidden', 'linked', 'nmWithoutAddr'];
+        const controlKeys = [
+            'currency', 'clrSysRef',
+            ...[...this.agentPrefixes, ...this.partyPrefixes].flatMap(p => [p + 'AddrType', p + 'Name'])
+        ];
+        controlKeys.forEach(k => {
+            const ctrl = this.form.get(k);
+            if (!ctrl?.errors) return;
+            const remaining = { ...ctrl.errors };
+            ruleKeys.forEach(e => delete remaining[e]);
+            ctrl.setErrors(Object.keys(remaining).length ? remaining : null);
+        });
+    }
+
     getValidationLayers(): string[] {
         if (!this.validationReport?.layer_status) return [];
         return Object.keys(this.validationReport.layer_status).sort();
@@ -1183,6 +1218,7 @@ ${this.rmtInf(v)}
                     // Recompute per-layer status so layer cards reflect the filtered details
                     // (e.g. if Layer 3 was FAIL solely because of R9 errors we just removed,
                     // it should now read PASS or WARN � not still show a red ?).
+                    // it should now read PASS or WARN  not still show a red ?).
                     if (data.layer_status && typeof data.layer_status === 'object') {
                         Object.keys(data.layer_status).forEach((lk: string) => {
                             const layerNum = parseInt(lk, 10);
@@ -1191,15 +1227,15 @@ ${this.rmtInf(v)}
                             const ls = data.layer_status[lk];
                             if (ls && typeof ls === 'object') {
                                 const oldStatus: string = ls.status || '';
-                                // Only soften a layer that was previously marked failed/warned �
+                                // Only soften a layer that was previously marked failed/warned 
                                 // never escalate a passing layer.
-                                if (oldStatus.includes('?') || oldStatus.includes('FAIL')) {
+                                if (oldStatus.includes('❌') || oldStatus.includes('FAIL')) {
                                     if (layerErrors === 0) {
-                                        ls.status = layerWarns > 0 ? '? WARN' : '? PASS';
+                                        ls.status = layerWarns > 0 ? '⚠️ WARN' : '✅ PASS';
                                     }
-                                } else if (oldStatus.includes('?') || oldStatus.includes('WARN')) {
+                                } else if (oldStatus.includes('⚠️') || oldStatus.includes('WARN')) {
                                     if (layerErrors === 0 && layerWarns === 0) {
-                                        ls.status = '? PASS';
+                                        ls.status = '✅ PASS';
                                     }
                                 }
                             }
@@ -1208,6 +1244,7 @@ ${this.rmtInf(v)}
                 }
                 this.validationReport = data;
                 this.clearDraft();
+                this.clearBusinessRuleErrors();
                 this.validationStatus = 'done';
             },
             error: (err) => {
@@ -1216,6 +1253,7 @@ ${this.rmtInf(v)}
                     layer_status: {},
                     details: [{ severity: 'ERROR', layer: 0, code: 'BACKEND_ERROR', path: '', message: 'Validation failed � ' + (err.error?.detail?.message || 'backend not reachable.'), fix_suggestion: 'Ensure the validation server is running.' }]
                 };
+                this.clearBusinessRuleErrors();
                 this.validationStatus = 'done';
             }
         });
@@ -1485,4 +1523,5 @@ ${this.rmtInf(v)}
         });
     }
 }
+
 

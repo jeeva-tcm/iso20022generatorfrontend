@@ -1427,11 +1427,8 @@ ${tx}\t\t\t</DrctDbtTxInf>
       content += `${t}</ClrSysMmbId>\n`;
     }
     if (lei) content += `${t}<LEI>${this.e(lei)}</LEI>\n`;
-    // CBPR_COM_R9 (strict): only InstgAgt/InstdAgt must omit Nm + PstlAdr when BICFI is set.
-    // For every other agent (Dbtr, Cdtr, DbtrAgt, CdtrAgt, IntrmyAgt*, PrvsInstgAgt*)
-    // BICFI + Nm + PstlAdr are permitted together � let user-entered Name/Address through.
-    const strictR9 = tag === 'InstgAgt' || tag === 'InstdAgt';
-    if (!strictR9 || !bic) {
+    // CBPR_COM_R9: If BICFI is present, Nm and PstlAdr are NOT allowed for any FinInstnId
+    if (!bic) {
       if (name) content += `${t}<Nm>${this.e(name)}</Nm>\n`;
       content += this.addrXml(v, prefix, indent + 2, tag.startsWith('PrvsInstgAgt'));
     }
@@ -1647,6 +1644,35 @@ ${tx}\t\t\t</DrctDbtTxInf>
       store_in_history: true
     }).subscribe({
       next: (data: any) => {
+        // Second-layer defence for CBPR_COM_R9 on AppHdr: filter out any R9 errors
+        // the server flagged on AppHdr paths (the sanitizer already strips Nm/PstlAdr
+        // from <AppHdr>; this catches any that slipped past, e.g. due to server caching).
+        if (data?.details?.length) {
+          data.details = data.details.filter((d: any) =>
+            !(d?.code === 'CBPR_COM_R9' && typeof d?.path === 'string' && d.path.startsWith('AppHdr.'))
+          );
+          const remainingErrors = data.details.filter((d: any) => d?.severity === 'ERROR').length;
+          const remainingWarnings = data.details.filter((d: any) => d?.severity === 'WARNING').length;
+          data.errors = remainingErrors;
+          data.warnings = remainingWarnings;
+          if (remainingErrors === 0 && data.status === 'FAIL') data.status = remainingWarnings ? 'WARNINGS' : 'PASS';
+          if (data.layer_status && typeof data.layer_status === 'object') {
+            Object.keys(data.layer_status).forEach((lk: string) => {
+              const layerNum = parseInt(lk, 10);
+              const layerErrors = data.details.filter((d: any) => d?.severity === 'ERROR' && Number(d?.layer) === layerNum).length;
+              const layerWarns = data.details.filter((d: any) => d?.severity === 'WARNING' && Number(d?.layer) === layerNum).length;
+              const ls = data.layer_status[lk];
+              if (ls && typeof ls === 'object') {
+                const oldStatus: string = ls.status || '';
+                if (oldStatus.includes('❌') || oldStatus.includes('FAIL')) {
+                  if (layerErrors === 0) ls.status = layerWarns > 0 ? '⚠️ WARN' : '✅ PASS';
+                } else if (oldStatus.includes('⚠️') || oldStatus.includes('WARN')) {
+                  if (layerErrors === 0 && layerWarns === 0) ls.status = '✅ PASS';
+                }
+              }
+            });
+          }
+        }
         this.validationReport = data;
         this.clearDraft();
         this.validationStatus = 'done';

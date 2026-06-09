@@ -309,6 +309,23 @@ export class Pacs10Component implements OnInit, OnDestroy {
     }
 
     private validateFullMessageErrors() {
+        ['currency', 'clrSysRef'].forEach(k => {
+            const ctrl = this.form.get(k);
+            if (ctrl && ctrl.errors) {
+                const { target2, chaps, chips, fed, forbidden, ...rest } = ctrl.errors;
+                ctrl.setErrors(Object.keys(rest).length ? rest : null);
+            }
+        });
+        ['cdtr', 'dbtr', 'cdtrAgt', 'dbtrAgt'].forEach(p => {
+            ['AddrType', 'Name'].forEach(f => {
+                const ctrl = this.form.get(p + f);
+                if (ctrl && ctrl.errors) {
+                    const { linked, ...rest } = ctrl.errors;
+                    ctrl.setErrors(Object.keys(rest).length ? rest : null);
+                }
+            });
+        });
+
         const systems = [...this.agentPrefixes, ...this.partyPrefixes].map(p => {
             return this.form.get(p + 'ClrSysCd')?.value?.trim()?.toUpperCase();
         });
@@ -941,11 +958,9 @@ ${this.rmtInf(v)}
         const val = (f: string) => { const x = v[p + f]; return (typeof x === 'string' ? x.trim() : x) || ''; };
         const addrType = val('AddrType');
 
-        // 'none' or no address type ? no PostalAddress element
         if (!addrType || addrType === 'none') return '';
 
         if (addrType === 'structured') {
-            // STRUCTURED: all structured fields, no AdrLine (R19)
             if (val('Dept'))       lines.push(`${t}<Dept>${this.e(val('Dept'))}</Dept>`);
             if (val('SubDept'))    lines.push(`${t}<SubDept>${this.e(val('SubDept'))}</SubDept>`);
             if (val('StrtNm'))     lines.push(`${t}<StrtNm>${this.e(val('StrtNm'))}</StrtNm>`);
@@ -961,22 +976,21 @@ ${this.rmtInf(v)}
             if (val('CtrySubDvsn'))lines.push(`${t}<CtrySubDvsn>${this.e(val('CtrySubDvsn'))}</CtrySubDvsn>`);
             if (val('Ctry'))       lines.push(`${t}<Ctry>${this.e(val('Ctry'))}</Ctry>`);
 
+            if (lines.length === 0) return '';
         } else if (addrType === 'hybrid') {
-            // HYBRID (R18): TwnNm + Ctry mandatory, max 2 AdrLine, no other structured fields
             if (val('TwnNm'))  lines.push(`${t}<TwnNm>${this.e(val('TwnNm'))}</TwnNm>`);
             if (val('Ctry'))   lines.push(`${t}<Ctry>${this.e(val('Ctry'))}</Ctry>`);
-            // Max 2 AdrLine when other elements are present (R18)
             if (val('AdrLine1')) lines.push(`${t}<AdrLine>${this.e(val('AdrLine1'))}</AdrLine>`);
             if (val('AdrLine2')) lines.push(`${t}<AdrLine>${this.e(val('AdrLine2'))}</AdrLine>`);
-
+            
+            if (lines.length === 0) return '';
         } else if (addrType === 'unstructured') {
-            // UNSTRUCTURED (R20): AdrLine only, max 3 occurrences, each max 35 chars
-            if (val('AdrLine1')) lines.push(`${t}<AdrLine>${this.e(val('AdrLine1'))}</AdrLine>`);
-            if (val('AdrLine2')) lines.push(`${t}<AdrLine>${this.e(val('AdrLine2'))}</AdrLine>`);
-            if (val('AdrLine3')) lines.push(`${t}<AdrLine>${this.e(val('AdrLine3'))}</AdrLine>`);
+            for (let i = 1; i <= 3; i++) {
+                if (val('AdrLine' + i)) lines.push(`${t}<AdrLine>${this.e(val('AdrLine' + i))}</AdrLine>`);
+            }
+            if (lines.length === 0) return '';
         }
 
-        if (!lines.length) return '';
         return `${this.tabs(indent)}<PstlAdr>\n${lines.join('\n')}\n${this.tabs(indent)}</PstlAdr>\n`;
     }
 
@@ -1233,9 +1247,13 @@ ${this.rmtInf(v)}
                             patch[pfx + 'Ctry'] = tval(pstl, 'Ctry');
                             const adrLines = pstl.getElementsByTagName('AdrLine');
                             if (adrLines.length > 0) {
-                                patch[pfx + 'AddrType'] = 'hybrid';
+                                if (tval(pstl, 'TwnNm') || tval(pstl, 'Ctry')) {
+                                    patch[pfx + 'AddrType'] = 'hybrid';
+                                } else {
+                                    patch[pfx + 'AddrType'] = 'unstructured';
+                                }
                                 patch[pfx + 'StrtNm'] = ''; patch[pfx + 'BldgNb'] = ''; patch[pfx + 'PstCd'] = '';
-                                for (let i = 0; i < Math.min(adrLines.length, 2); i++) {
+                                for (let i = 0; i < Math.min(adrLines.length, 3); i++) {
                                     patch[pfx + 'AdrLine' + (i + 1)] = adrLines[i].textContent?.trim() || '';
                                 }
                             } else {
@@ -1243,7 +1261,7 @@ ${this.rmtInf(v)}
                                 patch[pfx + 'BldgNb'] = tval(pstl, 'BldgNb');
                                 patch[pfx + 'BldgNm'] = tval(pstl, 'BldgNm');
                                 patch[pfx + 'PstCd'] = tval(pstl, 'PstCd');
-                                patch[pfx + 'AddrType'] = tval(pstl, 'StrtNm') ? 'structured' : 'hybrid';
+                                patch[pfx + 'AddrType'] = 'structured';
                             }
                         }
                     }
@@ -1395,13 +1413,13 @@ ${this.rmtInf(v)}
                             const ls = data.layer_status[lk];
                             if (ls && typeof ls === 'object') {
                                 const oldStatus: string = ls.status || '';
-                                if (oldStatus.includes('?') || oldStatus.includes('FAIL')) {
+                                if (oldStatus.includes('❌') || oldStatus.includes('FAIL')) {
                                     if (layerErrors === 0) {
-                                        ls.status = layerWarns > 0 ? '? WARN' : '? PASS';
+                                        ls.status = layerWarns > 0 ? '⚠️ WARN' : '✅ PASS';
                                     }
-                                } else if (oldStatus.includes('?') || oldStatus.includes('WARN')) {
+                                } else if (oldStatus.includes('⚠️') || oldStatus.includes('WARN')) {
                                     if (layerErrors === 0 && layerWarns === 0) {
-                                        ls.status = '? PASS';
+                                        ls.status = '✅ PASS';
                                     }
                                 }
                             }

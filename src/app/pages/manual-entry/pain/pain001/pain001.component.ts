@@ -153,11 +153,11 @@ export class Pain001Component implements OnInit, OnDestroy {
       // BAH (head.001.001.02)
       head_charSet: ['UTF-8', [Validators.maxLength(2048)]],
       head_fromBic: ['BANCUS33XXX', [Validators.required, Validators.pattern(/^([A-Z0-9]{8}|[A-Z0-9]{11})$/)]],
-      head_fromClrSysId: ['USABA', [Validators.maxLength(5)]],
+      head_fromClrSysId: ['FED', [Validators.maxLength(5)]],
       head_fromMmbId: ['123456789', [Validators.maxLength(35)]],
       head_fromLei: ['W22LROWBR70L5U3S5244', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
       head_toBic: ['BANCGB2LXXX', [Validators.required, Validators.pattern(/^([A-Z0-9]{8}|[A-Z0-9]{11})$/)]],
-      head_toClrSysId: ['GBFPS', [Validators.maxLength(5)]],
+      head_toClrSysId: ['STG', [Validators.maxLength(5)]],
       head_toMmbId: ['200000', [Validators.maxLength(35)]],
       head_toLei: ['EBMRY7N10NRY5NCY5Y71', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
       head_bizMsgIdr: [sharedMsgId, [Validators.maxLength(35)]],
@@ -202,14 +202,14 @@ export class Pain001Component implements OnInit, OnDestroy {
       pmtCtrlSum: ['0.00', [Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],
       instrPrty: ['NORM', Validators.required],
       poolgAdjstmntDt: [this.isoNowDate()],
-      svcLvl: ['SEPA', [Validators.maxLength(5)]],
+      svcLvl: ['G001', [Validators.maxLength(5)]],
       lclInstrm: ['INST', [Validators.maxLength(35)]],
       ctgyPurp: ['CASH', [Validators.maxLength(5)]],
       reqdExctnDt: [this.isoNowDate(), Validators.required],
       fwdgAgtBic: ['FWDGUS33XXX', [Validators.maxLength(11)]],
       initnSrc: ['ERP-X-SYSTEM', [Validators.maxLength(35)]],
       dbtrName: ['Holding Account One', [Validators.required, Validators.maxLength(140)]],
-      dbtrIban: ['60161331926819', [Validators.required, Validators.maxLength(34)]],
+      dbtrIban: ['GB29NWBK60161331926819', [Validators.required, Validators.maxLength(34)]],
       dbtrAddrType: ['hybrid'],
       dbtrCtry: ['US', [Validators.pattern(/^[A-Z]{2,2}$/)]],
       dbtrTwnNm: ['New York', [Validators.maxLength(35)]],
@@ -225,10 +225,10 @@ export class Pain001Component implements OnInit, OnDestroy {
       dbtrAcctType: ['IBAN'],
       dbtrAcctOthrId: [''],
       dbtrAgtAcctType: ['IBAN'],
-      dbtrAgtAcctIban: ['11112222333344', [Validators.maxLength(34)]],
+      dbtrAgtAcctIban: ['GB24NWBK11112222333344', [Validators.maxLength(34)]],
       dbtrAgtAcctOthrId: [''],
       dbtrAgtBic: ['CHASUS33XXX', [Validators.maxLength(11)]],
-      dbtrAgtClrSysCd: ['USABA', [Validators.maxLength(5)]],
+      dbtrAgtClrSysCd: ['FED', [Validators.maxLength(5)]],
       dbtrAgtClrSysMmbId: ['021000021', [Validators.maxLength(35)]],
       dbtrAgtLei: ['54930068N2K3Y9N1F719', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
       dbtrAgtName: ['', [Validators.maxLength(140)]],
@@ -258,9 +258,9 @@ export class Pain001Component implements OnInit, OnDestroy {
       ultmtDbtrAdrLine1: ['', [Validators.maxLength(70)]],
       ultmtDbtrAdrLine2: ['', [Validators.maxLength(70)]],
       relMsgId: ['REL-' + Date.now(), [Validators.maxLength(35)]],
-      chrgsAcctType: ['IBAN'],
-      chrgsAcctIban: ['US12345678901231', [Validators.maxLength(34)]],
-      chrgsAcctOthrId: [''],
+      chrgsAcctType: ['Othr'],
+      chrgsAcctIban: ['', [Validators.maxLength(34)]],
+      chrgsAcctOthrId: ['1234567890'],
       chrgsAcctAgtBic: ['CHASUS33XXX', [Validators.pattern(/^([A-Z0-9]{8}|[A-Z0-9]{11})$/)]],
 
       // Transactions
@@ -335,11 +335,11 @@ export class Pain001Component implements OnInit, OnDestroy {
       cdtrAgtClrSysCd: ['', Validators.maxLength(5)],
       cdtrAgtClrSysMmbId: ['', Validators.maxLength(35)],
       cdtrAgtAcctType: ['IBAN'],
-      cdtrAgtAcct: ['GB73BARC20000012345678'],
+      cdtrAgtAcct: ['GB33BUKB20201555555555'],
       cdtrAgtAcctOthrId: [''],
       cdtrName: ['Precision Engineering Ltd', [Validators.required, Validators.maxLength(140)]],
       cdtrAcctType: ['IBAN'],
-      cdtrIban: ['GB73BARC20000012345678', [Validators.required, Validators.maxLength(34)]],
+      cdtrIban: ['GB74BARC20000012345678', [Validators.required, Validators.maxLength(34)]],
       cdtrAcctOthrId: [''],
       cdtrAddrType: ['hybrid'],
       cdtrCtry: ['GB', [Validators.pattern(/^[A-Z]{2,2}$/)]],
@@ -1448,11 +1448,42 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
     catch (e) { console.warn('Draft save failed:', e); }
   }
 
+  private isValidIban(val: string): boolean {
+    if (!/^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$/.test(val)) return false;
+    const rearranged = val.slice(4) + val.slice(0, 4);
+    const numeric = rearranged.split('').map(c => c >= 'A' ? String(c.charCodeAt(0) - 55) : c).join('');
+    let remainder = 0;
+    for (let i = 0; i < numeric.length; i += 9) {
+      remainder = Number(String(remainder) + numeric.slice(i, i + 9)) % 97;
+    }
+    return remainder === 1;
+  }
+
   private loadDraft(): boolean {
     try {
       const saved = localStorage.getItem(this.DRAFT_KEY);
       if (!saved) return false;
-      this.form.patchValue(JSON.parse(saved), { emitEvent: false });
+      const parsed = JSON.parse(saved);
+      // Remove IBAN values that fail format or MOD-97 so the form defaults apply instead
+      const topIbanFields = ['dbtrIban', 'dbtrAgtAcctIban', 'chrgsAcctIban'];
+      for (const f of topIbanFields) {
+        if (parsed[f] && !this.isValidIban(parsed[f])) {
+          delete parsed[f];
+          // Also clear the paired type field so the form's default account type takes effect
+          if (f === 'chrgsAcctIban') delete parsed['chrgsAcctType'];
+          if (f === 'dbtrIban') delete parsed['dbtrAcctType'];
+          if (f === 'dbtrAgtAcctIban') delete parsed['dbtrAgtAcctType'];
+        }
+      }
+      if (Array.isArray(parsed.transactions)) {
+        for (const tx of parsed.transactions) {
+          const txIbanFields = ['cdtrIban', 'cdtrAgtAcct', 'intrmyAgt1Acct', 'intrmyAgt2Acct', 'intrmyAgt3Acct'];
+          for (const f of txIbanFields) {
+            if (tx[f] && !this.isValidIban(tx[f])) delete tx[f];
+          }
+        }
+      }
+      this.form.patchValue(parsed, { emitEvent: false });
       return true;
     } catch (e) { console.warn('Draft load failed:', e); return false; }
   }

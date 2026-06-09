@@ -449,9 +449,10 @@ export class BulkGenerateComponent implements OnInit {
         // Pre-check mandatory blocks
         this.initBlockChecked(cfg);
       },
-      error: () => {
+      error: (err) => {
+        console.error(`Failed to load block configuration for ${cfg.id}:`, err);
         this.loadingBlocks = false;
-        this.snackBar.open('Failed to load block configuration.', 'Close', {
+        this.snackBar.open(`Failed to load block configuration for ${cfg.id}: ${err.message}`, 'Close', {
           duration: 4000, horizontalPosition: 'center', verticalPosition: 'bottom'
         });
       }

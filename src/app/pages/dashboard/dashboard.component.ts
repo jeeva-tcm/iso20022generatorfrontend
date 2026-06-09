@@ -62,7 +62,7 @@ export class DashboardComponent implements OnInit {
         }
 
         this.versionSub = this.srVersion.version$.subscribe(() => {
-            this.refresh();
+            this.refresh(false);
         });
     }
 
@@ -160,11 +160,13 @@ export class DashboardComponent implements OnInit {
         });
     }
 
-    refresh() {
+    refresh(showSnackbar: boolean = true) {
         if (this.isRefreshing) return;
         this.isRefreshing = true;
 
-        this.snackBar.open('Reloading dashboard data...', '', { duration: 1000 });
+        if (showSnackbar) {
+            this.snackBar.open('Reloading dashboard data...', '', { duration: 1000 });
+        }
 
         let completed = 0;
         const checkDone = () => {
@@ -173,11 +175,13 @@ export class DashboardComponent implements OnInit {
                 setTimeout(() => {
                     this.isRefreshing = false;
                     const hadError = this.statsError || this.activityError;
-                    this.snackBar.open(
-                        hadError ? 'Dashboard refresh failed. See message above.' : 'Dashboard updated successfully.',
-                        'Close',
-                        { duration: 2500 }
-                    );
+                    if (showSnackbar || hadError) {
+                        this.snackBar.open(
+                            hadError ? 'Dashboard refresh failed. See message above.' : 'Dashboard updated successfully.',
+                            'Close',
+                            { duration: 2500 }
+                        );
+                    }
                 }, 600);
             }
         };
