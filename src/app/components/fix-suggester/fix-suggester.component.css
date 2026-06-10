@@ -1,68 +1,96 @@
-/* Hallmark · component: modal · genre: modern-minimal · theme: Quiet
+/* Hallmark · component: modal · genre: modern-minimal · theme: app-shell (host-token-driven)
  * states: default · hover · focus · active · disabled · selected · applied · unavailable
- * contrast: pass (46–50)
+ * contrast: pass (46–50) · pre-emit critique: P5 H4 E5 S4 R5 V4
  */
 
 /* ════════════════════════════════════════════════════════════════════════
    AI Fix Suggester — modal
-   Restrained, utility-first surface. One accent (ink-blue) on the primary
-   action and the selected rail; nothing else fights for attention.
+   Re-themed to INHERIT the host app's design system (styles.css :root).
+   Every surface/ink/line token derives from the app's --bg-* / --text-* /
+   --border-* / --accent-* variables, so the modal automatically tracks the
+   app's dark "Obsidian + Electric Teal" theme AND its body.light-theme
+   variant — one component, both themes, no foreign palette.
+   Fonts follow the app: Outfit (display) · Inter (UI) · JetBrains Mono (code).
+   The single accent is the app accent (teal in dark, blue in light).
    ════════════════════════════════════════════════════════════════════════ */
 
 :host {
-  /* ─── Locked tokens ───────────────────────────────────────────────── */
-  /* Paper band (dark — modal lives over the app) */
-  --fs-paper:        oklch(13% 0.012 250);     /* shell */
-  --fs-paper-2:      oklch(17% 0.014 250);     /* surface card */
-  --fs-paper-3:      oklch(21% 0.016 250);     /* surface card hover */
-  --fs-paper-inset:  oklch(9%  0.010 250);     /* diff inset */
+  /* ─── Locked tokens — all derived from the app shell (styles.css) ─────
+     color-mix() lets us build the modal's stepped surfaces and translucent
+     status fills FROM the app tokens, so re-theming the app re-themes this
+     modal for free. Fallbacks keep it sane if a token is ever absent. */
 
-  --fs-line:         oklch(28% 0.018 250);     /* hairline border */
-  --fs-line-2:       oklch(36% 0.022 250);     /* border hover */
+  /* Paper band — surfaces, darkest → lightest */
+  --fs-paper:        var(--bg-app, #000000);                                   /* shell */
+  --fs-paper-2:      var(--bg-card, #0a0a0b);                                  /* surface card */
+  --fs-paper-3:      var(--bg-card-hover, #121214);                           /* surface card hover */
+  --fs-paper-inset:  color-mix(in oklab, var(--bg-app, #000) 86%, #000 14%); /* diff inset (recessed) */
 
-  /* Ink (text) */
-  --fs-ink:          oklch(96% 0.005 250);     /* primary */
-  --fs-ink-2:        oklch(74% 0.012 250);     /* secondary */
-  --fs-ink-3:        oklch(54% 0.014 250);     /* tertiary / muted */
-  --fs-ink-4:        oklch(40% 0.014 250);     /* whisper */
+  /* Hairline borders */
+  --fs-line:         var(--border-light, rgba(255,255,255,0.14));
+  --fs-line-2:       color-mix(in oklab, var(--border-light, rgba(255,255,255,0.14)) 60%, var(--text-main, #fff) 40%);
 
-  /* Accent — single cool ink-blue. Used only on:
-     1. The primary CTA fill
-     2. The selected card rail + ring
-     3. The progress bar fill
-     4. The checked checkbox
-     Nothing else. */
-  --fs-accent:       oklch(62% 0.14 250);
-  --fs-accent-2:     oklch(70% 0.12 250);      /* hover lighten */
-  --fs-accent-soft:  oklch(62% 0.14 250 / 0.14);
-  --fs-accent-ring:  oklch(62% 0.14 250 / 0.40);
+  /* Ink (text) — primary → whisper */
+  --fs-ink:          var(--text-main, #ffffff);
+  --fs-ink-2:        var(--text-muted, #a1a1aa);
+  --fs-ink-3:        color-mix(in oklab, var(--text-muted, #a1a1aa) 72%, var(--bg-app, #000) 28%);
+  --fs-ink-4:        color-mix(in oklab, var(--text-muted, #a1a1aa) 46%, var(--bg-app, #000) 54%);
 
-  /* Status (borrowed from diff conventions — not invented) */
-  --fs-good:         oklch(76% 0.16 155);
-  --fs-good-bg:      oklch(76% 0.16 155 / 0.10);
-  --fs-good-line:    oklch(76% 0.16 155 / 0.32);
-  --fs-warn:         oklch(82% 0.13  85);
-  --fs-warn-bg:      oklch(82% 0.13  85 / 0.10);
-  --fs-warn-line:    oklch(82% 0.13  85 / 0.30);
-  --fs-bad:          oklch(72% 0.18  25);
-  --fs-bad-bg:       oklch(72% 0.18  25 / 0.10);
-  --fs-bad-line:     oklch(72% 0.18  25 / 0.32);
+  /* Accent — THE app accent (teal in dark, blue in light). Used only on:
+     primary CTA · selected card rail + ring · progress fill · checked box. */
+  --fs-accent:       var(--accent-color, #00e5a0);
+  --fs-accent-2:     color-mix(in oklab, var(--accent-color, #00e5a0) 82%, #fff 18%);  /* hover lighten */
+  --fs-accent-soft:  color-mix(in oklab, var(--accent-color, #00e5a0) 16%, transparent);
+  --fs-accent-ring:  color-mix(in oklab, var(--accent-color, #00e5a0) 42%, transparent);
+  /* Readable ink to sit ON the accent fill (dark accent→light text, etc.) */
+  --fs-on-accent:    #04130d;
 
-  /* Geometry */
-  --fs-r:            12px;
-  --fs-r-sm:         8px;
-  --fs-r-xs:         5px;
+  /* Status (diff conventions — semantic, theme-independent hues) */
+  --fs-good:         oklch(72% 0.17 155);
+  --fs-good-bg:      oklch(72% 0.17 155 / 0.12);
+  --fs-good-line:    oklch(72% 0.17 155 / 0.34);
+  --fs-warn:         oklch(74% 0.15  75);
+  --fs-warn-bg:      oklch(74% 0.15  75 / 0.12);
+  --fs-warn-line:    oklch(74% 0.15  75 / 0.32);
+  --fs-bad:          oklch(64% 0.20  25);
+  --fs-bad-bg:       oklch(64% 0.20  25 / 0.12);
+  --fs-bad-line:     oklch(64% 0.20  25 / 0.34);
+
+  /* Geometry — align to the app's rounded language */
+  --fs-r:            16px;
+  --fs-r-sm:         10px;
+  --fs-r-xs:         6px;
   --fs-step:         4px;                       /* 4-pt scale */
 
-  /* Type */
-  --fs-font-ui:      system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --fs-font-mono:    ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+  /* Type — follow the app stack */
+  --fs-font-display: 'Outfit', 'Inter', system-ui, sans-serif;
+  --fs-font-ui:      'Inter', 'Outfit', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --fs-font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
   /* Motion */
   --fs-ease:         cubic-bezier(0.2, 0.7, 0.2, 1);
   --fs-dur-fast:     140ms;
   --fs-dur:          200ms;
   --fs-dur-slow:     280ms;
+}
+
+/* Light theme — when the app flips to body.light-theme, the inherited tokens
+   above already update; we only need to lighten the inset, the on-accent ink,
+   and the status fills so they read correctly on a white surface. */
+:host-context(body.light-theme) {
+  --fs-paper-inset:  color-mix(in oklab, var(--bg-app, #f4f6fb) 78%, #000 22%);
+  --fs-line-2:       color-mix(in oklab, var(--border-light, #d8e0f0) 55%, var(--text-main, #0c1226) 45%);
+  --fs-on-accent:    #ffffff;                   /* white ink on the blue accent */
+
+  --fs-good:         oklch(52% 0.16 152);
+  --fs-good-bg:      oklch(52% 0.16 152 / 0.10);
+  --fs-good-line:    oklch(52% 0.16 152 / 0.30);
+  --fs-warn:         oklch(58% 0.14  62);
+  --fs-warn-bg:      oklch(58% 0.14  62 / 0.10);
+  --fs-warn-line:    oklch(58% 0.14  62 / 0.30);
+  --fs-bad:          oklch(54% 0.21  25);
+  --fs-bad-bg:       oklch(54% 0.21  25 / 0.09);
+  --fs-bad-line:     oklch(54% 0.21  25 / 0.30);
 }
 
 ::ng-deep body.fs-modal-open { overflow: hidden; }
@@ -74,7 +102,8 @@
   position: fixed;
   inset: 0;
   z-index: 2000;
-  background: oklch(6% 0.008 250 / 0.55);
+  /* Scrim derived from the app shell so it dims correctly in both themes */
+  background: color-mix(in oklab, var(--bg-app, #000) 55%, transparent);
   backdrop-filter: blur(3px) saturate(110%);
   -webkit-backdrop-filter: blur(3px) saturate(110%);
   animation: fs-fade var(--fs-dur) var(--fs-ease);
@@ -109,8 +138,8 @@
   flex-direction: column;
   overflow: hidden;
   animation: fs-slide-in 240ms var(--fs-ease);
-  box-shadow: -16px 0 48px oklch(0% 0 0 / 0.45),
-              inset -1px 0 0 oklch(100% 0 0 / 0.04);
+  box-shadow: var(--shadow-xl, -16px 0 48px rgba(0, 0, 0, 0.45)),
+              inset 1px 0 0 var(--fs-line);
 }
 
 /* ────────────────────────────────────────────────────────────────────────
@@ -149,6 +178,7 @@
 
 .fs-title {
   margin: 0;
+  font-family: var(--fs-font-display);
   font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -563,8 +593,10 @@
   content: '';
   width: 8px;
   height: 4px;
-  border-left: 2px solid var(--fs-ink);
-  border-bottom: 2px solid var(--fs-ink);
+  /* ink-on-accent, not --fs-ink: the box fill is the bright accent, so the
+     check must use the readable on-accent token (dark on teal / white on blue) */
+  border-left: 2px solid var(--fs-on-accent);
+  border-bottom: 2px solid var(--fs-on-accent);
   transform: rotate(-45deg) translate(0, -1px);
 }
 
@@ -576,7 +608,7 @@
   content: '';
   width: 8px;
   height: 0;
-  border-top: 2px solid var(--fs-ink);
+  border-top: 2px solid var(--fs-on-accent);
 }
 
 /* Focus-visible ring on the focusable input — visible on the box */
@@ -682,7 +714,8 @@
   font-size: 12px;
   width: 12px;
   height: 12px;
-  color: var(--fs-ink);
+  /* sits inside the accent-filled checked box → on-accent ink for contrast */
+  color: var(--fs-on-accent);
 }
 
 .fs-status-icon-wrap {
@@ -789,24 +822,28 @@
   flex-shrink: 0;
 }
 
-.conf-high {
+/* Confidence colours are SCOPED to the badge — without the .fs-conf-badge
+   qualifier these global .conf-* rules leak onto any element that also carries
+   a conf-* class (the batch card did, via itemStatusClass), tinting the whole
+   card green/amber. Scoping keeps colour on the pill only, per the design. */
+.fs-conf-badge.conf-high {
   background: var(--fs-good-bg);
   color: var(--fs-good);
   border-color: var(--fs-good-line);
 }
-.conf-low {
+.fs-conf-badge.conf-low {
   background: var(--fs-warn-bg);
   color: var(--fs-warn);
   border-color: var(--fs-warn-line);
 }
-.conf-unavail {
+.fs-conf-badge.conf-unavail {
   background: var(--fs-paper);
   color: var(--fs-ink-3);
   border-color: var(--fs-line);
 }
 /* 'resolved' — the issue was fixed by an overlapping fix in the same batch.
    Reads as a muted success (it needs no separate action). */
-.conf-resolved {
+.fs-conf-badge.conf-resolved {
   background: var(--fs-good-bg);
   color: var(--fs-good);
   border-color: var(--fs-good-line);
@@ -902,7 +939,7 @@
 
 .fs-btn-primary {
   background: var(--fs-accent);
-  color: oklch(15% 0.015 250);             /* dark ink on a mid-luminance fill — AA contrast */
+  color: var(--fs-on-accent);              /* readable ink on the app accent — AA contrast both themes */
   font-weight: 600;
 }
 .fs-btn-primary:hover:not(:disabled) { background: var(--fs-accent-2); }

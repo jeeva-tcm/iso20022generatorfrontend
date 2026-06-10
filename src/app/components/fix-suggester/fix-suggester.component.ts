@@ -364,9 +364,11 @@ export class FixSuggesterComponent implements OnInit, OnChanges, OnDestroy, Afte
     }
   }
 
-  /** Returns severity dot color class derived from confidence + has-change. */
+  /** Card state class. Only the per-status class — the confidence COLOUR lives
+   * on the badge (confidenceClass). Emitting conf-* here leaked the global
+   * confidence colours onto the whole card, tinting it green/amber. */
   itemStatusClass(item: BatchFixItem): string {
-    return `item-${item.status} conf-${item.suggestion.confidence}`;
+    return `item-${item.status}`;
   }
 
   /** Click on the card body (anywhere except the checkbox) toggles expanded. */

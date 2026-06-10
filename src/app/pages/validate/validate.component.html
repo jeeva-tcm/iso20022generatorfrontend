@@ -250,18 +250,27 @@
             <div class="row-details" *ngIf="expandedFile === f" (click)="$event.stopPropagation()">
               <div class="details-inner" *ngIf="f.report; else noReport">
 
-                <!-- ── Structural Fix Banner (shown when backend recovered malformed XML) ── -->
-                <div class="structural-fix-banner" *ngIf="f.fixedXml">
+                <!-- ── Structural Fix Banner ──────────────────────────────────
+                     Shown while the backend is computing a repair (button disabled)
+                     AND once a repair is available (button enabled). This gives the
+                     user immediate feedback that a fix is being prepared. -->
+                <div class="structural-fix-banner"
+                     *ngIf="f.fixedXml || computingFixIds.has(f.id)"
+                     [class.is-computing]="computingFixIds.has(f.id) && !f.fixedXml">
                   <div class="sfb-left">
                     <mat-icon class="sfb-icon">auto_fix_high</mat-icon>
                     <div class="sfb-text">
-                      <strong>Auto-Repair Available</strong>
-                      <span>The backend detected and repaired structural issues (unclosed tags, missing elements, or reserved characters). Click to apply the fix.</span>
+                      <strong>{{ f.fixedXml ? 'Auto-Repair Available' : 'Preparing Auto-Repair…' }}</strong>
+                      <span *ngIf="f.fixedXml">The backend detected and repaired structural issues (unclosed tags, missing elements, or reserved characters). Click to apply the fix.</span>
+                      <span *ngIf="!f.fixedXml && computingFixIds.has(f.id)">Computing structural and field-level fixes for this message…</span>
                     </div>
                   </div>
-                  <button class="btn-structural-fix" (click)="applyStructuralFix(f, $event)">
-                    <mat-icon>build_circle</mat-icon>
-                    Apply Structural Fix
+                  <button class="btn-structural-fix"
+                          (click)="applyStructuralFix(f, $event)"
+                          [disabled]="!f.fixedXml || computingFixIds.has(f.id)">
+                    <mat-icon *ngIf="!computingFixIds.has(f.id) || f.fixedXml">build_circle</mat-icon>
+                    <mat-icon *ngIf="computingFixIds.has(f.id) && !f.fixedXml" class="spin-slow">progress_activity</mat-icon>
+                    {{ f.fixedXml ? 'Apply Structural Fix' : 'Computing…' }}
                   </button>
                 </div>
 
