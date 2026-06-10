@@ -10,6 +10,7 @@ import { Subscription } from 'rxjs';
 import { ConfigService } from '../../../../services/config.service';
 import { UetrService } from '../../../../services/uetr.service';
 import { SrVersionService } from '../../../../services/sr-version.service';
+import { VersionDeltaService, VersionDeltaBinding } from '../../../../services/version-delta.service';
 import { SrVersion } from '../../../../config/sr-version.config';
 import { SrVersionConfig } from '../../../../config/sr-version.config';
 import { ISO_PURPOSE_CODES } from '../../../../constants/purpose-codes';
@@ -88,14 +89,20 @@ export class Pacs10Component implements OnInit, OnDestroy {
         private uetrService: UetrService,
         private dialog: MatDialog,
         private cdr: ChangeDetectorRef,
-        private srVersionSvc: SrVersionService
+        private srVersionSvc: SrVersionService,
+        private versionDelta: VersionDeltaService
     ) { }
+
+    // SR-version field delta (single source of truth from "pacs SR2026 Changes")
+    verDelta!: VersionDeltaBinding;
 
     ngOnInit() {
         this.buildForm();
         this.defaultFormValues = this.form.getRawValue();
         this.activeVersion = this.srVersionSvc.currentVersion as SrVersion;
 
+        this.verDelta = this.versionDelta.bind('pacs010');
+        this.verDelta.refresh(this.form, this.srVersionSvc.currentVersion, () => this.cdr.detectChanges());
         this.fetchCodelists();
 
         // -- Subscribe to SR version changes ? re-sync form defaults + regenerate XML --
@@ -127,6 +134,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
             this.showDraftBanner = hadDraft;
 
             this.applyVersionDefaults();
+            this.verDelta.refresh(this.form, newVersion, () => this.cdr.detectChanges());
             this.generateXml();
             this.cdr.detectChanges();
         });

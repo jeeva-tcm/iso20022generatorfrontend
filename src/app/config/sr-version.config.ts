@@ -272,7 +272,7 @@ const SR2026: SrVersionConfig = {
     pacs003: {
       msgDefIdr: 'pacs.003.001.08',           // same version per xsds sr2026/ filename
       namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.003.001.08',
-      bizSvc: 'swift.cbprplus.04',            // .02 → .04 per SR2026 collection version
+      bizSvc: 'swift.cbprplus.03',            // pacs.003 SR2026 uses .03 (not .04); per comparison HTML
       liveDate: 'November 2026',
     },
     pacs002: {

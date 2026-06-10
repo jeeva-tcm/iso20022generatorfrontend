@@ -9,6 +9,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { UetrService } from '../../../../services/uetr.service';
 import { SrVersionService } from '../../../../services/sr-version.service';
+import { VersionDeltaService, VersionDeltaBinding } from '../../../../services/version-delta.service';
 import { SrVersion } from '../../../../config/sr-version.config';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
@@ -86,14 +87,20 @@ export class Pacs2Component implements OnInit, OnDestroy {
     private uetrService: UetrService,
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
-    public srVersion: SrVersionService
+    public srVersion: SrVersionService,
+    private versionDelta: VersionDeltaService
   ) {}
+
+  // SR-version field delta (single source of truth from "pacs SR2026 Changes")
+  verDelta!: VersionDeltaBinding;
 
   ngOnInit() {
     this.buildForm();
     this.defaultFormValues = this.form.getRawValue();
     this.activeVersion = this.srVersion.currentVersion;
 
+    this.verDelta = this.versionDelta.bind('pacs002');
+    this.verDelta.refresh(this.form, this.srVersion.currentVersion, () => this.cdr.detectChanges());
     this.fetchCountries();
 
     // On version switch: patch bizSvc + msgDefIdr form fields and regenerate XML
@@ -131,6 +138,7 @@ export class Pacs2Component implements OnInit, OnDestroy {
         bizSvc:    this.srVersion.getBizSvc('pacs002'),
         msgDefIdr: this.srVersion.getMsgDefIdr('pacs002'),
       }, { emitEvent: false });
+      this.verDelta.refresh(this.form, newVersion, () => this.cdr.detectChanges());
       this.generateXml();
       this.cdr.detectChanges();
     });

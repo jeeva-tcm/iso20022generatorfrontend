@@ -11,6 +11,7 @@ import { ConfigService } from '../../../../services/config.service';
 import { FormattingService } from '../../../../services/formatting.service';
 import { UetrService } from '../../../../services/uetr.service';
 import { SrVersionService } from '../../../../services/sr-version.service';
+import { VersionDeltaService, VersionDeltaBinding } from '../../../../services/version-delta.service';
 import { SrVersion } from '../../../../config/sr-version.config';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
@@ -79,14 +80,20 @@ export class Pacs4Component implements OnInit, OnDestroy {
         private formatting: FormattingService,
         private dialog: MatDialog,
         private cdr: ChangeDetectorRef,
-        public srVersion: SrVersionService
+        public srVersion: SrVersionService,
+        private versionDelta: VersionDeltaService
     ) { }
+
+    // SR-version field delta (single source of truth from "pacs SR2026 Changes")
+    verDelta!: VersionDeltaBinding;
 
     ngOnInit() {
         this.buildForm();
         this.defaultFormValues = this.form.getRawValue();
         this.activeVersion = this.srVersion.currentVersion;
 
+        this.verDelta = this.versionDelta.bind('pacs004');
+        this.verDelta.refresh(this.form, this.srVersion.currentVersion, () => this.cdr.detectChanges());
         this.fetchCodelists();
 
         this.versionSub = this.srVersion.version$.subscribe((newVersion) => {
@@ -117,6 +124,7 @@ export class Pacs4Component implements OnInit, OnDestroy {
             this.showDraftBanner = hadDraft;
 
             this.fetchCodelists();
+            this.verDelta.refresh(this.form, newVersion, () => this.cdr.detectChanges());
             this.generateXml();
             this.cdr.detectChanges();
         });

@@ -12,6 +12,7 @@ import { FormattingService } from '../../../../services/formatting.service';
 import { AddressValidatorService, AddressValidationResult } from '../../../../services/address-validator.service';
 import { UetrService } from '../../../../services/uetr.service';
 import { SrVersionService } from '../../../../services/sr-version.service';
+import { VersionDeltaService, VersionDeltaBinding } from '../../../../services/version-delta.service';
 import { SrVersion } from '../../../../config/sr-version.config';
 import { ISO_PURPOSE_CODES } from '../../../../constants/purpose-codes';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -87,14 +88,20 @@ export class Pacs8Component implements OnInit, OnDestroy {
     private formatting: FormattingService,
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
-    public srVersion: SrVersionService
+    public srVersion: SrVersionService,
+    private versionDelta: VersionDeltaService
   ) { }
+
+  // SR-version field delta (single source of truth from "pacs SR2026 Changes")
+  verDelta!: VersionDeltaBinding;
 
   ngOnInit() {
     this.buildForm();
     this.defaultFormValues = this.form.getRawValue();
     this.activeVersion = this.srVersion.currentVersion;
 
+    this.verDelta = this.versionDelta.bind('pacs008');
+    this.verDelta.refresh(this.form, this.srVersion.currentVersion, () => this.cdr.detectChanges());
     this.fetchCodelists();
 
     // React to Standards Release switching (SR2025 ↔ SR2026) without page reload
@@ -129,6 +136,7 @@ export class Pacs8Component implements OnInit, OnDestroy {
 
       this.fetchCodelists();                 // reload version-specific codelists
       this.updateSrVersionValidators();      // enforce SR2026 mandatory fields
+      this.verDelta.refresh(this.form, newVersion, () => this.cdr.detectChanges());
       this.generateXml();                    // regenerate XML with correct namespace/BizSvc
       this.cdr.detectChanges();
     });

@@ -13,6 +13,7 @@ import { AddressValidatorService, AddressValidationResult } from '../../../../se
 import { UetrService } from '../../../../services/uetr.service';
 import { SrVersionService } from '../../../../services/sr-version.service';
 import { SrVersion } from '../../../../config/sr-version.config';
+import { VersionDeltaService, AppliedDelta, VersionDelta } from '../../../../services/version-delta.service';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
 import { debounceTime } from 'rxjs/operators';
@@ -69,6 +70,14 @@ export class Pacs3Component implements OnInit, OnDestroy {
   private versionSub?: Subscription;
   get isSR2026(): boolean { return this.srVersion.isSR2026; }
 
+  // SR-version field delta (single source of truth from "pacs SR2026 Changes")
+  appliedDelta: AppliedDelta | null = null;
+  private currentDelta: VersionDelta | null = null;
+  /** True when the named control is mandatory in the active SR version. */
+  isReq(ctrl: string): boolean { return !!this.appliedDelta?.requiredControls.has(ctrl); }
+  /** Max length for the named control in the active SR version (or undefined). */
+  verMaxLen(ctrl: string): number | undefined { return this.appliedDelta?.maxLengths.get(ctrl); }
+
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
@@ -80,8 +89,19 @@ export class Pacs3Component implements OnInit, OnDestroy {
     private formatting: FormattingService,
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
-    public srVersion: SrVersionService
+    public srVersion: SrVersionService,
+    private versionDelta: VersionDeltaService
   ) { }
+
+  /** Fetch + apply the SR-version delta for this message to the form. */
+  private applyVersionDelta(): void {
+    this.versionDelta.getDelta('pacs003', this.srVersion.currentVersion).subscribe(delta => {
+      if (this.currentDelta) this.versionDelta.clearFromForm(this.form, this.currentDelta);
+      this.currentDelta = delta;
+      this.appliedDelta = this.versionDelta.applyToForm(this.form, delta);
+      this.cdr.detectChanges();
+    });
+  }
 
   ngOnInit() {
     this.buildForm();
@@ -89,10 +109,12 @@ export class Pacs3Component implements OnInit, OnDestroy {
     this.activeVersion = this.srVersion.currentVersion;
 
     this.fetchCodelists();
+    this.applyVersionDelta();
 
     this.versionSub = this.srVersion.version$.subscribe((newVersion) => {
       if (newVersion === this.activeVersion) {
         this.fetchCodelists();
+        this.applyVersionDelta();
         this.generateXml();
         this.cdr.detectChanges();
         return;
@@ -118,6 +140,7 @@ export class Pacs3Component implements OnInit, OnDestroy {
       this.showDraftBanner = hadDraft;
 
       this.fetchCodelists();
+      this.applyVersionDelta();
       this.generateXml();
       this.cdr.detectChanges();
     });
@@ -1619,7 +1642,24 @@ ${tx}\t\t\t</DrctDbtTxInf>
       this.snackBar.open('Please fix the errors in the form before validating.', 'Close', { duration: 3000 });
       return;
     }
-    // Always regenerate from the form before validating � guarantees the validator
+
+    // SR2026: highlight fields that are spec-mandatory but not covered by form.invalid.
+    // Marks them touched + sets a required error so the inline hint shows immediately.
+    // Does NOT block submission — the validation panel shows the full L3 result anyway.
+    if (this.srVersion.isSR2026) {
+      const sr2026Mandatory = ['seqTp', 'mndtId', 'dtOfSgntr', 'cdtrName', 'dbtrName'];
+      let anyMissing = false;
+      for (const ctrl of sr2026Mandatory) {
+        const c = this.form.get(ctrl);
+        if (c && !c.value?.toString().trim()) {
+          c.markAsTouched();
+          anyMissing = true;
+        }
+      }
+      if (anyMissing) this.cdr.detectChanges();
+    }
+
+    // Always regenerate from the form before validating — guarantees the validator
     // sees a clean, generator-produced XML rather than stale pasted/edited content
     // (which may contain forbidden elements like Nm/PstlAdr inside AppHdr.Fr).
     this.generateXml();

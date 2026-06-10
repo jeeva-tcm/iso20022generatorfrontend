@@ -88,10 +88,16 @@ export class ValidateComponent implements OnInit {
   allMessageTypes: string[] = ['Auto-detect'];
   private standardMXTypes: string[] = [
     'pacs.008.001.08',
+    'pacs.008.001.08_STP',
     'pacs.009.001.08',
+    'pacs.009.001.08_ADV',
+    'pacs.009.001.08_COV',
     'pacs.002.001.10',
     'pain.001.001.09',
     'camt.053.001.08',
+    'camt.054.001.08',
+    'camt.056.001.08',
+    'pacs.004.001.09'
   ];
 
   // ── Selected issue (detail view) ───────────────────────────────────────────

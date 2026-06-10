@@ -37,7 +37,7 @@ export class Pain001Component implements OnInit, OnDestroy {
   chargeBearers = ['CRED', 'SHAR', 'SLEV'];
   priorities = ['HIGH', 'NORM'];
   paymentMethods = ['TRF', 'CHK'];
-  countries = ['US', 'GB', 'DE', 'FR', 'IT', 'CH', 'CA', 'AU', 'JP', 'IN', 'SG', 'HK', 'NZ'];
+  countries: string[] = ['US', 'GB', 'DE', 'FR', 'IT', 'CH', 'CA', 'AU', 'JP', 'IN', 'SG', 'HK', 'NZ'];
 
   // Validation state
   showValidationModal = false;
@@ -65,6 +65,10 @@ export class Pain001Component implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
+    this.http.get<any>(this.config.getApiUrl('/codelists/country')).subscribe({
+      next: (res) => { if (res && res.codes && res.codes.length) this.countries = res.codes; },
+      error: () => {}
+    });
     this.buildForm();
         const bizMsgIdCtrl = this.form.get('head_bizMsgIdr');
         const msgIdCtrl = this.form.get('msgId');

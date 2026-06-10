@@ -10,6 +10,7 @@ import { Subscription } from 'rxjs';
 import { ConfigService } from '../../../../services/config.service';
 import { UetrService } from '../../../../services/uetr.service';
 import { SrVersionService } from '../../../../services/sr-version.service';
+import { VersionDeltaService, VersionDeltaBinding } from '../../../../services/version-delta.service';
 import { SrVersion } from '../../../../config/sr-version.config';
 import { SrVersionConfig } from '../../../../config/sr-version.config';
 import { ISO_PURPOSE_CODES } from '../../../../constants/purpose-codes';
@@ -88,13 +89,19 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
         private dialog: MatDialog,
         private cdr: ChangeDetectorRef,
         private srVersionSvc: SrVersionService,
+        private versionDelta: VersionDeltaService,
     ) { }
+
+    // SR-version field delta (single source of truth from "pacs SR2026 Changes")
+    verDelta!: VersionDeltaBinding;
 
     ngOnInit() {
         this.buildForm();
         this.defaultFormValues = this.form.getRawValue();
         this.activeVersion = this.srVersionSvc.currentVersion as SrVersion;
 
+        this.verDelta = this.versionDelta.bind('pacs010');
+        this.verDelta.refresh(this.form, this.srVersionSvc.currentVersion, () => this.cdr.detectChanges());
         this.fetchCodelists();
 
         // -- Subscribe to SR version changes ----------------------------------
@@ -128,6 +135,7 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
 
             const cfg = this.srVersionSvc.getMessageRules('pacs010MarginCollection');
             this.form.patchValue({ msgDefIdr: cfg.msgDefIdr, bizSvc: cfg.bizSvc }, { emitEvent: false });
+            this.verDelta.refresh(this.form, newVersion, () => this.cdr.detectChanges());
             this.generateXml();
             this.cdr.detectChanges();
         });
