@@ -13,6 +13,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { ConfigService } from '../../services/config.service';
+import { SrVersionService } from '../../services/sr-version.service';
 
 export interface FileEntry {
   id: string;
@@ -25,6 +26,7 @@ export interface FileEntry {
   messageType: string;
   handle?: any;
   origin?: 'Pasted' | 'Uploaded' | 'Manual Entry' | 'MT to MX';
+  srVersion?: string;
 }
 
 @Component({
@@ -164,7 +166,10 @@ export class ValidateComponent implements OnInit {
     let passedLayers = 0;
     if (f.report.layer_status) {
       Object.keys(f.report.layer_status).forEach(k => {
-        if (f.report.layer_status[k].status.includes('✅') || f.report.layer_status[k].status.includes('⚠') || f.report.layer_status[k].status.includes('WARN')) {
+        const s = f.report.layer_status[k].status || '';
+        const isPass = s.includes('✅') || s.includes('PASS') || s.includes('SUCCESS');
+        const isWarn = s.includes('⚠') || s.includes('WARN') || s.includes('WARNING');
+        if (isPass || isWarn) {
           passedLayers++;
         }
       });
@@ -379,7 +384,8 @@ export class ValidateComponent implements OnInit {
     private router: Router,
     private snackBar: MatSnackBar,
     private config: ConfigService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private srVersionService: SrVersionService
   ) { }
 
   async ngOnInit() {
@@ -1284,11 +1290,9 @@ export class ValidateComponent implements OnInit {
       // Clear existing first
       store.clear();
 
-      // Add all current files
+      const version = this.srVersionService.currentVersion;
       for (const f of this.files) {
-        // We strip large binary data if needed, but here we store content.
-        // Handles CAN be stored in IDB.
-        store.put({ ...f, status: f.status === 'validating' ? 'pending' : f.status });
+        store.put({ ...f, srVersion: version, status: f.status === 'validating' ? 'pending' : f.status });
       }
     } catch (e) {
       console.warn('Failed to persist workspace:', e);
@@ -1302,13 +1306,16 @@ export class ValidateComponent implements OnInit {
         const tx = db.transaction(this.STORE_NAME, 'readonly');
         const store = tx.objectStore(this.STORE_NAME);
         const request = store.getAll();
+        const currentVersion = this.srVersionService.currentVersion;
 
         request.onsuccess = () => {
           if (request.result && request.result.length > 0) {
-            this.files = request.result.map((f: any) => ({
-              ...f,
-              status: f.status === 'validating' ? 'pending' : f.status
-            }));
+            this.files = request.result
+              .filter((f: any) => f.srVersion === currentVersion)
+              .map((f: any) => ({
+                ...f,
+                status: f.status === 'validating' ? 'pending' : f.status
+              }));
             this.cdr.detectChanges();
           }
           resolve();

@@ -1,4 +1,4 @@
-﻿<div class="container" (click)="$event.stopPropagation()">
+<div class="container" (click)="$event.stopPropagation()">
     <header>
         <h1>Customer Payment Status Report (pain.002)</h1>
     </header>
@@ -501,7 +501,7 @@
                                                 XML</button>
                                         <button type="button" class="action-btn" (click)="downloadXml()"><mat-icon>download</mat-icon>
                                                 Download XML</button>
-                                        <button type="button" class="action-btn validate-btn" (click)="validateMessage()" [disabled]="form.invalid" [title]="form.invalid ? 'Fix the errors listed above before validating' : 'Run XSD + business-rule validation'">
+                                        <button type="button" class="action-btn validate-btn" (click)="validateMessage()" [title]="form.invalid ? 'Fix the errors listed above before validating' : 'Run XSD + business-rule validation'">
                                                 <mat-icon>verified</mat-icon> Validate Message
                                         </button>
                                 </div>
@@ -718,7 +718,7 @@
                         <label>Address Type</label>
                         <select formControlName="addrType" (change)="onAddrTypeChange(group)">
                             <option value="none">None (No Address Elements)</option>
-                            <option value="hybrid">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
+                            <option value="hybrid">Hybrid (TwnNm + Ctry + AdrLine) ? Preferred</option>
                             <option value="structured">Structured</option>
                             <option value="unstructured">Unstructured</option>
                         </select>

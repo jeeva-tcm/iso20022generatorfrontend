@@ -110,13 +110,20 @@ export class HistoryComponent implements OnInit {
 
     loadHistory() {
         this.isLoading = true;
+        this.dataSource.data = [];
         this.http.get<any[]>(this.config.getApiUrl('/history?limit=5000'))
             .subscribe({
                 next: (data) => {
-                    console.log('Fetched raw data length from backend:', data.length);
+                    const currentVersion = this.srVersion.currentVersion;
+                    // Client-side version guard: filter out any records that don't belong
+                    // to the current SR version (defence against stale cache or legacy
+                    // records without a version field that slipped through the backend filter).
+                    const versionFiltered = data.filter((item: any) =>
+                        !item.version || item.version === currentVersion
+                    );
                     // Group records by batch_id (or validation_id if missing)
                     const grouped: { [key: string]: any } = {};
-                    data.forEach(item => {
+                    versionFiltered.forEach(item => {
                         const id = item.batch_id || item.validation_id || item.id || 'unknown';
 
                         // Force real status based on actual numeric metrics

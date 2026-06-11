@@ -552,7 +552,7 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
             covTaxCcy: ['EUR'],
             // InstdAmt
             covInstdAmtCcy: ['EUR'],
-            covInstdAmt: [''],
+            covInstdAmt: ['1000.00', [Validators.required, Validators.pattern(/^[0-9]+(\.[0-9]{1,5})?$/)]],
         };
         // Address prefixes for main agents
         // Only the mandatory parties that ship with full address data default to 'hybrid'.
@@ -654,16 +654,16 @@ export class Pacs9CovComponent implements OnInit, OnDestroy {
             c[p + 'TwnNm'] = ['', [Validators.maxLength(35), ADDR_PATTERN]];
             c[p + 'Ctry'] = ['', Validators.pattern(/^[A-Z]{2,2}$/)];
         });
-        // covDbtr/covCdtr: Nm required, hybrid address (TwnNm + Ctry + AdrLine1 mandatory in hybrid mode)
+        // covDbtr/covCdtr: Nm required, structured address to avoid SR2026 deprecation errors
         const covParties = ['covDbtr', 'covCdtr'];
         covParties.forEach(p => {
             const isDbtr = p === 'covDbtr';
             c[p + 'Name'] = [isDbtr ? 'Debtor Name' : 'Creditor Name', [Validators.required, Validators.maxLength(140), SAFE_NAME]];
-            c[p + 'AddrType'] = ['hybrid'];
-            c[p + 'AdrLine1'] = [isDbtr ? 'Avenue Louise 42' : 'Boulevard Royal 18', [Validators.maxLength(70), ADDR_PATTERN]];
+            c[p + 'AddrType'] = ['structured'];
+            c[p + 'AdrLine1'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
             c[p + 'AdrLine2'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
-            c[p + 'StrtNm'] = ['', [Validators.maxLength(70), ADDR_PATTERN]];
-            c[p + 'BldgNb'] = ['', [Validators.maxLength(16), ADDR_PATTERN]];
+            c[p + 'StrtNm'] = [isDbtr ? 'Avenue Louise' : 'Boulevard Royal', [Validators.maxLength(70), ADDR_PATTERN]];
+            c[p + 'BldgNb'] = [isDbtr ? '42' : '18', [Validators.maxLength(16), ADDR_PATTERN]];
             c[p + 'TwnNm'] = [isDbtr ? 'New York' : 'London', [Validators.maxLength(35), ADDR_PATTERN]];
             c[p + 'Ctry'] = [isDbtr ? 'US' : 'GB', Validators.pattern(/^[A-Z]{2,2}$/)];
         });

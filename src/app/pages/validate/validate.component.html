@@ -320,14 +320,22 @@
 
                           <div class="detail-item" *ngIf="getIssueLine(issue)">
                             <div class="di-label">LINE NUMBER</div>
-                            <div class="di-val mono">
-                              {{getIssueLine(issue)}}
-                            </div>
+                            <div class="di-val mono">{{getIssueLine(issue)}}</div>
+                          </div>
+
+                          <div class="detail-item" *ngIf="issue.code">
+                            <div class="di-label">ERROR CODE</div>
+                            <div class="di-val mono">{{issue.code}}</div>
+                          </div>
+
+                          <div class="detail-item" *ngIf="getIssuePath(issue)">
+                            <div class="di-label">LOCATION</div>
+                            <div class="di-val mono">{{getIssuePath(issue)}}</div>
                           </div>
 
                         </div>
 
-                        <div class="detail-fix-box" *ngIf="issue.fix_suggestion">
+                        <div class="detail-fix-box" *ngIf="issue.fix_suggestion && issue.fix_suggestion.trim()">
                           <div class="df-header">
                             <mat-icon>lightbulb</mat-icon>
                             <span>FIX SUGGESTION</span>
