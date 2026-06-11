@@ -502,7 +502,8 @@ export class Pacs4Component implements OnInit, OnDestroy {
         tx += this.el('OrgnlIntrBkSttlmDt', v.orgnlSttlmDt, 4);
 
         tx += `\t\t\t\t<RtrdIntrBkSttlmAmt Ccy="${this.e(v.currency)}">${this.formatting.formatAmount(v.amount, v.currency)}</RtrdIntrBkSttlmAmt>\n`;
-        tx += this.el('IntrBkSttlmDt', v.sttlmDt, 4); 
+        tx += this.el('IntrBkSttlmDt', v.sttlmDt, 4);
+        tx += `\t\t\t\t<RtrdInstdAmt Ccy="${this.e(v.currency)}">${this.formatting.formatAmount(v.amount, v.currency)}</RtrdInstdAmt>\n`;
         tx += this.el('ChrgBr', v.chrgBr, 4);
 
         tx += this.agt('InstgAgt', 'instgAgt', v, 4);
