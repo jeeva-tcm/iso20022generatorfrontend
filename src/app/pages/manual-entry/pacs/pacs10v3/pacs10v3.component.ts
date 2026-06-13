@@ -96,6 +96,14 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
     verDelta!: VersionDeltaBinding;
 
     ngOnInit() {
+        // Margin Collection (pacs.010.001.03) does not exist in SR2026.
+        // If reached directly (e.g. bookmarked URL) under SR2026, bounce back
+        // to the manual-entry catalog where the option is hidden.
+        if (this.srVersionSvc.isSR2026) {
+            this.router.navigate(['/generate']);
+            return;
+        }
+
         this.buildForm();
         this.defaultFormValues = this.form.getRawValue();
         this.activeVersion = this.srVersionSvc.currentVersion as SrVersion;
@@ -106,6 +114,12 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
 
         // -- Subscribe to SR version changes ----------------------------------
         this.versionSub = this.srVersionSvc.version$.subscribe((newVersion) => {
+            // Margin Collection is SR2025-only — leave the form if switched to SR2026.
+            if (newVersion === 'SR2026') {
+                this.router.navigate(['/generate']);
+                return;
+            }
+
             if (newVersion === this.activeVersion) {
                 const cfg = this.srVersionSvc.getMessageRules('pacs010MarginCollection');
                 this.form.patchValue({ msgDefIdr: cfg.msgDefIdr, bizSvc: cfg.bizSvc }, { emitEvent: false });
@@ -507,14 +521,14 @@ export class Pacs10v3Component implements OnInit, OnDestroy {
             
             cdtrAgtBic: ['CHASUS33XXX', BIC_OPT],
             cdtrAgtName: ['JPMORGAN CHASE BANK', [Validators.maxLength(140), SAFE_NAME]],
-            cdtrAgtLei: ['7H6LDXLRUQGFU57RNE97', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
+            cdtrAgtLei: ['7H6LDXLRUQGFU57RNE75', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
             cdtrAgtClrSysCd: ['USABA', Validators.maxLength(5)],
             cdtrAgtClrSysMmbId: ['MEM-CAGT-01', Validators.maxLength(28)],
             cdtrAgtAddrType: ['none'],
             
             cdtrBic: ['CITIUS33XXX', BIC],
             cdtrName: ['CITIBANK NA', [Validators.maxLength(140), SAFE_NAME]],
-            cdtrLei: ['E57ODZWZ7FF32TWEFS77', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
+            cdtrLei: ['E57ODZWZ7FF32TWEFS22', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
             cdtrClrSysCd: ['USABA', Validators.maxLength(5)],
             cdtrClrSysMmbId: ['MEM-CDTR-01', Validators.maxLength(28)],
             cdtrAddrType: ['none'],

@@ -882,39 +882,53 @@ header p {
     position: relative;
 }
 
-.line-numbers {
+textarea.line-numbers {
+    margin: 0;
     width: 45px;
+    height: 100%;
     background: var(--editor-gutter);
     color: var(--editor-gutter-text);
     padding: 1rem 0;
+    padding-bottom: calc(1rem + 15px);
     text-align: right;
     font-family: 'JetBrains Mono', Consolas, monospace;
     font-size: 12px;
-    line-height: 1.55;
+    line-height: 19px;
     user-select: none;
     padding-right: 12px;
+    border: none;
     border-right: 1px solid var(--border-light);
+    outline: none;
+    resize: none;
     overflow: hidden;
+    overflow-y: auto;
+    scrollbar-width: none;
+    white-space: pre;
+    box-sizing: border-box;
+    opacity: 1;
+    -webkit-text-fill-color: var(--editor-gutter-text);
 }
 
-.line-numbers div {
-    padding: 0 4px;
+textarea.line-numbers::-webkit-scrollbar {
+    display: none;
 }
 
 textarea.code-editor {
+    margin: 0;
     flex: 1;
     height: 100%;
     font-family: 'JetBrains Mono', Consolas, monospace;
     font-size: 12px;
-    line-height: 1.55;
+    line-height: 19px;
     background: transparent;
     border: none;
     color: var(--editor-text);
     padding: 1rem;
     resize: none;
     outline: none;
-    overflow-x: auto;
+    overflow: auto;
     white-space: pre;
+    box-sizing: border-box;
 }
 
 textarea.code-editor::-webkit-scrollbar {

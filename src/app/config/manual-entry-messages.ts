@@ -8,6 +8,8 @@ export interface ManualEntryMessage {
   type: 'pacs' | 'camt' | 'pain';
   route?: string;
   bulkId: string;
+  /** Only available in SR2025 (e.g. Margin Collection pacs.010.001.03 was removed in SR2026). */
+  sr2025Only?: boolean;
 }
 
 export const MANUAL_ENTRY_MESSAGES: ManualEntryMessage[] = [
@@ -20,7 +22,7 @@ export const MANUAL_ENTRY_MESSAGES: ManualEntryMessage[] = [
   { id: 'pacs.004.001.09', name: 'Payment Return', type: 'pacs', route: 'pacs4', bulkId: 'pacs.004' },
   { id: 'pacs.002.001.10', name: 'Payment Status Report', type: 'pacs', route: 'pacs2', bulkId: 'pacs.002' },
   { id: 'pacs.010.001.10', name: 'Interbank Direct Debit', type: 'pacs', route: 'pacs10', bulkId: 'pacs.010' },
-  { id: 'pacs.010.001.03', name: 'Margin Collection', type: 'pacs', route: 'pacs10v3', bulkId: 'pacs.010.v3' },
+  { id: 'pacs.010.001.03', name: 'Margin Collection', type: 'pacs', route: 'pacs10v3', bulkId: 'pacs.010.v3', sr2025Only: true },
   // CAMT
   { id: 'camt.057.001.06', name: 'Notification to Receive', type: 'camt', route: 'camt57', bulkId: 'camt.057' },
   { id: 'camt.052.001.08', name: 'Bank To Customer Report', type: 'camt', route: 'camt052', bulkId: 'camt.052' },

@@ -22,6 +22,8 @@ export class MtToMxComponent implements OnInit {
     mxOutput = '';
     editorLineCount: number[] = [1];
     outputLineCount: number[] = [1];
+    mtLineNumbersText: string = '1';
+    mxLineNumbersText: string = '1';
     detectedMtType = '';
     mappedMxType = '';
     mappedMxDesc = '';
@@ -146,9 +148,9 @@ export class MtToMxComponent implements OnInit {
     };
 
     @ViewChild('mtEditor') mtEditorRef!: ElementRef<HTMLTextAreaElement>;
-    @ViewChild('mtLineNumbers') mtLineNumbersRef!: ElementRef<HTMLDivElement>;
+    @ViewChild('mtLineNumbers') mtLineNumbersRef!: ElementRef<HTMLTextAreaElement>;
     @ViewChild('mxEditor') mxEditorRef!: ElementRef<HTMLTextAreaElement>;
-    @ViewChild('mxLineNumbers') mxLineNumbersRef!: ElementRef<HTMLDivElement>;
+    @ViewChild('mxLineNumbers') mxLineNumbersRef!: ElementRef<HTMLTextAreaElement>;
 
     constructor(
         private snackBar: MatSnackBar,
@@ -353,15 +355,20 @@ export class MtToMxComponent implements OnInit {
     updateLineCount(which: 'mt' | 'mx') {
         const content = which === 'mt' ? this.mtInput : this.mxOutput;
         const lines = (content || '').split('\n').length;
+        const numbers = Array.from({ length: lines }, (_, i) => i + 1).join('\n');
         if (which === 'mt') {
             this.editorLineCount = Array.from({ length: lines }, (_, i) => i + 1);
+            this.mtLineNumbersText = numbers;
         } else {
             this.outputLineCount = Array.from({ length: lines }, (_, i) => i + 1);
+            this.mxLineNumbersText = numbers;
         }
     }
 
-    syncScroll(editor: HTMLTextAreaElement, gutter: HTMLDivElement) {
-        gutter.scrollTop = editor.scrollTop;
+    syncScroll(source: HTMLTextAreaElement, target: HTMLTextAreaElement) {
+        if (target.scrollTop !== source.scrollTop) {
+            target.scrollTop = source.scrollTop;
+        }
     }
 
     detectMtType(mt: string): string {
@@ -1372,6 +1379,7 @@ export class MtToMxComponent implements OnInit {
         if (file.status === 'success' && file.mxOutput) {
             this.mxOutput = file.mxOutput;
             this.conversionStatus = 'success';
+            this.updateLineCount('mx');
         }
         this.snackBar.open(`Loaded ${file.filename} into editor.`, 'Dismiss', { duration: 3000 });
         setTimeout(() => {

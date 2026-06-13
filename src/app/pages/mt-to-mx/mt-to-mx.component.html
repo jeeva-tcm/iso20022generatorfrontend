@@ -252,9 +252,7 @@
                 </div>
             </div>
             <div class="editor-wrapper">
-                <div class="line-numbers" #mtLineNumbers>
-                    <div *ngFor="let idx of editorLineCount; let i = index">{{i + 1}}</div>
-                </div>
+                <textarea class="line-numbers" readonly wrap="off" [value]="mtLineNumbersText" #mtLineNumbers (scroll)="syncScroll(mtLineNumbers, mtEditor)"></textarea>
                 <textarea class="code-editor mt-editor" [(ngModel)]="mtInput" (ngModelChange)="onMtChange($event)"
                     (scroll)="syncScroll(mtEditor, mtLineNumbers)" #mtEditor spellcheck="false" wrap="off"
                     placeholder="Paste your SWIFT MT message here..."></textarea>
@@ -320,9 +318,7 @@
                     </div>
                 </div>
 
-                <div class="line-numbers" #mxLineNumbers>
-                    <div *ngFor="let idx of outputLineCount; let i = index">{{i + 1}}</div>
-                </div>
+                <textarea class="line-numbers" readonly wrap="off" [value]="mxLineNumbersText" #mxLineNumbers (scroll)="syncScroll(mxLineNumbers, mxEditor)"></textarea>
                 <textarea class="code-editor mx-editor" [(ngModel)]="mxOutput" (ngModelChange)="onMxChange($event)"
                     (scroll)="syncScroll(mxEditor, mxLineNumbers)" #mxEditor spellcheck="false" wrap="off"></textarea>
             </div>

@@ -173,11 +173,11 @@ export class Pain008Component implements OnInit, OnDestroy {
       rltdFrBic: ['SNDRUS33XXX'],
       rltdFrClrSysCd: ['USABA'],
       rltdFrMmbId: ['123456789'],
-      rltdFrLei: ['12345678901234567890'],
+      rltdFrLei: ['12345678901234567888'],
       rltdToBic: ['RCVRUS33XXX'],
       rltdToClrSysCd: ['USABA'],
       rltdToMmbId: ['987654321'],
-      rltdToLei: ['09876543210987654321'],
+      rltdToLei: ['09876543210987654374'],
       rltdBizMsgIdr: ['RLTD-BMS-001'],
       rltdMsgDefIdr: ['pain.008.001.08'],
       rltdBizSvc: ['swift.cbprplus.03'],
@@ -253,7 +253,7 @@ export class Pain008Component implements OnInit, OnDestroy {
       cdtrAgtBic: ['BANCGB2LXXX', [Validators.required, Validators.maxLength(11)]],
       cdtrAgtClrSysCd: ['GBDSC'],
       cdtrAgtMmbId: ['112233'],
-      cdtrAgtLei: ['549300V6YF7100J0J012'],
+      cdtrAgtLei: ['549300V6YF7100J0J060'],
       cdtrAgtNm: [''],
       // CdtrAgtAcct
       cdtrAgtAcctType: ['IBAN'],
@@ -270,7 +270,7 @@ export class Pain008Component implements OnInit, OnDestroy {
       // Charges Account Agent
       chrgsAcctAgtBic: ['BANCGB2LXXX'],
       chrgsAcctAgtMmbId: ['112233'],
-      chrgsAcctAgtLei: ['549300V6YF7100J0J012'],
+      chrgsAcctAgtLei: ['549300V6YF7100J0J060'],
 
       // Transactions
       transactions: this.fb.array([this.createTxGroup()])
@@ -348,7 +348,7 @@ export class Pain008Component implements OnInit, OnDestroy {
       dbtrAgtBic: ['DEUTDEFFXXX', [Validators.required, Validators.maxLength(11)]],
       dbtrAgtClrSysCd: ['DEBCC'],
       dbtrAgtMmbId: ['445566'],
-      dbtrAgtLei: ['12345678901234567891'],
+      dbtrAgtLei: ['22345678901234567871'],
       // DbtrAgtAcct
       dbtrAgtAcctType: ['IBAN'],
       dbtrAgtAcctIban: ['GB82WEST12345698765432'],
@@ -375,7 +375,7 @@ export class Pain008Component implements OnInit, OnDestroy {
       dbtrAdrLine1: [''],
       dbtrAdrLine2: [''],
       dbtrOrgIdAnyBic: ['DEUTDEFFXXX'],
-      dbtrOrgIdLei: ['12345678901234567892'],
+      dbtrOrgIdLei: ['32345678901234567854'],
       dbtrOrgIdOthrId: ['ORG-ID-001'],
       dbtrOrgIdOthrSchmeNmCd: ['VAT'],
       dbtrOrgIdOthrIssr: ['ISSUER-Y'],

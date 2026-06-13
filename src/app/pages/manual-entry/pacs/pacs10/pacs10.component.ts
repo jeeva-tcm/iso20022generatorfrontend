@@ -560,7 +560,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
             // Creditor Agent
             cdtrAgtBic: ['CHASUS33XXX', BIC_OPT],
             cdtrAgtName: ['JPMORGAN CHASE BANK', [Validators.maxLength(140), SAFE_NAME]],
-            cdtrAgtLei: ['7H6LDXLRUQGFU57RNE97', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
+            cdtrAgtLei: ['7H6LDXLRUQGFU57RNE75', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
             cdtrAgtClrSysCd: ['USABA', Validators.maxLength(5)],
             cdtrAgtClrSysMmbId: ['MEM-CAGT-01', Validators.maxLength(28)],
             cdtrAgtAddrType: ['structured'],
@@ -568,7 +568,7 @@ export class Pacs10Component implements OnInit, OnDestroy {
             // Creditor
             cdtrBic: ['CITIUS33XXX', BIC],
             cdtrName: ['CITIBANK NA', [Validators.maxLength(140), SAFE_NAME]],
-            cdtrLei: ['E57ODZWZ7FF32TWEFS77', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
+            cdtrLei: ['E57ODZWZ7FF32TWEFS22', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
             cdtrClrSysCd: ['USABA', Validators.maxLength(5)],
             cdtrClrSysMmbId: ['MEM-CDTR-01', Validators.maxLength(28)],
             cdtrAddrType: ['structured'],
@@ -1824,6 +1824,20 @@ ${this.rmtInf(v)}
             msgDefIdr: cfg.msgDefIdr,
             bizSvc:    cfg.bizSvc,
         }, { emitEvent: false });
+
+        // CreditIdentification (CdtId) datatype was narrowed from Max35 to
+        // CBPR_RestrictedFINXMax16Text in SR2026. Enforce the correct max length
+        // per version so the form catches it before backend validation.
+        const cdtId = this.form.get('cdtId');
+        if (cdtId) {
+            const maxLen = this.srVersionSvc.isSR2026 ? 16 : 35;
+            cdtId.setValidators([
+                Validators.required,
+                Validators.maxLength(maxLen),
+                Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]*$/),
+            ]);
+            cdtId.updateValueAndValidity({ emitEvent: false });
+        }
     }
 
     openBicSearchGroup(controlName: string, group: FormGroup | any): void {

@@ -110,6 +110,7 @@ export class Pacs2Component implements OnInit, OnDestroy {
           bizSvc:    this.srVersion.getBizSvc('pacs002'),
           msgDefIdr: this.srVersion.getMsgDefIdr('pacs002'),
         }, { emitEvent: false });
+        this.applyVersionFieldConstraints();
         this.generateXml();
         this.cdr.detectChanges();
         return;
@@ -138,6 +139,7 @@ export class Pacs2Component implements OnInit, OnDestroy {
         bizSvc:    this.srVersion.getBizSvc('pacs002'),
         msgDefIdr: this.srVersion.getMsgDefIdr('pacs002'),
       }, { emitEvent: false });
+      this.applyVersionFieldConstraints();
       this.verDelta.refresh(this.form, newVersion, () => this.cdr.detectChanges());
       this.generateXml();
       this.cdr.detectChanges();
@@ -1097,5 +1099,19 @@ ${txInf.trimEnd()}
   ngOnDestroy(): void {
     if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
     this.versionSub?.unsubscribe();
+  }
+
+  /**
+   * Apply SR2026 datatype narrowings to form validators.
+   * OriginalInstructionIdentification was narrowed from Max35Text to
+   * CBPR_RestrictedFINXMax16Text in SR2026 (pacs.002 comparison doc).
+   */
+  private applyVersionFieldConstraints(): void {
+    const oii = this.form.get('orgnlInstrId');
+    if (oii) {
+      const maxLen = this.srVersion.isSR2026 ? 16 : 35;
+      oii.setValidators([Validators.maxLength(maxLen)]);
+      oii.updateValueAndValidity({ emitEvent: false });
+    }
   }
 }

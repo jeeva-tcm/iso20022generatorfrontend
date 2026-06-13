@@ -1,5 +1,7 @@
 import JSZip from 'jszip';
-import { Component, OnInit, ElementRef, HostListener, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, HostListener, ViewChild } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { skip } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -8,6 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ConfigService } from '../../services/config.service';
 import { MANUAL_ENTRY_MESSAGES } from '../../config/manual-entry-messages';
+import { SrVersionService } from '../../services/sr-version.service';
 
 interface MessageBlock {
   id: string;
@@ -63,7 +66,9 @@ interface DependencyWarning {
   templateUrl: './bulk-generate.component.html',
   styleUrl: './bulk-generate.component.css'
 })
-export class BulkGenerateComponent implements OnInit {
+export class BulkGenerateComponent implements OnInit, OnDestroy {
+
+  private versionSub?: Subscription;
 
   /** All message configs dynamically built from Manual Entry source */
   messageConfigs: MessageTypeConfig[] = [];
@@ -126,7 +131,8 @@ export class BulkGenerateComponent implements OnInit {
     private http: HttpClient,
     private config: ConfigService,
     private snackBar: MatSnackBar,
-    private elRef: ElementRef
+    private elRef: ElementRef,
+    private srVersion: SrVersionService
   ) {}
 
   /** Close dropdown when clicking outside the search container */
@@ -141,6 +147,17 @@ export class BulkGenerateComponent implements OnInit {
 
   ngOnInit() {
     this.buildConfigsFromManualEntry();
+
+    // Rebuild the catalog when the SR version changes so version-specific
+    // messages (e.g. Margin Collection pacs.010.001.03, SR2025-only) are
+    // shown/hidden correctly. Skip the initial emit (already built above).
+    this.versionSub = this.srVersion.version$.pipe(skip(1)).subscribe(() => {
+      this.buildConfigsFromManualEntry();
+    });
+  }
+
+  ngOnDestroy() {
+    this.versionSub?.unsubscribe();
   }
 
   // ── Dynamic Config Builder ────────────────────────────────────────────────
@@ -151,6 +168,10 @@ export class BulkGenerateComponent implements OnInit {
    * Blocks are loaded on-demand from the backend when a message is selected.
    */
   private buildConfigsFromManualEntry() {
+    // Reset so this method is idempotent (re-run on SR version change).
+    this.messageConfigs = [];
+    this.messageFamilies = [];
+
     const familyMap: Record<string, { label: string; configs: MessageTypeConfig[] }> = {};
 
     const familyLabels: Record<string, string> = {
@@ -159,7 +180,12 @@ export class BulkGenerateComponent implements OnInit {
       pain: 'Payment Initiation (PAIN)',
     };
 
+    const isSR2026 = this.srVersion.isSR2026;
+
     for (const msg of MANUAL_ENTRY_MESSAGES) {
+      // Skip SR2025-only messages (e.g. Margin Collection pacs.010.001.03) under SR2026.
+      if (msg.sr2025Only && isSR2026) continue;
+
       const cfg: MessageTypeConfig = {
         id: msg.id,
         bulkId: msg.bulkId,

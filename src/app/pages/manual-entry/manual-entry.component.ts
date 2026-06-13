@@ -68,12 +68,22 @@ export class ManualEntryComponent implements OnInit, OnDestroy {
 
     previewXml = '';
 
-    popularMessages = POPULAR_MANUAL_ENTRY_MESSAGES.map(m => ({
-        id: m.id,
-        name: m.name,
-        type: m.type,
-        route: m.route!
-    }));
+    /**
+     * Manual-entry catalog, filtered by the active SR version.
+     * SR2025-only messages (e.g. Margin Collection pacs.010.001.03, removed in
+     * SR2026) are hidden when the active version is SR2026.
+     */
+    get popularMessages() {
+        const isSR2026 = this.srVersionService.isSR2026;
+        return POPULAR_MANUAL_ENTRY_MESSAGES
+            .filter(m => !(m.sr2025Only && isSR2026))
+            .map(m => ({
+                id: m.id,
+                name: m.name,
+                type: m.type,
+                route: m.route!
+            }));
+    }
 
     constructor(
         private http: HttpClient,
