@@ -284,55 +284,55 @@ const SR2026: SrVersionConfig = {
     camt057: {
       msgDefIdr: 'camt.057.001.06',
       namespace: 'urn:iso:std:iso:20022:tech:xsd:camt.057.001.06',
-      bizSvc: 'swift.cbprplus.03',
+      bizSvc: 'swift.cbprplus.04',            // SR2026 (per camt.057 diff)
       liveDate: 'November 2026',
     },
     camt052: {
       msgDefIdr: 'camt.052.001.08',
       namespace: 'urn:iso:std:iso:20022:tech:xsd:camt.052.001.08',
-      bizSvc: 'swift.cbprplus.02',
+      bizSvc: 'swift.cbprplus.04',            // SR2026
       liveDate: 'November 2026',
     },
     camt053: {
       msgDefIdr: 'camt.053.001.08',
       namespace: 'urn:iso:std:iso:20022:tech:xsd:camt.053.001.08',
-      bizSvc: 'swift.cbprplus.02',
+      bizSvc: 'swift.cbprplus.04',            // SR2026 (per camt.053 diff)
       liveDate: 'November 2026',
     },
     camt054: {
       msgDefIdr: 'camt.054.001.08',
       namespace: 'urn:iso:std:iso:20022:tech:xsd:camt.054.001.08',
-      bizSvc: 'swift.cbprplus.02',
+      bizSvc: 'swift.cbprplus.04',            // SR2026 (per camt.054 diff)
       liveDate: 'November 2026',
     },
     camt055: {
       msgDefIdr: 'camt.055.001.08',
       namespace: 'urn:iso:std:iso:20022:tech:xsd:camt.055.001.08',
-      bizSvc: 'swift.cbprplus.02',
+      bizSvc: 'swift.cbprplus.03',            // SR2026: camt.055 uses .03 (per diff)
       liveDate: 'November 2026',
     },
     camt056: {
       msgDefIdr: 'camt.056.001.08',
       namespace: 'urn:iso:std:iso:20022:tech:xsd:camt.056.001.08',
-      bizSvc: 'swift.cbprplus.02',
+      bizSvc: 'swift.cbprplus.04',            // SR2026 (per camt.056 diff)
       liveDate: 'November 2026',
     },
     pain001: {
       msgDefIdr: 'pain.001.001.09',
       namespace: 'urn:iso:std:iso:20022:tech:xsd:pain.001.001.09',
-      bizSvc: 'swift.cbprplus.02',
+      bizSvc: 'swift.cbprplus.04',            // SR2026 (per pain.001 diff)
       liveDate: 'November 2026',
     },
     pain002: {
       msgDefIdr: 'pain.002.001.10',
       namespace: 'urn:iso:std:iso:20022:tech:xsd:pain.002.001.10',
-      bizSvc: 'swift.cbprplus.02',
+      bizSvc: 'swift.cbprplus.04',            // SR2026 (aligned with pain.001 + bulk-gen)
       liveDate: 'November 2026',
     },
     pain008: {
       msgDefIdr: 'pain.008.001.08',
       namespace: 'urn:iso:std:iso:20022:tech:xsd:pain.008.001.08',
-      bizSvc: 'swift.cbprplus.02',
+      bizSvc: 'swift.cbprplus.03',            // SR2026 uses .03 for direct debit messages
       liveDate: 'November 2026',
     },
   },

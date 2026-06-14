@@ -8,6 +8,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { ConfigService } from '../../../../services/config.service';
 import { FormattingService } from '../../../../services/formatting.service';
 import { UetrService } from '../../../../services/uetr.service';
+import { SrVersionService } from '../../../../services/sr-version.service';
+import { Subscription } from 'rxjs';
 
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
@@ -68,12 +70,53 @@ export class Camt056Component implements OnInit, OnDestroy {
     private formatting: FormattingService,
     private uetr: UetrService,
     private dialog: MatDialog,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    public srVersion: SrVersionService
   ) { }
+
+  private versionSub?: Subscription;
+  get isSR2026(): boolean { return this.srVersion.isSR2026; }
+
+  /** Apply the SR-version-specific BizSvc + MsgDefIdr to the form (SR2026 vs SR2025). */
+  private applyVersionDefaults() {
+    this.form.patchValue({
+      bizSvc: this.srVersion.getBizSvc('camt056'),
+      msgDefId: this.srVersion.getMsgDefIdr('camt056'),
+    }, { emitEvent: false });
+
+    if (this.isSR2026) {
+      // 1. OrgnlInstrId is mandatory in SR2026 (CBPR+)
+      const orgnlInstrIdCtrl = this.form.get('txInf.orgnlInstrId');
+      orgnlInstrIdCtrl?.setValidators([Validators.required, Validators.maxLength(35)]);
+      if (!orgnlInstrIdCtrl?.value) {
+        orgnlInstrIdCtrl?.setValue('INSTR' + Date.now().toString().slice(-11), { emitEvent: false });
+      }
+      
+      // 2. Migrate deprecated unstructured/hybrid addresses
+      const partyPrefixes = ['caseCretrAgt', 'caseCretrPty', 'cxlOrgtr'];
+      partyPrefixes.forEach(prefix => {
+        const addrTypeCtrl = this.form.get('txInf.' + prefix + 'AdrType');
+        if (addrTypeCtrl?.value === 'UNSTRUCTURED' || addrTypeCtrl?.value === 'HYBRID') {
+          const hasTwn = !!this.form.get('txInf.' + prefix + 'TwnNm')?.value;
+          const hasCtry = !!this.form.get('txInf.' + prefix + 'Ctry')?.value;
+          addrTypeCtrl.setValue((hasTwn || hasCtry) ? 'STRUCTURED' : 'NONE', { emitEvent: false });
+        }
+      });
+    } else {
+      this.form.get('txInf.orgnlInstrId')?.setValidators([Validators.maxLength(35)]);
+    }
+    this.form.get('txInf.orgnlInstrId')?.updateValueAndValidity({ emitEvent: false });
+  }
 
   ngOnInit() {
     this.fetchCodelists();
     this.buildForm();
+    // Re-apply version defaults + regenerate when the SR version changes.
+    this.versionSub = this.srVersion.version$.subscribe(() => {
+      this.applyVersionDefaults();
+      this.generateXml();
+      this.cdr.detectChanges();
+    });
         const bizMsgIdCtrl = this.form.get('bizMsgId');
         const msgIdCtrl = this.form.get('msgId');
         if (bizMsgIdCtrl && msgIdCtrl) {
@@ -96,6 +139,7 @@ export class Camt056Component implements OnInit, OnDestroy {
         }
 
     const hadDraft = this.loadDraft();
+    this.applyVersionDefaults();
     if (hadDraft) {
       this.showDraftBanner = true;
       this.generateXml();
@@ -104,10 +148,51 @@ export class Camt056Component implements OnInit, OnDestroy {
     this.pushHistory();
 
     this.form.valueChanges.subscribe(() => {
+      this.updateCoexistenceValidators();
       this.generateXml();
       this.scheduleDraftSave();
       this.cdr.detectChanges();
     });
+  }
+
+  // CBPR+ Name & Postal Address co-existence (version-invariant: enforced by BOTH the SR2025 and
+  // SR2026 engines). The Case Creator is emitted either as an Agent (<Agt>/<FinInstnId>) or a
+  // Party (<Pty>), both of which the engine constrains. Without this guard the form could emit a
+  // <Nm> with no <PstlAdr> (or vice-versa) and the engine rejects it (NAME_ADDRESS_COEXISTENCE).
+  // The cancellation Originator is emitted under <Orgtr>, which the engine does NOT constrain,
+  // so it is intentionally excluded here.
+  private updateCoexistenceValidators() {
+    const txInf = this.form?.get('txInf');
+    if (!txInf) return;
+    const val = (n: string) => (txInf.get(n)?.value || '').toString().trim();
+    const setCo = (ctrlName: string, state: 'addr' | 'name' | null) => {
+      const c = txInf.get(ctrlName);
+      if (!c) return;
+      const errs = c.errors ? { ...c.errors } : {};
+      if (state) errs['nameAddrCoexist'] = state; else delete errs['nameAddrCoexist'];
+      c.setErrors(Object.keys(errs).length ? errs : null);
+    };
+
+    let agtState: 'addr' | 'name' | null = null;
+    let ptyState: 'addr' | 'name' | null = null;
+    if (val('caseCretrType') === 'AGENT') {
+      // BICFI is emitted when present -> CBPR+ exempts Nm/PstlAdr co-existence.
+      const hasBic = !!val('caseCretrAgtBic');
+      const hasName = !!val('caseCretrAgtNm');
+      const hasAddr = !!(val('caseCretrAgtCtry') || val('caseCretrAgtAdrLine1'));
+      if (!hasBic) {
+        if (hasName && !hasAddr) agtState = 'addr';
+        else if (hasAddr && !hasName) agtState = 'name';
+      }
+    } else {
+      // Party: no AnyBIC is emitted (only LEI), so there is no BIC exemption.
+      const hasName = !!val('caseCretrPtyNm');
+      const hasAddr = !!(val('caseCretrPtyCtry') || val('caseCretrPtyAdrLine1'));
+      if (hasName && !hasAddr) ptyState = 'addr';
+      else if (hasAddr && !hasName) ptyState = 'name';
+    }
+    setCo('caseCretrAgtNm', agtState);
+    setCo('caseCretrPtyNm', ptyState);
   }
 
   fetchCodelists() {
@@ -223,7 +308,7 @@ export class Camt056Component implements OnInit, OnDestroy {
         orgnlCreDtTm: [this.isoNowWithTZ()],
         
         // Transaction Reference
-        orgnlInstrId: ['', [Validators.maxLength(35)]],
+        orgnlInstrId: ['INSTR' + Date.now().toString().slice(-11), [Validators.maxLength(35)]],
         orgnlEndToEndId: ['E2E' + Date.now().toString().slice(-13), [Validators.maxLength(35)]],
         orgnlTxId: ['', [Validators.maxLength(35)]],
         orgnlUetr: [this.uetr.generate(), [Validators.required, Validators.pattern(UETR_REG)]],
@@ -715,10 +800,11 @@ export class Camt056Component implements OnInit, OnDestroy {
           if (tx.cxlOrgtrLei) xml += t(9) + `<LEI>${this.e(tx.cxlOrgtrLei)}</LEI>\n`;
           if (tx.cxlOrgtrOrgOthrId) {
             xml += t(9) + `<Othr>\n` + t(10) + `<Id>${this.e(tx.cxlOrgtrOrgOthrId)}</Id>\n`;
-            if (tx.cxlOrgtrOrgOthrSchme || tx.cxlOrgtrOrgOthrPrtry) {
+            // SR2026: SchemeName for OrgId/Other allows only <Cd> (Proprietary removed).
+            if (tx.cxlOrgtrOrgOthrSchme || (tx.cxlOrgtrOrgOthrPrtry && !this.isSR2026)) {
               xml += t(10) + `<SchmeNm>\n`;
               if (tx.cxlOrgtrOrgOthrSchme) xml += t(11) + `<Cd>${this.e(tx.cxlOrgtrOrgOthrSchme)}</Cd>\n`;
-              if (tx.cxlOrgtrOrgOthrPrtry) xml += t(11) + `<Prtry>${this.e(tx.cxlOrgtrOrgOthrPrtry)}</Prtry>\n`;
+              if (tx.cxlOrgtrOrgOthrPrtry && !this.isSR2026) xml += t(11) + `<Prtry>${this.e(tx.cxlOrgtrOrgOthrPrtry)}</Prtry>\n`;
               xml += t(10) + `</SchmeNm>\n`;
             }
             if (tx.cxlOrgtrOrgOthrIssr) xml += t(10) + `<Issr>${this.e(tx.cxlOrgtrOrgOthrIssr)}</Issr>\n`;
@@ -737,10 +823,11 @@ export class Camt056Component implements OnInit, OnDestroy {
           }
           if (tx.cxlOrgtrPrvtOthrId) {
             xml += t(9) + `<Othr>\n` + t(10) + `<Id>${this.e(tx.cxlOrgtrPrvtOthrId)}</Id>\n`;
-            if (tx.cxlOrgtrPrvtOthrSchme || tx.cxlOrgtrPrvtOthrPrtry) {
+            // SR2026: SchemeName for PrvtId/Other allows only <Cd> (Proprietary removed).
+            if (tx.cxlOrgtrPrvtOthrSchme || (tx.cxlOrgtrPrvtOthrPrtry && !this.isSR2026)) {
               xml += t(10) + `<SchmeNm>\n`;
               if (tx.cxlOrgtrPrvtOthrSchme) xml += t(11) + `<Cd>${this.e(tx.cxlOrgtrPrvtOthrSchme)}</Cd>\n`;
-              if (tx.cxlOrgtrPrvtOthrPrtry) xml += t(11) + `<Prtry>${this.e(tx.cxlOrgtrPrvtOthrPrtry)}</Prtry>\n`;
+              if (tx.cxlOrgtrPrvtOthrPrtry && !this.isSR2026) xml += t(11) + `<Prtry>${this.e(tx.cxlOrgtrPrvtOthrPrtry)}</Prtry>\n`;
               xml += t(10) + `</SchmeNm>\n`;
             }
             if (tx.cxlOrgtrPrvtOthrIssr) xml += t(10) + `<Issr>${this.e(tx.cxlOrgtrPrvtOthrIssr)}</Issr>\n`;
@@ -808,6 +895,11 @@ export class Camt056Component implements OnInit, OnDestroy {
     const c = group ? group.get(f) : this.form.get(f);
     if (!c || !c.touched || c.valid) return null;
     if (c.errors?.['required']) return 'Required field.';
+    if (c.errors?.['nameAddrCoexist']) {
+      return c.errors['nameAddrCoexist'] === 'name'
+        ? 'Name is required when a postal address is provided.'
+        : 'A postal address is required when a name is provided (CBPR+).';
+    }
     if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
     if (c.errors?.['pattern']) {
       const fl = f.toLowerCase();
@@ -1072,6 +1164,7 @@ export class Camt056Component implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+    this.versionSub?.unsubscribe();
   }
   canUndoXml(): boolean { return this.xmlHistoryIdx > 0; }
   canRedoXml(): boolean { return this.xmlHistoryIdx < this.xmlHistory.length - 1; }

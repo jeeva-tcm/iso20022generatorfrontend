@@ -447,18 +447,21 @@ body.light-theme .btn-primary {
     gap: 12px;
     padding: 0;
     border-radius: 0;
-    font-size: 1.6rem;
+    font-size: 1.4rem;
     font-weight: 800;
     box-shadow: none;
     background: transparent;
     border: none;
     letter-spacing: -0.5px;
+    /* Keep each feature on a single line (the SWIFT MT→MX line is the longest). */
+    white-space: nowrap;
 }
 
 .tag mat-icon {
-    font-size: 32px;
-    width: 32px;
-    height: 32px;
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
 }
 
 .tag-blue { background: transparent; color: #2563EB; border: none; }
@@ -1014,6 +1017,9 @@ body.light-theme .db-hero::before {
     .hero-title { font-size: 1.75rem; letter-spacing: normal; }
     .hero-actions { flex-direction: column; }
     .db-aside { grid-template-columns: 1fr; }
+    /* On phones let the feature tags wrap so a long line never overflows the screen. */
+    .tag { white-space: normal; font-size: 1.15rem; }
+    .tag-cloud { align-items: flex-start; }
 }
 
 /* Spinner animation for the refresh button */

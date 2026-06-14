@@ -9,6 +9,8 @@ import { Router } from '@angular/router';
 import { ConfigService } from '../../../../services/config.service';
 import { FormattingService } from '../../../../services/formatting.service';
 import { UetrService } from '../../../../services/uetr.service';
+import { SrVersionService } from '../../../../services/sr-version.service';
+import { Subscription } from 'rxjs';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
 import { debounceTime } from 'rxjs/operators';
@@ -51,8 +53,15 @@ export class Camt052Component implements OnInit, OnDestroy {
         private formatting: FormattingService,
         private uetr: UetrService,
         private dialog: MatDialog,
-        private cdr: ChangeDetectorRef
+        private cdr: ChangeDetectorRef,
+        public srVersion: SrVersionService
     ) { }
+
+    private versionSub?: Subscription;
+    get isSR2026(): boolean { return this.srVersion.isSR2026; }
+    private applyVersionDefaults() {
+        this.form.patchValue({ bizSvc: this.srVersion.getBizSvc('camt052') }, { emitEvent: false });
+    }
 
 
     private createPartyFields(prefix: string) {
@@ -212,6 +221,12 @@ export class Camt052Component implements OnInit, OnDestroy {
     ngOnInit() {
         this.fetchCodelists();
         this.buildForm();
+        this.applyVersionDefaults();
+        this.versionSub = this.srVersion.version$.subscribe(() => {
+            this.applyVersionDefaults();
+            this.generateXml();
+            this.cdr.detectChanges();
+        });
         const bizMsgIdCtrl = this.form.get('bizMsgId');
         const msgIdCtrl = this.form.get('msgId');
         if (bizMsgIdCtrl && msgIdCtrl) {
@@ -332,7 +347,7 @@ export class Camt052Component implements OnInit, OnDestroy {
 
             // Account
             acctIdType: ['IBAN'],
-            acctId: ['BE12345678901234', [Validators.required, Validators.maxLength(34)]],
+            acctId: ['BE68539007547034', [Validators.required, Validators.maxLength(34)]],
             acctCcy: ['USD', [Validators.pattern(/^[A-Z]{3}$/)]],
             acctNm: ['', [Validators.maxLength(70)]],
             acctOwnrNm: ['', [Validators.maxLength(140)]],
@@ -874,7 +889,10 @@ export class Camt052Component implements OnInit, OnDestroy {
             + t(4) + '<Id>' + this.e(v.rptId) + '</Id>\n'
             + pgnXml;
 
-        if (v.elctrncSeqNb?.trim()) this.generatedXml += t(4) + '<ElctrncSeqNb>' + this.e(v.elctrncSeqNb) + '</ElctrncSeqNb>\n';
+        // ElectronicSequenceNumber: mandatory [1..1] in SR2026 (AccountReport25__1).
+        // Use the entered value, else default to 1 for SR2026 (SR2025 keeps it optional).
+        const _seqNb = v.elctrncSeqNb?.trim() || (this.isSR2026 ? '1' : '');
+        if (_seqNb) this.generatedXml += t(4) + '<ElctrncSeqNb>' + this.e(_seqNb) + '</ElctrncSeqNb>\n';
 
         if (v.rptgSeq?.trim()) {
             this.generatedXml += t(4) + '<RptgSeq>\n' + t(5) + '<FrSeq>' + this.e(v.rptgSeq) + '</FrSeq>\n' + t(4) + '</RptgSeq>\n';
@@ -1196,6 +1214,7 @@ export class Camt052Component implements OnInit, OnDestroy {
 
     ngOnDestroy(): void {
         if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+        this.versionSub?.unsubscribe();
     }
 
     parseXmlToForm(xml: string) {

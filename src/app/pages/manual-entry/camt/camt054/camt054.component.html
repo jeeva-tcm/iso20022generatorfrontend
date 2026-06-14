@@ -528,6 +528,16 @@
                                         <div class="field-hint at-limit" *ngIf="hint('ultmtDbtrNm', 140, entry) as h">{{h}}</div>
                                     </div>
                                     <div class="form-group">
+                                        <label>Ultimate Debtor Town</label>
+                                        <input type="text" formControlName="ultmtDbtrTwnNm" maxlength="35">
+                                        <div class="validation-msg" *ngIf="err('ultmtDbtrTwnNm', entry) as e">{{e}}</div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Ultimate Debtor Country</label>
+                                        <input type="text" formControlName="ultmtDbtrCtry" maxlength="2" placeholder="e.g. US">
+                                        <div class="validation-msg" *ngIf="err('ultmtDbtrCtry', entry) as e">{{e}}</div>
+                                    </div>
+                                    <div class="form-group">
                                         <label>Creditor Name</label>
                                         <input type="text" formControlName="cdtrNm" maxlength="140">
                                         <div class="validation-msg" *ngIf="err('cdtrNm', entry) as e">{{e}}</div>
@@ -548,6 +558,16 @@
                                         <input type="text" formControlName="ultmtCdtrNm" maxlength="140">
                                         <div class="validation-msg" *ngIf="err('ultmtCdtrNm', entry) as e">{{e}}</div>
                                         <div class="field-hint at-limit" *ngIf="hint('ultmtCdtrNm', 140, entry) as h">{{h}}</div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Ultimate Creditor Town</label>
+                                        <input type="text" formControlName="ultmtCdtrTwnNm" maxlength="35">
+                                        <div class="validation-msg" *ngIf="err('ultmtCdtrTwnNm', entry) as e">{{e}}</div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Ultimate Creditor Country</label>
+                                        <input type="text" formControlName="ultmtCdtrCtry" maxlength="2" placeholder="e.g. GB">
+                                        <div class="validation-msg" *ngIf="err('ultmtCdtrCtry', entry) as e">{{e}}</div>
                                     </div>
                                     <div class="form-group">
                                         <label>Unstructured Remittance Info</label>
@@ -676,9 +696,9 @@
                         <label>{{title}} Address Type</label>
                         <select [formControlName]="prefix+'AddrType'">
                                 <option value="none">None (BIC/ID Only)</option>
-                                <option value="hybrid">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
+                                <option value="hybrid" *ngIf="!isSR2026">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
                                 <option value="structured">Structured</option>
-                                <option value="unstructured">Unstructured</option>
+                                <option value="unstructured" *ngIf="!isSR2026">Unstructured</option>
                         </select>
                         <div class="validation-msg" *ngIf="err(prefix+'AddrType') as e">{{e}}</div>
                 </div>

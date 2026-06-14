@@ -200,3 +200,63 @@
         font-size: 1.4rem;
     }
 }
+
+/* ── SR2026 Enhancements panel ── */
+.sr2026-panel {
+    margin-top: 24px;
+    border: 1px solid rgba(139, 92, 246, 0.35);
+    border-radius: 12px;
+    background: rgba(139, 92, 246, 0.06);
+    padding: 22px 28px 26px;
+}
+
+.sr2026-panel-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.sr2026-panel-head > mat-icon {
+    color: #a78bfa;
+    font-size: 26px;
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+}
+
+.sr2026-panel-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-main);
+    line-height: 1.2;
+}
+
+.sr2026-panel-sub {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    margin-top: 3px;
+}
+
+.sr2026-pill {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #a78bfa;
+    background: rgba(139, 92, 246, 0.14);
+    border: 1px solid rgba(139, 92, 246, 0.35);
+    border-radius: 6px;
+    padding: 3px 9px;
+}
+
+.sr2026-list code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    background: rgba(139, 92, 246, 0.12);
+    color: #a78bfa;
+    padding: 1px 5px;
+    border-radius: 3px;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+}

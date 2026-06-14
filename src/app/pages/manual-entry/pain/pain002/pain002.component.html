@@ -388,7 +388,8 @@
                     <ng-container *ngIf="sections['orgnlPmtInf']">
                         <div class="form-group full-width">
                             <label>Orgnl Pmt Inf ID <span class="req">*</span></label>
-                            <input formControlName="orgnlPmtInfId" maxlength="35" (input)="handleInput($event, 'orgnlPmtInfId', 'PmtInfId')">
+                            <input formControlName="orgnlPmtInfId" maxlength="35" [readonly]="isSR2026" (input)="handleInput($event, 'orgnlPmtInfId', 'PmtInfId')">
+                            <div class="field-hint" *ngIf="isSR2026">SR2026: must equal Orgnl Msg ID (CBPR+ R6) — auto-synced.</div>
                             <div class="validation-msg" *ngIf="err('orgnlPmtInfId') as e">{{e}}</div>
                         </div>
 

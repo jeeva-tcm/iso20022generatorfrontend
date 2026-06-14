@@ -7,6 +7,8 @@ import { ConfigService } from '../../../../services/config.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { UetrService } from '../../../../services/uetr.service';
+import { SrVersionService } from '../../../../services/sr-version.service';
+import { Subscription } from 'rxjs';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
 import { debounceTime } from 'rxjs/operators';
@@ -129,12 +131,34 @@ export class Camt055Component implements OnInit, OnDestroy {
     private router: Router,
     private uetrService: UetrService,
     private dialog: MatDialog,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    public srVersion: SrVersionService
   ) {}
+
+  private versionSub?: Subscription;
+  get isSR2026(): boolean { return this.srVersion.isSR2026; }
+  private applyVersionDefaults() {
+    this.form.patchValue({ head_bizSvc: this.srVersion.getBizSvc('camt055') }, { emitEvent: false });
+    if (this.isSR2026) {
+      [...this.agentPrefixes, ...this.partyPrefixes].forEach(prefix => {
+        const addrTypeCtrl = this.form.get(prefix + 'AddrType');
+        if (addrTypeCtrl?.value === 'unstructured' || addrTypeCtrl?.value === 'hybrid') {
+          const hasTwn = !!this.form.get(prefix + 'TwnNm')?.value;
+          const hasCtry = !!this.form.get(prefix + 'Ctry')?.value;
+          addrTypeCtrl.setValue((hasTwn || hasCtry) ? 'structured' : 'none', { emitEvent: false });
+        }
+      });
+    }
+  }
 
   ngOnInit() {
     this.fetchCountries();
     this.buildForm();
+    this.versionSub = this.srVersion.version$.subscribe(() => {
+      this.applyVersionDefaults();
+      this.generateXml();
+      this.cdr.detectChanges();
+    });
         const bizMsgIdCtrl = this.form.get('bizMsgId');
         const msgIdCtrl = this.form.get('msgId');
         if (bizMsgIdCtrl && msgIdCtrl) {
@@ -157,6 +181,7 @@ export class Camt055Component implements OnInit, OnDestroy {
         }
 
     const hadDraft = this.loadDraft();
+    this.applyVersionDefaults();
     if (hadDraft) {
       this.showDraftBanner = true;
       this.generateXml();
@@ -205,6 +230,29 @@ export class Camt055Component implements OnInit, OnDestroy {
       ctry.updateValueAndValidity({ emitEvent: false });
       twnNm.updateValueAndValidity({ emitEvent: false });
       adrLine1?.updateValueAndValidity({ emitEvent: false });
+
+      // CBPR+ Name & Postal Address co-existence (version-invariant: enforced by BOTH the SR2025
+      // and SR2026 engines). Only 'cretr' is emitted inside a tag the engine constrains (<Pty>);
+      // assgnr/assgne emit BIC-only (no Nm) and cxlRsnOrgtr emits inside <Orgtr> which is not
+      // constrained — so guarding those would wrongly block valid input.
+      if (p === 'cretr') {
+        const nameCtrl = this.form.get(p + 'Name');
+        const bicVal = ((this.form.get(p + 'OrgAnyBIC')?.value) || '').toString().trim();
+        const nameVal = (nameCtrl?.value || '').toString().trim();
+        const ADDR_VALUE_FIELDS = ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'CtrySubDvsn', 'Ctry', 'AdrLine1', 'AdrLine2'];
+        const hasAddrContent = !!addrType && addrType !== 'none' &&
+          ADDR_VALUE_FIELDS.some(f => (this.form.get(p + f)?.value || '').toString().trim());
+        let coState: 'addr' | 'name' | null = null;
+        if (!bicVal) {
+          if (nameVal && !hasAddrContent) coState = 'addr';
+          else if (hasAddrContent && !nameVal) coState = 'name';
+        }
+        if (nameCtrl) {
+          const errs = nameCtrl.errors ? { ...nameCtrl.errors } : {};
+          if (coState) errs['nameAddrCoexist'] = coState; else delete errs['nameAddrCoexist'];
+          nameCtrl.setErrors(Object.keys(errs).length ? errs : null);
+        }
+      }
     });
   }
 
@@ -628,13 +676,17 @@ export class Camt055Component implements OnInit, OnDestroy {
     // Ensure only ONE <Id> at this level (Case/Id) — party Id is nested deeper in Cretr/Pty/Id
     // Nm + PstlAdr (with TwnNm, Ctry, AdrLine x2) must always be present together per CBPR+ rule
     let cretrPty = this.partyAgentXml('Pty', 'cretr', v, 8);
+    // SR2026 deprecates unstructured <AdrLine>; the fallback emits a structured TwnNm+Ctry address
+    // only (still satisfies Name/Address co-existence + mandatory TwnNm+Ctry). SR2025 keeps the
+    // AdrLine x2 so its output is byte-identical.
     const cretrFallback = this.branch('Pty',
       this.leaf('Nm', 'UNKNOWN', 10) +
       this.branch('PstlAdr',
         this.leaf('TwnNm', 'Brussels', 11) +
         this.leaf('Ctry', 'BE', 11) +
-        this.leaf('AdrLine', 'Address Line 1', 11) +
-        this.leaf('AdrLine', 'Address Line 2', 11),
+        (this.isSR2026 ? '' :
+          this.leaf('AdrLine', 'Address Line 1', 11) +
+          this.leaf('AdrLine', 'Address Line 2', 11)),
         10),
       9);
     caseInner += this.branch('Cretr', cretrPty || cretrFallback, 7);
@@ -1238,6 +1290,11 @@ ${txInf.trimEnd()}
     }
     if (!c.touched || c.valid) return null;
     if (c.errors?.['required']) return 'Required field.';
+    if (c.errors?.['nameAddrCoexist']) {
+      return c.errors['nameAddrCoexist'] === 'name'
+        ? 'Name is required when a postal address is provided.'
+        : 'A postal address is required when a name is provided (CBPR+).';
+    }
     if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
     if (c.errors?.['future_date']) return 'Date cannot be in the future.';
     if (c.errors?.['pattern']) {
@@ -1509,6 +1566,7 @@ ${txInf.trimEnd()}
 
   ngOnDestroy(): void {
     if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+    this.versionSub?.unsubscribe();
   }
   copyToClipboard() {
     navigator.clipboard.writeText(this.generatedXml).then(() => {

@@ -50,17 +50,36 @@ export class AppComponent implements OnInit {
         return this.srVersion.currentVersion as 'SR2025' | 'SR2026';
     }
 
+    // ─── SR version switch confirmation modal ──────────────────────────────────
+    srConfirmOpen = false;
+    pendingSrVersion: SrVersion | null = null;
+
+    private requestSrSwitch(v: SrVersion) {
+        this.pendingSrVersion = v;
+        this.srConfirmOpen = true;
+        this.srDropdownOpen = false;
+        this.isSRMenuForcedClosed = true;
+    }
+
+    confirmSrSwitch() {
+        if (this.pendingSrVersion) {
+            this.srVersion.setVersion(this.pendingSrVersion);
+            this.srConfirmOpen = false;
+            window.location.reload();
+        }
+    }
+
+    cancelSrSwitch() {
+        this.srConfirmOpen = false;
+        this.pendingSrVersion = null;
+    }
+
     setActiveSR(sr: 'SR2025' | 'SR2026') {
         if (sr === this.activeSR) {
             this.isSRMenuForcedClosed = true;
             return;
         }
-        const confirmSwitch = window.confirm(`Changing the active version to ${sr} will completely reload the environment and discard any unsaved changes. Proceed?`);
-        if (confirmSwitch) {
-            this.srVersion.setVersion(sr);
-            this.isSRMenuForcedClosed = true;
-            window.location.reload();
-        }
+        this.requestSrSwitch(sr);
     }
 
     constructor(
@@ -75,6 +94,13 @@ export class AppComponent implements OnInit {
     onDocumentClick(event: MouseEvent): void {
         if (!this.elementRef.nativeElement.querySelector('.sr-dropdown-wrapper')?.contains(event.target)) {
             this.srDropdownOpen = false;
+        }
+    }
+
+    @HostListener('document:keydown.escape')
+    onEscape(): void {
+        if (this.srConfirmOpen) {
+            this.cancelSrSwitch();
         }
     }
 
@@ -107,12 +133,7 @@ export class AppComponent implements OnInit {
             this.srDropdownOpen = false;
             return;
         }
-        const confirmSwitch = window.confirm(`Changing the active version to ${v} will completely reload the environment and discard any unsaved changes. Proceed?`);
-        if (confirmSwitch) {
-            this.selectedVersion = v;
-            this.srDropdownOpen = false;
-            window.location.reload();
-        }
+        this.requestSrSwitch(v);
     }
 
     getVersionBadgeColor(v: SrVersion): string {

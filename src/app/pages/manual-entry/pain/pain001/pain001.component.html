@@ -262,8 +262,8 @@
                                 <select formControlName="initgPtyAddrType">
                                     <option value="none">None</option>
                                     <option value="structured">Structured</option>
-                                    <option value="unstructured">Unstructured</option>
-                                    <option value="hybrid">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
+                                    <option value="unstructured" *ngIf="!isSR2026">Unstructured</option>
+                                    <option value="hybrid" *ngIf="!isSR2026">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
                                 </select>
                             </div>
                         </div>
@@ -407,8 +407,8 @@
                                 <select formControlName="dbtrAddrType">
                                     <option value="none">None (BIC/ID Only)</option>
                                     <option value="structured">Structured</option>
-                                    <option value="unstructured">Unstructured</option>
-                                    <option value="hybrid">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
+                                    <option value="unstructured" *ngIf="!isSR2026">Unstructured</option>
+                                    <option value="hybrid" *ngIf="!isSR2026">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
                                 </select>
                                 <div class="validation-msg" *ngIf="err('dbtrAddrType') as e">{{e}}</div>
                             </div>
@@ -523,8 +523,8 @@
                                 <select formControlName="ultmtDbtrAddrType">
                                     <option value="none">None</option>
                                     <option value="structured">Structured</option>
-                                    <option value="unstructured">Unstructured</option>
-                                    <option value="hybrid">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
+                                    <option value="unstructured" *ngIf="!isSR2026">Unstructured</option>
+                                    <option value="hybrid" *ngIf="!isSR2026">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
                                 </select>
                             </div>
                         </div>
@@ -642,8 +642,8 @@
                                 <select formControlName="dbtrAgtAddrType">
                                     <option value="none">None (BIC/ID Only)</option>
                                     <option value="structured">Structured</option>
-                                    <option value="unstructured">Unstructured</option>
-                                    <option value="hybrid">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
+                                    <option value="unstructured" *ngIf="!isSR2026">Unstructured</option>
+                                    <option value="hybrid" *ngIf="!isSR2026">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
                                 </select>
                                 <div class="validation-msg" *ngIf="err('dbtrAgtAddrType') as e">{{e}}</div>
                             </div>
@@ -1191,8 +1191,8 @@
                                         <select formControlName="ultmtDbtrAddrType">
                                             <option value="none">None</option>
                                             <option value="structured">Structured</option>
-                                            <option value="unstructured">Unstructured</option>
-                                            <option value="hybrid">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
+                                            <option value="unstructured" *ngIf="!isSR2026">Unstructured</option>
+                                            <option value="hybrid" *ngIf="!isSR2026">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
                                         </select>
                                     </div>
                                     <ng-container *ngIf="tx.get('ultmtDbtrAddrType')?.value !== 'none'">
@@ -1336,9 +1336,9 @@
                         <label>{{title}} Address Type</label>
                         <select [formControlName]="prefix+'AddrType'">
                                 <option value="none">None (BIC/ID Only)</option>
-                                <option value="hybrid">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
+                                <option value="hybrid" *ngIf="!isSR2026">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
                                 <option value="structured">Structured</option>
-                                <option value="unstructured">Unstructured</option>
+                                <option value="unstructured" *ngIf="!isSR2026">Unstructured</option>
                         </select>
                         <div class="validation-msg" *ngIf="err(prefix+'AddrType') as e">{{e}}</div>
                 </div>

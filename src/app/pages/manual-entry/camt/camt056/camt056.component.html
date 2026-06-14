@@ -1,6 +1,6 @@
 <div class="container" (click)="$event.stopPropagation()">
     <header>
-        <h1>FI to FI Payment Cancellation Request (camt.056 SR2025) <mat-icon class="title-icon">cancel_schedule_send</mat-icon></h1>
+        <h1>FI to FI Payment Cancellation Request (camt.056 {{ isSR2026 ? 'SR2026' : 'SR2025' }}) <mat-icon class="title-icon">cancel_schedule_send</mat-icon></h1>
         <p>CBPR+ Usage Guideline • camt.056.001.08</p>
     </header>
 
@@ -393,8 +393,8 @@
                                     <label>Address Type</label>
                                     <select formControlName="caseCretrAgtAdrType">
                                         <option value="STRUCTURED">Structured</option>
-                                        <option value="UNSTRUCTURED">Unstructured</option>
-                                        <option value="HYBRID">Hybrid</option>
+                                        <option value="UNSTRUCTURED" *ngIf="!isSR2026">Unstructured</option>
+                                        <option value="HYBRID" *ngIf="!isSR2026">Hybrid</option>
                                     </select>
                                     <div class="validation-msg" *ngIf="err('caseCretrAgtAdrType', form.get('txInf')) as e">{{e}}</div>
                                 </div>
@@ -479,8 +479,8 @@
                                     <label>Address Type</label>
                                     <select formControlName="caseCretrPtyAdrType">
                                         <option value="STRUCTURED">Structured</option>
-                                        <option value="UNSTRUCTURED">Unstructured</option>
-                                        <option value="HYBRID">Hybrid</option>
+                                        <option value="UNSTRUCTURED" *ngIf="!isSR2026">Unstructured</option>
+                                        <option value="HYBRID" *ngIf="!isSR2026">Hybrid</option>
                                     </select>
                                     <div class="validation-msg" *ngIf="err('caseCretrPtyAdrType', form.get('txInf')) as e">{{e}}</div>
                                 </div>
@@ -726,8 +726,8 @@
                                 <label>Originator Address Type</label>
                                 <select formControlName="cxlOrgtrAdrType">
                                     <option value="STRUCTURED">Structured</option>
-                                    <option value="UNSTRUCTURED">Unstructured</option>
-                                    <option value="HYBRID">Hybrid</option>
+                                    <option value="UNSTRUCTURED" *ngIf="!isSR2026">Unstructured</option>
+                                    <option value="HYBRID" *ngIf="!isSR2026">Hybrid</option>
                                 </select>
                                 <div class="validation-msg" *ngIf="err('cxlOrgtrAdrType', form.get('txInf')) as e">{{e}}</div>
                             </div>
@@ -904,9 +904,9 @@
                         <label>{{title}} Address Type</label>
                         <select [formControlName]="prefix+'AddrType'">
                                 <option value="none">None (BIC/ID Only)</option>
-                                <option value="hybrid">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
+                                <option value="hybrid" *ngIf="!isSR2026">Hybrid (TwnNm + Ctry + AdrLine) ★ Preferred</option>
                                 <option value="structured">Structured</option>
-                                <option value="unstructured">Unstructured</option>
+                                <option value="unstructured" *ngIf="!isSR2026">Unstructured</option>
                         </select>
                         <div class="validation-msg" *ngIf="err(prefix+'AddrType') as e">{{e}}</div>
                 </div>

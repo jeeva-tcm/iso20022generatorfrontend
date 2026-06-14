@@ -9,6 +9,8 @@ import { ConfigService } from '../../../../services/config.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { UetrService } from '../../../../services/uetr.service';
+import { SrVersionService } from '../../../../services/sr-version.service';
+import { Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { getValidationErrorMessage } from '../../../../utils/validation-utils';
 
@@ -140,12 +142,35 @@ export class Pain002Component implements OnInit, OnDestroy {
     private snackBar: MatSnackBar,
     private router: Router,
     public uetrService: UetrService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    public srVersion: SrVersionService
   ) {}
+
+  private versionSub?: Subscription;
+  get isSR2026(): boolean { return this.srVersion.isSR2026; }
+  private applyVersionDefaults() {
+    this.form.patchValue({ head_bizSvc: this.srVersion.getBizSvc('pain002') }, { emitEvent: false });
+    // CBPR+ R6 (SR2026): OriginalPaymentInformationIdentification must equal
+    // OriginalGroupInformationAndStatus/OriginalMessageIdentification. Mirror it so the form can
+    // never emit a mismatch. SR2025 keeps the two fields independent (rule not enforced there).
+    if (this.isSR2026) {
+      const msgId = this.form.get('orgnlMsgId')?.value;
+      const pmtInfCtrl = this.form.get('orgnlPmtInfId');
+      if (pmtInfCtrl && pmtInfCtrl.value !== msgId) {
+        pmtInfCtrl.setValue(msgId, { emitEvent: false });
+      }
+    }
+  }
 
   ngOnInit() {
     this.fetchCountries();
     this.buildForm();
+    this.applyVersionDefaults();
+    this.versionSub = this.srVersion.version$.subscribe(() => {
+      this.applyVersionDefaults();
+      this.generateXml();
+      this.cdr.detectChanges();
+    });
         const bizMsgIdCtrl = this.form.get('head_bizMsgIdr');
         const msgIdCtrl = this.form.get('grpHdr_msgId');
         if (bizMsgIdCtrl && msgIdCtrl) {
@@ -162,6 +187,18 @@ export class Pain002Component implements OnInit, OnDestroy {
             msgIdCtrl.valueChanges.subscribe(v => {
                 if (bizMsgIdCtrl.value !== v) {
                     bizMsgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+            });
+        }
+
+        // SR2026 CBPR+ R6: keep OrgnlPmtInfId mirroring OrgnlMsgId as the user edits it.
+        const orgnlMsgIdCtrl = this.form.get('orgnlMsgId');
+        const orgnlPmtInfIdCtrl = this.form.get('orgnlPmtInfId');
+        if (orgnlMsgIdCtrl && orgnlPmtInfIdCtrl) {
+            orgnlMsgIdCtrl.valueChanges.subscribe(v => {
+                if (this.isSR2026 && orgnlPmtInfIdCtrl.value !== v) {
+                    orgnlPmtInfIdCtrl.setValue(v, { emitEvent: false });
                     this.generateXml();
                 }
             });
@@ -665,7 +702,9 @@ export class Pain002Component implements OnInit, OnDestroy {
     if (v.orgnlGrpSts) orgnlGrp += this.leaf('GrpSts', v.orgnlGrpSts, 4);
     doc += this.branch('OrgnlGrpInfAndSts', orgnlGrp, 3);
     let orgnlPmt = '';
-    orgnlPmt += this.leaf('OrgnlPmtInfId', v.orgnlPmtInfId, 4);
+    // SR2026 CBPR+ R6: OrgnlPmtInfId must equal OrgnlGrpInfAndSts/OrgnlMsgId. Emit OrgnlMsgId in
+    // SR2026 so the output is always compliant regardless of control state. SR2025 unchanged.
+    orgnlPmt += this.leaf('OrgnlPmtInfId', this.isSR2026 ? v.orgnlMsgId : v.orgnlPmtInfId, 4);
     v.transactions.forEach((tx: any) => {
       let txInf = '';
       if (tx.orgnlInstrId) txInf += this.leaf('OrgnlInstrId', tx.orgnlInstrId, 5);
@@ -1208,6 +1247,7 @@ ${doc.trimEnd()}
 
   ngOnDestroy(): void {
     if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+    this.versionSub?.unsubscribe();
   }
 }
 

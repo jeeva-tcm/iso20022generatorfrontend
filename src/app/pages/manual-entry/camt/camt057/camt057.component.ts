@@ -9,6 +9,8 @@ import { Router } from '@angular/router';
 import { ConfigService } from '../../../../services/config.service';
 import { FormattingService } from '../../../../services/formatting.service';
 import { UetrService } from '../../../../services/uetr.service';
+import { SrVersionService } from '../../../../services/sr-version.service';
+import { Subscription } from 'rxjs';
 import { ISO_PURPOSE_CODES } from '../../../../constants/purpose-codes';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
@@ -61,8 +63,29 @@ export class Camt057Component implements OnInit, OnDestroy {
         private uetrService: UetrService,
         private formatting: FormattingService,
         private dialog: MatDialog,
-        private cdr: ChangeDetectorRef
+        private cdr: ChangeDetectorRef,
+        public srVersion: SrVersionService
     ) { }
+
+    private versionSub?: Subscription;
+    get isSR2026(): boolean { return this.srVersion.isSR2026; }
+    private applyVersionDefaults() {
+        this.form.patchValue({ bizSvc: this.srVersion.getBizSvc('camt057') }, { emitEvent: false });
+        if (this.isSR2026) {
+            this.agentPrefixes.forEach(prefix => {
+                const addrTypeCtrl = this.form.get(prefix + 'AddrType');
+                if (addrTypeCtrl?.value === 'unstructured' || addrTypeCtrl?.value === 'hybrid') {
+                    // SR2026 deprecates unstructured <AdrLine>. Migrate to 'structured' (keeps the
+                    // mandatory TwnNm+Ctry, drops AdrLine) when an address is present; only 'none'
+                    // if truly empty. Forcing bare 'none' would STRIP a populated address and leave
+                    // a named party/agent violating NAME_ADDRESS_COEXISTENCE.
+                    const hasTwn = !!this.form.get(prefix + 'TwnNm')?.value;
+                    const hasCtry = !!this.form.get(prefix + 'Ctry')?.value;
+                    addrTypeCtrl.setValue((hasTwn || hasCtry) ? 'structured' : 'none', { emitEvent: false });
+                }
+            });
+        }
+    }
 
     public syncScroll(editor: any, gutter: any) {
         gutter.scrollTop = editor.scrollTop;
@@ -71,6 +94,12 @@ export class Camt057Component implements OnInit, OnDestroy {
     ngOnInit() {
         this.fetchCodelists();
         this.buildForm();
+        this.applyVersionDefaults();
+        this.versionSub = this.srVersion.version$.subscribe(() => {
+            this.applyVersionDefaults();
+            this.generateXml();
+            this.cdr.detectChanges();
+        });
         const bizMsgIdCtrl = this.form.get('bizMsgId');
         const msgIdCtrl = this.form.get('msgId');
         if (bizMsgIdCtrl && msgIdCtrl) {
@@ -223,6 +252,29 @@ export class Camt057Component implements OnInit, OnDestroy {
             ctryCtrl?.updateValueAndValidity({ emitEvent: false });
             twnNmCtrl?.updateValueAndValidity({ emitEvent: false });
             adrLine1Ctrl?.updateValueAndValidity({ emitEvent: false });
+
+            // CBPR+ Name & Postal Address co-existence (version-invariant: enforced by BOTH the
+            // SR2025 engine and the SR2026 engine, so this guard applies in both versions).
+            // If a party/agent is identified by name (not BIC), a postal address must accompany it
+            // and vice-versa. Without this the form could emit <Nm> with no <PstlAdr>, which the
+            // engine rejects with NAME_ADDRESS_COEXISTENCE. (Output for valid input is unchanged.)
+            const nameCtrl = this.form.get(p + 'Name');
+            const bicVal = ((this.form.get(p + 'Bic')?.value || this.form.get(p + 'OrgAnyBIC')?.value) || '').toString().trim();
+            const nameVal = (nameCtrl?.value || '').toString().trim();
+            const ADDR_VALUE_FIELDS = ['Dept', 'SubDept', 'StrtNm', 'BldgNb', 'BldgNm', 'Flr', 'PstBx', 'Room', 'PstCd', 'TwnNm', 'CtrySubDvsn', 'Ctry', 'AdrLine1', 'AdrLine2'];
+            const hasAddrContent = !!addrType && addrType !== 'none' &&
+                ADDR_VALUE_FIELDS.some(f => (this.form.get(p + f)?.value || '').toString().trim());
+            let coState: 'addr' | 'name' | null = null;
+            if (!bicVal) {
+                if (nameVal && !hasAddrContent) coState = 'addr';
+                else if (hasAddrContent && !nameVal) coState = 'name';
+            }
+            if (nameCtrl) {
+                const errs = nameCtrl.errors ? { ...nameCtrl.errors } : {};
+                if (coState) errs['nameAddrCoexist'] = coState;
+                else delete errs['nameAddrCoexist'];
+                nameCtrl.setErrors(Object.keys(errs).length ? errs : null);
+            }
         });
     }
 
@@ -390,6 +442,11 @@ export class Camt057Component implements OnInit, OnDestroy {
         if (!c || c.valid || (!c.touched && !c.dirty)) return null;
 
         if (c.errors?.['required']) return 'Required field.';
+        if (c.errors?.['nameAddrCoexist']) {
+            return c.errors['nameAddrCoexist'] === 'name'
+                ? 'Name is required when a postal address is provided.'
+                : 'A postal address is required when a name is provided (CBPR+).';
+        }
         if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
         if (c.errors?.['pattern']) {
             if (f === 'amount') {
@@ -1111,7 +1168,11 @@ ${ntfctnPartiesXml}${itmXml}
 
             ['TwnNm', 'Ctry', 'CtrySubDvsn'].forEach(f => patch[prefix + f] = aV(f));
             if (hasAdrLines) {
-                patch[prefix + 'AddrType'] = 'hybrid';
+                if (this.isSR2026) {
+                    patch[prefix + 'AddrType'] = hasStructured ? 'structured' : 'none';
+                } else {
+                    patch[prefix + 'AddrType'] = 'hybrid';
+                }
                 patch[prefix + 'AdrLine1'] = adrLines[0]?.textContent || '';
                 patch[prefix + 'AdrLine2'] = adrLines[1]?.textContent || '';
                 ['StrtNm','BldgNb','BldgNm','Flr','PstBx','Room','PstCd','Dept','SubDept'].forEach(f => { patch[prefix + f] = ''; });
@@ -1129,7 +1190,11 @@ ${ntfctnPartiesXml}${itmXml}
                     patch[prefix + 'AdrTpPrtry'] = adrTp.getElementsByTagName('Prtry')[0]?.textContent || '';
                 }
             } else {
-                patch[prefix + 'AddrType'] = 'hybrid';
+                if (this.isSR2026) {
+                    patch[prefix + 'AddrType'] = 'none';
+                } else {
+                    patch[prefix + 'AddrType'] = 'hybrid';
+                }
             }
         } else {
             patch[prefix + 'AddrType'] = '';
@@ -1490,5 +1555,6 @@ ${ntfctnPartiesXml}${itmXml}
 
     ngOnDestroy(): void {
         if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+        this.versionSub?.unsubscribe();
     }
 }

@@ -11,6 +11,8 @@ import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dia
 import { ConfigService } from '../../../../services/config.service';
 import { FormattingService } from '../../../../services/formatting.service';
 import { UetrService } from '../../../../services/uetr.service';
+import { SrVersionService } from '../../../../services/sr-version.service';
+import { Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
 @Component({
@@ -56,8 +58,15 @@ export class Camt053Component implements OnInit, OnDestroy {
         private formatting: FormattingService,
         private uetr: UetrService,
         private dialog: MatDialog,
-        private cdr: ChangeDetectorRef
+        private cdr: ChangeDetectorRef,
+        public srVersion: SrVersionService
     ) { }
+
+    private versionSub?: Subscription;
+    get isSR2026(): boolean { return this.srVersion.isSR2026; }
+    private applyVersionDefaults() {
+        this.form.patchValue({ bizSvc: this.srVersion.getBizSvc('camt053') }, { emitEvent: false });
+    }
 
 
     private createPartyFields(prefix: string) {
@@ -216,6 +225,12 @@ export class Camt053Component implements OnInit, OnDestroy {
     ngOnInit() {
         this.fetchCodelists();
         this.buildForm();
+        this.applyVersionDefaults();
+        this.versionSub = this.srVersion.version$.subscribe(() => {
+            this.applyVersionDefaults();
+            this.generateXml();
+            this.cdr.detectChanges();
+        });
         const bizMsgIdCtrl = this.form.get('bizMsgId');
         const msgIdCtrl = this.form.get('msgId');
         if (bizMsgIdCtrl && msgIdCtrl) {
@@ -383,7 +398,7 @@ export class Camt053Component implements OnInit, OnDestroy {
 
             // Account
             acctIdType: ['IBAN'],
-            acctId: ['IE12BOFI90000112345678', [Validators.required, Validators.maxLength(34)]],
+            acctId: ['IE45BOFI90000112345678', [Validators.required, Validators.maxLength(34)]],
             acctCcy: ['USD', [Validators.pattern(/^[A-Z]{3}$/)]],
             acctNm: ['PRIMARY ACCOUNT', [Validators.maxLength(70)]],
             acctOwnrNm: ['GLOBAL CORP LTD', [Validators.maxLength(140)]],
@@ -1536,6 +1551,7 @@ export class Camt053Component implements OnInit, OnDestroy {
 
     ngOnDestroy(): void {
         if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+        this.versionSub?.unsubscribe();
     }
   openBicSearchGroup(controlName: string, group: FormGroup | any) {
     const dialogRef = this.dialog.open(BicSearchDialogComponent, { width: '800px', disableClose: true });

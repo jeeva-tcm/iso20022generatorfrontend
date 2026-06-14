@@ -10,6 +10,8 @@ import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dia
 import { ConfigService } from '../../../../services/config.service';
 import { FormattingService } from '../../../../services/formatting.service';
 import { UetrService } from '../../../../services/uetr.service';
+import { SrVersionService } from '../../../../services/sr-version.service';
+import { Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
 @Component({
@@ -70,12 +72,21 @@ export class Camt054Component implements OnInit, OnDestroy {
     private formatting: FormattingService,
     private uetr: UetrService,
     private dialog: MatDialog,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    public srVersion: SrVersionService
   ) { }
+
+  private versionSub?: Subscription;
+  get isSR2026(): boolean { return this.srVersion.isSR2026; }
 
   ngOnInit() {
     this.fetchCodelists();
     this.buildForm();
+    this.versionSub = this.srVersion.version$.subscribe(() => {
+      this.applyVersionDefaults();
+      this.generateXml();
+      this.cdr.detectChanges();
+    });
         const bizMsgIdCtrl = this.form.get('businessMsgId');
         const msgIdCtrl = this.form.get('msgId');
         if (bizMsgIdCtrl && msgIdCtrl) {
@@ -101,15 +112,66 @@ export class Camt054Component implements OnInit, OnDestroy {
     this.pushHistory();
 
     const hadDraft = this.loadDraft();
+    this.applyVersionDefaults();
     if (hadDraft) {
       this.showDraftBanner = true;
       this.generateXml();
     }
 
     this.form.valueChanges.subscribe(() => {
+      this.updateCoexistenceValidators();
       this.scheduleDraftSave();
       this.generateXml();
       this.cdr.detectChanges();
+    });
+  }
+
+  private applyVersionDefaults() {
+    if (!this.form) return;
+    this.form.patchValue({ bizSvc: this.srVersion.getBizSvc('camt054') }, { emitEvent: false });
+    if (this.isSR2026) {
+      const entries = this.form.get('entries') as FormArray;
+      if (entries) {
+        entries.controls.forEach(entry => {
+          ['dbtr', 'cdtr'].forEach(prefix => {
+            const ctrl = entry.get(prefix + 'AddrType');
+            if (ctrl && (ctrl.value === 'unstructured' || ctrl.value === 'hybrid')) {
+              const hasTwn = !!entry.get(prefix + 'TwnNm')?.value;
+              const hasCtry = !!entry.get(prefix + 'Ctry')?.value;
+              ctrl.setValue((hasTwn || hasCtry) ? 'structured' : 'none', { emitEvent: false });
+            }
+          });
+        });
+      }
+    }
+  }
+
+  // CBPR+ Name & Postal Address co-existence (SR2026 only; SR2025 untouched).
+  // The ultimate parties (UltmtDbtr/UltmtCdtr) are emitted inside <Pty>, which the SR2026 engine
+  // constrains. They have no BIC, so a name without a postal address would be rejected
+  // (NAME_ADDRESS_COEXISTENCE). The entry's Dbtr/Cdtr always carry an address and are emitted
+  // only with their name, so they cannot produce a lone <Nm> and need no guard here.
+  private updateCoexistenceValidators() {
+    const entries = this.form?.get('entries') as FormArray | null;
+    if (!entries) return;
+    entries.controls.forEach(entry => {
+      const setCo = (nameField: string, twnField: string, ctryField: string, addrTypeField?: string) => {
+        const nameCtrl = entry.get(nameField);
+        if (!nameCtrl) return;
+        const hasName = !!(nameCtrl.value || '').toString().trim();
+        const addrType = addrTypeField ? entry.get(addrTypeField)?.value : 'structured';
+        const hasAddrFields = !!((entry.get(twnField)?.value || '').toString().trim() &&
+                                 (entry.get(ctryField)?.value || '').toString().trim());
+        const hasAddr = addrType !== 'none' && hasAddrFields;
+        const state = (hasName && !hasAddr) ? 'addr' : null;
+        const errs = nameCtrl.errors ? { ...nameCtrl.errors } : {};
+        if (state) errs['nameAddrCoexist'] = state; else delete errs['nameAddrCoexist'];
+        nameCtrl.setErrors(Object.keys(errs).length ? errs : null);
+      };
+      setCo('ultmtDbtrNm', 'ultmtDbtrTwnNm', 'ultmtDbtrCtry');
+      setCo('ultmtCdtrNm', 'ultmtCdtrTwnNm', 'ultmtCdtrCtry');
+      setCo('dbtrNm', 'dbtrTwnNm', 'dbtrCtry', 'dbtrAddrType');
+      setCo('cdtrNm', 'cdtrTwnNm', 'cdtrCtry', 'cdtrAddrType');
     });
   }
 
@@ -238,7 +300,13 @@ export class Camt054Component implements OnInit, OnDestroy {
       cdtrAdrLine1: ['456 Commerce Avenue', [Validators.maxLength(70)]],
       cdtrAgtBic: ['RCVRBEBBXXX', [Validators.pattern(/^[A-Z0-9]{8,11}$/)]],
       ultmtDbtrNm: ['', [Validators.maxLength(140)]],
+      // SR2026: CBPR+ requires Name & Postal Address to co-exist. Minimal structured address
+      // (TwnNm + Ctry) for the ultimate parties; emitted/validated for SR2026 only (SR2025 unchanged).
+      ultmtDbtrTwnNm: ['', [Validators.maxLength(35)]],
+      ultmtDbtrCtry: ['', [Validators.pattern(/^[A-Z]{2}$/)]],
       ultmtCdtrNm: ['', [Validators.maxLength(140)]],
+      ultmtCdtrTwnNm: ['', [Validators.maxLength(35)]],
+      ultmtCdtrCtry: ['', [Validators.pattern(/^[A-Z]{2}$/)]],
       remittanceInfo: ['INV-2026-101 PAYMENT', [Validators.maxLength(140)]],
       purposeCode: ['OTHR', [Validators.maxLength(4)]],
       reversalIndicator: [false],
@@ -352,7 +420,7 @@ export class Camt054Component implements OnInit, OnDestroy {
     
     xml += t(2) + `<BizMsgIdr>${this.e(v.businessMsgId)}</BizMsgIdr>\n`;
     xml += t(2) + `<MsgDefIdr>${this.e(v.msgDefId)}</MsgDefIdr>\n`;
-    xml += t(2) + `<BizSvc>swift.cbprplus.02</BizSvc>\n`;
+    xml += t(2) + `<BizSvc>${this.e(this.srVersion.getBizSvc('camt054'))}</BizSvc>\n`;
     if (v.marketPractice || v.marketPracticeId) {
       xml += t(2) + `<MktPrctc>\n`;
       if (v.marketPractice) xml += t(3) + `<Regy>${this.e(v.marketPractice)}</Regy>\n`;
@@ -530,19 +598,37 @@ export class Camt054Component implements OnInit, OnDestroy {
           if ((addrType === 'hybrid' || addrType === 'unstructured') && adrLine1) a += t(ind+1) + `<AdrLine>${this.e(adrLine1)}</AdrLine>\n`;
           return a + t(ind) + `</PstlAdr>\n`;
         };
+        // Minimal structured PstlAdr (TwnNm + Ctry) so Name & Address co-exist for the ultimate
+        // parties. Emitted in both versions when provided; when the fields are empty nothing is
+        // emitted, so existing SR2025 messages (which never had these fields) stay byte-identical.
+        const buildUltmtAddr = (twnNm: string, ctry: string, ind: number) => {
+          if (!twnNm && !ctry) return '';
+          let a = t(ind) + `<PstlAdr>\n`;
+          if (twnNm) a += t(ind+1) + `<TwnNm>${this.e(twnNm)}</TwnNm>\n`;
+          if (ctry) a += t(ind+1) + `<Ctry>${this.e(ctry)}</Ctry>\n`;
+          return a + t(ind) + `</PstlAdr>\n`;
+        };
         xml += t(7) + `<RltdPties>\n`;
         if (ntry.dbtrNm) {
           xml += t(8) + `<Dbtr>\n` + t(9) + `<Pty>\n` + t(10) + `<Nm>${this.e(ntry.dbtrNm)}</Nm>\n`;
           xml += buildPtyAddr(ntry.dbtrAddrType, ntry.dbtrStrtNm, ntry.dbtrTwnNm, ntry.dbtrCtry, ntry.dbtrAdrLine1, 10);
           xml += t(9) + `</Pty>\n` + t(8) + `</Dbtr>\n`;
         }
-        if (ntry.ultmtDbtrNm) xml += t(8) + `<UltmtDbtr>\n` + t(9) + `<Pty>\n` + t(10) + `<Nm>${this.e(ntry.ultmtDbtrNm)}</Nm>\n` + t(9) + `</Pty>\n` + t(8) + `</UltmtDbtr>\n`;
+        if (ntry.ultmtDbtrNm) {
+          xml += t(8) + `<UltmtDbtr>\n` + t(9) + `<Pty>\n` + t(10) + `<Nm>${this.e(ntry.ultmtDbtrNm)}</Nm>\n`;
+          xml += buildUltmtAddr(ntry.ultmtDbtrTwnNm, ntry.ultmtDbtrCtry, 10);
+          xml += t(9) + `</Pty>\n` + t(8) + `</UltmtDbtr>\n`;
+        }
         if (ntry.cdtrNm) {
           xml += t(8) + `<Cdtr>\n` + t(9) + `<Pty>\n` + t(10) + `<Nm>${this.e(ntry.cdtrNm)}</Nm>\n`;
           xml += buildPtyAddr(ntry.cdtrAddrType, ntry.cdtrStrtNm, ntry.cdtrTwnNm, ntry.cdtrCtry, ntry.cdtrAdrLine1, 10);
           xml += t(9) + `</Pty>\n` + t(8) + `</Cdtr>\n`;
         }
-        if (ntry.ultmtCdtrNm) xml += t(8) + `<UltmtCdtr>\n` + t(9) + `<Pty>\n` + t(10) + `<Nm>${this.e(ntry.ultmtCdtrNm)}</Nm>\n` + t(9) + `</Pty>\n` + t(8) + `</UltmtCdtr>\n`;
+        if (ntry.ultmtCdtrNm) {
+          xml += t(8) + `<UltmtCdtr>\n` + t(9) + `<Pty>\n` + t(10) + `<Nm>${this.e(ntry.ultmtCdtrNm)}</Nm>\n`;
+          xml += buildUltmtAddr(ntry.ultmtCdtrTwnNm, ntry.ultmtCdtrCtry, 10);
+          xml += t(9) + `</Pty>\n` + t(8) + `</UltmtCdtr>\n`;
+        }
         xml += t(7) + `</RltdPties>\n`;
       }
 
@@ -631,8 +717,12 @@ export class Camt054Component implements OnInit, OnDestroy {
 
   err(f: string, group?: any): string | null {
     const c = group ? group.get(f) : this.form.get(f);
-    if (!c || !c.touched || c.valid) return null;
+    if (!c || c.valid) return null;
+    if (!c.touched && !c.dirty && !c.errors?.['nameAddrCoexist']) return null;
     if (c.errors?.['required']) return 'Required field.';
+    if (c.errors?.['nameAddrCoexist']) {
+      return 'Both Town and Country are required when a party name is provided (CBPR+).';
+    }
     if (c.errors?.['maxlength']) return `Max ${c.errors['maxlength'].requiredLength} chars.`;
     if (c.errors?.['pattern']) {
       const fl = f.toLowerCase();
@@ -1146,6 +1236,7 @@ export class Camt054Component implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+    this.versionSub?.unsubscribe();
   }
   canUndoXml(): boolean { return this.xmlHistoryIdx > 0; }
   canRedoXml(): boolean { return this.xmlHistoryIdx < this.xmlHistory.length - 1; }

@@ -258,7 +258,7 @@ export class ValidateComponent implements OnInit {
   downloadReport() {
     if (this.files.length === 0) return;
 
-    let csv = "Batch ID,File ID,File Name,Status,Pass %,Total Errors,Total Warnings,Layer,Severity,Issue Path,Message\n";
+    let csv = "Batch ID,File ID,File Name,Status,Pass %,Total Errors,Total Warnings,Layer,Severity,Issue Path,Message,Fix Suggestion\n";
 
     this.files.forEach(f => {
       const batchId = f.report?.batch_id || '';
@@ -277,14 +277,15 @@ export class ValidateComponent implements OnInit {
           const severity = `"${(issue.severity || '').toString().replace(/"/g, '""')}"`;
           const issuePath = `"${(issue.path || 'Root').toString().replace(/"/g, '""')}"`;
           const msg = `"${(issue.message || '').toString().replace(/"/g, '""')}"`;
+          const fixSug = `"${(issue.fix_suggestion || '').toString().replace(/"/g, '""')}"`;
           if (index === 0) {
-            csv += `${baseRow},${layer},${severity},${issuePath},${msg}\n`;
+            csv += `${baseRow},${layer},${severity},${issuePath},${msg},${fixSug}\n`;
           } else {
-            csv += `,,,,,,,${layer},${severity},${issuePath},${msg}\n`;
+            csv += `,,,,,,,${layer},${severity},${issuePath},${msg},${fixSug}\n`;
           }
         });
       } else {
-        csv += `${baseRow},,,,\n`;
+        csv += `${baseRow},,,,,\n`;
       }
     });
 
@@ -305,7 +306,7 @@ export class ValidateComponent implements OnInit {
       this.snackBar.open('Run validation to see details.', 'Dismiss', { duration: 3000 });
       return;
     }
-    let csv = "File Name,Status,Pass %,Total Errors,Total Warnings,Layer,Severity,Issue Path,Message\n";
+    let csv = "File Name,Status,Pass %,Total Errors,Total Warnings,Layer,Severity,Issue Path,Message,Fix Suggestion\n";
     const name = `"${f.name.replace(/"/g, '""')}"`;
     const status = f.status.toUpperCase();
     const passRate = `${this.getFilePassRate(f)}%`;
@@ -320,14 +321,15 @@ export class ValidateComponent implements OnInit {
         const severity = `"${(issue.severity || '').toString().replace(/"/g, '""')}"`;
         const issuePath = `"${(issue.path || 'Root').toString().replace(/"/g, '""')}"`;
         const msg = `"${(issue.message || '').toString().replace(/"/g, '""')}"`;
+        const fixSug = `"${(issue.fix_suggestion || '').toString().replace(/"/g, '""')}"`;
         if (index === 0) {
-          csv += `${baseRow},${layer},${severity},${issuePath},${msg}\n`;
+          csv += `${baseRow},${layer},${severity},${issuePath},${msg},${fixSug}\n`;
         } else {
-          csv += `,,,,,${layer},${severity},${issuePath},${msg}\n`;
+          csv += `,,,,,${layer},${severity},${issuePath},${msg},${fixSug}\n`;
         }
       });
     } else {
-      csv += `${baseRow},,,,\n`;
+      csv += `${baseRow},,,,,\n`;
     }
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });

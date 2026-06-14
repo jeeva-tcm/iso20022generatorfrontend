@@ -4,7 +4,7 @@
             <span style="font-family: 'Outfit', 'Inter', system-ui, sans-serif; font-size: 1.55rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; letter-spacing: -0.3px; line-height: 1;">
                 IS<span style="position: relative; display: inline-flex; align-items: center; justify-content: center; color: var(--text-main);">O<span style="position: absolute; width: 38px; height: 38px; background: radial-gradient(circle, rgba(0, 210, 255, 0.95) 0%, rgba(0, 130, 255, 0.65) 30%, rgba(0, 70, 255, 0.15) 50%, rgba(0, 70, 255, 0) 75%); filter: blur(6px); z-index: -1; pointer-events: none; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); overflow: visible;"></span></span>
             </span>
-            <span style="font-family: 'Outfit', 'Inter', system-ui, sans-serif; font-size: 1.55rem; font-weight: 300; color: var(--text-main); letter-spacing: -0.3px; line-height: 1; margin-left: 4.5px;">Nova</span>
+            <span style="font-family: 'Outfit', 'Inter', system-ui, sans-serif; font-size: 1.55rem; font-weight: 600; color: var(--text-main); letter-spacing: -0.3px; line-height: 1; margin-left: 4.5px;">Nova</span>
         </div>
     </span>
 
@@ -226,13 +226,13 @@
 
         <button mat-icon-button (click)="toggleTheme()"
             [matTooltip]="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'" class="theme-toggle">
-            <mat-icon>{{ isDarkMode ? 'wb_sunny' : 'nights_stay' }}</mat-icon>
+            <mat-icon>{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</mat-icon>
         </button>
     </nav>
 
     <div class="user-info">
 
-        <img src="assets/logo.jpg" alt="Logo">
+        <img src="assets/logo.png" alt="Ticking Minds">
 
         <!-- <button mat-icon-button>
             <mat-icon>account_circle</mat-icon>
@@ -242,6 +242,24 @@
 
 <div class="main-content" [class.dark-page]="isValidatePage" [class.me-full-page]="isFullWidthPage">
     <router-outlet></router-outlet>
+</div>
+
+<!-- SR version switch confirmation -->
+<div class="sr-confirm-overlay" *ngIf="srConfirmOpen" (click)="cancelSrSwitch()">
+    <div class="sr-confirm-dialog" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="srConfirmTitle">
+        <div class="sr-confirm-icon"><mat-icon>sync_alt</mat-icon></div>
+        <h2 id="srConfirmTitle" class="sr-confirm-title">Switch to {{ pendingSrVersion }}?</h2>
+        <p class="sr-confirm-body">
+            Switching the active standard release to <strong>{{ pendingSrVersion }}</strong> reloads the
+            workspace and discards any unsaved changes in the current form.
+        </p>
+        <div class="sr-confirm-actions">
+            <button type="button" class="sr-confirm-btn cancel" (click)="cancelSrSwitch()">Cancel</button>
+            <button type="button" class="sr-confirm-btn proceed" (click)="confirmSrSwitch()">
+                <mat-icon>refresh</mat-icon> Switch &amp; Reload
+            </button>
+        </div>
+    </div>
 </div>
 
 <!-- <app-chatbot></app-chatbot> -->

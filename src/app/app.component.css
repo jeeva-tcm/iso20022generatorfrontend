@@ -87,7 +87,7 @@ body.light-theme .logo-secondary {
 
 .theme-toggle {
     color: var(--text-muted) !important;
-    margin-left: 4px;
+    margin-left: 8px;
     width: 36px !important;
     height: 36px !important;
     display: flex !important;
@@ -522,21 +522,15 @@ body.light-theme .msg-tag.pain {
 }
 
 .user-info img {
-    height: 52px;
-    width: 180px;
-    min-width: 80px;
+    height: 40px;
+    width: auto;            /* hug the logo — no empty space */
+    max-width: 200px;
     object-fit: contain;
-    background: #ffffff;
-    padding: 5px 12px;
-    border-radius: 8px;
-    border: none;
     display: block;
-    opacity: 0.92;
-}
-
-body.light-theme .user-info img {
-    opacity: 1;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    /* logo.png has a transparent background, so no chip/box needed — clean on any theme. */
+    background: transparent;
+    border: none;
+    box-shadow: none;
 }
 
 
@@ -674,7 +668,7 @@ body.light-theme .user-info img {
     }
 
     .user-info img {
-        height: 52px;
+        height: 40px;
         width: auto;
     }
 
@@ -711,20 +705,42 @@ body.light-theme .user-info img {
     padding: 8px;
 }
 
+/* SR trigger is one cohesive pill (badge text + chevron together), aligned with the theme toggle. */
 .sr-trigger {
-    gap: 4px;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px !important;
+    height: 34px !important;
+    min-width: 0 !important;
+    padding: 0 10px 0 12px !important;
+    border-radius: 18px !important;
+    border: 1px solid rgba(139, 92, 246, 0.32);
+    background: rgba(139, 92, 246, 0.10);
+    line-height: 1 !important;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.sr-trigger:hover {
+    background: rgba(139, 92, 246, 0.18);
+    border-color: rgba(139, 92, 246, 0.5);
 }
 
 .sr-badge {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.72rem;
+    font-size: 0.74rem;
     font-weight: 700;
     letter-spacing: 0.5px;
     color: #a78bfa;
-    background: rgba(139, 92, 246, 0.12);
-    border: 1px solid rgba(139, 92, 246, 0.3);
-    border-radius: 5px;
-    padding: 2px 7px;
+    /* no separate pill — the trigger is the pill now */
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+}
+
+.sr-trigger .dropdown-arrow {
+    color: #a78bfa;
+    opacity: 0.85;
 }
 
 .sr-menu-label {
@@ -793,4 +809,137 @@ body.light-theme .user-info img {
 .sr-year-badge--new {
     background: rgba(139, 92, 246, 0.15);
     color: #a78bfa;
+}
+
+/* ===== SR Version Switch Confirmation Modal ===== */
+.sr-confirm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 4000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(8, 10, 20, 0.62);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    animation: sr-overlay-in 0.18s ease-out;
+}
+
+@keyframes sr-overlay-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.sr-confirm-dialog {
+    width: 100%;
+    max-width: 440px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    padding: 28px 28px 22px;
+    box-shadow:
+        0 10px 20px -8px rgba(0, 0, 0, 0.4),
+        0 30px 60px -12px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    animation: sr-dialog-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes sr-dialog-in {
+    from { opacity: 0; transform: translateY(12px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.sr-confirm-icon {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(139, 92, 246, 0.14);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.sr-confirm-icon mat-icon {
+    color: #a78bfa;
+    font-size: 26px;
+    width: 26px;
+    height: 26px;
+}
+
+.sr-confirm-title {
+    margin: 0 0 10px;
+    font-size: 1.18rem;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.2px;
+}
+
+.sr-confirm-body {
+    margin: 0 0 24px;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: var(--text-muted);
+}
+
+.sr-confirm-body strong {
+    color: #a78bfa;
+    font-weight: 700;
+}
+
+.sr-confirm-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.sr-confirm-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 120px;
+    padding: 10px 18px;
+    border-radius: 9px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+    border: 1px solid transparent;
+}
+
+.sr-confirm-btn mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+.sr-confirm-btn:active {
+    transform: translateY(1px);
+}
+
+.sr-confirm-btn.cancel {
+    background: transparent;
+    border-color: var(--border-light);
+    color: var(--text-main);
+}
+
+.sr-confirm-btn.cancel:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+:host-context(.light-theme) .sr-confirm-btn.cancel:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.sr-confirm-btn.proceed {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: #fff;
+    box-shadow: 0 4px 12px -2px rgba(124, 58, 237, 0.5);
+}
+
+.sr-confirm-btn.proceed:hover {
+    background: linear-gradient(135deg, #9b6cff, #8b5cf6);
 }

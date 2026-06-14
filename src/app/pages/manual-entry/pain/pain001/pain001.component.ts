@@ -8,6 +8,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfigService } from '../../../../services/config.service';
 import { FormattingService } from '../../../../services/formatting.service';
+import { SrVersionService } from '../../../../services/sr-version.service';
+import { Subscription } from 'rxjs';
 import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
 import { debounceTime } from 'rxjs/operators';
 import { getValidationErrorMessage } from '../../../../utils/validation-utils';
@@ -61,8 +63,38 @@ export class Pain001Component implements OnInit, OnDestroy {
     private snackBar: MatSnackBar,
     private formatting: FormattingService,
     private dialog: MatDialog,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    public srVersion: SrVersionService
   ) { }
+
+  private versionSub?: Subscription;
+  get isSR2026(): boolean { return this.srVersion.isSR2026; }
+  private applyVersionDefaults() {
+    this.form.patchValue({ head_bizSvc: this.srVersion.getBizSvc('pain001') }, { emitEvent: false });
+
+    if (this.isSR2026) {
+      // Rule R8: PmtInfId must equal MsgId
+      const msgId = this.form.get('msgId')?.value;
+      if (msgId) {
+        this.form.get('pmtInfId')?.setValue(msgId, { emitEvent: false });
+      }
+
+      const partyPrefixes = ['initgPty', 'dbtr', 'dbtrAgt', 'cdtrAgt', 'cdtr', 'ultmtDbtr', 'ultmtCdtr', 'intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'];
+      const processPrefixes = (ctrl: import('@angular/forms').AbstractControl) => {
+        partyPrefixes.forEach(prefix => {
+          const addrTypeCtrl = ctrl.get(prefix + 'AddrType');
+          if (addrTypeCtrl && (addrTypeCtrl.value === 'unstructured' || addrTypeCtrl.value === 'hybrid')) {
+            const hasTwn = !!ctrl.get(prefix + 'TwnNm')?.value;
+            const hasCtry = !!ctrl.get(prefix + 'Ctry')?.value;
+            addrTypeCtrl.setValue((hasTwn || hasCtry) ? 'structured' : 'none', { emitEvent: false });
+          }
+        });
+      };
+
+      processPrefixes(this.form);
+      this.transactions.controls.forEach(tx => processPrefixes(tx));
+    }
+  }
 
   ngOnInit() {
     this.http.get<any>(this.config.getApiUrl('/codelists/country')).subscribe({
@@ -70,33 +102,53 @@ export class Pain001Component implements OnInit, OnDestroy {
       error: () => {}
     });
     this.buildForm();
+    this.applyVersionDefaults();
+    this.versionSub = this.srVersion.version$.subscribe(() => {
+      this.applyVersionDefaults();
+      this.generateXml();
+      this.cdr.detectChanges();
+    });
         const bizMsgIdCtrl = this.form.get('head_bizMsgIdr');
         const msgIdCtrl = this.form.get('msgId');
+        const pmtInfIdCtrl = this.form.get('pmtInfId');
         if (bizMsgIdCtrl && msgIdCtrl) {
             if (msgIdCtrl.value !== bizMsgIdCtrl.value) {
                 msgIdCtrl.setValue(bizMsgIdCtrl.value, {emitEvent: false});
+                if (pmtInfIdCtrl && pmtInfIdCtrl.value !== bizMsgIdCtrl.value) {
+                    pmtInfIdCtrl.setValue(bizMsgIdCtrl.value, {emitEvent: false});
+                }
                 this.generateXml();
             }
             bizMsgIdCtrl.valueChanges.subscribe(v => {
                 if (msgIdCtrl.value !== v) {
                     msgIdCtrl.setValue(v, {emitEvent: false});
+                    if (pmtInfIdCtrl && pmtInfIdCtrl.value !== v) {
+                        pmtInfIdCtrl.setValue(v, {emitEvent: false});
+                    }
                     this.generateXml();
                 }
             });
             msgIdCtrl.valueChanges.subscribe(v => {
                 if (bizMsgIdCtrl.value !== v) {
                     bizMsgIdCtrl.setValue(v, {emitEvent: false});
+                    if (pmtInfIdCtrl && pmtInfIdCtrl.value !== v) {
+                        pmtInfIdCtrl.setValue(v, {emitEvent: false});
+                    }
                     this.generateXml();
                 }
             });
         }
+        
+        const hadDraft = this.loadDraft();
+        this.applyVersionDefaults();
+        if (hadDraft) {
+          this.showDraftBanner = true;
+          this.generateXml();
+        }
 
-    const hadDraft = this.loadDraft();
-    if (hadDraft) {
-      this.showDraftBanner = true;
-      this.generateXml();
-    }
-    this.generateXml();
+        if (!hadDraft) {
+          this.generateXml();
+        }
     this.pushHistory();
 
     this.form.valueChanges.subscribe(() => {
@@ -491,7 +543,7 @@ export class Pain001Component implements OnInit, OnDestroy {
     );
 
     // Payment Information
-    let pmtInfContent = this.el('PmtInfId', v.pmtInfId, 4) +
+    let pmtInfContent = this.el('PmtInfId', this.isSR2026 ? v.msgId : v.pmtInfId, 4) +
                         this.el('PmtMtd', v.pmtMtd, 4) +
                         (v.btchBookg ? this.el('BtchBookg', 'true', 4) : '');
 
@@ -849,7 +901,7 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
     if (v[p + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[p + 'Ctry'])}</Ctry>`);
 
     // AdrLine � hybrid: TwnNm + Ctry + AdrLines (SR2026: unstructured deprecated)
-    if (type === 'hybrid' || type === 'unstructured') {
+    if ((type === 'hybrid' || type === 'unstructured') && !this.isSR2026) {
       if (v[p + 'AdrLine1']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine1'])}</AdrLine>`);
       if (v[p + 'AdrLine2']) lines.push(`${t}<AdrLine>${this.e(v[p + 'AdrLine2'])}</AdrLine>`);
     }
@@ -864,7 +916,13 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
       let orgId = '';
       if (anyBic) orgId += this.el('AnyBIC', anyBic, indent + 3);
       if (v[p + 'OrgIdLei']) orgId += this.el('LEI', v[p + 'OrgIdLei'], indent + 3);
-      if (v[p + 'Id']) orgId += this.tag('Othr', this.el('Id', v[p + 'Id'], indent + 5), indent + 3);
+      if (v[p + 'Id']) {
+        let othrContent = this.el('Id', v[p + 'Id'], indent + 5);
+        if (this.isSR2026) {
+          othrContent += this.tag('SchmeNm', this.el('Cd', 'CUST', indent + 6), indent + 5);
+        }
+        orgId += this.tag('Othr', othrContent, indent + 3);
+      }
       idContent = this.tag('OrgId', orgId, indent + 2);
     } else if (v[p + 'PrvtIdBirthDt']) {
       let dob = this.el('BirthDt', v[p + 'PrvtIdBirthDt'], indent + 4);
@@ -1506,5 +1564,6 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
 
   ngOnDestroy(): void {
     if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+    this.versionSub?.unsubscribe();
   }
 }

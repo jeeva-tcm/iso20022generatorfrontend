@@ -321,7 +321,8 @@
 
                     <!-- ═══ PmtInf ═══ -->
                     <div class="section-title">Payment Information</div>
-                    <div class="form-group"><label>Pmt Information ID <span class="req">*</span></label><input formControlName="pmtInfId" maxlength="35">
+                    <div class="form-group"><label>Pmt Information ID <span class="req">*</span></label><input formControlName="pmtInfId" maxlength="35" [readonly]="isSR2026">
+                        <div class="field-hint" *ngIf="isSR2026">SR2026: must equal Msg ID (CBPR+ R7) — auto-synced.</div>
                         <div class="validation-msg" *ngIf="err('pmtInfId') as e">{{e}}</div>
                         <div class="field-hint at-limit" *ngIf="hint('pmtInfId', 35) as h">{{h}}</div>
                     </div>

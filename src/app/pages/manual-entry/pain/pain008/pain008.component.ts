@@ -9,6 +9,8 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ConfigService } from '../../../../services/config.service';
 import { FormattingService } from '../../../../services/formatting.service';
+import { SrVersionService } from '../../../../services/sr-version.service';
+import { Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
 @Component({
@@ -67,11 +69,34 @@ export class Pain008Component implements OnInit, OnDestroy {
     private config: ConfigService,
     private snackBar: MatSnackBar,
     private formatting: FormattingService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    public srVersion: SrVersionService
   ) { }
+
+  private versionSub?: Subscription;
+  get isSR2026(): boolean { return this.srVersion.isSR2026; }
+  private applyVersionDefaults() {
+    this.form.patchValue({ bizSvc: this.srVersion.getBizSvc('pain008') }, { emitEvent: false });
+    // CBPR+ R7 (SR2026): PaymentInformation/PaymentInformationIdentification must equal
+    // GroupHeader/MessageIdentification. Mirror it so the form can never emit a mismatch.
+    // SR2025 keeps the two fields independent (rule not enforced there).
+    if (this.isSR2026) {
+      const msgId = this.form.get('msgId')?.value;
+      const pmtInfCtrl = this.form.get('pmtInfId');
+      if (pmtInfCtrl && pmtInfCtrl.value !== msgId) {
+        pmtInfCtrl.setValue(msgId, { emitEvent: false });
+      }
+    }
+  }
 
   ngOnInit() {
     this.buildForm();
+    this.applyVersionDefaults();
+    this.versionSub = this.srVersion.version$.subscribe(() => {
+      this.applyVersionDefaults();
+      this.generateXml();
+      this.cdr.detectChanges();
+    });
         const bizMsgIdCtrl = this.form.get('bizMsgId');
         const msgIdCtrl = this.form.get('msgId');
         if (bizMsgIdCtrl && msgIdCtrl) {
@@ -88,6 +113,12 @@ export class Pain008Component implements OnInit, OnDestroy {
             msgIdCtrl.valueChanges.subscribe(v => {
                 if (bizMsgIdCtrl.value !== v) {
                     bizMsgIdCtrl.setValue(v, {emitEvent: false});
+                    this.generateXml();
+                }
+                // SR2026 CBPR+ R7: keep PmtInfId mirroring MsgId as the user edits it.
+                const pmtInfIdCtrl = this.form.get('pmtInfId');
+                if (this.isSR2026 && pmtInfIdCtrl && pmtInfIdCtrl.value !== v) {
+                    pmtInfIdCtrl.setValue(v, { emitEvent: false });
                     this.generateXml();
                 }
             });
@@ -312,7 +343,7 @@ export class Pain008Component implements OnInit, OnDestroy {
       orgnlCdtrAgtBic: ['OLDCAU33XXX'],
       orgnlDbtrNm: ['Original Debtor Name'],
       orgnlDbtrAcctType: ['IBAN'],
-      orgnlDbtrAcctIban: ['GB94BARC20201530093459'],
+      orgnlDbtrAcctIban: ['GB77BARC20201530093459'],
       orgnlDbtrAcctOthrId: [''],
       orgnlDbtrAgtBic: ['OLDDAU33XXX'],
       orgnlFnlColltnDt: [this.isoNowDate()],
@@ -328,13 +359,13 @@ export class Pain008Component implements OnInit, OnDestroy {
       frqcyPrdCntPerPrd: ['1'],
       rsnCd: ['MD01'],
       rsnPrtry: [''],
-      trckgDays: ['03'],
+        trckgDays: ['03'],
 
       // CdtrSchmeId
       cdtrSchmeIdNm: ['Creditor Scheme Name'],
       cdtrSchmeIdOthrId: ['SCHEME-ID-001'],
-      cdtrSchmeIdOthrSchmeNmCd: [''],
-      cdtrSchmeIdOthrSchmeNmPrtry: ['SEPA'],
+      cdtrSchmeIdOthrSchmeNmCd: ['CUST'],
+      cdtrSchmeIdOthrSchmeNmPrtry: [''],
       cdtrSchmeIdOthrIssr: ['ISSUER-X'],
 
       // PreNtfctn
@@ -377,7 +408,7 @@ export class Pain008Component implements OnInit, OnDestroy {
       dbtrOrgIdAnyBic: ['DEUTDEFFXXX'],
       dbtrOrgIdLei: ['32345678901234567854'],
       dbtrOrgIdOthrId: ['ORG-ID-001'],
-      dbtrOrgIdOthrSchmeNmCd: ['VAT'],
+      dbtrOrgIdOthrSchmeNmCd: ['CUST'],
       dbtrOrgIdOthrIssr: ['ISSUER-Y'],
       dbtrPrvtIdBirthDt: ['1980-01-01'],
       dbtrPrvtIdCityOfBirth: ['Berlin'],
@@ -413,7 +444,7 @@ export class Pain008Component implements OnInit, OnDestroy {
       rgltryRptgDtlsCd: ['REG-001'],
       rgltryRptgDtlsCtry: ['DE'],
       rgltryRptgDtlsAmt: ['100.00'],
-      rgltryRptgDtlsAmtCcy: ['EUR'],
+      rgltryRptgDtlsAmtCcy: [''],
       rgltryRptgDtlsInf: ['Regulatory details info'],
 
       // Tax
@@ -429,9 +460,9 @@ export class Pain008Component implements OnInit, OnDestroy {
       taxRefNb: ['REF-TAX-001'],
       taxMtd: ['MTD-01'],
       taxTtlTaxblBaseAmt: ['500.00'],
-      taxTtlTaxblBaseAmtCcy: ['EUR'],
+      taxTtlTaxblBaseAmtCcy: [''],
       taxTtlTaxAmt: ['100.00'],
-      taxTtlTaxAmtCcy: ['EUR'],
+      taxTtlTaxAmtCcy: [''],
       taxDt: [this.isoNowDate()],
       taxSeqNb: ['1'],
 
@@ -494,7 +525,7 @@ export class Pain008Component implements OnInit, OnDestroy {
       rmtInfStrdTaxRmtAdmstnZone: ['Zone 1'],
       rmtInfStrdTaxRmtRefNb: ['REF-TAX-99'],
       rmtInfStrdTaxRmtTtlTaxAmt: ['40.00'],
-      rmtInfStrdTaxRmtTtlTaxAmtCcy: ['EUR'],
+      rmtInfStrdTaxRmtTtlTaxAmtCcy: [''],
       // Strd > GrnshmtRmt
       rmtInfStrdGrnshmtTpCd: ['G001'],
       rmtInfStrdGrnshmtTpPrtry: [''],
@@ -503,7 +534,7 @@ export class Pain008Component implements OnInit, OnDestroy {
       rmtInfStrdGrnshmtRefNb: ['REF-GRN-001'],
       rmtInfStrdGrnshmtDt: [this.isoNowDate()],
       rmtInfStrdGrnshmtRmtdAmt: ['50.00'],
-      rmtInfStrdGrnshmtRmtdAmtCcy: ['EUR'],
+      rmtInfStrdGrnshmtRmtdAmtCcy: [''],
       rmtInfStrdGrnshmtFmlyMdclInsrncInd: ['true'],
       rmtInfStrdGrnshmtMplyeeTermntnInd: ['false'],
       // Strd > AddtlRmtInf
@@ -563,12 +594,12 @@ export class Pain008Component implements OnInit, OnDestroy {
     // ── AppHdr ──
     const frFinInstnId = this.el('BICFI', v.fromBic, 5)
       + (v.fromClrSysCd || v.fromMmbId ? this.tag('ClrSysMmbId',
-          (v.fromClrSysCd ? this.tag('ClrSysId', this.el('Cd', v.fromClrSysCd, 7), 6) : '')
+          (v.fromClrSysCd || (this.isSR2026 && v.fromMmbId) ? this.tag('ClrSysId', this.el('Cd', v.fromClrSysCd || 'USCHU', 7), 6) : '')
           + this.el('MmbId', v.fromMmbId, 6), 5) : '')
       + this.el('LEI', v.fromLei, 5);
     const toFinInstnId = this.el('BICFI', v.toBic, 5)
       + (v.toClrSysCd || v.toMmbId ? this.tag('ClrSysMmbId',
-          (v.toClrSysCd ? this.tag('ClrSysId', this.el('Cd', v.toClrSysCd, 7), 6) : '')
+          (v.toClrSysCd || (this.isSR2026 && v.toMmbId) ? this.tag('ClrSysId', this.el('Cd', v.toClrSysCd || 'USCHU', 7), 6) : '')
           + this.el('MmbId', v.toMmbId, 6), 5) : '')
       + this.el('LEI', v.toLei, 5);
 
@@ -587,10 +618,10 @@ export class Pain008Component implements OnInit, OnDestroy {
 
     // ── GrpHdr ──
     const authsn = v.authsnCd || v.authsnPrtry ? this.tag('Authstn', (v.authsnCd ? this.el('Cd', v.authsnCd, 5) : this.el('Prtry', v.authsnPrtry, 5)), 4) : '';
-    const initgPtyId = v.initgPtyId ? this.tag('Id', this.tag('OrgId', this.tag('Othr', this.el('Id', v.initgPtyId, 7), 6), 5), 4) : '';
+    const initgPtyId = v.initgPtyId ? this.tag('Id', this.tag('OrgId', this.tag('Othr', this.el('Id', v.initgPtyId, 7) + (this.isSR2026 ? this.tag('SchmeNm', this.el('Cd', 'CUST', 9), 8) : ''), 6), 5), 4) : '';
     const fwdgAgt = v.fwdgAgtBic || v.fwdgAgtLei ? this.tag('FwdgAgt', this.tag('FinInstnId',
       this.el('BICFI', v.fwdgAgtBic, 6)
-      + (v.fwdgAgtClrSysCd || v.fwdgAgtMmbId ? this.tag('ClrSysMmbId', (v.fwdgAgtClrSysCd ? this.tag('ClrSysId', this.el('Cd', v.fwdgAgtClrSysCd, 8), 7) : '') + this.el('MmbId', v.fwdgAgtMmbId, 7), 6) : '')
+      + (v.fwdgAgtClrSysCd || v.fwdgAgtMmbId ? this.tag('ClrSysMmbId', (v.fwdgAgtClrSysCd || (this.isSR2026 && v.fwdgAgtMmbId) ? this.tag('ClrSysId', this.el('Cd', v.fwdgAgtClrSysCd || 'USCHU', 8), 7) : '') + this.el('MmbId', v.fwdgAgtMmbId, 7), 6) : '')
       + this.el('LEI', v.fwdgAgtLei, 6), 5), 4) : '';
 
     // InitgPty PstlAdr
@@ -613,7 +644,7 @@ export class Pain008Component implements OnInit, OnDestroy {
 
     const cdtrAgt = v.cdtrAgtBic || v.cdtrAgtLei ? this.tag('CdtrAgt', this.tag('FinInstnId',
       this.el('BICFI', v.cdtrAgtBic, 6)
-      + (v.cdtrAgtClrSysCd || v.cdtrAgtMmbId ? this.tag('ClrSysMmbId', (v.cdtrAgtClrSysCd ? this.tag('ClrSysId', this.el('Cd', v.cdtrAgtClrSysCd, 8), 7) : '') + this.el('MmbId', v.cdtrAgtMmbId, 7), 6) : '')
+      + (v.cdtrAgtClrSysCd || v.cdtrAgtMmbId ? this.tag('ClrSysMmbId', (v.cdtrAgtClrSysCd || (this.isSR2026 && v.cdtrAgtMmbId) ? this.tag('ClrSysId', this.el('Cd', v.cdtrAgtClrSysCd || 'USCHU', 8), 7) : '') + this.el('MmbId', v.cdtrAgtMmbId, 7), 6) : '')
       + this.el('LEI', v.cdtrAgtLei, 6), 5)
       + this.el('Nm', v.cdtrAgtNm, 5), 4) : '';
 
@@ -629,7 +660,7 @@ export class Pain008Component implements OnInit, OnDestroy {
 
     const chrgsAcctAgt = (v.chrgsAcctAgtBic || v.chrgsAcctAgtMmbId) ? this.tag('ChrgsAcctAgt', this.tag('FinInstnId',
       this.el('BICFI', v.chrgsAcctAgtBic, 6)
-      + (v.chrgsAcctAgtMmbId ? this.tag('ClrSysMmbId', this.el('MmbId', v.chrgsAcctAgtMmbId, 7), 6) : '')
+      + (v.chrgsAcctAgtMmbId ? this.tag('ClrSysMmbId', (this.isSR2026 && v.chrgsAcctAgtMmbId ? this.tag('ClrSysId', this.el('Cd', 'USCHU', 8), 7) : '') + this.el('MmbId', v.chrgsAcctAgtMmbId, 7), 6) : '')
       + this.el('LEI', v.chrgsAcctAgtLei, 6), 5), 4) : '';
 
     // ── Transactions (DrctDbtTxInf) ──
@@ -641,10 +672,10 @@ export class Pain008Component implements OnInit, OnDestroy {
       const pmtTpInf = (tx.instrPrty || tx.svcLvlCd || tx.svcLvlPrtry || tx.lclInstrmCd || tx.lclInstrmPrtry || tx.seqTp || tx.ctgyPurpCd || tx.ctgyPurpPrtry) ?
         this.tag('PmtTpInf',
           this.el('InstrPrty', tx.instrPrty, 6)
-          + (tx.svcLvlCd || tx.svcLvlPrtry ? this.tag('SvcLvl', this.el('Cd', tx.svcLvlCd, 7) + this.el('Prtry', tx.svcLvlPrtry, 7), 6) : '')
-          + (tx.lclInstrmCd || tx.lclInstrmPrtry ? this.tag('LclInstrm', this.el('Cd', tx.lclInstrmCd, 7) + this.el('Prtry', tx.lclInstrmPrtry, 7), 6) : '')
+          + (tx.svcLvlCd || tx.svcLvlPrtry ? this.tag('SvcLvl', this.el('Cd', tx.svcLvlCd, 7) + (tx.svcLvlCd ? '' : this.el('Prtry', tx.svcLvlPrtry, 7)), 6) : '')
+          + (tx.lclInstrmCd || tx.lclInstrmPrtry ? this.tag('LclInstrm', this.el('Cd', tx.lclInstrmCd, 7) + (tx.lclInstrmCd ? '' : this.el('Prtry', tx.lclInstrmPrtry, 7)), 6) : '')
           + this.el('SeqTp', tx.seqTp, 6)
-          + (tx.ctgyPurpCd || tx.ctgyPurpPrtry ? this.tag('CtgyPurp', this.el('Cd', tx.ctgyPurpCd, 7) + this.el('Prtry', tx.ctgyPurpPrtry, 7), 6) : ''), 5) : '';
+          + (tx.ctgyPurpCd || tx.ctgyPurpPrtry ? this.tag('CtgyPurp', this.el('Cd', tx.ctgyPurpCd, 7) + (tx.ctgyPurpCd ? '' : this.el('Prtry', tx.ctgyPurpPrtry, 7)), 6) : ''), 5) : '';
 
       const instdAmt = `${this.tabs(5)}<InstdAmt Ccy="${this.e(tx.currency)}">${amt}</InstdAmt>\n`;
 
@@ -660,7 +691,7 @@ export class Pain008Component implements OnInit, OnDestroy {
           + (tx.orgnlDbtrAgtBic ? this.tag('OrgnlDbtrAgt', this.tag('FinInstnId', this.el('BICFI', tx.orgnlDbtrAgtBic, 10), 9), 8) : '')
           + this.el('OrgnlFnlColltnDt', tx.orgnlFnlColltnDt, 8)
           + (tx.orgnlFrqcyTp ? this.tag('OrgnlFrqcy', this.el('Tp', tx.orgnlFrqcyTp, 9), 8) : '')
-          + (tx.orgnlRsnCd || tx.orgnlRsnPrtry ? this.tag('OrgnlRsn', this.el('Cd', tx.orgnlRsnCd, 9) + this.el('Prtry', tx.orgnlRsnPrtry, 9), 8) : '')
+          + (tx.orgnlRsnCd || tx.orgnlRsnPrtry ? this.tag('OrgnlRsn', this.el('Cd', tx.orgnlRsnCd, 9) + (tx.orgnlRsnCd ? '' : this.el('Prtry', tx.orgnlRsnPrtry, 9)), 8) : '')
           + this.el('OrgnlTrckgDays', tx.orgnlTrckgDays, 8), 7) : '';
       const frqcy = tx.frqcyTp ? (tx.frqcyPrdTp ? this.tag('Frqcy', this.tag('Prd', this.el('Tp', tx.frqcyPrdTp, 9) + this.el('CntPerPrd', tx.frqcyPrdCntPerPrd, 9), 8), 7) : this.tag('Frqcy', this.tag('Tp', this.el('Cd', tx.frqcyTp, 10), 9), 7)) : '';
       const rsn = tx.rsnCd || tx.rsnPrtry ? this.tag('Rsn', (tx.rsnCd ? this.el('Cd', tx.rsnCd, 8) : this.el('Prtry', tx.rsnPrtry, 8)), 7) : '';
@@ -681,7 +712,9 @@ export class Pain008Component implements OnInit, OnDestroy {
         this.el('Nm', tx.cdtrSchmeIdNm, 7)
         + (tx.cdtrSchmeIdOthrId ? this.tag('Id', this.tag('PrvtId', this.tag('Othr',
           this.el('Id', tx.cdtrSchmeIdOthrId, 10)
-          + (tx.cdtrSchmeIdOthrSchmeNmCd || tx.cdtrSchmeIdOthrSchmeNmPrtry ? this.tag('SchmeNm', this.el('Cd', tx.cdtrSchmeIdOthrSchmeNmCd, 11) + this.el('Prtry', tx.cdtrSchmeIdOthrSchmeNmPrtry, 11), 10) : '')
+          + (tx.cdtrSchmeIdOthrSchmeNmCd || tx.cdtrSchmeIdOthrSchmeNmPrtry ? this.tag('SchmeNm', 
+              (this.isSR2026 ? this.el('Cd', tx.cdtrSchmeIdOthrSchmeNmCd || 'CUST', 11) : (tx.cdtrSchmeIdOthrSchmeNmCd ? this.el('Cd', tx.cdtrSchmeIdOthrSchmeNmCd, 11) : this.el('Prtry', tx.cdtrSchmeIdOthrSchmeNmPrtry, 11)))
+            , 10) : '')
           + this.el('Issr', tx.cdtrSchmeIdOthrIssr, 10), 9), 8), 7) : ''), 6) : '';
 
       const drctDbtTx = this.tag('DrctDbtTx', mndtRltdInf + cdtrSchmeId
@@ -693,7 +726,7 @@ export class Pain008Component implements OnInit, OnDestroy {
       // DbtrAgt
       const dbtrAgt = tx.dbtrAgtBic || tx.dbtrAgtLei ? this.tag('DbtrAgt', this.tag('FinInstnId',
         this.el('BICFI', tx.dbtrAgtBic, 7)
-        + (tx.dbtrAgtClrSysCd || tx.dbtrAgtMmbId ? this.tag('ClrSysMmbId', (tx.dbtrAgtClrSysCd ? this.tag('ClrSysId', this.el('Cd', tx.dbtrAgtClrSysCd, 9), 8) : '') + this.el('MmbId', tx.dbtrAgtMmbId, 8), 7) : '')
+        + (tx.dbtrAgtClrSysCd || tx.dbtrAgtMmbId ? this.tag('ClrSysMmbId', (tx.dbtrAgtClrSysCd || (this.isSR2026 && tx.dbtrAgtMmbId) ? this.tag('ClrSysId', this.el('Cd', tx.dbtrAgtClrSysCd || 'USCHU', 9), 8) : '') + this.el('MmbId', tx.dbtrAgtMmbId, 8), 7) : '')
         + this.el('LEI', tx.dbtrAgtLei, 7), 6), 5) : '';
 
       const dbtrAgtAcctType = tx.dbtrAgtAcctType || 'none';
@@ -704,11 +737,11 @@ export class Pain008Component implements OnInit, OnDestroy {
       const dbtrId = tx.dbtrOrgIdAnyBic || tx.dbtrOrgIdLei || tx.dbtrOrgIdOthrId || tx.dbtrPrvtIdBirthDt || tx.dbtrPrvtIdOthrId ?
         this.tag('Id',
           (tx.dbtrOrgIdAnyBic || tx.dbtrOrgIdLei || tx.dbtrOrgIdOthrId ? this.tag('OrgId',
-            this.el('AnyBIC', tx.dbtrOrgIdAnyBic, 8) + this.el('LEI', tx.dbtrOrgIdLei, 8)
-            + (tx.dbtrOrgIdOthrId ? this.tag('Othr', this.el('Id', tx.dbtrOrgIdOthrId, 9) + (tx.dbtrOrgIdOthrSchmeNmCd ? this.tag('SchmeNm', this.el('Cd', tx.dbtrOrgIdOthrSchmeNmCd, 11), 10) : '') + this.el('Issr', tx.dbtrOrgIdOthrIssr, 9), 8) : ''), 7) :
+            this.el('AnyBIC', tx.dbtrOrgIdAnyBic, 8) + (tx.dbtrOrgIdAnyBic ? '' : this.el('LEI', tx.dbtrOrgIdLei, 8))
+            + (tx.dbtrOrgIdOthrId && !tx.dbtrOrgIdAnyBic && !tx.dbtrOrgIdLei ? this.tag('Othr', this.el('Id', tx.dbtrOrgIdOthrId, 9) + (tx.dbtrOrgIdOthrSchmeNmCd ? this.tag('SchmeNm', this.el('Cd', tx.dbtrOrgIdOthrSchmeNmCd, 11), 10) : '') + this.el('Issr', tx.dbtrOrgIdOthrIssr, 9), 8) : ''), 7) :
           (tx.dbtrPrvtIdBirthDt || tx.dbtrPrvtIdOthrId ? this.tag('PrvtId',
             (tx.dbtrPrvtIdBirthDt ? this.tag('DtAndPlcOfBirth', this.el('BirthDt', tx.dbtrPrvtIdBirthDt, 9) + this.el('CityOfBirth', tx.dbtrPrvtIdCityOfBirth, 9) + this.el('CtryOfBirth', tx.dbtrPrvtIdCtryOfBirth, 9), 8) : '')
-            + (tx.dbtrPrvtIdOthrId ? this.tag('Othr', this.el('Id', tx.dbtrPrvtIdOthrId, 9) + (tx.dbtrPrvtIdOthrSchmeNmCd ? this.tag('SchmeNm', this.el('Cd', tx.dbtrPrvtIdOthrSchmeNmCd, 11), 10) : '') + this.el('Issr', tx.dbtrPrvtIdOthrIssr, 9), 8) : ''), 7) : '')), 6) : '';
+            + (tx.dbtrPrvtIdOthrId && !tx.dbtrPrvtIdBirthDt ? this.tag('Othr', this.el('Id', tx.dbtrPrvtIdOthrId, 9) + (tx.dbtrPrvtIdOthrSchmeNmCd ? this.tag('SchmeNm', this.el('Cd', tx.dbtrPrvtIdOthrSchmeNmCd, 11), 10) : '') + this.el('Issr', tx.dbtrPrvtIdOthrIssr, 9), 8) : ''), 7) : '')), 6) : '';
 
       const dbtr = this.tag('Dbtr', this.el('Nm', tx.dbtrName, 6) + this.buildAddr(tx, 'dbtr', 6) + dbtrId + this.el('CtryOfRes', tx.dbtrCtryOfRes, 6), 5);
 
@@ -722,7 +755,7 @@ export class Pain008Component implements OnInit, OnDestroy {
 
       const ultmtDbtr = tx.ultmtDbtrName ? this.tag('UltmtDbtr', this.el('Nm', tx.ultmtDbtrName, 6), 5) : '';
 
-      const purp = tx.purpCd || tx.purpPrtry ? this.tag('Purp', this.el('Cd', tx.purpCd, 6) + this.el('Prtry', tx.purpPrtry, 6), 5) : '';
+      const purp = tx.purpCd || tx.purpPrtry ? this.tag('Purp', this.el('Cd', tx.purpCd, 6) + (tx.purpCd ? '' : this.el('Prtry', tx.purpPrtry, 6)), 5) : '';
 
       // RgltryRptg
       const rgltryRptg = tx.rgltryRptgInd || tx.rgltryRptgAuthrtyNm || tx.rgltryRptgDtlsCd ?
@@ -731,7 +764,7 @@ export class Pain008Component implements OnInit, OnDestroy {
           + (tx.rgltryRptgAuthrtyNm || tx.rgltryRptgAuthrtyCtry ? this.tag('Authrty', this.el('Nm', tx.rgltryRptgAuthrtyNm, 7) + this.el('Ctry', tx.rgltryRptgAuthrtyCtry, 7), 6) : '')
           + (tx.rgltryRptgDtlsTp || tx.rgltryRptgDtlsCd || tx.rgltryRptgDtlsCtry || tx.rgltryRptgDtlsInf || tx.rgltryRptgDtlsDt || tx.rgltryRptgDtlsAmt ?
             this.tag('Dtls', this.el('Tp', tx.rgltryRptgDtlsTp, 7) + this.el('Dt', tx.rgltryRptgDtlsDt, 7) + this.el('Ctry', tx.rgltryRptgDtlsCtry, 7) + (tx.rgltryRptgDtlsCd ? this.el('Cd', tx.rgltryRptgDtlsCd, 7) : '')
-            + (tx.rgltryRptgDtlsAmt ? `${this.tabs(7)}<Amt Ccy="${this.e(tx.rgltryRptgDtlsAmtCcy || 'EUR')}">${this.e(tx.rgltryRptgDtlsAmt)}</Amt>\n` : '')
+            + (tx.rgltryRptgDtlsAmt ? `${this.tabs(7)}<Amt Ccy="${this.e(tx.currency)}">${this.e(tx.rgltryRptgDtlsAmt)}</Amt>\n` : '')
             + this.el('Inf', tx.rgltryRptgDtlsInf, 7), 6) : ''), 5) : '';
 
       // Tax
@@ -742,8 +775,8 @@ export class Pain008Component implements OnInit, OnDestroy {
           + ((v.taxAuthsnTitl || v.taxAuthsnNm) ? this.tag('UltmtDbtr', this.el('Titl', v.taxAuthsnTitl, 7) + this.el('Nm', v.taxAuthsnNm, 7), 6) : '')
           + this.el('AdmstnZone', tx.taxAdmstnZone, 6)
           + this.el('RefNb', tx.taxRefNb, 6) + this.el('Mtd', tx.taxMtd, 6)
-          + (tx.taxTtlTaxblBaseAmt ? `${this.tabs(6)}<TtlTaxblBaseAmt Ccy="${this.e(tx.taxTtlTaxblBaseAmtCcy || 'EUR')}">${this.e(tx.taxTtlTaxblBaseAmt)}</TtlTaxblBaseAmt>\n` : '')
-          + (tx.taxTtlTaxAmt ? `${this.tabs(6)}<TtlTaxAmt Ccy="${this.e(tx.taxTtlTaxAmtCcy || 'EUR')}">${this.e(tx.taxTtlTaxAmt)}</TtlTaxAmt>\n` : '')
+          + (tx.taxTtlTaxblBaseAmt ? `${this.tabs(6)}<TtlTaxblBaseAmt Ccy="${this.e(tx.currency)}">${this.e(tx.taxTtlTaxblBaseAmt)}</TtlTaxblBaseAmt>\n` : '')
+          + (tx.taxTtlTaxAmt ? `${this.tabs(6)}<TtlTaxAmt Ccy="${this.e(tx.currency)}">${this.e(tx.taxTtlTaxAmt)}</TtlTaxAmt>\n` : '')
           + this.el('Dt', tx.taxDt, 6) + this.el('SeqNb', tx.taxSeqNb, 6), 5) : '';
 
       // RltdRmtInf
@@ -764,9 +797,9 @@ export class Pain008Component implements OnInit, OnDestroy {
           let rfrdLineDtls = '';
           if (tx.rmtInfStrdRfrdDocLineDtlsDesc || tx.rmtInfStrdRfrdDocLineDtlsDuePyblAmt || tx.rmtInfStrdRfrdDocLineDtlsRmtdAmt) {
             let lineAmt = '';
-            if (tx.rmtInfStrdRfrdDocLineDtlsDuePyblAmt) lineAmt += `${this.tabs(9)}<DuePyblAmt Ccy="${this.e(tx.rmtInfStrdRfrdDocLineDtlsDuePyblAmtCcy || 'EUR')}">${this.e(tx.rmtInfStrdRfrdDocLineDtlsDuePyblAmt)}</DuePyblAmt>\n`;
-            if (tx.rmtInfStrdRfrdDocLineDtlsCdtNoteAmt) lineAmt += `${this.tabs(9)}<CdtNoteAmt Ccy="${this.e(tx.rmtInfStrdRfrdDocLineDtlsCdtNoteAmtCcy || 'EUR')}">${this.e(tx.rmtInfStrdRfrdDocLineDtlsCdtNoteAmt)}</CdtNoteAmt>\n`;
-            if (tx.rmtInfStrdRfrdDocLineDtlsRmtdAmt) lineAmt += `${this.tabs(9)}<RmtdAmt Ccy="${this.e(tx.rmtInfStrdRfrdDocLineDtlsRmtdAmtCcy || 'EUR')}">${this.e(tx.rmtInfStrdRfrdDocLineDtlsRmtdAmt)}</RmtdAmt>\n`;
+            if (tx.rmtInfStrdRfrdDocLineDtlsDuePyblAmt) lineAmt += `${this.tabs(9)}<DuePyblAmt Ccy="${this.e(tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocLineDtlsDuePyblAmt)}</DuePyblAmt>\n`;
+            if (tx.rmtInfStrdRfrdDocLineDtlsCdtNoteAmt) lineAmt += `${this.tabs(9)}<CdtNoteAmt Ccy="${this.e(tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocLineDtlsCdtNoteAmt)}</CdtNoteAmt>\n`;
+            if (tx.rmtInfStrdRfrdDocLineDtlsRmtdAmt) lineAmt += `${this.tabs(9)}<RmtdAmt Ccy="${this.e(tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocLineDtlsRmtdAmt)}</RmtdAmt>\n`;
             rfrdLineDtls = this.tag('LineDtls', this.el('Desc', tx.rmtInfStrdRfrdDocLineDtlsDesc, 8) + (lineAmt ? this.tag('Amt', lineAmt, 8) : ''), 7);
           }
           strd += this.tag('RfrdDocInf',
@@ -776,12 +809,12 @@ export class Pain008Component implements OnInit, OnDestroy {
         // RfrdDocAmt
         if (tx.rmtInfStrdRfrdDocAmtDuePyblAmt || tx.rmtInfStrdRfrdDocAmtCdtNoteAmt || tx.rmtInfStrdRfrdDocAmtRmtdAmt || tx.rmtInfStrdRfrdDocAmtDscntApldAmt || tx.rmtInfStrdRfrdDocAmtTaxAmt || tx.rmtInfStrdRfrdDocAmtAdjAmt) {
           let rda = '';
-          if (tx.rmtInfStrdRfrdDocAmtDuePyblAmt) rda += `${this.tabs(7)}<DuePyblAmt Ccy="${this.e(tx.rmtInfStrdRfrdDocAmtDuePyblAmtCcy || 'EUR')}">${this.e(tx.rmtInfStrdRfrdDocAmtDuePyblAmt)}</DuePyblAmt>\n`;
-          if (tx.rmtInfStrdRfrdDocAmtDscntApldAmt) rda += this.tag('DscntApldAmt', (tx.rmtInfStrdRfrdDocAmtDscntApldAmtTpCd ? this.tag('Tp', this.el('Cd', tx.rmtInfStrdRfrdDocAmtDscntApldAmtTpCd, 9), 8) : '') + `${this.tabs(8)}<Amt Ccy="${this.e(tx.rmtInfStrdRfrdDocAmtDscntApldAmtCcy || 'EUR')}">${this.e(tx.rmtInfStrdRfrdDocAmtDscntApldAmt)}</Amt>\n`, 7);
-          if (tx.rmtInfStrdRfrdDocAmtCdtNoteAmt) rda += `${this.tabs(7)}<CdtNoteAmt Ccy="${this.e(tx.rmtInfStrdRfrdDocAmtCdtNoteAmtCcy || 'EUR')}">${this.e(tx.rmtInfStrdRfrdDocAmtCdtNoteAmt)}</CdtNoteAmt>\n`;
-          if (tx.rmtInfStrdRfrdDocAmtTaxAmt) rda += this.tag('TaxAmt', (tx.rmtInfStrdRfrdDocAmtTaxAmtTpCd ? this.tag('Tp', this.el('Cd', tx.rmtInfStrdRfrdDocAmtTaxAmtTpCd, 9), 8) : '') + `${this.tabs(8)}<Amt Ccy="${this.e(tx.rmtInfStrdRfrdDocAmtTaxAmtCcy || 'EUR')}">${this.e(tx.rmtInfStrdRfrdDocAmtTaxAmt)}</Amt>\n`, 7);
-          if (tx.rmtInfStrdRfrdDocAmtAdjAmt) rda += this.tag('AdjstmntAmtAndRsn', `${this.tabs(8)}<Amt Ccy="${this.e(tx.rmtInfStrdRfrdDocAmtAdjAmtCcy || 'EUR')}">${this.e(tx.rmtInfStrdRfrdDocAmtAdjAmt)}</Amt>\n` + this.el('CdtDbtInd', tx.rmtInfStrdRfrdDocAmtAdjCdtDbtInd, 8) + this.el('Rsn', tx.rmtInfStrdRfrdDocAmtAdjRsn, 8) + this.el('AddtlInf', tx.rmtInfStrdRfrdDocAmtAdjAddtlInf, 8), 7);
-          if (tx.rmtInfStrdRfrdDocAmtRmtdAmt) rda += `${this.tabs(7)}<RmtdAmt Ccy="${this.e(tx.rmtInfStrdRfrdDocAmtRmtdAmtCcy || 'EUR')}">${this.e(tx.rmtInfStrdRfrdDocAmtRmtdAmt)}</RmtdAmt>\n`;
+          if (tx.rmtInfStrdRfrdDocAmtDuePyblAmt) rda += `${this.tabs(7)}<DuePyblAmt Ccy="${this.e(tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocAmtDuePyblAmt)}</DuePyblAmt>\n`;
+          if (tx.rmtInfStrdRfrdDocAmtDscntApldAmt) rda += this.tag('DscntApldAmt', (tx.rmtInfStrdRfrdDocAmtDscntApldAmtTpCd ? this.tag('Tp', this.el('Cd', tx.rmtInfStrdRfrdDocAmtDscntApldAmtTpCd, 9), 8) : '') + `${this.tabs(8)}<Amt Ccy="${this.e(tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocAmtDscntApldAmt)}</Amt>\n`, 7);
+          if (tx.rmtInfStrdRfrdDocAmtCdtNoteAmt) rda += `${this.tabs(7)}<CdtNoteAmt Ccy="${this.e(tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocAmtCdtNoteAmt)}</CdtNoteAmt>\n`;
+          if (tx.rmtInfStrdRfrdDocAmtTaxAmt) rda += this.tag('TaxAmt', (tx.rmtInfStrdRfrdDocAmtTaxAmtTpCd ? this.tag('Tp', this.el('Cd', tx.rmtInfStrdRfrdDocAmtTaxAmtTpCd, 9), 8) : '') + `${this.tabs(8)}<Amt Ccy="${this.e(tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocAmtTaxAmt)}</Amt>\n`, 7);
+          if (tx.rmtInfStrdRfrdDocAmtAdjAmt) rda += this.tag('AdjstmntAmtAndRsn', `${this.tabs(8)}<Amt Ccy="${this.e(tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocAmtAdjAmt)}</Amt>\n` + this.el('CdtDbtInd', tx.rmtInfStrdRfrdDocAmtAdjCdtDbtInd, 8) + this.el('Rsn', tx.rmtInfStrdRfrdDocAmtAdjRsn, 8) + this.el('AddtlInf', tx.rmtInfStrdRfrdDocAmtAdjAddtlInf, 8), 7);
+          if (tx.rmtInfStrdRfrdDocAmtRmtdAmt) rda += `${this.tabs(7)}<RmtdAmt Ccy="${this.e(tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocAmtRmtdAmt)}</RmtdAmt>\n`;
           strd += this.tag('RfrdDocAmt', rda, 6);
         }
         // CdtrRefInf
@@ -806,7 +839,7 @@ export class Pain008Component implements OnInit, OnDestroy {
             + (tx.rmtInfStrdTaxRmtDbtrTaxId || tx.rmtInfStrdTaxRmtDbtrRegnId ? this.tag('Dbtr', this.el('TaxId', tx.rmtInfStrdTaxRmtDbtrTaxId, 8) + this.el('RegnId', tx.rmtInfStrdTaxRmtDbtrRegnId, 8) + this.el('TaxTp', tx.rmtInfStrdTaxRmtDbtrTaxTp, 8), 7) : '')
             + (tx.rmtInfStrdTaxRmtUltmtDbtrTaxId ? this.tag('UltmtDbtr', this.el('TaxId', tx.rmtInfStrdTaxRmtUltmtDbtrTaxId, 8) + this.el('RegnId', tx.rmtInfStrdTaxRmtUltmtDbtrRegnId, 8) + this.el('TaxTp', tx.rmtInfStrdTaxRmtUltmtDbtrTaxTp, 8), 7) : '')
             + this.el('AdmstnZone', tx.rmtInfStrdTaxRmtAdmstnZone, 7) + this.el('RefNb', tx.rmtInfStrdTaxRmtRefNb, 7)
-            + (tx.rmtInfStrdTaxRmtTtlTaxAmt ? `${this.tabs(7)}<TtlTaxAmt Ccy="${this.e(tx.rmtInfStrdTaxRmtTtlTaxAmtCcy || 'EUR')}">${this.e(tx.rmtInfStrdTaxRmtTtlTaxAmt)}</TtlTaxAmt>\n` : ''), 6);
+            + (tx.rmtInfStrdTaxRmtTtlTaxAmt ? `${this.tabs(7)}<TtlTaxAmt Ccy="${this.e(tx.currency)}">${this.e(tx.rmtInfStrdTaxRmtTtlTaxAmt)}</TtlTaxAmt>\n` : ''), 6);
         }
         // GrnshmtRmt
         if (tx.rmtInfStrdGrnshmtTpCd || tx.rmtInfStrdGrnshmtGrnsheeNm || tx.rmtInfStrdGrnshmtGrnshmtAdmstrNm || tx.rmtInfStrdGrnshmtRefNb) {
@@ -815,7 +848,7 @@ export class Pain008Component implements OnInit, OnDestroy {
             + (tx.rmtInfStrdGrnshmtGrnsheeNm ? this.tag('Grnshee', this.el('Nm', tx.rmtInfStrdGrnshmtGrnsheeNm, 8), 7) : '')
             + (tx.rmtInfStrdGrnshmtGrnshmtAdmstrNm ? this.tag('GrnshmtAdmstr', this.el('Nm', tx.rmtInfStrdGrnshmtGrnshmtAdmstrNm, 8), 7) : '')
             + this.el('RefNb', tx.rmtInfStrdGrnshmtRefNb, 7) + this.el('Dt', tx.rmtInfStrdGrnshmtDt, 7)
-            + (tx.rmtInfStrdGrnshmtRmtdAmt ? `${this.tabs(7)}<RmtdAmt Ccy="${this.e(tx.rmtInfStrdGrnshmtRmtdAmtCcy || 'EUR')}">${this.e(tx.rmtInfStrdGrnshmtRmtdAmt)}</RmtdAmt>\n` : '')
+            + (tx.rmtInfStrdGrnshmtRmtdAmt ? `${this.tabs(7)}<RmtdAmt Ccy="${this.e(tx.currency)}">${this.e(tx.rmtInfStrdGrnshmtRmtdAmt)}</RmtdAmt>\n` : '')
             + this.el('FmlyMdclInsrncInd', tx.rmtInfStrdGrnshmtFmlyMdclInsrncInd, 7)
             + this.el('MplyeeTermntnInd', tx.rmtInfStrdGrnshmtMplyeeTermntnInd, 7), 6);
         }
@@ -824,17 +857,22 @@ export class Pain008Component implements OnInit, OnDestroy {
       }
       const rmtInf = rmtInfContent.trim() ? this.tag('RmtInf', rmtInfContent, 5) : '';
 
+      // SR2026: RltdRmtInf and RmtInf are mutually exclusive
+      const finalRmtInf = (this.isSR2026 && rltdRmt) ? '' : rmtInf;
+
       txsXml += this.tag('DrctDbtTxInf',
         pmtId + pmtTpInf + instdAmt + this.el('ChrgBr', tx.chrgBr, 5)
         + drctDbtTx + ultmtCdtr + dbtrAgt + dbtrAgtAcct + dbtr + dbtrAcct + ultmtDbtr
         + this.el('InstrForCdtrAgt', tx.instrForCdtrAgt, 5)
-        + purp + rgltryRptg + tax + rltdRmt + rmtInf, 4);
+        + purp + rgltryRptg + tax + rltdRmt + finalRmtInf, 4);
     });
 
     const cdtrAddr = this.buildAddr(v, 'cdtr', 5);
     const cdtrAgtAcctTag = cdtrAgtAcct;
     const pmtInf = this.tag('PmtInf',
-      this.el('PmtInfId', v.pmtInfId, 4)
+      // SR2026 CBPR+ R7: PmtInfId must equal GrpHdr/MsgId. Emit MsgId in SR2026 so output is always
+      // compliant regardless of control state. SR2025 unchanged.
+      this.el('PmtInfId', this.isSR2026 ? v.msgId : v.pmtInfId, 4)
       + this.el('PmtMtd', v.pmtMtd, 4)
       + this.el('BtchBookg', v.btchBookg, 4)
       + this.el('ReqdColltnDt', v.reqdColltnDt, 4)
@@ -892,8 +930,8 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
     // TwnNm + Ctry emitted in all modes
     if (v[prefix + 'TwnNm']) lines.push(`${t}<TwnNm>${this.e(v[prefix + 'TwnNm'])}</TwnNm>`);
     if (v[prefix + 'Ctry']) lines.push(`${t}<Ctry>${this.e(v[prefix + 'Ctry'])}</Ctry>`);
-    // AdrLine — hybrid: TwnNm + Ctry + AdrLines (SR2026: unstructured deprecated)
-    if (type === 'hybrid' || type === 'unstructured') {
+    // AdrLine - hybrid: TwnNm + Ctry + AdrLines (SR2026: unstructured deprecated)
+    if ((type === 'hybrid' || type === 'unstructured') && !this.isSR2026) {
       if (v[prefix + 'AdrLine1']) lines.push(`${t}<AdrLine>${this.e(v[prefix + 'AdrLine1'])}</AdrLine>`);
       if (v[prefix + 'AdrLine2']) lines.push(`${t}<AdrLine>${this.e(v[prefix + 'AdrLine2'])}</AdrLine>`);
     }
@@ -906,11 +944,11 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
     if (!hasRltd) return '';
     const rFr = v.rltdFrBic ? this.tag('Fr', this.tag('FIId', this.tag('FinInstnId',
       this.el('BICFI', v.rltdFrBic, 6)
-      + (v.rltdFrClrSysCd || v.rltdFrMmbId ? this.tag('ClrSysMmbId', (v.rltdFrClrSysCd ? this.tag('ClrSysId', this.el('Cd', v.rltdFrClrSysCd, 8), 7) : '') + this.el('MmbId', v.rltdFrMmbId, 7), 6) : '')
+      + (v.rltdFrClrSysCd || v.rltdFrMmbId ? this.tag('ClrSysMmbId', (v.rltdFrClrSysCd || (this.isSR2026 && v.rltdFrMmbId) ? this.tag('ClrSysId', this.el('Cd', v.rltdFrClrSysCd || 'USCHU', 8), 7) : '') + this.el('MmbId', v.rltdFrMmbId, 7), 6) : '')
       + this.el('LEI', v.rltdFrLei, 6), 5), 4), 3) : '';
     const rTo = v.rltdToBic ? this.tag('To', this.tag('FIId', this.tag('FinInstnId',
       this.el('BICFI', v.rltdToBic, 6)
-      + (v.rltdToClrSysCd || v.rltdToMmbId ? this.tag('ClrSysMmbId', (v.rltdToClrSysCd ? this.tag('ClrSysId', this.el('Cd', v.rltdToClrSysCd, 8), 7) : '') + this.el('MmbId', v.rltdToMmbId, 7), 6) : '')
+      + (v.rltdToClrSysCd || v.rltdToMmbId ? this.tag('ClrSysMmbId', (v.rltdToClrSysCd || (this.isSR2026 && v.rltdToMmbId) ? this.tag('ClrSysId', this.el('Cd', v.rltdToClrSysCd || 'USCHU', 8), 7) : '') + this.el('MmbId', v.rltdToMmbId, 7), 6) : '')
       + this.el('LEI', v.rltdToLei, 6), 5), 4), 3) : '';
     return this.tag('Rltd',
       this.el('CharSet', v.rltdCharSet, 3) + rFr + rTo
@@ -1397,6 +1435,7 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
 
   ngOnDestroy(): void {
     if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer);
+    this.versionSub?.unsubscribe();
   }
   countries = ['AF','AX','AL','DZ','AS','AD','AO','AI','AQ','AG','AR','AM','AW','AU','AT','AZ','BS','BH','BD','BB','BY','BE','BZ','BJ','BM','BT','BO','BQ','BA','BW','BV','BR','IO','BN','BG','BF','BI','CV','KH','CM','CA','KY','CF','TD','CL','CN','CX','CC','CO','KM','CG','CD','CK','CR','CI','HR','CU','CW','CY','CZ','DK','DJ','DM','DO','EC','EG','SV','GQ','ER','EE','SZ','ET','FK','FO','FJ','FI','FR','GF','PF','TF','GA','GM','GE','DE','GH','GI','GR','GL','GD','GP','GU','GT','GG','GN','GW','GY','HT','HM','VA','HN','HK','HU','IS','IN','ID','IR','IQ','IE','IM','IL','IT','JM','JP','JE','JO','KZ','KE','KI','KP','KR','KW','KG','LA','LV','LB','LS','LR','LY','LI','LT','LU','MO','MG','MW','MY','MV','ML','MT','MH','MQ','MR','MU','YT','MX','FM','MD','MC','MN','ME','MS','MA','MZ','MM','NA','NR','NP','NL','NC','NZ','NI','NE','NG','NU','NF','MK','MP','NO','OM','PK','PW','PS','PA','PG','PY','PE','PH','PN','PL','PT','PR','QA','RE','RO','RU','RW','BL','SH','KN','LC','MF','PM','VC','WS','SM','ST','SA','SN','RS','SC','SL','SG','SX','SK','SI','SB','SO','ZA','GS','SS','ES','LK','SD','SR','SJ','SE','CH','SY','TW','TJ','TZ','TH','TL','TG','TK','TO','TT','TN','TR','TM','TC','TV','UG','UA','AE','GB','US','UM','UY','UZ','VU','VE','VN','VG','VI','WF','EH','YE','ZM','ZW'];
 }

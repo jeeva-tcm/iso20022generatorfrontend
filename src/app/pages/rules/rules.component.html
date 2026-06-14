@@ -1,7 +1,7 @@
 <div class="rules-container">
 
   <div class="page-header">
-    <div class="page-header-eyebrow">ISO 20022 · SWIFT CBPR+ · SR2025</div>
+    <div class="page-header-eyebrow">ISO 20022 · SWIFT CBPR+ · {{ sr }}</div>
     <h1>Validation Rule Engine</h1>
     <p>A multi-layered defense system ensuring 100% compliance with ISO 20022 standards.</p>
   </div>
@@ -38,16 +38,16 @@
     <div class="layer-col">
       <div class="layer-num">02</div>
       <div class="layer-title">Schema Validation (Structural)</div>
-      <div class="layer-sub">SR2025 XSD &amp; BAH Compliance</div>
+      <div class="layer-sub">{{ sr }} XSD &amp; BAH Compliance</div>
       <p class="layer-desc">
-        Validates the message structure against official SR2025 ISO 20022 XML
+        Validates the message structure against official {{ sr }} ISO 20022 XML
         Schema Definitions (XSD) and Business Application Header (BAH) schema.
       </p>
       <div class="divider"></div>
       <ul class="rule-list">
         <li>
           <mat-icon>check_circle</mat-icon>
-          <span>SR2025 schema validation (pacs.008.001.08, pacs.009.001.08, etc.)</span>
+          <span>{{ sr }} schema validation (pacs.008.001.08, pacs.009.001.08, etc.)</span>
         </li>
         <li>
           <mat-icon>check_circle</mat-icon>
@@ -106,5 +106,39 @@
       </ul>
     </div>
 
+  </div>
+
+  <!-- SR2026-specific enhancements (shown only when SR2026 is the active release) -->
+  <div class="sr2026-panel" *ngIf="isSR2026">
+    <div class="sr2026-panel-head">
+      <mat-icon>new_releases</mat-icon>
+      <div>
+        <div class="sr2026-panel-title">SR2026 Enhancements</div>
+        <div class="sr2026-panel-sub">Additional CBPR+ rules enforced on top of the three layers above</div>
+      </div>
+      <span class="sr2026-pill">SR2026</span>
+    </div>
+    <ul class="rule-list sr2026-list">
+      <li>
+        <mat-icon>check_circle</mat-icon>
+        <span><strong>Structured Postal Address</strong> — Unstructured &lt;AdrLine&gt; is deprecated; <strong>TwnNm + Ctry</strong> are mandatory in every postal address.</span>
+      </li>
+      <li>
+        <mat-icon>check_circle</mat-icon>
+        <span><strong>Name &amp; Address Co-existence</strong> — A named party or agent must always carry a postal address (and vice-versa).</span>
+      </li>
+      <li>
+        <mat-icon>check_circle</mat-icon>
+        <span><strong>Business Service</strong> — Upgraded to <code>swift.cbprplus.04</code> across PACS / CAMT / PAIN.</span>
+      </li>
+      <li>
+        <mat-icon>check_circle</mat-icon>
+        <span><strong>Identifier Consistency</strong> — BizMsgIdr = GrpHdr/MsgId; PmtInfId = MsgId (pain.001 / pain.008); OrgnlPmtInfId = OrgnlMsgId (pain.002).</span>
+      </li>
+      <li>
+        <mat-icon>check_circle</mat-icon>
+        <span><strong>Margin Collection (pacs.010.001.03)</strong> — Withdrawn from the SR2026 message set.</span>
+      </li>
+    </ul>
   </div>
 </div>
