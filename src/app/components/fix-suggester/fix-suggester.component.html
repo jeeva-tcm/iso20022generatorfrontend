@@ -1,0 +1,263 @@
+<div class="fs-overlay" (click)="dismiss()">
+  <div class="fs-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+
+    <!-- Header ─────────────────────────────────────────────────────── -->
+    <header class="fs-header">
+      <div class="fs-header-top">
+        <div class="fs-header-title-row">
+          <mat-icon class="fs-header-icon-sm">auto_fix_high</mat-icon>
+          <h2 class="fs-title">{{ mode === 'batch' ? 'AI Fix All Issues' : 'AI Fix Issue' }}</h2>
+        </div>
+        <button class="fs-icon-btn" (click)="dismiss()" matTooltip="Close (Esc)" aria-label="Close">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      <div class="fs-header-meta" *ngIf="!loading">
+        <span class="fs-file-pill" *ngIf="fileName">
+          <mat-icon>insert_drive_file</mat-icon>{{ fileName }}
+        </span>
+        <ng-container *ngIf="mode === 'batch'">
+          <span class="fs-meta-stat">{{ total }} analysed</span>
+          <span class="fs-meta-dot">·</span>
+          <span class="fs-meta-stat fs-meta-accent">{{ actionableCount }} fixable</span>
+          <ng-container *ngIf="unavailableCount > 0">
+            <span class="fs-meta-dot">·</span>
+            <span class="fs-meta-stat fs-meta-warn">{{ unavailableCount }} unavailable</span>
+          </ng-container>
+        </ng-container>
+        <ng-container *ngIf="mode === 'single' && suggestion">
+          <span class="fs-meta-stat">{{ confidenceLabel(suggestion.confidence) }}</span>
+        </ng-container>
+      </div>
+    </header>
+
+    <!-- Progress strip — batch mode -->
+    <div class="fs-progress-strip" *ngIf="mode === 'batch' && !loading && total > 0">
+      <div class="fs-progress-track">
+        <div class="fs-progress-fill"
+             [style.width.%]="total === 0 ? 0 : (selectedCount / total) * 100"></div>
+      </div>
+      <div class="fs-progress-label">
+        <strong>{{ selectedCount }}</strong> of {{ actionableCount }} selected
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="fs-loading" *ngIf="loading">
+      <div class="fs-skeleton-rows">
+        <div class="fs-skeleton-row" *ngFor="let _ of [1,2,3]"></div>
+      </div>
+      <div class="fs-loading-text">
+        <mat-icon class="spin">progress_activity</mat-icon>
+        <span>Generating fix{{ mode === 'batch' ? 'es' : '' }}…</span>
+      </div>
+    </div>
+
+    <!-- Error banner -->
+    <div class="fs-error-banner" *ngIf="errorMsg && !loading" role="alert">
+      <mat-icon>warning_amber</mat-icon>
+      <span>{{ errorMsg }}</span>
+    </div>
+
+    <!-- ─── SINGLE mode ──────────────────────────────────────────────── -->
+    <ng-container *ngIf="!loading && mode === 'single' && suggestion">
+      <section class="fs-single-body">
+
+        <div class="fs-issue-card">
+          <div class="fs-issue-card-head">
+            <span class="fs-rule-badge">{{ suggestion.issue_code }}</span>
+            <span class="fs-conf-badge" [class]="confidenceClass(suggestion.confidence)">
+              <span class="fs-conf-dot"></span>
+              {{ confidenceLabel(suggestion.confidence) }}
+            </span>
+          </div>
+          <p class="fs-issue-msg">{{ suggestion.issue_message }}</p>
+        </div>
+
+        <ng-container *ngIf="suggestion.confidence !== 'unavailable'">
+          <div class="fs-inline-diff" *ngIf="singleInlineFrom && singleInlineTo">
+            <div class="fs-inline-pill removed">
+              <span class="fs-inline-label">Was</span>
+              <code>{{ singleInlineFrom }}</code>
+            </div>
+            <mat-icon class="fs-inline-arrow">east</mat-icon>
+            <div class="fs-inline-pill added">
+              <span class="fs-inline-label">Now</span>
+              <code>{{ singleInlineTo }}</code>
+            </div>
+          </div>
+
+          <div class="fs-diff-card">
+            <div class="fs-diff-card-head">
+              <span class="fs-diff-card-title">XML diff</span>
+              <code class="fs-diff-xpath">{{ suggestion.xpath }}</code>
+            </div>
+            <pre class="fs-diff-body"><ng-container *ngFor="let line of singleDiff; trackBy: trackByLine"><span
+                  class="diff-line"
+                  [class.diff-removed]="line.type === 'removed'"
+                  [class.diff-added]="line.type === 'added'"
+                  [class.diff-unchanged]="line.type === 'unchanged'"><span
+                    class="diff-gutter">{{ line.type === 'removed' ? '−' : line.type === 'added' ? '+' : ' ' }}</span><span
+                    class="diff-text">{{ line.text }}</span></span></ng-container></pre>
+            <div class="fs-no-changes" *ngIf="!singleHasChanges">
+              <mat-icon>info</mat-icon>
+              <span>No change proposed — the AI returned the same element.</span>
+            </div>
+          </div>
+        </ng-container>
+
+      </section>
+    </ng-container>
+
+    <!-- ─── BATCH mode ───────────────────────────────────────────────── -->
+    <ng-container *ngIf="!loading && mode === 'batch' && batchItems.length > 0">
+
+      <div class="fs-toolbar">
+        <label class="fs-master-check" [class.indeterminate]="someSelected">
+          <input #masterCheck
+                 type="checkbox"
+                 [checked]="allSelected"
+                 (change)="onMasterChange($event)"
+                 [disabled]="actionableCount === 0">
+          <span class="fs-checkbox-box"></span>
+          <span class="fs-master-label">
+            {{ allSelected ? 'Deselect all' : 'Select all' }}
+            <span class="fs-master-count" *ngIf="actionableCount > 0">· {{ actionableCount }}</span>
+          </span>
+        </label>
+      </div>
+
+      <section class="fs-batch-list">
+        <article *ngFor="let item of batchItems; let i = index; trackBy: trackByCode"
+                 class="fs-batch-card"
+                 [class.selected]="item.selected && item.status === 'ready'"
+                 [class.expanded]="item.expanded"
+                 [class]="itemStatusClass(item)"
+                 tabindex="0"
+                 (click)="onCardClick(item, $event)"
+                 (keydown.enter)="toggleBatchItem(item)"
+                 (keydown.space)="$event.preventDefault(); toggleBatchItem(item)">
+
+          <span class="fs-card-rail" aria-hidden="true"></span>
+
+          <div class="fs-card-content">
+            <header class="fs-card-head">
+              <label class="fs-check" (click)="$event.stopPropagation()"
+                     *ngIf="item.status === 'ready' || item.status === 'applied'">
+                <input type="checkbox"
+                       [checked]="item.selected || item.status === 'applied'"
+                       [disabled]="item.status === 'applied' || applying"
+                       (change)="toggleBatchItem(item)">
+                <span class="fs-checkbox-box">
+                  <mat-icon *ngIf="item.status === 'applied'" class="fs-check-icon">check</mat-icon>
+                </span>
+              </label>
+              <span class="fs-status-icon-wrap"
+                    *ngIf="item.status !== 'ready' && item.status !== 'applied'">
+                <mat-icon class="fs-status-icon">{{ statusIcon(item.status) }}</mat-icon>
+              </span>
+
+              <div class="fs-card-text">
+                <div class="fs-card-line-1">
+                  <span class="fs-rule-badge">{{ item.suggestion.issue_code }}</span>
+                  <span class="fs-conf-badge"
+                        [class]="confidenceClass(item.suggestion.confidence)"
+                        *ngIf="item.status !== 'applied' && item.status !== 'no-change'">
+                    <span class="fs-conf-dot"></span>
+                    {{ confidenceLabel(item.suggestion.confidence) }}
+                  </span>
+                  <span class="fs-conf-badge applied-badge" *ngIf="item.status === 'applied'">
+                    <mat-icon>check_circle</mat-icon> Applied
+                  </span>
+                  <span class="fs-no-change-pill" *ngIf="item.status === 'no-change'">No-op</span>
+                </div>
+                <p class="fs-card-msg" [title]="item.suggestion.issue_message">
+                  {{ item.suggestion.issue_message }}
+                </p>
+              </div>
+
+              <button class="fs-expand-btn"
+                      *ngIf="item.status === 'ready' || item.status === 'applied'"
+                      (click)="toggleExpanded(item, $event)"
+                      [matTooltip]="item.expanded ? 'Hide diff' : 'Show diff'"
+                      [attr.aria-label]="item.expanded ? 'Hide diff' : 'Show diff'"
+                      [attr.aria-expanded]="item.expanded">
+                <mat-icon>{{ item.expanded ? 'expand_less' : 'expand_more' }}</mat-icon>
+              </button>
+            </header>
+
+            <!-- Inline before → after (compact, when not expanded) -->
+            <div class="fs-inline-diff fs-inline-compact"
+                 *ngIf="item.inlineFrom !== undefined && item.inlineTo !== undefined && !item.expanded">
+              <div class="fs-inline-pill removed">
+                <code>{{ item.inlineFrom }}</code>
+              </div>
+              <mat-icon class="fs-inline-arrow">east</mat-icon>
+              <div class="fs-inline-pill added">
+                <code>{{ item.inlineTo }}</code>
+              </div>
+            </div>
+
+            <!-- Full diff (expanded) -->
+            <div class="fs-batch-diff"
+                 *ngIf="item.expanded && (item.status === 'ready' || item.status === 'applied')">
+              <div class="fs-diff-card">
+                <div class="fs-diff-card-head">
+                  <span class="fs-diff-card-title">XML diff</span>
+                  <code class="fs-diff-xpath">{{ item.suggestion.xpath }}</code>
+                </div>
+                <pre class="fs-diff-body"><ng-container *ngFor="let line of item.diffLines; trackBy: trackByLine"><span
+                      class="diff-line"
+                      [class.diff-removed]="line.type === 'removed'"
+                      [class.diff-added]="line.type === 'added'"
+                      [class.diff-unchanged]="line.type === 'unchanged'"><span
+                        class="diff-gutter">{{ line.type === 'removed' ? '−' : line.type === 'added' ? '+' : ' ' }}</span><span
+                        class="diff-text">{{ line.text }}</span></span></ng-container></pre>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+    </ng-container>
+
+    <!-- Empty state -->
+    <div class="fs-empty"
+         *ngIf="!loading && mode === 'batch' && total > 0 && actionableCount === 0">
+      <mat-icon>sentiment_dissatisfied</mat-icon>
+      <p>None of the issues could be auto-fixed.</p>
+      <p class="muted">Configure the AI service, or try fixing issues one by one.</p>
+    </div>
+
+    <!-- Footer -->
+    <footer class="fs-footer" *ngIf="!loading">
+      <div class="fs-footer-actions">
+        <button class="fs-btn fs-btn-ghost" (click)="dismiss()" [disabled]="applying">
+          Cancel
+        </button>
+
+        <button class="fs-btn fs-btn-primary"
+                *ngIf="mode === 'single'"
+                [disabled]="!suggestion || suggestion.confidence === 'unavailable' || !singleHasChanges || applying"
+                (click)="acceptSingle()">
+          <mat-icon *ngIf="!applying">auto_fix_high</mat-icon>
+          <mat-icon *ngIf="applying" class="spin">progress_activity</mat-icon>
+          <span>{{ applying ? 'Applying…' : 'Apply fix' }}</span>
+        </button>
+
+        <button class="fs-btn fs-btn-primary"
+                *ngIf="mode === 'batch'"
+                [disabled]="selectedCount === 0 || applying"
+                (click)="acceptSelected()">
+          <mat-icon *ngIf="!applying">auto_fix_high</mat-icon>
+          <mat-icon *ngIf="applying" class="spin">progress_activity</mat-icon>
+          <span>
+            {{ applying
+              ? 'Applying ' + selectedCount + '…'
+              : 'Apply ' + selectedCount + ' fix' + (selectedCount === 1 ? '' : 'es') }}
+          </span>
+        </button>
+      </div>
+    </footer>
+
+  </div>
+</div>
