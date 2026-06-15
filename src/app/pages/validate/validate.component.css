@@ -2209,6 +2209,7 @@ body.light-theme .layer-summary-pill.passed-pill {
 body.light-theme .layer-summary-pill.failed-pill {
   background: #fef2f2;
   border-color: #fecaca;
+}
 .layer-summary-pill.failed-pill {
   background: var(--validation-fail-bg) !important;
   border-color: var(--validation-fail-border) !important;

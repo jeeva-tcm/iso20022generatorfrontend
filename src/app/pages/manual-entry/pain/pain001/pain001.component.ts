@@ -266,7 +266,6 @@ export class Pain001Component implements OnInit, OnDestroy {
       initnSrc: ['ERP-X-SYSTEM', [Validators.maxLength(35)]],
       dbtrName: ['Holding Account One', [Validators.required, Validators.maxLength(140)]],
       dbtrIban: ['GB29NWBK60161331926819', [Validators.required, Validators.maxLength(34)]],
-      dbtrIban: ['GB29NWBK60161331926819', [Validators.required, Validators.maxLength(34)]],
       dbtrAddrType: ['hybrid'],
       dbtrCtry: ['US', [Validators.pattern(/^[A-Z]{2,2}$/)]],
       dbtrTwnNm: ['New York', [Validators.maxLength(35)]],
@@ -318,7 +317,6 @@ export class Pain001Component implements OnInit, OnDestroy {
       relMsgId: ['REL-' + Date.now(), [Validators.maxLength(35)]],
       chrgsAcctIban: ['GB28NWBK60161331926820', [Validators.maxLength(34)]],
       chrgsAcctType: ['Othr'],
-      chrgsAcctIban: ['', [Validators.maxLength(34)]],
       chrgsAcctOthrId: ['1234567890'],
       chrgsAcctAgtBic: ['CHASUS33XXX', [Validators.pattern(/^([A-Z0-9]{8}|[A-Z0-9]{11})$/)]],
 
