@@ -311,7 +311,7 @@ export class Pain008Component implements OnInit, OnDestroy {
   private createTxGroup(): FormGroup {
     return this.fb.group({
       // PmtId
-      instrId:['INSTR-' + Date.now(), [Validators.required, Validators.maxLength(16)]],
+      instrId:['I' + Date.now().toString().slice(-15), [Validators.required, Validators.maxLength(16)]],
       endToEndId: ['E2E-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
       uetr: [crypto.randomUUID ? crypto.randomUUID() : '550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/)]],
 
@@ -364,8 +364,8 @@ export class Pain008Component implements OnInit, OnDestroy {
       // CdtrSchmeId
       cdtrSchmeIdNm: ['Creditor Scheme Name'],
       cdtrSchmeIdOthrId: ['SCHEME-ID-001'],
-      cdtrSchmeIdOthrSchmeNmCd: ['CUST'],
-      cdtrSchmeIdOthrSchmeNmPrtry: [''],
+      cdtrSchmeIdOthrSchmeNmCd: [''],
+      cdtrSchmeIdOthrSchmeNmPrtry: ['SEPA'],
       cdtrSchmeIdOthrIssr: ['ISSUER-X'],
 
       // PreNtfctn
@@ -408,7 +408,7 @@ export class Pain008Component implements OnInit, OnDestroy {
       dbtrOrgIdAnyBic: ['DEUTDEFFXXX'],
       dbtrOrgIdLei: ['32345678901234567854'],
       dbtrOrgIdOthrId: ['ORG-ID-001'],
-      dbtrOrgIdOthrSchmeNmCd: ['CUST'],
+      dbtrOrgIdOthrSchmeNmCd: ['LEI'],
       dbtrOrgIdOthrIssr: ['ISSUER-Y'],
       dbtrPrvtIdBirthDt: ['1980-01-01'],
       dbtrPrvtIdCityOfBirth: ['Berlin'],
@@ -618,7 +618,7 @@ export class Pain008Component implements OnInit, OnDestroy {
 
     // ── GrpHdr ──
     const authsn = v.authsnCd || v.authsnPrtry ? this.tag('Authstn', (v.authsnCd ? this.el('Cd', v.authsnCd, 5) : this.el('Prtry', v.authsnPrtry, 5)), 4) : '';
-    const initgPtyId = v.initgPtyId ? this.tag('Id', this.tag('OrgId', this.tag('Othr', this.el('Id', v.initgPtyId, 7) + (this.isSR2026 ? this.tag('SchmeNm', this.el('Cd', 'CUST', 9), 8) : ''), 6), 5), 4) : '';
+    const initgPtyId = v.initgPtyId ? this.tag('Id', this.tag('OrgId', this.tag('Othr', this.el('Id', v.initgPtyId, 7) + (this.isSR2026 ? this.tag('SchmeNm', this.el('Cd', 'LEI', 9), 8) : ''), 6), 5), 4) : '';
     const fwdgAgt = v.fwdgAgtBic || v.fwdgAgtLei ? this.tag('FwdgAgt', this.tag('FinInstnId',
       this.el('BICFI', v.fwdgAgtBic, 6)
       + (v.fwdgAgtClrSysCd || v.fwdgAgtMmbId ? this.tag('ClrSysMmbId', (v.fwdgAgtClrSysCd || (this.isSR2026 && v.fwdgAgtMmbId) ? this.tag('ClrSysId', this.el('Cd', v.fwdgAgtClrSysCd || 'USCHU', 8), 7) : '') + this.el('MmbId', v.fwdgAgtMmbId, 7), 6) : '')
@@ -712,8 +712,8 @@ export class Pain008Component implements OnInit, OnDestroy {
         this.el('Nm', tx.cdtrSchmeIdNm, 7)
         + (tx.cdtrSchmeIdOthrId ? this.tag('Id', this.tag('PrvtId', this.tag('Othr',
           this.el('Id', tx.cdtrSchmeIdOthrId, 10)
-          + (tx.cdtrSchmeIdOthrSchmeNmCd || tx.cdtrSchmeIdOthrSchmeNmPrtry ? this.tag('SchmeNm', 
-              (this.isSR2026 ? this.el('Cd', tx.cdtrSchmeIdOthrSchmeNmCd || 'CUST', 11) : (tx.cdtrSchmeIdOthrSchmeNmCd ? this.el('Cd', tx.cdtrSchmeIdOthrSchmeNmCd, 11) : this.el('Prtry', tx.cdtrSchmeIdOthrSchmeNmPrtry, 11)))
+          + (tx.cdtrSchmeIdOthrSchmeNmCd || tx.cdtrSchmeIdOthrSchmeNmPrtry ? this.tag('SchmeNm',
+              (tx.cdtrSchmeIdOthrSchmeNmCd ? this.el('Cd', tx.cdtrSchmeIdOthrSchmeNmCd, 11) : this.el('Prtry', tx.cdtrSchmeIdOthrSchmeNmPrtry, 11))
             , 10) : '')
           + this.el('Issr', tx.cdtrSchmeIdOthrIssr, 10), 9), 8), 7) : ''), 6) : '';
 
@@ -1417,6 +1417,54 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
       const saved = localStorage.getItem(this.DRAFT_KEY);
       if (!saved) return false;
       this.form.patchValue(JSON.parse(saved), { emitEvent: false });
+
+      const today = this.isoNowDate();
+      const now   = this.isoNow();
+
+      // Refresh message creation timestamps — always current, never stale.
+      this.form.patchValue({
+        creDtTm:  now,   // GrpHdr/CreDtTm
+        creDt:    now,   // AppHdr/CreDt
+        rltdCreDt: now,  // Rltd/CreDt
+      }, { emitEvent: false });
+
+      // ReqdColltnDt must be today or future. If the draft holds a past date,
+      // reset it to today so validation does not fire a past-date error.
+      const rcd = this.form.get('reqdColltnDt')?.value as string | null;
+      if (rcd && rcd < today) {
+        this.form.patchValue({ reqdColltnDt: today }, { emitEvent: false });
+      }
+
+      // Per-transaction fixes for stale draft values.
+      const txArray = this.form.get('transactions') as import('@angular/forms').FormArray;
+      if (txArray) {
+        txArray.controls.forEach(ctrl => {
+          const patch: Record<string, unknown> = {};
+
+          // Over-length InstrId from old 'INSTR-' + Date.now() default (19 chars, max 16).
+          const instrId = ctrl.get('instrId')?.value as string | null;
+          if (instrId && instrId.length > 16) {
+            patch['instrId'] = 'I' + Date.now().toString().slice(-15);
+          }
+
+          // CdtrSchmeId: migrate old Cd='CUST'/'SEPA' to Prtry='SEPA'.
+          // Pain.008 should use <Prtry>SEPA</Prtry>, not a standard Cd code.
+          const schemeCd = ctrl.get('cdtrSchmeIdOthrSchmeNmCd')?.value as string | null;
+          if (schemeCd && schemeCd !== '') {
+            patch['cdtrSchmeIdOthrSchmeNmCd'] = '';
+            patch['cdtrSchmeIdOthrSchmeNmPrtry'] = 'SEPA';
+          }
+
+          if (Object.keys(patch).length) {
+            ctrl.patchValue(patch, { emitEvent: false });
+          }
+        });
+      }
+
+      // Per-transaction date refresh: DtOfSgntr is legitimately historical
+      // (mandate signature date) so it is NOT reset here. The backend
+      // excludes it from the past-date check. No refresh needed.
+
       return true;
     } catch (e) { console.warn('Draft load failed:', e); return false; }
   }
