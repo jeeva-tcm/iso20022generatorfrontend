@@ -197,10 +197,16 @@
           <div class="th-col th-action">XML</div>
           <div class="th-col th-export">Actions</div>
         </div>
-        <div class="table-body">
+        <div class="table-body" cdkDropList (cdkDropListDropped)="onRowDrop($event)">
           <ng-container *ngFor="let f of paginatedFiles; let i = index">
-            <div class="table-row" (click)="toggleFileRow(f)">
-              <div class="td-col td-index">{{ (currentPage - 1) * pageSize + i + 1 }}</div>
+            <div class="table-row" cdkDrag cdkDragLockAxis="y" (cdkDragStarted)="onDragStarted()" (click)="toggleFileRow(f)">
+              <div class="td-col td-index">
+                <span class="drag-handle" cdkDragHandle (click)="$event.stopPropagation()" matTooltip="Drag to reorder">
+                  <mat-icon class="drag-icon">drag_indicator</mat-icon>
+                </span>
+                <span class="row-num">{{ (currentPage - 1) * pageSize + i + 1 }}</span>
+              </div>
+              <div *cdkDragPlaceholder class="drag-placeholder"></div>
               <div class="td-col td-name">
                 <mat-icon class="file-ic" [ngClass]="f.status">
                   description
