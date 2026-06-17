@@ -1983,6 +1983,14 @@ body.light-theme .btn-download {
   cursor: grabbing !important;
 }
 
+/* When a row is expanded, disable all drag affordances */
+.drag-row-wrapper.drag-disabled .table-row {
+  cursor: default;
+}
+.drag-row-wrapper.drag-disabled:hover .drag-handle {
+  opacity: 0;
+}
+
 /* Floating card shown while dragging */
 .drag-preview-card {
   display: flex;

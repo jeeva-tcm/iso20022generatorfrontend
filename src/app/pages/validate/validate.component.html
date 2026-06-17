@@ -202,8 +202,10 @@
 
             <!-- ── Drag wrapper: the unit CDK moves ────────────────────────── -->
             <div cdkDrag cdkDragLockAxis="y"
+                 [cdkDragDisabled]="expandedFile === f"
                  (cdkDragStarted)="onDragStarted()"
-                 class="drag-row-wrapper">
+                 class="drag-row-wrapper"
+                 [class.drag-disabled]="expandedFile === f">
 
               <!-- Lightweight floating card shown while dragging -->
               <div *cdkDragPreview class="drag-preview-card">
