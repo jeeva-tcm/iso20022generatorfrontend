@@ -96,7 +96,7 @@ const SR2025: SrVersionConfig = {
     pacs010MarginCollection: {
       msgDefIdr: 'pacs.010.001.03',
       namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.010.001.03',
-      bizSvc: 'swift.cbprplus.col.02',
+      bizSvc: 'swift.cbprplus.04',
       liveDate: 'November 2025',
     },
     pacs008: {
@@ -236,7 +236,7 @@ const SR2026: SrVersionConfig = {
     pacs010MarginCollection: {
       msgDefIdr: 'pacs.010.001.03',
       namespace: 'urn:iso:std:iso:20022:tech:xsd:pacs.010.001.03',
-      bizSvc: 'swift.cbprplus.col.02',        // margin collection keeps .col.02
+      bizSvc: 'swift.cbprplus.04',             // corrected per SWIFT MyStandards: .col.02 is not valid
       liveDate: 'November 2026',
     },
     pacs008: {

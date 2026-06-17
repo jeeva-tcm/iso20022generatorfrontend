@@ -199,61 +199,80 @@
         </div>
         <div class="table-body" cdkDropList (cdkDropListDropped)="onRowDrop($event)">
           <ng-container *ngFor="let f of paginatedFiles; let i = index">
-            <div class="table-row" cdkDrag cdkDragLockAxis="y" (cdkDragStarted)="onDragStarted()" (click)="toggleFileRow(f)">
-              <div class="td-col td-index">
-                <span class="drag-handle" cdkDragHandle (click)="$event.stopPropagation()" matTooltip="Drag to reorder">
-                  <mat-icon class="drag-icon">drag_indicator</mat-icon>
-                </span>
-                <span class="row-num">{{ (currentPage - 1) * pageSize + i + 1 }}</span>
-              </div>
-              <div *cdkDragPlaceholder class="drag-placeholder"></div>
-              <div class="td-col td-name">
-                <mat-icon class="file-ic" [ngClass]="f.status">
-                  description
-                </mat-icon>
-                {{f.name}}
-              </div>
-              <div class="td-col td-status">
-                <span class="status-badge" [ngClass]="f.status"
-                  *ngIf="f.status !== 'validating' && f.status !== 'pending'">
+
+            <!-- ── Drag wrapper: the unit CDK moves ────────────────────────── -->
+            <div cdkDrag cdkDragLockAxis="y"
+                 (cdkDragStarted)="onDragStarted()"
+                 class="drag-row-wrapper">
+
+              <!-- Lightweight floating card shown while dragging -->
+              <div *cdkDragPreview class="drag-preview-card">
+                <mat-icon class="drag-preview-file-icon" [ngClass]="f.status">description</mat-icon>
+                <span class="drag-preview-name">{{ f.name }}</span>
+                <span class="status-badge drag-preview-badge" [ngClass]="f.status"
+                      *ngIf="f.status !== 'validating' && f.status !== 'pending'">
                   {{ f.status === 'passed' ? 'PASSED' : (f.status === 'warnings' ? 'WARNINGS' : 'FAILED') }}
                 </span>
-                <span class="status-badge validating" *ngIf="f.status === 'validating'">Validating...</span>
-                <span class="status-badge pending" *ngIf="f.status === 'pending'">Pending</span>
               </div>
-              <div class="td-col td-err">{{f.report?.errors || 0}}</div>
-              <div class="td-col td-pass wrap-text-centered">
-                <span class="pass-val-text">{{getFilePassRate(f)}}%</span>
-              </div>
-              <div class="td-col td-action" style="justify-content: center; gap: 6px; display: flex;">
-                <button class="btn-table-action" (click)="openEditor(f, $event)" matTooltip="View / Edit XML">
-                  View XML
-                </button>
-                <button class="btn-table-action btn-copy-xml" (click)="copyXml(f, $event)"
-                  [matTooltip]="copiedFileId === f.id ? 'Copied!' : 'Copy XML to clipboard'">
-                  <mat-icon style="font-size:15px;width:15px;height:15px;">
-                    {{copiedFileId === f.id ? 'check' : 'content_copy'}}
-                  </mat-icon>
-                </button>
-              </div>
-              <div class="td-col td-export" style="justify-content: center; gap: 4px; display: flex; align-items: center;">
-                <button class="btn-table-action view-btn-alt" (click)="downloadFileReport(f, $event)"
-                  matTooltip="Export result as CSV">
-                  <mat-icon>file_download</mat-icon>
-                </button>
-                <button class="btn-delete-row" (click)="removeFile(f, $event)"
-                  matTooltip="Remove this file">
-                  <i class="fa fa-trash-o btn-delete-icon"></i>
-                </button>
-                <!-- Structural fix computing spinner -->
-                <span *ngIf="computingFixIds.has(f.id)" class="fix-computing-pill" matTooltip="Computing structural fix…">
-                  <mat-icon class="spin-slow" style="font-size:14px;width:14px;height:14px;">progress_activity</mat-icon>
-                </span>
-              </div>
-            </div>
 
-            <!-- Expanded Row Details -->
-            <div class="row-details" *ngIf="expandedFile === f" (click)="$event.stopPropagation()">
+              <!-- Blue dashed slot indicating where the row will land -->
+              <div *cdkDragPlaceholder class="drag-placeholder"></div>
+
+              <!-- Visible row (click expands, drag from anywhere) -->
+              <div class="table-row" (click)="toggleFileRow(f)">
+                <div class="td-col td-index">
+                  <span class="drag-handle" matTooltip="Drag to reorder">
+                    <mat-icon class="drag-icon">drag_indicator</mat-icon>
+                  </span>
+                  <span class="row-num">{{ (currentPage - 1) * pageSize + i + 1 }}</span>
+                </div>
+                <div class="td-col td-name">
+                  <mat-icon class="file-ic" [ngClass]="f.status">
+                    description
+                  </mat-icon>
+                  {{f.name}}
+                </div>
+                <div class="td-col td-status">
+                  <span class="status-badge" [ngClass]="f.status"
+                    *ngIf="f.status !== 'validating' && f.status !== 'pending'">
+                    {{ f.status === 'passed' ? 'PASSED' : (f.status === 'warnings' ? 'WARNINGS' : 'FAILED') }}
+                  </span>
+                  <span class="status-badge validating" *ngIf="f.status === 'validating'">Validating...</span>
+                  <span class="status-badge pending" *ngIf="f.status === 'pending'">Pending</span>
+                </div>
+                <div class="td-col td-err">{{f.report?.errors || 0}}</div>
+                <div class="td-col td-pass wrap-text-centered">
+                  <span class="pass-val-text">{{getFilePassRate(f)}}%</span>
+                </div>
+                <div class="td-col td-action" style="justify-content: center; gap: 6px; display: flex;">
+                  <button class="btn-table-action" (click)="openEditor(f, $event)" matTooltip="View / Edit XML">
+                    View XML
+                  </button>
+                  <button class="btn-table-action btn-copy-xml" (click)="copyXml(f, $event)"
+                    [matTooltip]="copiedFileId === f.id ? 'Copied!' : 'Copy XML to clipboard'">
+                    <mat-icon style="font-size:15px;width:15px;height:15px;">
+                      {{copiedFileId === f.id ? 'check' : 'content_copy'}}
+                    </mat-icon>
+                  </button>
+                </div>
+                <div class="td-col td-export" style="justify-content: center; gap: 4px; display: flex; align-items: center;">
+                  <button class="btn-table-action view-btn-alt" (click)="downloadFileReport(f, $event)"
+                    matTooltip="Export result as CSV">
+                    <mat-icon>file_download</mat-icon>
+                  </button>
+                  <button class="btn-delete-row" (click)="removeFile(f, $event)"
+                    matTooltip="Remove this file">
+                    <i class="fa fa-trash-o btn-delete-icon"></i>
+                  </button>
+                  <!-- Structural fix computing spinner -->
+                  <span *ngIf="computingFixIds.has(f.id)" class="fix-computing-pill" matTooltip="Computing structural fix…">
+                    <mat-icon class="spin-slow" style="font-size:14px;width:14px;height:14px;">progress_activity</mat-icon>
+                  </span>
+                </div>
+              </div>
+
+              <!-- Expanded Row Details (inside wrapper so CDK treats row+detail as one unit) -->
+              <div class="row-details" *ngIf="expandedFile === f" (click)="$event.stopPropagation()">
               <div class="details-inner" *ngIf="f.report; else noReport">
 
                 <!-- ── Structural Fix Banner ──────────────────────────────────
@@ -438,6 +457,8 @@
               <ng-template #noReport>
                 <div class="no-report-msg">Run validation to see details.</div>
               </ng-template>
+            </div>
+            <!-- ── end drag-row-wrapper ── -->
             </div>
           </ng-container>
 
