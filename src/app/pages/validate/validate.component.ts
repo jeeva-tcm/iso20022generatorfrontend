@@ -16,6 +16,7 @@ import { ConfigService } from '../../services/config.service';
 import { FixSuggesterComponent } from '../../components/fix-suggester/fix-suggester.component';
 import { IssueRef } from '../../services/fix-suggester.service';
 import { SrVersionService } from '../../services/sr-version.service';
+import { CdkDragDrop, moveItemInArray, DragDropModule } from '@angular/cdk/drag-drop';
 
 export interface FileEntry {
   id: string;
@@ -47,6 +48,7 @@ export interface FileEntry {
     MatFormFieldModule,
     MatInputModule,
     FixSuggesterComponent,
+    DragDropModule,
   ],
   templateUrl: './validate.component.html',
   styleUrls: ['./validate.component.css']
@@ -354,6 +356,22 @@ export class ValidateComponent implements OnInit {
     // Ensure we don't divide by 0 and max is 100%
     if (expectedLayers === 0) return 0;
     return Math.min(100, Math.round((passedLayers / expectedLayers) * 100));
+  }
+
+  onRowDrop(event: CdkDragDrop<FileEntry[]>): void {
+    if (event.previousIndex === event.currentIndex) return;
+    const movedFile = this.paginatedFiles[event.previousIndex];
+    const targetFile = this.paginatedFiles[event.currentIndex];
+    const fromIdx = this.files.indexOf(movedFile);
+    const toIdx = this.files.indexOf(targetFile);
+    if (fromIdx !== -1 && toIdx !== -1) {
+      moveItemInArray(this.files, fromIdx, toIdx);
+      this.saveWorkspace();
+    }
+  }
+
+  onDragStarted(): void {
+    this.expandedFile = null;
   }
 
   toggleFileRow(f: FileEntry) {
@@ -1505,9 +1523,9 @@ export class ValidateComponent implements OnInit {
       store.clear();
 
       const version = this.srVersionService.currentVersion;
-      for (const f of this.files) {
-        store.put({ ...f, srVersion: version, status: f.status === 'validating' ? 'pending' : f.status });
-      }
+      this.files.forEach((f, index) => {
+        store.put({ ...f, srVersion: version, status: f.status === 'validating' ? 'pending' : f.status, sortOrder: index });
+      });
     } catch (e) {
       console.warn('Failed to persist workspace:', e);
     }
@@ -1526,6 +1544,7 @@ export class ValidateComponent implements OnInit {
           if (request.result && request.result.length > 0) {
             this.files = request.result
               .filter((f: any) => f.srVersion === currentVersion)
+              .sort((a: any, b: any) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
               .map((f: any) => ({
                 ...f,
                 status: f.status === 'validating' ? 'pending' : f.status
