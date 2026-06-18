@@ -1774,6 +1774,26 @@ ${tx}\t\t\t</CdtTrfTxInf>
                         patch.rmtInfUstrd = ustrd.textContent || '';
                         if (coreRmts.length > 1) patch.rmtInfUstrd2 = tval('Ustrd', coreRmts[1]);
                     }
+                    const strd = getT('Strd', coreRmts[0]);
+                    if (strd) {
+                        const grnshmtRmt = getT('GrnshmtRmt', strd);
+                        if (grnshmtRmt) {
+                            const grnshmtId = getT('Id', grnshmtRmt);
+                            if (grnshmtId) {
+                                const prvtId = getT('PrvtId', grnshmtId);
+                                if (prvtId) {
+                                    const othrEl = getT('Othr', prvtId);
+                                    if (othrEl) patch.rmtInfStrdGrnshmtId = tval('Id', othrEl);
+                                }
+                            }
+                        }
+                        const invcee = getT('Invcee', strd);
+                        if (invcee) patch.rmtInfStrdInvceeNm = tval('Nm', invcee);
+                        const invcr = getT('Invcr', strd);
+                        if (invcr) patch.rmtInfStrdInvcrNm = tval('Nm', invcr);
+                        const taxRmt = getT('TaxRmt', strd);
+                        if (taxRmt) patch.rmtInfStrdTaxRmtId = tval('AdmstnZn', taxRmt);
+                    }
                 }
 
                 const undrl = getT('UndrlygCstmrCdtTrf', tx);

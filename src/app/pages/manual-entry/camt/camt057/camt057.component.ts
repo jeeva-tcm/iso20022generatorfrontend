@@ -1020,6 +1020,10 @@ ${ntfctnPartiesXml}${itmXml}
             setVal('bizMsgId', tval('BizMsgIdr'));
             setVal('bizSvc', tval('BizSvc'));
             setVal('msgId', tval('MsgId'));
+            const appHdrEl = doc.getElementsByTagName('AppHdr')[0];
+            if (appHdrEl) {
+                setVal('appHdrPriority', appHdrEl.getElementsByTagName('Prty')[0]?.textContent?.trim() || '');
+            }
 
             const tryTag = (tag: string, child: string) => {
                 const p = doc.getElementsByTagName(tag)[0];

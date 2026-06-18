@@ -1309,7 +1309,10 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 patch.bizMsgId = tval('BizMsgIdr', appHdr);
                 patch.appHdrPriority = tval('Prty', appHdr);
                 const rltd = getT('Rltd', appHdr);
-                if (rltd) patch.rltd = tval('BizMsgIdr', rltd);
+                if (rltd) {
+                    patch.rltd = tval('BizMsgIdr', rltd);
+                    patch.rltdCharSet = tval('CharSet', rltd);
+                }
             }
 
             // 2. Document

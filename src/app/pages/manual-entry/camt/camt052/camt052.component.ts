@@ -1288,11 +1288,56 @@ export class Camt052Component implements OnInit, OnDestroy {
                     setVal('grpHdrMsgRcptNm', tval('Nm', rcpt));
                     setVal('grpHdrMsgRcptBic', tval('AnyBIC', rcpt));
                 }
+                // GrpHdr extras
+                const msgPgntn = getT('MsgPgntn', grpHdr);
+                if (msgPgntn) {
+                    setVal('grpHdrMsgPgntnPgNb', tval('PgNb', msgPgntn));
+                    setVal('grpHdrMsgPgntnLastPg', tval('LastPgInd', msgPgntn));
+                }
+                const orgnlBizQry = getT('OrgnlBizQry', grpHdr);
+                if (orgnlBizQry) {
+                    setVal('grpHdrOrgnlBizQryMsgId', tval('MsgId', orgnlBizQry));
+                    setVal('grpHdrOrgnlBizQryMsgDef', tval('MsgDefIdr', orgnlBizQry));
+                }
+                setVal('grpHdrAddtlInf', tval('AddtlInf', grpHdr));
+            }
+
+            // AppHdr extras
+            if (appHdr) {
+                setVal('appHdrBizPrcgDt', tval('BizPrcgDt', appHdr));
             }
 
             const rpt = getT('Rpt');
             if (rpt) {
                 setVal('rptId', tval('Id', rpt));
+
+                // Rpt pagination
+                const rptPgntn = getT('RptPgntn', rpt);
+                if (rptPgntn) {
+                    setVal('rptPgNb', tval('PgNb', rptPgntn));
+                    setVal('rptPgLastPgInd', tval('LastPgInd', rptPgntn));
+                }
+
+                // Rpt sequence numbers
+                setVal('elctrncSeqNb', tval('ElctrncSeqNb', rpt));
+                setVal('lglSeqNb', tval('LglSeqNb', rpt));
+                const rptgSeqEl = getT('RptgSeq', rpt);
+                if (rptgSeqEl) setVal('rptgSeq', tval('FrSeq', rptgSeqEl));
+
+                // Rpt date range
+                const frToDt = getT('FrToDt', rpt);
+                if (frToDt) {
+                    setVal('frDtTm', tval('FrDtTm', frToDt));
+                    setVal('toDtTm', tval('ToDtTm', frToDt));
+                }
+
+                // Rpt misc
+                setVal('cpyDplctInd', tval('CpyDplctInd', rpt));
+                const rptgSrcEl = getT('RptgSrc', rpt);
+                if (rptgSrcEl) setVal('rptgSrc', tval('Prtry', rptgSrcEl));
+                setVal('addtlRptInf', tval('AddtlRptInf', rpt));
+
+                // Account
                 const acct = getT('Acct', rpt);
                 if (acct) {
                     const id = getT('Id', acct);
@@ -1301,11 +1346,242 @@ export class Camt052Component implements OnInit, OnDestroy {
                         if (iban) {
                             setVal('acctId', iban);
                             patch.acctIdType = 'IBAN';
+                        } else {
+                            const othrId = tval('Id', getT('Othr', id) || id);
+                            if (othrId) {
+                                setVal('acctId', othrId);
+                                patch.acctIdType = 'Othr';
+                            }
                         }
                     }
                     setVal('acctCcy', tval('Ccy', acct));
+                    setVal('acctNm', tval('Nm', acct));
+                    const acctTpEl = getT('Tp', acct);
+                    if (acctTpEl) setVal('acctTp', tval('Cd', acctTpEl));
                     const svcr = getT('Svcr', acct);
                     if (svcr) setVal('acctSvcrBic', tval('BICFI', getT('FinInstnId', svcr) || svcr));
+                }
+
+                // Balance block — first Bal
+                const balEls = rpt.getElementsByTagName('Bal');
+                if (balEls.length > 0) {
+                    const bal0 = balEls[0];
+                    const bal0Tp = getT('CdOrPrtry', getT('Tp', bal0) || bal0);
+                    if (bal0Tp) setVal('balType', tval('Cd', bal0Tp));
+                    const bal0AmtEl = getT('Amt', bal0);
+                    if (bal0AmtEl) setVal('balanceAmt', bal0AmtEl.textContent?.trim() || '');
+                    setVal('balInd', tval('CdtDbtInd', bal0));
+                    const bal0DtEl = getT('Dt', bal0);
+                    if (bal0DtEl) setVal('balDt', tval('Dt', bal0DtEl));
+                }
+
+                // Second balance (bal2)
+                if (balEls.length > 1) {
+                    patch['bal2Enabled'] = true;
+                    const bal1 = balEls[1];
+                    const bal1Tp = getT('CdOrPrtry', getT('Tp', bal1) || bal1);
+                    if (bal1Tp) setVal('bal2Type', tval('Cd', bal1Tp));
+                    const bal1AmtEl = getT('Amt', bal1);
+                    if (bal1AmtEl) setVal('bal2Amt', bal1AmtEl.textContent?.trim() || '');
+                    setVal('bal2Ind', tval('CdtDbtInd', bal1));
+                    const bal1DtEl = getT('Dt', bal1);
+                    if (bal1DtEl) setVal('bal2Dt', tval('Dt', bal1DtEl));
+                }
+
+                // TxsSummry
+                const txsSummry = getT('TxsSummry', rpt);
+                if (txsSummry) {
+                    patch['txsSummryEnabled'] = true;
+                    const ttlNtries = getT('TtlNtries', txsSummry);
+                    if (ttlNtries) {
+                        setVal('nbOfTtlNtrys', tval('NbOfNtries', ttlNtries));
+                        setVal('sumTtlNtrys', tval('Sum', ttlNtries));
+                    }
+                    const ttlCdtNtries = getT('TtlCdtNtries', txsSummry);
+                    if (ttlCdtNtries) {
+                        setVal('nbOfTtlCdtNtrys', tval('NbOfNtries', ttlCdtNtries));
+                        setVal('sumTtlCdtNtrys', tval('Sum', ttlCdtNtries));
+                    }
+                    const ttlDbtNtries = getT('TtlDbtNtries', txsSummry);
+                    if (ttlDbtNtries) {
+                        setVal('nbOfTtlDbtNtrys', tval('NbOfNtries', ttlDbtNtries));
+                        setVal('sumTtlDbtNtrys', tval('Sum', ttlDbtNtries));
+                    }
+                }
+
+                // Entry (Ntry) — first entry
+                const ntryEl = getT('Ntry', rpt);
+                if (ntryEl) {
+                    setVal('ntryRef', tval('NtryRef', ntryEl));
+                    const ntryAmtEl = getT('Amt', ntryEl);
+                    if (ntryAmtEl) setVal('ntryAmt', ntryAmtEl.textContent?.trim() || '');
+                    setVal('ntryInd', tval('CdtDbtInd', ntryEl));
+                    const ntryStsCd = getT('Sts', ntryEl);
+                    if (ntryStsCd) setVal('ntrySts', tval('Cd', ntryStsCd));
+                    setVal('ntryRevsclInd', tval('RvslInd', ntryEl));
+                    const ntryBookgDtEl = getT('BookgDt', ntryEl);
+                    if (ntryBookgDtEl) setVal('ntryBookgDt', tval('Dt', ntryBookgDtEl));
+                    const ntryValDtEl = getT('ValDt', ntryEl);
+                    if (ntryValDtEl) setVal('ntryValDt', tval('Dt', ntryValDtEl));
+                    setVal('ntryAcctSvcrRef', tval('AcctSvcrRef', ntryEl));
+
+                    // Avlbty
+                    const avlbty = getT('Avlbty', ntryEl);
+                    if (avlbty) {
+                        const avlbtyDtEl = getT('Dt', avlbty);
+                        if (avlbtyDtEl) setVal('ntryAvlbtyDt', tval('ActlDt', avlbtyDtEl));
+                        const avlbtyAmtEl = getT('Amt', avlbty);
+                        if (avlbtyAmtEl) setVal('ntryAvlbtyAmt', avlbtyAmtEl.textContent?.trim() || '');
+                        setVal('ntryAvlbtyCdtDbtInd', tval('CdtDbtInd', avlbty));
+                    }
+
+                    // ComssnWvrInd
+                    setVal('ntryComssnWvrInd', tval('ComssnWvrInd', ntryEl));
+
+                    // AddtlInfInd
+                    const addtlInfInd = getT('AddtlInfInd', ntryEl);
+                    if (addtlInfInd) setVal('ntryAddtlInfIndMsgNmId', tval('MsgNmId', addtlInfInd));
+
+                    // AmtDtls
+                    const amtDtls = getT('AmtDtls', ntryEl);
+                    if (amtDtls) {
+                        const instdAmtEl = getT('InstdAmt', amtDtls);
+                        if (instdAmtEl) {
+                            const instdAmtAmt = getT('Amt', instdAmtEl);
+                            if (instdAmtAmt) setVal('ntryAmtDtlsInstdAmt', instdAmtAmt.textContent?.trim() || '');
+                        }
+                    }
+
+                    // Chrgs
+                    const chrgs = getT('Chrgs', ntryEl);
+                    if (chrgs) {
+                        const ttlChrgsEl = getT('TtlChrgsAndTaxAmt', chrgs);
+                        if (ttlChrgsEl) setVal('ntryChrgsAmt', ttlChrgsEl.textContent?.trim() || '');
+                    }
+
+                    // TechInptChanl
+                    const techInptChanl = getT('TechInptChanl', ntryEl);
+                    if (techInptChanl) setVal('ntryTechInptChanl', tval('Prtry', techInptChanl));
+
+                    // Intrst
+                    const intrst = getT('Intrst', ntryEl);
+                    if (intrst) {
+                        const ttlIntrstEl = getT('TtlIntrstAndTaxAmt', intrst);
+                        if (ttlIntrstEl) setVal('ntryIntrstAmt', ttlIntrstEl.textContent?.trim() || '');
+                    }
+
+                    // CardTx
+                    const cardTx = getT('CardTx', ntryEl);
+                    if (cardTx) {
+                        const plainCardData = getT('PlainCardData', cardTx);
+                        if (plainCardData) setVal('ntryCardTxPan', tval('PAN', plainCardData));
+                    }
+
+                    // BkTxCd
+                    const bkTxCd = getT('BkTxCd', ntryEl);
+                    if (bkTxCd) {
+                        const domn = getT('Domn', bkTxCd);
+                        if (domn) {
+                            setVal('ntryBkTxCdDomn', tval('Cd', domn));
+                            const fmly = getT('Fmly', domn);
+                            if (fmly) {
+                                setVal('ntryBkTxCdFmly', tval('Cd', fmly));
+                                setVal('ntryBkTxCdSubFmly', tval('SubFmlyCd', fmly));
+                            }
+                        }
+                    }
+
+                    // AddtlNtryInf
+                    setVal('ntryAddtlInf', tval('AddtlNtryInf', ntryEl));
+
+                    // Entry Details — TxDtls
+                    const ntryDtls = getT('NtryDtls', ntryEl);
+                    const txDtls = ntryDtls ? getT('TxDtls', ntryDtls) : null;
+                    if (txDtls) {
+                        patch['txDtlsEnabled'] = true;
+                        const refs = getT('Refs', txDtls);
+                        if (refs) {
+                            setVal('txEndToEndId', tval('EndToEndId', refs));
+                            setVal('txMsgId', tval('MsgId', refs));
+                            setVal('txAcctSvcrRef', tval('AcctSvcrRef', refs));
+                            setVal('txPmtInfId', tval('PmtInfId', refs));
+                            setVal('txInstrId', tval('InstrId', refs));
+                            setVal('txUetr', tval('UETR', refs));
+                        }
+                        const txAmtEl = getT('Amt', txDtls);
+                        if (txAmtEl) setVal('txAmt', txAmtEl.textContent?.trim() || '');
+                        setVal('txCdtDbtInd', tval('CdtDbtInd', txDtls));
+
+                        // Related Parties
+                        const rltdPties = getT('RltdPties', txDtls);
+                        if (rltdPties) {
+                            const initgPty = getT('InitgPty', rltdPties);
+                            if (initgPty) setVal('txInitgPtyNm', tval('Nm', initgPty));
+                            const ultmtDbtr = getT('UltmtDbtr', rltdPties);
+                            if (ultmtDbtr) setVal('txUltmtDbtrNm', tval('Nm', ultmtDbtr));
+                            const dbtr = getT('Dbtr', rltdPties);
+                            if (dbtr) {
+                                // Try Dbtr/Pty/Nm first, fall back to Dbtr/Nm
+                                const dbtrPty = getT('Pty', dbtr);
+                                setVal('txDbtrNm', dbtrPty ? tval('Nm', dbtrPty) : tval('Nm', dbtr));
+                            }
+                            const dbtrAcct = getT('DbtrAcct', rltdPties);
+                            if (dbtrAcct) {
+                                const dbtrAcctId = getT('Id', dbtrAcct);
+                                if (dbtrAcctId) {
+                                    const dbtrOthr = getT('Othr', dbtrAcctId);
+                                    if (dbtrOthr) setVal('txDbtrAcct', tval('Id', dbtrOthr));
+                                }
+                            }
+                            const cdtr = getT('Cdtr', rltdPties);
+                            if (cdtr) {
+                                // Try Cdtr/Pty/Nm first, fall back to Cdtr/Nm
+                                const cdtrPty = getT('Pty', cdtr);
+                                setVal('txCdtrNm', cdtrPty ? tval('Nm', cdtrPty) : tval('Nm', cdtr));
+                            }
+                            const cdtrAcct = getT('CdtrAcct', rltdPties);
+                            if (cdtrAcct) {
+                                const cdtrAcctId = getT('Id', cdtrAcct);
+                                if (cdtrAcctId) {
+                                    const cdtrOthr = getT('Othr', cdtrAcctId);
+                                    if (cdtrOthr) setVal('txCdtrAcct', tval('Id', cdtrOthr));
+                                }
+                            }
+                            const ultmtCdtr = getT('UltmtCdtr', rltdPties);
+                            if (ultmtCdtr) setVal('txUltmtCdtrNm', tval('Nm', ultmtCdtr));
+                        }
+
+                        // Related Agents
+                        const rltdAgts = getT('RltdAgts', txDtls);
+                        if (rltdAgts) {
+                            const dbtrAgt = getT('DbtrAgt', rltdAgts);
+                            if (dbtrAgt) setVal('txDbtrAgtBic', tval('BICFI', getT('FinInstnId', dbtrAgt) || dbtrAgt));
+                            const intrmyAgt = getT('IntrmyAgt1', rltdAgts);
+                            if (intrmyAgt) setVal('txIntrmyAgtBic', tval('BICFI', getT('FinInstnId', intrmyAgt) || intrmyAgt));
+                            const cdtrAgt = getT('CdtrAgt', rltdAgts);
+                            if (cdtrAgt) setVal('txCdtrAgtBic', tval('BICFI', getT('FinInstnId', cdtrAgt) || cdtrAgt));
+                        }
+
+                        // Purpose
+                        const purp = getT('Purp', txDtls);
+                        if (purp) setVal('ntryPurpCd', tval('Cd', purp));
+
+                        // Remittance
+                        const rmtInf = getT('RmtInf', txDtls);
+                        if (rmtInf) {
+                            setVal('txRmtInfUstrd', tval('Ustrd', rmtInf));
+                            const strd = getT('Strd', rmtInf);
+                            if (strd) {
+                                const cdtrRefInf = getT('CdtrRefInf', strd);
+                                if (cdtrRefInf) {
+                                    const cdtrRefTp = getT('CdOrPrtry', getT('Tp', cdtrRefInf) || cdtrRefInf);
+                                    if (cdtrRefTp) setVal('txRmtInfStrdCdtrRefType', tval('Cd', cdtrRefTp));
+                                    setVal('txRmtInfStrdCdtrRef', tval('Ref', cdtrRefInf));
+                                }
+                                setVal('txRmtInfStrdAddtlRmtInf', tval('AddtlRmtInf', strd));
+                            }
+                        }
+                    }
                 }
             }
 

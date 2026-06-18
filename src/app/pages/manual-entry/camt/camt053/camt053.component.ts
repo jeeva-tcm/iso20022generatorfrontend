@@ -1246,6 +1246,7 @@ export class Camt053Component implements OnInit, OnDestroy {
         setVal('bizSvc', tval('BizSvc', appHdr));
         setVal('creDtTm', tval('CreDt', appHdr));
         setVal('appHdrCharSet', tval('CharSet', appHdr));
+        setVal('appHdrBizPrcgDt', tval('BizPrcgDt', appHdr));
         setVal('appHdrCpyDplct', tval('CpyDplct', appHdr));
         setVal('appHdrPrty', tval('Prty', appHdr));
         setVal('appHdrPssblDplct', tval('PssblDplct', appHdr));

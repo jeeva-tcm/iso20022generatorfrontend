@@ -871,6 +871,12 @@ export class Pacs8Component implements OnInit, OnDestroy {
       dbtrAgtAcctType: ['iban'],
       cdtrAgtAcct: [''],
       cdtrAgtAcctType: ['iban'],
+      // SR2026: Proxy Type for each account (Proxy/Tp/Cd — 4-char uppercase code e.g. TELE, EMAL, MOBL)
+      dbtrAcctPrxyTp: ['', [Validators.maxLength(4), Validators.pattern(/^[A-Z]{4}$/)]],
+      cdtrAcctPrxyTp: ['', [Validators.maxLength(4), Validators.pattern(/^[A-Z]{4}$/)]],
+      dbtrAgtAcctPrxyTp: ['', [Validators.maxLength(4), Validators.pattern(/^[A-Z]{4}$/)]],
+      cdtrAgtAcctPrxyTp: ['', [Validators.maxLength(4), Validators.pattern(/^[A-Z]{4}$/)]],
+      sttlmAcctPrxyTp: ['', [Validators.maxLength(4), Validators.pattern(/^[A-Z]{4}$/)]],
 
       rmtInfType: ['none'],
       rmtInfUstrd: ['', [Validators.maxLength(140), Validators.pattern(/^[a-zA-Z0-9\/\-\?:\(\)\.,\+' ]+$/)]],
@@ -1619,14 +1625,34 @@ export class Pacs8Component implements OnInit, OnDestroy {
         if (initgContent.trim()) tx += `${this.tabs(4)}<InitgPty>\n${initgContent}${this.tabs(4)}</InitgPty>\n`;
     }
     tx += this.partyAgentXml('Dbtr', 'dbtr', v, 4);
-    if (v.dbtrAcct?.trim()) tx += this.tag('DbtrAcct', this.tag('Id', formatAcct(v.dbtrAcct, 5, v.dbtrAcctType), 5), 4);
+    if (v.dbtrAcct?.trim()) {
+      let _dbtrAcctInner = this.tag('Id', formatAcct(v.dbtrAcct, 5, v.dbtrAcctType), 5);
+      if (this.isSR2026 && v.dbtrAcctPrxyTp?.trim())
+        _dbtrAcctInner += this.tag('Prxy', this.tag('Tp', this.el('Cd', v.dbtrAcctPrxyTp, 7), 6), 5);
+      tx += this.tag('DbtrAcct', _dbtrAcctInner, 4);
+    }
     tx += this.agt('DbtrAgt', 'dbtrAgt', v, 4);
-    if (v.dbtrAgtAcct?.trim()) tx += this.tag('DbtrAgtAcct', this.tag('Id', formatAcct(v.dbtrAgtAcct, 5, v.dbtrAgtAcctType), 5), 4);
+    if (v.dbtrAgtAcct?.trim()) {
+      let _dbtrAgtAcctInner = this.tag('Id', formatAcct(v.dbtrAgtAcct, 5, v.dbtrAgtAcctType), 5);
+      if (this.isSR2026 && v.dbtrAgtAcctPrxyTp?.trim())
+        _dbtrAgtAcctInner += this.tag('Prxy', this.tag('Tp', this.el('Cd', v.dbtrAgtAcctPrxyTp, 7), 6), 5);
+      tx += this.tag('DbtrAgtAcct', _dbtrAgtAcctInner, 4);
+    }
 
     tx += this.agt('CdtrAgt', 'cdtrAgt', v, 4);
-    if (v.cdtrAgtAcct?.trim()) tx += this.tag('CdtrAgtAcct', this.tag('Id', formatAcct(v.cdtrAgtAcct, 5, v.cdtrAgtAcctType), 5), 4);
+    if (v.cdtrAgtAcct?.trim()) {
+      let _cdtrAgtAcctInner = this.tag('Id', formatAcct(v.cdtrAgtAcct, 5, v.cdtrAgtAcctType), 5);
+      if (this.isSR2026 && v.cdtrAgtAcctPrxyTp?.trim())
+        _cdtrAgtAcctInner += this.tag('Prxy', this.tag('Tp', this.el('Cd', v.cdtrAgtAcctPrxyTp, 7), 6), 5);
+      tx += this.tag('CdtrAgtAcct', _cdtrAgtAcctInner, 4);
+    }
     tx += this.partyAgentXml('Cdtr', 'cdtr', v, 4);
-    if (v.cdtrAcct?.trim()) tx += this.tag('CdtrAcct', this.tag('Id', formatAcct(v.cdtrAcct, 5, v.cdtrAcctType), 5), 4);
+    if (v.cdtrAcct?.trim()) {
+      let _cdtrAcctInner = this.tag('Id', formatAcct(v.cdtrAcct, 5, v.cdtrAcctType), 5);
+      if (this.isSR2026 && v.cdtrAcctPrxyTp?.trim())
+        _cdtrAcctInner += this.tag('Prxy', this.tag('Tp', this.el('Cd', v.cdtrAcctPrxyTp, 7), 6), 5);
+      tx += this.tag('CdtrAcct', _cdtrAcctInner, 4);
+    }
     tx += this.partyAgentXml('UltmtCdtr', 'ultmtCdtr', v, 4);
 
     // InstrForCdtrAgt (0..2) � CBPR+ R36: each <Cd> value must appear at most once
@@ -2241,6 +2267,11 @@ ${tx}\t\t\t</CdtTrfTxInf>
           } else {
             setVal('thrdRmbrsmntAgtBic', '');
           }
+          const _sttlmAcctEl = getT('SttlmAcct', sttlmInf);
+          if (_sttlmAcctEl) {
+            const _sttlmPrxy = getT('Prxy', _sttlmAcctEl);
+            if (_sttlmPrxy) setVal('sttlmAcctPrxyTp', tval('Cd', getT('Tp', _sttlmPrxy)));
+          }
         }
       }
 
@@ -2430,7 +2461,8 @@ ${tx}\t\t\t</CdtTrfTxInf>
                 setVal(prefix + 'AddrType', hasTwnOrCtry ? 'hybrid' : 'unstructured');
               }
               // Detail structured fields must NOT coexist with <AdrLine>; wipe them.
-              ['StrtNm','BldgNb','BldgNm','Flr','PstBx','Room','PstCd','Dept','SubDept','TwnLctnNm','DstrctNm','CtrySubDvsn'].forEach(f =>
+              // TwnNm, Ctry, TwnLctnNm, DstrctNm, CtrySubDvsn are valid alongside AdrLine (hybrid) — preserve them.
+              ['StrtNm','BldgNb','BldgNm','Flr','PstBx','Room','PstCd','Dept','SubDept'].forEach(f =>
                 setVal(prefix + f, ''));
             } else {
               // No AdrLine in XML: pure structured mode.
@@ -2655,7 +2687,9 @@ ${tx}\t\t\t</CdtTrfTxInf>
             mapParty(p.charAt(0).toUpperCase() + p.slice(1), p, tx);
         });
 
-        // Extra Accounts check � also detect IBAN vs Other for dbtr/cdtr/dbtrAgt/cdtrAgt/intrmyAgt1/intrmyAgt2/intrmyAgt3 AcctType dropdown
+        // Extra Accounts check — also detect IBAN vs Other for AcctType dropdown.
+        // Also parse SR2026 Proxy/Tp/Cd into the *AcctPrxyTp form controls.
+        const _proxyAcctPrefixes = new Set(['dbtr', 'cdtr', 'dbtrAgt', 'cdtrAgt']);
         ['instgAgt', 'instdAgt', 'dbtrAgt', 'cdtrAgt', 'dbtr', 'cdtr', 'ultmtDbtr', 'ultmtCdtr', 'intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'].forEach(p => {
             const tag = p.charAt(0).toUpperCase() + p.slice(1) + 'Acct';
             const acctParent = getT(tag, tx);
@@ -2671,6 +2705,14 @@ ${tx}\t\t\t</CdtTrfTxInf>
                         if (['dbtr', 'cdtr', 'dbtrAgt', 'cdtrAgt', 'intrmyAgt1', 'intrmyAgt2', 'intrmyAgt3'].includes(p)) {
                             setVal(p + 'AcctType', ibanVal ? 'iban' : 'other');
                         }
+                    }
+                }
+                // SR2026 Proxy Type: <Prxy><Tp><Cd>TELE</Cd></Tp></Prxy>
+                if (_proxyAcctPrefixes.has(p)) {
+                    const prxy = getT('Prxy', acctParent);
+                    if (prxy) {
+                        const tp = getT('Tp', prxy);
+                        if (tp) setVal(p + 'AcctPrxyTp', tval('Cd', tp));
                     }
                 }
             }

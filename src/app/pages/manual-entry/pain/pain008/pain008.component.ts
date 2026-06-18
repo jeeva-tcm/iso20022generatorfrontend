@@ -981,6 +981,12 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
     setV('PstCd', 'PstCd');
     setV('Dept', 'Dept');
     setV('SubDept', 'SubDept');
+    setV('Flr', 'Flr');
+    setV('PstBx', 'PstBx');
+    setV('Room', 'Room');
+    setV('TwnLctnNm', 'TwnLctnNm');
+    setV('DstrctNm', 'DstrctNm');
+    setV('CtrySubDvsn', 'CtrySubDvsn');
     const adrLines = Array.from(pstl.getElementsByTagName('AdrLine'));
     if (adrLines[0]) patch[prefix + 'AdrLine1'] = adrLines[0].textContent?.trim() || '';
     if (adrLines[1]) patch[prefix + 'AdrLine2'] = adrLines[1].textContent?.trim() || '';

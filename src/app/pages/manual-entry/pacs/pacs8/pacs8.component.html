@@ -381,7 +381,15 @@
                                         </div>
                                         <div class="form-group intermediary-field">
                                                 <label>Service Level Code <span class="opt">Optional</span></label>
-                                                <input formControlName="svcLvlCd" placeholder="e.g. G001">
+                                                <ng-container *ngIf="isSR2026 && verDelta.allowed('svcLvlCd') as opts; else svcLvlFreeInput">
+                                                        <select formControlName="svcLvlCd">
+                                                                <option value="">-- Select --</option>
+                                                                <option *ngFor="let o of opts" [value]="o">{{o}}</option>
+                                                        </select>
+                                                </ng-container>
+                                                <ng-template #svcLvlFreeInput>
+                                                        <input formControlName="svcLvlCd" placeholder="e.g. G001">
+                                                </ng-template>
                                                 <div class="validation-msg" *ngIf="err('svcLvlCd') as e">{{e}}</div>
                                         </div>
                                         <div class="form-group intermediary-field">
@@ -585,6 +593,12 @@
                                                                 <div class="validation-msg"
                                                                         *ngIf="err('dbtrAcct') as e">{{e}}</div>
                                                         </div>
+                                                        <!-- SR2026: Proxy Type -->
+                                                        <div class="form-group" *ngIf="isSR2026">
+                                                                <label>Proxy Type <span *ngIf="verDelta.isReq('dbtrAcctPrxyTp')" class="req">*</span><span *ngIf="!verDelta.isReq('dbtrAcctPrxyTp')" class="opt">Optional</span></label>
+                                                                <input formControlName="dbtrAcctPrxyTp" maxlength="4" placeholder="e.g. TELE">
+                                                                <div class="validation-msg" *ngIf="err('dbtrAcctPrxyTp') as e">{{e}}</div>
+                                                        </div>
                                                 </div>
                                         </div>
 
@@ -614,6 +628,12 @@
                                                                         [placeholder]="form.get('dbtrAgtAcctType')?.value === 'iban' ? 'e.g. BE68539007547034' : 'e.g. 471932901234'">
                                                                 <div class="validation-msg"
                                                                         *ngIf="err('dbtrAgtAcct') as e">{{e}}</div>
+                                                        </div>
+                                                        <!-- SR2026: Proxy Type -->
+                                                        <div class="form-group" *ngIf="isSR2026">
+                                                                <label>Proxy Type <span *ngIf="verDelta.isReq('dbtrAgtAcctPrxyTp')" class="req">*</span><span *ngIf="!verDelta.isReq('dbtrAgtAcctPrxyTp')" class="opt">Optional</span></label>
+                                                                <input formControlName="dbtrAgtAcctPrxyTp" maxlength="4" placeholder="e.g. TELE">
+                                                                <div class="validation-msg" *ngIf="err('dbtrAgtAcctPrxyTp') as e">{{e}}</div>
                                                         </div>
                                                 </div>
                                         </div>
@@ -645,6 +665,12 @@
                                                                 <div class="validation-msg"
                                                                         *ngIf="err('cdtrAgtAcct') as e">{{e}}</div>
                                                         </div>
+                                                        <!-- SR2026: Proxy Type -->
+                                                        <div class="form-group" *ngIf="isSR2026">
+                                                                <label>Proxy Type <span *ngIf="verDelta.isReq('cdtrAgtAcctPrxyTp')" class="req">*</span><span *ngIf="!verDelta.isReq('cdtrAgtAcctPrxyTp')" class="opt">Optional</span></label>
+                                                                <input formControlName="cdtrAgtAcctPrxyTp" maxlength="4" placeholder="e.g. TELE">
+                                                                <div class="validation-msg" *ngIf="err('cdtrAgtAcctPrxyTp') as e">{{e}}</div>
+                                                        </div>
                                                 </div>
                                         </div>
 
@@ -674,6 +700,12 @@
                                                                         [placeholder]="form.get('cdtrAcctType')?.value === 'iban' ? 'e.g. LU280019400644750000' : 'e.g. 471932901234'">
                                                                 <div class="validation-msg"
                                                                         *ngIf="err('cdtrAcct') as e">{{e}}</div>
+                                                        </div>
+                                                        <!-- SR2026: Proxy Type -->
+                                                        <div class="form-group" *ngIf="isSR2026">
+                                                                <label>Proxy Type <span *ngIf="verDelta.isReq('cdtrAcctPrxyTp')" class="req">*</span><span *ngIf="!verDelta.isReq('cdtrAcctPrxyTp')" class="opt">Optional</span></label>
+                                                                <input formControlName="cdtrAcctPrxyTp" maxlength="4" placeholder="e.g. TELE">
+                                                                <div class="validation-msg" *ngIf="err('cdtrAcctPrxyTp') as e">{{e}}</div>
                                                         </div>
                                                 </div>
                                         </div>

@@ -1944,6 +1944,13 @@ ${tx}\t\t\t</DrctDbtTxInf>
           patch.toLei = tval('LEI', to);
         }
         patch.bizMsgId = tval('BizMsgIdr', appHdr);
+        // Group D — AppHdr extras
+        patch.charSet = tval('CharSet', appHdr);
+        const mktPrctcEl = getT('MktPrctc', appHdr);
+        if (mktPrctcEl) {
+          patch.mktPrctc = tval('Id', mktPrctcEl);
+          patch.regyId = tval('Regy', mktPrctcEl);
+        }
       }
 
       // Document
@@ -1968,11 +1975,24 @@ ${tx}\t\t\t</DrctDbtTxInf>
         if (pmtTp) {
           patch.instrPrty = tval('InstrPrty', pmtTp);
           patch.clrChanl = tval('ClrChanl', pmtTp);
-          const svcLvl = getT('SvcLvl', pmtTp);
-          if (svcLvl) {
-            patch.svcLvlCd = tval('Cd', svcLvl);
-            patch.svcLvlPrtry = tval('Prtry', svcLvl);
+          // Group A — Multiple SvcLvl entries
+          const svcLvlEls = pmtTp.querySelectorAll ? Array.from(pmtTp.querySelectorAll('SvcLvl')) : [];
+          if (svcLvlEls.length === 0) {
+            const svcLvlFallback = getT('SvcLvl', pmtTp);
+            if (svcLvlFallback) {
+              patch.svcLvlCd = tval('Cd', svcLvlFallback);
+              patch.svcLvlPrtry = tval('Prtry', svcLvlFallback);
+            }
+          } else {
+            const svcLvlKeys = ['', '2', '3'];
+            svcLvlEls.slice(0, 3).forEach((sl: Element, idx: number) => {
+              const s = svcLvlKeys[idx];
+              patch['svcLvlCd' + s] = tval('Cd', sl);
+              patch['svcLvlPrtry' + s] = tval('Prtry', sl);
+            });
           }
+          // Group K — SeqTp
+          patch.seqTp = tval('SeqTp', pmtTp);
           const lclInstrm = getT('LclInstrm', pmtTp);
           if (lclInstrm) {
             patch.lclInstrmCd = tval('Cd', lclInstrm);
@@ -1991,7 +2011,34 @@ ${tx}\t\t\t</DrctDbtTxInf>
           patch.currency = amtEl.getAttribute('Ccy') || '';
         }
         patch.sttlmDt = tval('IntrBkSttlmDt', tx);
+        patch.sttlmPrty = tval('SttlmPrty', tx);
+        // Group B — Settlement timing
+        const sttlmTmIndctn = getT('SttlmTmIndctn', tx);
+        if (sttlmTmIndctn) {
+          patch.cdtDtTm = tval('CdtDtTm', sttlmTmIndctn);
+          patch.dbtDtTm = tval('DbtDtTm', sttlmTmIndctn);
+        }
+        // Group K — InstdAmt and XchgRate
+        const instdAmtEl = getT('InstdAmt', tx);
+        if (instdAmtEl) {
+          patch.instdAmt = instdAmtEl.textContent?.trim() || '';
+          patch.instdAmtCcy = instdAmtEl.getAttribute('Ccy') || '';
+        }
+        patch.xchgRate = tval('XchgRate', tx);
         patch.reqdColltnDt = tval('ReqdColltnDt', tx);
+
+        // Group C — ChrgsInf (up to 3)
+        const chrgsInfEls = tx.querySelectorAll ? Array.from(tx.querySelectorAll('ChrgsInf')) : [];
+        const chrgsKeys = ['', '2', '3'];
+        chrgsInfEls.slice(0, 3).forEach((ci: Element, idx: number) => {
+          const s = chrgsKeys[idx];
+          const ciAmtEl = getT('Amt', ci);
+          if (ciAmtEl) {
+            patch['chrgsInfAmt' + s] = ciAmtEl.textContent?.trim() || '';
+            patch['chrgsInfCcy' + s] = ciAmtEl.getAttribute('Ccy') || '';
+          }
+          patch['chrgsInfAgtBic' + s] = tval('BICFI', getT('FinInstnId', getT('Agt', ci) || ci) || ci);
+        });
 
         patch.chrgBr = tval('ChrgBr', tx);
 
@@ -2002,6 +2049,25 @@ ${tx}\t\t\t</DrctDbtTxInf>
             patch.mndtId = tval('MndtId', mndt);
             patch.dtOfSgntr = tval('DtOfSgntr', mndt);
             patch.amdmntInd = tval('AmdmntInd', mndt);
+            // Group I — AmdmntInfDtls fields
+            const amdmntDtls = getT('AmdmntInfDtls', mndt);
+            if (amdmntDtls) {
+              patch.orgnlMndtId = tval('OrgnlMndtId', amdmntDtls);
+              const orgnlCdtrSchme = getT('OrgnlCdtrSchmeId', amdmntDtls);
+              if (orgnlCdtrSchme) {
+                patch.orgnlCdtrSchmeIdNm = tval('Nm', orgnlCdtrSchme);
+                patch.orgnlCdtrSchmeCtryOfRes = tval('CtryOfRes', orgnlCdtrSchme);
+              }
+              const orgnlCdtrAgtAcctEl = getT('OrgnlCdtrAgtAcct', amdmntDtls);
+              if (orgnlCdtrAgtAcctEl) {
+                const acctId = getT('Id', orgnlCdtrAgtAcctEl);
+                patch.orgnlCdtrAgtAcct = tval('IBAN', acctId || orgnlCdtrAgtAcctEl) ||
+                  tval('Id', getT('Othr', acctId || orgnlCdtrAgtAcctEl) || orgnlCdtrAgtAcctEl);
+                patch.orgnlCdtrAgtAcctTpCd = tval('Cd', getT('Tp', orgnlCdtrAgtAcctEl) || orgnlCdtrAgtAcctEl);
+                const prxy = getT('Prxy', orgnlCdtrAgtAcctEl);
+                if (prxy) patch.orgnlCdtrAgtAcctPrxyTpCd = tval('Cd', getT('Tp', prxy) || prxy);
+              }
+            }
           }
         }
 
@@ -2091,6 +2157,98 @@ ${tx}\t\t\t</DrctDbtTxInf>
         mapParty('ultmtDbtr', 'UltmtDbtr');
         mapParty('ultmtCdtr', 'UltmtCdtr');
         mapParty('initgPty', 'InitgPty');
+        mapParty('instgPty', 'InstgPty');
+
+        // Group E — Party/account fields not fully handled by mapParty/mapAgt
+        // CtryOfRes for Dbtr, Cdtr (mapParty sets Name/Addr/Id but not CtryOfRes)
+        const dbtrEl = getT('Dbtr', tx);
+        if (dbtrEl) {
+          patch.dbtrName = tval('Nm', dbtrEl);
+          patch.dbtrCtryOfRes = tval('CtryOfRes', dbtrEl);
+        }
+        const cdtrEl = getT('Cdtr', tx);
+        if (cdtrEl) {
+          patch.cdtrName = tval('Nm', cdtrEl);
+          patch.cdtrCtryOfRes = tval('CtryOfRes', cdtrEl);
+        }
+        const ultmtDbtrEl = getT('UltmtDbtr', tx);
+        if (ultmtDbtrEl) patch.ultmtDbtrName = tval('Nm', ultmtDbtrEl);
+        const ultmtCdtrEl = getT('UltmtCdtr', tx);
+        if (ultmtCdtrEl) patch.ultmtCdtrName = tval('Nm', ultmtCdtrEl);
+        const initgPtyEl = getT('InitgPty', tx);
+        if (initgPtyEl) patch.initgPtyName = tval('Nm', initgPtyEl);
+
+        // Account fields (CdtrAcct, DbtrAcct, CdtrAgtAcct, DbtrAgtAcct)
+        const cdtrAcctEl = getT('CdtrAcct', tx);
+        if (cdtrAcctEl) {
+          const acctId = getT('Id', cdtrAcctEl);
+          patch.cdtrAcct = tval('IBAN', acctId || cdtrAcctEl) ||
+            tval('Id', getT('Othr', acctId || cdtrAcctEl) || cdtrAcctEl);
+        }
+        const dbtrAcctEl = getT('DbtrAcct', tx);
+        if (dbtrAcctEl) {
+          const acctId = getT('Id', dbtrAcctEl);
+          patch.dbtrAcct = tval('IBAN', acctId || dbtrAcctEl) ||
+            tval('Id', getT('Othr', acctId || dbtrAcctEl) || dbtrAcctEl);
+        }
+        const cdtrAgtAcctEl = getT('CdtrAgtAcct', tx);
+        if (cdtrAgtAcctEl) {
+          const acctId = getT('Id', cdtrAgtAcctEl);
+          patch.cdtrAgtAcct = tval('IBAN', acctId || cdtrAgtAcctEl) ||
+            tval('Id', getT('Othr', acctId || cdtrAgtAcctEl) || cdtrAgtAcctEl);
+        }
+        const dbtrAgtAcctEl = getT('DbtrAgtAcct', tx);
+        if (dbtrAgtAcctEl) {
+          const acctId = getT('Id', dbtrAgtAcctEl);
+          patch.dbtrAgtAcct = tval('IBAN', acctId || dbtrAgtAcctEl) ||
+            tval('Id', getT('Othr', acctId || dbtrAgtAcctEl) || dbtrAgtAcctEl);
+        }
+
+        // Group J — instgAgtAcct, instdAgtAcct (mapAgt already sets BIC; account is separate)
+        const instgAgtAcctEl = getT('InstgAgtAcct', tx);
+        if (instgAgtAcctEl) {
+          const acctId = getT('Id', instgAgtAcctEl);
+          patch.instgAgtAcct = tval('IBAN', acctId || instgAgtAcctEl) ||
+            tval('Id', getT('Othr', acctId || instgAgtAcctEl) || instgAgtAcctEl);
+        }
+        const instdAgtAcctEl = getT('InstdAgtAcct', tx);
+        if (instdAgtAcctEl) {
+          const acctId = getT('Id', instdAgtAcctEl);
+          patch.instdAgtAcct = tval('IBAN', acctId || instdAgtAcctEl) ||
+            tval('Id', getT('Othr', acctId || instdAgtAcctEl) || instdAgtAcctEl);
+        }
+
+        // Group F — InstrForCdtrAgt (up to 2) and InstrForNxtAgt (up to 6)
+        if (tx.querySelectorAll) {
+          const cdtrAgtInstrs = Array.from(tx.querySelectorAll('InstrForCdtrAgt'));
+          cdtrAgtInstrs.slice(0, 2).forEach((el: Element, idx: number) => {
+            const n = idx + 1;
+            patch[`instrForCdtrAgt${n}Cd`] = tval('Cd', el);
+            patch[`instrForCdtrAgt${n}InfTxt`] = tval('InstrInf', el);
+          });
+          const nxtAgtInstrs = Array.from(tx.querySelectorAll('InstrForNxtAgt'));
+          nxtAgtInstrs.slice(0, 6).forEach((el: Element, idx: number) => {
+            const n = idx + 1;
+            patch[`instrForNxtAgt${n}Cd`] = tval('Cd', el);
+            patch[`instrForNxtAgt${n}InfTxt`] = tval('InstrInf', el);
+          });
+        }
+
+        // Group G — RgltryRptg and RltdRmtInf (up to 3 each)
+        if (tx.querySelectorAll) {
+          const rgltryEls = Array.from(tx.querySelectorAll('RgltryRptg'));
+          rgltryEls.slice(0, 3).forEach((el: Element, idx: number) => {
+            const n = idx + 1;
+            const dtls = getT('Dtls', el);
+            patch[`rgltryRptg${n}Code`] = dtls ? tval('Cd', dtls) : tval('Cd', el);
+            patch[`rgltryRptg${n}Inf`] = dtls ? tval('Inf', dtls) : tval('Inf', el);
+          });
+          const rltdRmtEls = Array.from(tx.querySelectorAll('RltdRmtInf'));
+          rltdRmtEls.slice(0, 3).forEach((el: Element, idx: number) => {
+            const n = idx + 1;
+            patch[`rltdRmtInf${n}Ref`] = tval('Ref', el);
+          });
+        }
 
         const rmtInf = getT('RmtInf', tx);
         if (rmtInf) {
@@ -2112,6 +2270,17 @@ ${tx}\t\t\t</DrctDbtTxInf>
               if (rfrd) {
                 patch.rmtInfStrdRfrdDocNb = tval('Nb', rfrd);
                 patch.rmtInfStrdRfrdDocCd = tval('Cd', getT('Tp', rfrd) || rfrd);
+              }
+              // Group H — Remittance Strd extras
+              const invcrEl = getT('Invcr', strd);
+              if (invcrEl) patch.rmtInfStrdInvcrNm = tval('Nm', invcrEl);
+              const invceeEl = getT('Invcee', strd);
+              if (invceeEl) patch.rmtInfStrdInvceeNm = tval('Nm', invceeEl);
+              const taxRmtEl = getT('TaxRmt', strd);
+              if (taxRmtEl) patch.rmtInfStrdTaxRmtId = tval('AdmstnZn', taxRmtEl);
+              const grnshmtEl = getT('GrnshmtRmt', strd);
+              if (grnshmtEl) {
+                patch.rmtInfStrdGrnshmtId = tval('Id', getT('Othr', getT('PrvtId', getT('Id', grnshmtEl) || grnshmtEl) || grnshmtEl) || grnshmtEl);
               }
             }
           }
