@@ -481,34 +481,83 @@
                         <div class="party-group-title" style="margin-top: 1rem; font-size: 0.65rem;">Identification</div>
                         <div class="party-grid">
                             <div class="form-group">
-                                <label>Org BIC (AnyBIC)</label>
-                                <div class="uetr-control-row">
-                                    <input formControlName="dbtrOrgIdAnyBic" maxlength="11" class="auto-uppercase">
-                                    <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('dbtrOrgIdAnyBic', form)" matTooltip="Search BIC">
-                                        <mat-icon>search</mat-icon>
-                                    </button>
-                                </div>
-                                <div class="validation-msg" *ngIf="err('dbtrOrgIdAnyBic') as e">{{e}}</div>
-                                <div class="field-hint at-limit" *ngIf="hint('dbtrOrgIdAnyBic', 11) as h">{{h}}</div>
-                            </div>
-                            <div class="form-group">
-                                <label>Org LEI</label>
-                                <input formControlName="dbtrOrgIdLei" maxlength="20">
-                                <div class="validation-msg" *ngIf="err('dbtrOrgIdLei') as e">{{e}}</div>
-                                <div class="field-hint at-limit" *ngIf="hint('dbtrOrgIdLei', 20) as h">{{h}}</div>
-                            </div>
-                            <div class="form-group">
-                                <label>Private Birth Date</label>
-                                <input type="date" formControlName="dbtrPrvtIdBirthDt">
-                                <div class="validation-msg" *ngIf="err('dbtrPrvtIdBirthDt') as e">{{e}}</div>
-                            </div>
-                            <div class="form-group">
-                                <label>Private City of Birth</label>
-                                <input formControlName="dbtrPrvtIdCityOfBirth" maxlength="35">
-                                <div class="validation-msg" *ngIf="err('dbtrPrvtIdCityOfBirth') as e">{{e}}</div>
-                                <div class="field-hint at-limit" *ngIf="hint('dbtrPrvtIdCityOfBirth', 35) as h">{{h}}</div>
+                                <label>Identification Type</label>
+                                <select formControlName="dbtrIdType">
+                                    <option value="none">— None —</option>
+                                    <option value="org">Organisation</option>
+                                    <option value="prvt">Private</option>
+                                </select>
                             </div>
                         </div>
+
+                        <!-- Organisation ID sub-fields -->
+                        <ng-container *ngIf="form.get('dbtrIdType')?.value === 'org'">
+                            <div class="party-grid">
+                                <div class="form-group">
+                                    <label>AnyBIC</label>
+                                    <div class="uetr-control-row">
+                                        <input formControlName="dbtrOrgIdAnyBic" maxlength="11" class="auto-uppercase" placeholder="8 or 11 chars">
+                                        <button type="button" class="uetr-refresh-btn" (click)="openBicSearchGroup('dbtrOrgIdAnyBic', form)" matTooltip="Search BIC">
+                                            <mat-icon>search</mat-icon>
+                                        </button>
+                                    </div>
+                                    <div class="validation-msg" *ngIf="err('dbtrOrgIdAnyBic') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrOrgIdAnyBic', 11) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>LEI</label>
+                                    <input formControlName="dbtrOrgIdLei" maxlength="20">
+                                    <div class="validation-msg" *ngIf="err('dbtrOrgIdLei') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrOrgIdLei', 20) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Other ID</label>
+                                    <input formControlName="dbtrOrgIdOthrId" maxlength="35" placeholder="Other identification">
+                                    <div class="validation-msg" *ngIf="err('dbtrOrgIdOthrId') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrOrgIdOthrId', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Other Scheme Code</label>
+                                    <input formControlName="dbtrOrgIdOthrSchmeNmCd" maxlength="35" placeholder="e.g. CUST, BANK">
+                                    <div class="validation-msg" *ngIf="err('dbtrOrgIdOthrSchmeNmCd') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrOrgIdOthrSchmeNmCd', 35) as h">{{h}}</div>
+                                </div>
+                            </div>
+                        </ng-container>
+
+                        <!-- Private ID sub-fields -->
+                        <ng-container *ngIf="form.get('dbtrIdType')?.value === 'prvt'">
+                            <div class="party-grid">
+                                <div class="form-group">
+                                    <label>Date of Birth <span class="req">*</span></label>
+                                    <input type="date" formControlName="dbtrPrvtIdBirthDt">
+                                    <div class="validation-msg" *ngIf="err('dbtrPrvtIdBirthDt') as e">{{e}}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>City of Birth <span class="req">*</span></label>
+                                    <input formControlName="dbtrPrvtIdCityOfBirth" maxlength="35">
+                                    <div class="validation-msg" *ngIf="err('dbtrPrvtIdCityOfBirth') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrPrvtIdCityOfBirth', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Country of Birth <span class="req">*</span></label>
+                                    <input formControlName="dbtrPrvtIdCtryOfBirth" maxlength="2" class="auto-uppercase" placeholder="e.g. GB">
+                                    <div class="validation-msg" *ngIf="err('dbtrPrvtIdCtryOfBirth') as e">{{e}}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Other ID</label>
+                                    <input formControlName="dbtrPrvtIdOthrId" maxlength="35" placeholder="Other identification">
+                                    <div class="validation-msg" *ngIf="err('dbtrPrvtIdOthrId') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrPrvtIdOthrId', 35) as h">{{h}}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Other Scheme Code</label>
+                                    <input formControlName="dbtrPrvtIdOthrSchmeNmCd" maxlength="35" placeholder="e.g. NIDN, CCPT">
+                                    <div class="validation-msg" *ngIf="err('dbtrPrvtIdOthrSchmeNmCd') as e">{{e}}</div>
+                                    <div class="field-hint at-limit" *ngIf="hint('dbtrPrvtIdOthrSchmeNmCd', 35) as h">{{h}}</div>
+                                </div>
+                            </div>
+                        </ng-container>
 
                         <div class="party-group-title" style="margin-top: 1rem; font-size: 0.65rem;">Ultimate Debtor <span class="opt">Optional</span></div>
                         <div class="party-grid">
@@ -905,9 +954,10 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Xchg Unit Ccy</label>
-                                    <input formControlName="xchgUnitCcy" maxlength="3" placeholder="e.g. EUR">
+                                    <select formControlName="xchgUnitCcy">
+                                        <option *ngFor="let c of currencies" [value]="c">{{c}}</option>
+                                    </select>
                                     <div class="validation-msg" *ngIf="err('xchgUnitCcy', tx) as e">{{e}}</div>
-                                    <div class="field-hint at-limit" *ngIf="hint('xchgUnitCcy', 3, tx) as h">{{h}}</div>
                                 </div>
                                 <div class="form-group">
                                     <label>Xchg Contract ID</label>

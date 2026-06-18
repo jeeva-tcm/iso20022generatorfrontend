@@ -712,9 +712,11 @@ export class Pain008Component implements OnInit, OnDestroy {
         this.el('Nm', tx.cdtrSchmeIdNm, 7)
         + (tx.cdtrSchmeIdOthrId ? this.tag('Id', this.tag('PrvtId', this.tag('Othr',
           this.el('Id', tx.cdtrSchmeIdOthrId, 10)
-          + (tx.cdtrSchmeIdOthrSchmeNmCd || tx.cdtrSchmeIdOthrSchmeNmPrtry ? this.tag('SchmeNm',
-              (tx.cdtrSchmeIdOthrSchmeNmCd ? this.el('Cd', tx.cdtrSchmeIdOthrSchmeNmCd, 11) : this.el('Prtry', tx.cdtrSchmeIdOthrSchmeNmPrtry, 11))
-            , 10) : '')
+          + (this.isSR2026
+              ? this.tag('SchmeNm', this.el('Cd', tx.cdtrSchmeIdOthrSchmeNmCd || tx.cdtrSchmeIdOthrSchmeNmPrtry || 'SEPA', 11), 10)
+              : (tx.cdtrSchmeIdOthrSchmeNmCd || tx.cdtrSchmeIdOthrSchmeNmPrtry ? this.tag('SchmeNm',
+                  (tx.cdtrSchmeIdOthrSchmeNmCd ? this.el('Cd', tx.cdtrSchmeIdOthrSchmeNmCd, 11) : this.el('Prtry', tx.cdtrSchmeIdOthrSchmeNmPrtry, 11))
+                , 10) : ''))
           + this.el('Issr', tx.cdtrSchmeIdOthrIssr, 10), 9), 8), 7) : ''), 6) : '';
 
       const drctDbtTx = this.tag('DrctDbtTx', mndtRltdInf + cdtrSchmeId

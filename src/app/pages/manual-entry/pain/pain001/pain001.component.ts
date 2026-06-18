@@ -230,8 +230,8 @@ export class Pain001Component implements OnInit, OnDestroy {
       // Group Header (pain.001.001.09)
       msgId: [sharedMsgId, [Validators.required, Validators.maxLength(35)]],
       creDtTm: [this.isoNow(), Validators.required],
-      authstnCd: ['AUTH'],
-      authstnPrtry: ['File pre-authorised at origin'],
+      authstnCd: [''],
+      authstnPrtry: [''],
       nbOfTxs: ['1', [Validators.required]],
       ctrlSum: ['0.00', [Validators.pattern(/^\d{1,18}(\.\d{1,5})?$/)]],
       initgPtyName: ['Global Solutions Corp', [Validators.required, Validators.maxLength(140)]],
@@ -299,11 +299,16 @@ export class Pain001Component implements OnInit, OnDestroy {
       chrgBr: ['SHAR', Validators.required],
       dbtrAgtBldgNb: ['270', [Validators.maxLength(16)]],
       dbtrAgtBldgNm: ['Chase Tower', [Validators.maxLength(35)]],
+      dbtrIdType: ['org'],
       dbtrOrgIdAnyBic: ['GBSOLUS33XX', [Validators.pattern(/^([A-Z0-9]{8}|[A-Z0-9]{11})$/)]],
       dbtrOrgIdLei: ['W22LROWBR70L5U3S5288', [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)]],
+      dbtrOrgIdOthrId: ['', [Validators.maxLength(35)]],
+      dbtrOrgIdOthrSchmeNmCd: ['', [Validators.maxLength(35)]],
       dbtrPrvtIdBirthDt: [''],
       dbtrPrvtIdCityOfBirth: ['', [Validators.maxLength(35)]],
       dbtrPrvtIdCtryOfBirth: ['', [Validators.pattern(/^[A-Z]{2,2}$/)]],
+      dbtrPrvtIdOthrId: ['', [Validators.maxLength(35)]],
+      dbtrPrvtIdOthrSchmeNmCd: ['', [Validators.maxLength(35)]],
       ultmtDbtrName: ['', [Validators.maxLength(140)]],
       ultmtDbtrAddrType: ['none'],
       ultmtDbtrCtry: ['', [Validators.pattern(/^[A-Z]{2,2}$/)]],
@@ -330,7 +335,7 @@ export class Pain001Component implements OnInit, OnDestroy {
     const BIC_OPT = [Validators.pattern(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/)];
     const LEI = [Validators.pattern(/^[A-Z0-9]{18}[0-9]{2}$/)];
 
-    return this.fb.group({
+    const g = this.fb.group({
       instrId:['INSTR-' + Date.now().toString().slice(-10), [Validators.required, Validators.maxLength(16)]],
       endToEndId: ['E2E-' + Date.now(), [Validators.required, Validators.maxLength(35)]],
       uetr: [crypto.randomUUID ? crypto.randomUUID() : '550e8400-e29b-41d4-a716-446655440000', [Validators.required, Validators.pattern(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)]],
@@ -338,7 +343,7 @@ export class Pain001Component implements OnInit, OnDestroy {
       currency: ['USD', Validators.required],
       xchgRate: [''],
       xchgRateTp: ['SPOT'],
-      xchgUnitCcy: ['', [Validators.maxLength(3), Validators.pattern(/^[A-Z]{3}$/)]],
+      xchgUnitCcy: ['USD'],
       xchgCtrctId: ['', [Validators.maxLength(35)]],
       chqInstr: [''],
       chqTp: [''],
@@ -424,6 +429,12 @@ export class Pain001Component implements OnInit, OnDestroy {
       rmtInf: ['Invoice Ref INV-2024-456', [Validators.maxLength(140)]],
       rltdRmtInfUrl: ['']
     });
+
+    g.get('currency')!.valueChanges.subscribe(ccy => {
+      if (ccy) g.get('xchgUnitCcy')?.setValue(ccy, { emitEvent: false });
+    });
+
+    return g;
   }
 
   get transactions(): FormArray {
@@ -524,36 +535,39 @@ export class Pain001Component implements OnInit, OnDestroy {
     bah += this.el('BizMsgIdr', v.head_bizMsgIdr, 2);
     bah += this.el('MsgDefIdr', v.head_msgDefIdr, 2);
     bah += this.el('BizSvc', v.head_bizSvc || 'swift.cbprplus.03', 2);
+    if (v.head_mktPrctcRegy || v.head_mktPrctcId)
+      bah += this.tag('MktPrctc', this.el('Regy', v.head_mktPrctcRegy, 3) + this.el('Id', v.head_mktPrctcId, 3), 2);
     bah += this.el('CreDt', this.fdt(v.head_creDt || creDtTm), 2);
     if (v.head_cpyDplct) bah += this.el('CpyDplct', v.head_cpyDplct, 2);
     if (v.head_pssblDplct) bah += this.el('PssblDplct', v.head_pssblDplct, 2);
     if (v.head_prty) bah += this.el('Prty', v.head_prty, 2);
-    if (v.head_rltdBizMsgIdr) bah += this.el('Rltd', this.el('BizMsgIdr', v.head_rltdBizMsgIdr, 4), 2);
+    if (v.head_rltdBizMsgIdr) bah += this.tag('Rltd', this.el('BizMsgIdr', v.head_rltdBizMsgIdr, 3), 2);
 
     // Group Header
     const grpHdr = this.tag('GrpHdr',
       this.el('MsgId', v.msgId, 4) +
       this.el('CreDtTm', this.fdt(creDtTm), 4) +
-      this.tag('Authstn', v.authstnCd ? this.el('Cd', v.authstnCd, 6) : this.el('Prtry', v.authstnPrtry, 6), 5) +
+      (v.authstnCd || v.authstnPrtry ? this.tag('Authstn', v.authstnCd ? this.el('Cd', v.authstnCd, 6) : this.el('Prtry', v.authstnPrtry, 6), 5) : '') +
       this.el('NbOfTxs', v.nbOfTxs, 4) +
       (v.ctrlSum && v.ctrlSum !== '0.00' ? this.el('CtrlSum', v.ctrlSum, 4) : '') +
       this.partyXml('InitgPty', 'initgPty', v, 4) +
       this.agtXml('FwdgAgt', 'fwdgAgt', v, 4) +
-      (v.initnSrc && (v.head_msgDefIdr || '').match(/\.(11|12|13|14)$/) ? this.tag('InitnSrc', this.el('Nm', v.initnSrc, 6), 5) : ''),
+      (!this.isSR2026 && v.initnSrc ? this.tag('InitnSrc', this.el('Nm', v.initnSrc, 6), 5) : ''),
       3
     );
 
     // Payment Information
-    let pmtInfContent = this.el('PmtInfId', this.isSR2026 ? v.msgId : v.pmtInfId, 4) +
+    let pmtInfContent = this.el('PmtInfId', v.pmtInfId, 4) +
                         this.el('PmtMtd', v.pmtMtd, 4) +
                         (v.btchBookg ? this.el('BtchBookg', 'true', 4) : '');
 
     if (v.pmtCtrlSum && v.pmtCtrlSum !== '0.00') pmtInfContent += this.el('PmtCtrlSum', v.pmtCtrlSum, 4);
 
     // XOR logic for PmtTpInf
-    const hasGlobalPmtTp = !!(v.svcLvl || v.lclInstrm || v.ctgyPurp);
+    const hasGlobalPmtTp = !!(v.instrPrty || v.svcLvl || v.lclInstrm || v.ctgyPurp);
     if (hasGlobalPmtTp) {
       pmtInfContent += this.tag('PmtTpInf',
+        (v.instrPrty ? this.el('InstrPrty', v.instrPrty, 5) : '') +
         (v.svcLvl ? this.tag('SvcLvl', this.el('Cd', v.svcLvl, 7), 6) : '') +
         (v.lclInstrm ? this.tag('LclInstrm', this.el('Cd', v.lclInstrm, 7), 6) : '') +
         (v.ctgyPurp ? this.tag('CtgyPurp', this.el('Cd', v.ctgyPurp, 7), 6) : ''), 4);
@@ -587,7 +601,6 @@ export class Pain001Component implements OnInit, OnDestroy {
       const amt = this.formatting.formatAmount(tx.amount || 0, tx.currency);
       let txContent = this.tag('PmtId', this.el('InstrId', tx.instrId, 6) + this.el('EndToEndId', tx.endToEndId, 6) + this.el('UETR', tx.uetr, 6), 5);
       
-      // Only add PmtTpInf if not at global level
       if (!hasGlobalPmtTp && (tx.txSvcLvl || tx.txLclInstrm || tx.txCtgyPurp)) {
         let tpInf = '';
         if (tx.txSvcLvl) tpInf += this.tag('SvcLvl', this.el('Cd', tx.txSvcLvl, 8), 7);
@@ -710,6 +723,7 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
       if (id) {
         const orgId = id.getElementsByTagName('OrgId')[0];
         if (orgId) {
+          patch[prefix + 'IdType'] = 'org';
           const bic = orgId.getElementsByTagName('AnyBIC')[0]?.textContent?.trim();
           if (bic) patch[prefix + 'OrgIdAnyBic'] = bic;
           const lei = orgId.getElementsByTagName('LEI')[0]?.textContent?.trim();
@@ -717,11 +731,14 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
           const othr = orgId.getElementsByTagName('Othr')[0];
           if (othr) {
             const othrId = othr.getElementsByTagName('Id')[0]?.textContent?.trim();
-            if (othrId) patch[prefix + 'Id'] = othrId;
+            if (othrId) { patch[prefix + 'OrgIdOthrId'] = othrId; patch[prefix + 'Id'] = othrId; }
+            const schemeCd = othr.getElementsByTagName('Cd')[0]?.textContent?.trim();
+            if (schemeCd) patch[prefix + 'OrgIdOthrSchmeNmCd'] = schemeCd;
           }
         }
         const prvtId = id.getElementsByTagName('PrvtId')[0];
         if (prvtId) {
+          patch[prefix + 'IdType'] = 'prvt';
           const dobNode = prvtId.getElementsByTagName('DtAndPlcOfBirth')[0];
           if (dobNode) {
             const dob = dobNode.getElementsByTagName('BirthDt')[0]?.textContent?.trim();
@@ -731,7 +748,17 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
             const ctry = dobNode.getElementsByTagName('CtryOfBirth')[0]?.textContent?.trim();
             if (ctry) patch[prefix + 'PrvtIdCtryOfBirth'] = ctry;
           }
+          const prvtOthr = prvtId.getElementsByTagName('Othr')[0];
+          if (prvtOthr) {
+            const othrId = prvtOthr.getElementsByTagName('Id')[0]?.textContent?.trim();
+            if (othrId) patch[prefix + 'PrvtIdOthrId'] = othrId;
+            const schemeCd = prvtOthr.getElementsByTagName('Cd')[0]?.textContent?.trim();
+            if (schemeCd) patch[prefix + 'PrvtIdOthrSchmeNmCd'] = schemeCd;
+          }
         }
+        if (!orgId && !prvtId) patch[prefix + 'IdType'] = 'none';
+      } else {
+        patch[prefix + 'IdType'] = 'none';
       }
     }
 
@@ -799,7 +826,8 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
     const acct = v[pref + 'Acct'];
     const acctOthr = v[pref + 'AcctOthrId'];
 
-    if (!bic && !lei && !nm && !clrMmb && acctType === 'none') return '';
+    const hasAddress = this.hasAddr(v, pref);
+    if (!bic && !lei && !nm && !clrMmb && acctType === 'none' && !hasAddress) return '';
 
     let fiId = '';
     if (bic) fiId += this.el('BICFI', bic, indent + 3);
@@ -813,14 +841,8 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
       fiId += this.tag('ClrSysMmbId', clrMmbContent, indent + 3);
     }
     if (lei) fiId += this.el('LEI', lei, indent + 3);
-    // CBPR_COM_R9: If BICFI is present, Nm and PstlAdr must NOT appear in FinInstnId
-    if (!bic && nm) {
-      const hasAddress = this.hasAddr(v, pref);
-      if (hasAddress) {
-        fiId += this.el('Nm', nm, indent + 3);
-        fiId += this.addrXml(v, pref, indent + 3);
-      }
-    }
+    if (nm) fiId += this.el('Nm', nm, indent + 3);
+    if (hasAddress) fiId += this.addrXml(v, pref, indent + 3);
     
     let inner = '';
     if (fiId) inner += this.tag('FinInstnId', fiId, indent + 2);
@@ -911,26 +933,49 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
   }
 
   partyIdXml(v: any, p: string, indent = 4): string {
-    let idContent = '';
+    const idType = v[p + 'IdType']; // 'org' | 'prvt' | 'none' | undefined (undefined = auto-detect for parties without a type dropdown)
+    if (idType === 'none') return '';
+
     const anyBic = v[p + 'OrgIdAnyBic'] || v[p + 'Bic'];
-    if (anyBic || v[p + 'OrgIdLei'] || v[p + 'Id']) {
+    const useOrg = idType === 'org' || (!idType && (anyBic || v[p + 'OrgIdLei'] || v[p + 'Id']));
+    const usePrvt = !useOrg && (idType === 'prvt' || (!idType && v[p + 'PrvtIdBirthDt']));
+
+    let idContent = '';
+
+    if (useOrg) {
       let orgId = '';
       if (anyBic) orgId += this.el('AnyBIC', anyBic, indent + 3);
       if (v[p + 'OrgIdLei']) orgId += this.el('LEI', v[p + 'OrgIdLei'], indent + 3);
-      if (v[p + 'Id']) {
-        let othrContent = this.el('Id', v[p + 'Id'], indent + 5);
-        if (this.isSR2026) {
+      const othrId = v[p + 'OrgIdOthrId'] || v[p + 'Id'];
+      if (othrId) {
+        let othrContent = this.el('Id', othrId, indent + 5);
+        const schemeCd = v[p + 'OrgIdOthrSchmeNmCd'];
+        if (schemeCd) {
+          othrContent += this.tag('SchmeNm', this.el('Cd', schemeCd, indent + 6), indent + 5);
+        } else if (this.isSR2026) {
           othrContent += this.tag('SchmeNm', this.el('Cd', 'CUST', indent + 6), indent + 5);
         }
         orgId += this.tag('Othr', othrContent, indent + 3);
       }
-      idContent = this.tag('OrgId', orgId, indent + 2);
-    } else if (v[p + 'PrvtIdBirthDt']) {
-      let dob = this.el('BirthDt', v[p + 'PrvtIdBirthDt'], indent + 4);
-      if (v[p + 'PrvtIdCityOfBirth']) dob += this.el('CityOfBirth', v[p + 'PrvtIdCityOfBirth'], indent + 4);
-      if (v[p + 'PrvtIdCtryOfBirth']) dob += this.el('CtryOfBirth', v[p + 'PrvtIdCtryOfBirth'], indent + 4);
-      idContent = this.tag('PrvtId', this.tag('DtAndPlcOfBirth', dob, indent + 3), indent + 2);
+      if (orgId) idContent = this.tag('OrgId', orgId, indent + 2);
+    } else if (usePrvt) {
+      let prvtInner = '';
+      if (v[p + 'PrvtIdBirthDt']) {
+        let dob = this.el('BirthDt', v[p + 'PrvtIdBirthDt'], indent + 4);
+        if (v[p + 'PrvtIdCityOfBirth']) dob += this.el('CityOfBirth', v[p + 'PrvtIdCityOfBirth'], indent + 4);
+        if (v[p + 'PrvtIdCtryOfBirth']) dob += this.el('CtryOfBirth', v[p + 'PrvtIdCtryOfBirth'], indent + 4);
+        prvtInner += this.tag('DtAndPlcOfBirth', dob, indent + 3);
+      }
+      const prvtOthrId = v[p + 'PrvtIdOthrId'];
+      if (prvtOthrId) {
+        let othrContent = this.el('Id', prvtOthrId, indent + 5);
+        const schemeCd = v[p + 'PrvtIdOthrSchmeNmCd'];
+        if (schemeCd) othrContent += this.tag('SchmeNm', this.el('Cd', schemeCd, indent + 6), indent + 5);
+        prvtInner += this.tag('Othr', othrContent, indent + 3);
+      }
+      if (prvtInner) idContent = this.tag('PrvtId', prvtInner, indent + 2);
     }
+
     return idContent ? this.tag('Id', idContent, indent + 1) : '';
   }
 
@@ -1544,6 +1589,21 @@ ${grpHdr}${pmtInf}\t\t</CstmrCdtTrfInitn>
           for (const f of txIbanFields) {
             if (tx[f] && !this.isValidIban(tx[f])) delete tx[f];
           }
+        }
+      }
+      // Migrate stale draft: old default authstnCd='AUTH' shadowed any Prtry value.
+      // Clear the default-only code so both fields start from a clean state.
+      if (parsed.authstnCd === 'AUTH' && !parsed.authstnPrtry) {
+        parsed.authstnCd = '';
+      }
+      // Migrate stale draft: dbtrIdType didn't exist before — auto-detect from saved fields.
+      if (!parsed.dbtrIdType) {
+        if (parsed.dbtrPrvtIdBirthDt) {
+          parsed.dbtrIdType = 'prvt';
+        } else if (parsed.dbtrOrgIdAnyBic || parsed.dbtrOrgIdLei || parsed.dbtrOrgIdOthrId) {
+          parsed.dbtrIdType = 'org';
+        } else {
+          parsed.dbtrIdType = 'none';
         }
       }
       this.form.patchValue(parsed, { emitEvent: false });
