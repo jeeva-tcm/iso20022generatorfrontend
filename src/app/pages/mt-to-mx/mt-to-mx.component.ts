@@ -143,7 +143,7 @@ export class MtToMxComponent implements OnInit {
         'MT103': { mx: 'pacs.008.001.08', desc: 'FI to FI Customer Credit Transfer' },
         'MT103+': { mx: 'pacs.008.001.08', desc: 'FI to FI Customer Credit Transfer (STP)' },
         'MT202': { mx: 'pacs.009.001.08', desc: 'FI to FI Institution Credit Transfer' },
-        'MT202COV': { mx: 'pacs.009.001.08', desc: 'FI to FI Institution Credit Transfer (COV)' },
+        'MT202COV': { mx: 'pacs.009.001.08_COV', desc: 'FI to FI Institution Credit Transfer (COV)' },
         'MT200': { mx: 'pacs.009.001.08', desc: 'Financial Institution Transfer' },
         'MT900': { mx: 'camt.054.001.08', desc: 'Debit Confirmation' },
         'MT910': { mx: 'camt.054.001.08', desc: 'Credit Confirmation' },

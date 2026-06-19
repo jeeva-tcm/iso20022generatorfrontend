@@ -309,7 +309,7 @@ export class Camt055Component implements OnInit, OnDestroy {
       head_rltd: [''], // Hidden control for backwards compatibility if needed elsewhere
 
       // Document - Assgnmt
-      assgnmt_id: ['ASGN-' + Date.now(), [Validators.maxLength(35)]],
+      assgnmt_id: ['ASGN-' + Date.now().toString().slice(-11), [Validators.required, Validators.maxLength(16)]],
       assgnmt_creDtTm: [this.isoNow(), Validators.required],
 
       // Underlying - OrgnlPmtInfAndCxl
@@ -409,12 +409,16 @@ export class Camt055Component implements OnInit, OnDestroy {
         errors['orgnlReqdExctnDt_duplicate'] = true;
       }
 
-      // OrgnlReqdExctnDt vs OrgnlReqdColltnDt — mutually exclusive in camt.055 TxInf
+      // OrgnlReqdExctnDt vs OrgnlReqdColltnDt — mutually exclusive in camt.055 TxInf (R8)
+      // Exactly one must be present; neither is also an error.
       const hasExctn = !!(group.get('orgnlReqdExctnDt')?.value?.trim() || group.get('orgnlReqdExctnDtTm')?.value?.trim());
       const hasColltn = !!(group.get('orgnlReqdColltnDt')?.value?.trim());
       if (hasExctn && hasColltn) {
         if (!errors) errors = {};
         errors['date_choice_conflict'] = true;
+      } else if (!hasExctn && !hasColltn) {
+        if (!errors) errors = {};
+        errors['date_choice_missing'] = true;
       }
 
       return errors;
@@ -1270,6 +1274,9 @@ ${txInf.trimEnd()}
       if (this.form.errors?.['date_choice_conflict']) {
         return 'Only ONE of Execution Date or Collection Date is allowed (schema choice).';
       }
+      if (this.form.errors?.['date_choice_missing']) {
+        return 'Either Execution Date or Collection Date must be provided (CBPR+ R8).';
+      }
     }
     if (this.form.errors) {
       if (this.form.errors[f + '_required']) return 'Other ID is required when a Scheme Code is selected.';
@@ -1380,6 +1387,7 @@ ${txInf.trimEnd()}
     if (this.form.errors?.['case_id_missing']) errors.push('Case ID is mandatory — Case/Id must precede OrgnlInstrId in TxInf (camt.055 CBPR+ schema rule).');
     if (this.form.errors?.['orgnlReqdExctnDt_duplicate']) errors.push('Only one of Execution Date (Dt) or DateTime (DtTm) is allowed.');
     if (this.form.errors?.['date_choice_conflict']) errors.push('Execution Date and Collection Date are mutually exclusive.');
+    if (this.form.errors?.['date_choice_missing']) errors.push('Either Execution Date (OrgnlReqdExctnDt) or Collection Date (OrgnlReqdColltnDt) must be provided — neither is present (CBPR+ R8).');
     return errors;
   }
 

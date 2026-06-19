@@ -364,9 +364,9 @@
                                         <div class="section-title">Assignment Details (<code>&lt;Assgnmt&gt;</code>)</div>
                                         <div class="form-group"><label>Assignment ID <span
                                                                 class="req">*</span></label><input
-                                                        formControlName="assgnmt_id" maxlength="35"
-                                                        placeholder="e.g. ASSGMT-20240331-001234">
-                                                <div class="field-hint at-limit" *ngIf="hint('assgnmt_id', 35) as h">{{h}}</div>
+                                                        formControlName="assgnmt_id" maxlength="16"
+                                                        placeholder="e.g. ASGN-12345678901">
+                                                <div class="field-hint at-limit" *ngIf="hint('assgnmt_id', 16) as h">{{h}}</div>
                                                 <div class="validation-msg" *ngIf="err('assgnmt_id') as e">{{e}}</div>
                                         </div>
                                         <div class="form-group"><label>Assignment DateTime <span

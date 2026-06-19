@@ -278,7 +278,14 @@ export class FixSuggesterComponent implements OnInit, OnChanges, OnDestroy, Afte
     if (!this.suggestion || this.suggestion.confidence === 'unavailable' || !this.singleHasChanges) return;
     this.applying = true;
     this.cdr.markForCheck();
-    this.fixService.apply(this.xml, this.suggestion.xpath, this.suggestion.fragment_xml).subscribe({
+    // Route through the server-side iterate-until-clean loop instead of a bare
+    // single-shot apply: the XSD validator only ever reports the FIRST
+    // sequence violation per container, so fixing just the one visible issue
+    // routinely unmasks another error on the next validate — forcing the user
+    // to click "Fix this" again, and again. auto-fix resolves the visible
+    // issue PLUS every cascading one it reveals in ONE round-trip, so this is
+    // strictly fewer backend calls overall, not more.
+    this.fixService.autoFix(this.xml).subscribe({
       next: (resp) => {
         this.applying = false;
         this.applied.emit(resp.new_xml);
