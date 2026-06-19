@@ -1,5 +1,5 @@
-/* ===================================================================
-   DYNAMIC MANUAL ENTRY — Professional Light Theme Form Redesign
+﻿/* ===================================================================
+   DYNAMIC MANUAL ENTRY â€” Professional Light Theme Form Redesign
    Matching user reference with indigo/white/gray palette
    =================================================================== */
 
@@ -14,7 +14,7 @@
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* ──────────────── HEADER ──────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ HEADER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .me-header {
     padding: 16px 32px;
     background: var(--header-bg);
@@ -50,7 +50,7 @@
     color: var(--text-muted);
 }
 
-/* ──────────────── TOOLBAR (Toggle) ──────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ TOOLBAR (Toggle) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .me-toolbar {
     background: var(--header-bg);
     padding: 12px 32px;
@@ -118,7 +118,7 @@
     margin-left: 4px;
 }
 
-/* ──────────────── CONTROLS (Search etc) ──────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ CONTROLS (Search etc) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .me-controls {
     display: flex;
     gap: 16px;
@@ -186,7 +186,7 @@
     transform: translateY(-1px);
 }
 
-/* ──────────────── EXPLORER VIEW ──────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ EXPLORER VIEW â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .me-explorer-center {
     height: 100%;
     width: 100%;
@@ -211,7 +211,7 @@
     margin-bottom: 24px;
 }
 
-/* ──────────────── POPULAR GRID ──────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ POPULAR GRID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .popular-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -382,7 +382,7 @@
     color: #94a3b8;
 }
 
-/* ──────────────── FORM EDITOR ──────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ FORM EDITOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .form-scroll-pane {
     flex: 1;
     overflow-y: auto;
@@ -534,7 +534,7 @@
     pointer-events: none;
 }
 
-/* ──────────────── XML PREVIEW ──────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ XML PREVIEW â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .split-view {
     display: flex;
     flex: 1;
@@ -608,7 +608,7 @@
     overflow-x: auto;
 }
 
-/* ──────────────── UTILITIES ──────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ UTILITIES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .loading-center {
     flex: 1;
     display: flex;
@@ -715,7 +715,7 @@
     background: var(--accent-light);
 }
 
-/* ──────────────── CUSTOM SCROLLBARS ──────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ CUSTOM SCROLLBARS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .form-scroll-pane::-webkit-scrollbar,
 .xml-scroll-pane::-webkit-scrollbar,
 .me-explorer-center::-webkit-scrollbar,
@@ -817,7 +817,7 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
 }
 
 
-/* ──────────────── SELECT INPUT ──────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ SELECT INPUT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .select-input {
     appearance: none;
     -webkit-appearance: none;
@@ -881,7 +881,7 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     display: block;
 }
 
-/* ──────────────── NEW PREMIUM CATALOG VIEW STYLES ──────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ NEW PREMIUM CATALOG VIEW STYLES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .me-explorer-center-new {
     flex: 1;
     width: 100%;
@@ -1291,7 +1291,7 @@ input.search-input-new::placeholder,
     line-height: 1.5;
 }
 
-/* ──────────────── LIGHT THEME OVERRIDES FOR MANUAL ENTRY CATALOG ──────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ LIGHT THEME OVERRIDES FOR MANUAL ENTRY CATALOG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 :host-context(.light-theme) .me-explorer-center-new {
     background: #f8fafc;
 }
@@ -1429,3 +1429,4 @@ input.search-input-new::placeholder,
 :host-context(.light-theme) .footer-spec mat-icon {
     color: #94a3b8;
 }
+
