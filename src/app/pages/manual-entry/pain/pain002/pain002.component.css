@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 :host {
     display: flex;
     flex-direction: column;
@@ -352,10 +352,10 @@ textarea {
     height: 100%;
     background: var(--editor-gutter);
     color: var(--editor-gutter-text);
-    padding: 1rem 0;
+    padding: 10px 0;
     text-align: right;
     font-family: 'JetBrains Mono', Consolas, monospace;
-    font-size: 12px;
+    font-size: 13px;
     line-height: 1.55;
     user-select: none;
     padding-right: 12px;
@@ -364,7 +364,7 @@ textarea {
 }
 
 .line-numbers div {
-    padding: 0 4px;
+    padding: 0;
 }
 
 textarea.code-editor {
@@ -1416,7 +1416,7 @@ textarea.code-editor::-webkit-scrollbar-thumb:hover {
     display: block;
 }
 
-/* ── Transactions styling ── */
+/* â”€â”€ Transactions styling â”€â”€ */
 .btn-add-tx {
     margin-left: auto !important;
     display: inline-flex;
@@ -1891,4 +1891,7 @@ body.light-theme .tx-grid .form-group select:focus {
     cursor: pointer;
     color: var(--accent-color);
 }
+
+
+
 
