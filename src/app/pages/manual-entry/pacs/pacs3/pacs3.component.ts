@@ -1946,10 +1946,18 @@ ${tx}\t\t\t</DrctDbtTxInf>
         patch.bizMsgId = tval('BizMsgIdr', appHdr);
         // Group D — AppHdr extras
         patch.charSet = tval('CharSet', appHdr);
+        patch.cpyDplct = tval('CpyDplct', appHdr) || null;
+        patch.pssblDplct = tval('PssblDplct', appHdr) || 'false';
+        patch.appHdrPrty = tval('Prty', appHdr);
         const mktPrctcEl = getT('MktPrctc', appHdr);
         if (mktPrctcEl) {
           patch.mktPrctc = tval('Id', mktPrctcEl);
           patch.regyId = tval('Regy', mktPrctcEl);
+        }
+        const rltdEl = getT('Rltd', appHdr);
+        if (rltdEl) {
+          patch.rltd = tval('Id', rltdEl);
+          patch.rltdCharSet = tval('CharSet', rltdEl);
         }
       }
 
@@ -1958,7 +1966,36 @@ ${tx}\t\t\t</DrctDbtTxInf>
       if (grpHdr) {
         patch.msgId = tval('MsgId', grpHdr);
         patch.creDtTm = tval('CreDtTm', grpHdr);
+        patch.nbOfTxs = tval('NbOfTxs', grpHdr);
+        const sttlmInf = getT('SttlmInf', grpHdr);
+        if (sttlmInf) {
+          patch.sttlmMtd = tval('SttlmMtd', sttlmInf);
+          const sttlmAcct = getT('SttlmAcct', sttlmInf);
+          if (sttlmAcct) {
+            const sttlmAcctId = getT('Id', sttlmAcct);
+            if (sttlmAcctId) {
+              const sttlmIban = tval('IBAN', sttlmAcctId);
+              const sttlmOthr = tval('Id', getT('Othr', sttlmAcctId) || sttlmAcctId);
+              patch.sttlmAcctId = sttlmIban || sttlmOthr;
+            }
+            const sttlmTp = getT('Tp', sttlmAcct);
+            if (sttlmTp) patch.sttlmAcctTpCd = tval('Cd', sttlmTp);
+            const sttlmPrxy = getT('Prxy', sttlmAcct);
+            if (sttlmPrxy) patch.sttlmAcctPrxyTpCd = tval('Cd', getT('Tp', sttlmPrxy) || sttlmPrxy);
+          }
+        }
       }
+      // Sync BizMsgIdr ↔ MsgId; also update the XML editor so both tags stay consistent
+      { const _cb = this.form.get('bizMsgId')?.value || '', _cm = this.form.get('msgId')?.value || '';
+        if (patch.bizMsgId && patch.bizMsgId !== _cb) {
+          patch.msgId = patch.bizMsgId;
+          const _u = this.generatedXml.replace(/<MsgId>[^<]*<\/MsgId>/, `<MsgId>${patch.bizMsgId}</MsgId>`);
+          if (_u !== this.generatedXml) { const _ta = document.querySelector('.code-editor') as HTMLTextAreaElement; const _p = _ta ? _ta.selectionStart : 0, _q = _ta ? _ta.selectionEnd : 0; if (_ta) { _ta.value = _u; _ta.setSelectionRange(_p, _q); } this.generatedXml = _u; }
+        } else if (patch.msgId && patch.msgId !== _cm) {
+          patch.bizMsgId = patch.msgId;
+          const _u = this.generatedXml.replace(/<BizMsgIdr>[^<]*<\/BizMsgIdr>/, `<BizMsgIdr>${patch.msgId}</BizMsgIdr>`);
+          if (_u !== this.generatedXml) { const _ta = document.querySelector('.code-editor') as HTMLTextAreaElement; const _p = _ta ? _ta.selectionStart : 0, _q = _ta ? _ta.selectionEnd : 0; const _d = patch.msgId.length - _cb.length; if (_ta) { _ta.value = _u; _ta.setSelectionRange(Math.max(0, _p + _d), Math.max(0, _q + _d)); } this.generatedXml = _u; }
+        } }
 
       const tx = getT('CdtTrfTxInf') || getT('DrctDbtTxInf');
       if (tx) {

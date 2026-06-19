@@ -920,10 +920,11 @@ export class Camt052Component implements OnInit, OnDestroy {
     onEditorChange(content: string, fromForm = false) {
         if (!this.isInternalChange && !fromForm) {
             this.pushHistory();
-            this.parseXmlToForm(content);
         }
         this.generatedXml = content;
         this.refreshLineCount();
+        if (fromForm || this.isInternalChange || this.isParsingXml) return;
+        this.parseXmlToForm(content);
     }
 
     private pushHistory() {
@@ -1283,6 +1284,17 @@ export class Camt052Component implements OnInit, OnDestroy {
             const grpHdr = getT('GrpHdr');
             if (grpHdr) {
                 setVal('msgId', tval('MsgId', grpHdr));
+                // Sync BizMsgIdr ↔ MsgId; also update the XML editor so both tags stay consistent
+                { const _cb = this.form.get('bizMsgId')?.value || '', _cm = this.form.get('msgId')?.value || '';
+                  if (patch.bizMsgId && patch.bizMsgId !== _cb) {
+                    patch.msgId = patch.bizMsgId;
+                    const _u = this.generatedXml.replace(/<MsgId>[^<]*<\/MsgId>/, `<MsgId>${patch.bizMsgId}</MsgId>`);
+                    if (_u !== this.generatedXml) { const _ta = document.querySelector('.code-editor') as HTMLTextAreaElement; const _p = _ta ? _ta.selectionStart : 0, _q = _ta ? _ta.selectionEnd : 0; if (_ta) { _ta.value = _u; _ta.setSelectionRange(_p, _q); } this.generatedXml = _u; }
+                  } else if (patch.msgId && patch.msgId !== _cm) {
+                    patch.bizMsgId = patch.msgId;
+                    const _u = this.generatedXml.replace(/<BizMsgIdr>[^<]*<\/BizMsgIdr>/, `<BizMsgIdr>${patch.msgId}</BizMsgIdr>`);
+                    if (_u !== this.generatedXml) { const _ta = document.querySelector('.code-editor') as HTMLTextAreaElement; const _p = _ta ? _ta.selectionStart : 0, _q = _ta ? _ta.selectionEnd : 0; const _d = patch.msgId.length - _cb.length; if (_ta) { _ta.value = _u; _ta.setSelectionRange(Math.max(0, _p + _d), Math.max(0, _q + _d)); } this.generatedXml = _u; }
+                  } }
                 const rcpt = getT('MsgRcpt', grpHdr);
                 if (rcpt) {
                     setVal('grpHdrMsgRcptNm', tval('Nm', rcpt));

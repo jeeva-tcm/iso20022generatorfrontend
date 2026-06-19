@@ -943,6 +943,17 @@ ${doc.trimEnd()}
       const grpHdr = getT('GrpHdr');
       if (grpHdr) {
         setIf('grpHdr_msgId', tval('MsgId', grpHdr));
+        // Sync BizMsgIdr ↔ MsgId; also update the XML editor so both tags stay consistent
+        { const _cb = this.form.get('head_bizMsgIdr')?.value || '', _cm = this.form.get('grpHdr_msgId')?.value || '';
+          if (patch.head_bizMsgIdr && patch.head_bizMsgIdr !== _cb) {
+            patch.grpHdr_msgId = patch.head_bizMsgIdr;
+            const _u = this.generatedXml.replace(/<MsgId>[^<]*<\/MsgId>/, `<MsgId>${patch.head_bizMsgIdr}</MsgId>`);
+            if (_u !== this.generatedXml) { const _ta = document.querySelector('.code-editor') as HTMLTextAreaElement; const _p = _ta ? _ta.selectionStart : 0, _q = _ta ? _ta.selectionEnd : 0; if (_ta) { _ta.value = _u; _ta.setSelectionRange(_p, _q); } this.generatedXml = _u; }
+          } else if (patch.grpHdr_msgId && patch.grpHdr_msgId !== _cm) {
+            patch.head_bizMsgIdr = patch.grpHdr_msgId;
+            const _u = this.generatedXml.replace(/<BizMsgIdr>[^<]*<\/BizMsgIdr>/, `<BizMsgIdr>${patch.grpHdr_msgId}</BizMsgIdr>`);
+            if (_u !== this.generatedXml) { const _ta = document.querySelector('.code-editor') as HTMLTextAreaElement; const _p = _ta ? _ta.selectionStart : 0, _q = _ta ? _ta.selectionEnd : 0; const _d = patch.grpHdr_msgId.length - _cb.length; if (_ta) { _ta.value = _u; _ta.setSelectionRange(Math.max(0, _p + _d), Math.max(0, _q + _d)); } this.generatedXml = _u; }
+          } }
         setIf('grpHdr_creDtTm', tval('CreDtTm', grpHdr));
         const initgPty = getT('InitgPty', grpHdr);
         if (initgPty) this.parsePartyGroup(initgPty, this.form.get('initgPty'), getT, tval);
