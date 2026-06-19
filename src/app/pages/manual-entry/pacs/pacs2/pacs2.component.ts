@@ -690,6 +690,7 @@ ${txInf.trimEnd()}
         patch.msgDefIdr = tval('MsgDefIdr', appHdr);
         patch.bizSvc = tval('BizSvc', appHdr);
         patch.creDtTm = tval('CreDt', appHdr) || tval('CreDtTm', appHdr);
+        patch.prty = tval('Prty', appHdr);
       }
 
       // Document
@@ -796,7 +797,9 @@ ${txInf.trimEnd()}
             patch.stsRsnCd = tval('Cd', rsn);
             patch.stsRsnPrtry = tval('Prtry', rsn);
           }
-          patch.stsRsnAddtlInf = tval('AddtlInf', rsnInf);
+          const addtlInfEls = rsnInf.getElementsByTagName('AddtlInf');
+          if (addtlInfEls.length > 0) patch.stsRsnAddtlInf = addtlInfEls[0].textContent?.trim() || '';
+          if (addtlInfEls.length > 1) patch.stsRsnAddtlInf2 = addtlInfEls[1].textContent?.trim() || '';
         }
 
         const effDt = getT('FctvIntrBkSttlmDt', tx);

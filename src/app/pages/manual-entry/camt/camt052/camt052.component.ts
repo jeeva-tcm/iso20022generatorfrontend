@@ -1272,9 +1272,47 @@ export class Camt052Component implements OnInit, OnDestroy {
                         patch[prefix + 'Type'] = 'FIId';
                         setVal(prefix + 'Bic', tval('BICFI', fi));
                         setVal(prefix + 'Lei', tval('LEI', fi));
+                        const clrSysMmbId = getT('ClrSysMmbId', fi);
+                        if (clrSysMmbId) {
+                            const clrSysId = getT('ClrSysId', clrSysMmbId);
+                            if (clrSysId) setVal(prefix + 'ClrSysCd', tval('Cd', clrSysId));
+                            setVal(prefix + 'ClrSysMmbId', tval('MmbId', clrSysMmbId));
+                        }
+                        const brnchId = getT('BrnchId', p);
+                        if (brnchId) setVal(prefix + 'BrnchId', tval('Id', brnchId));
                     } else {
                         patch[prefix + 'Type'] = 'OrgId';
                         setVal(prefix + 'Nm', tval('Nm', p));
+                        const orgId = getT('OrgId', getT('Id', p) || p);
+                        if (orgId) {
+                            setVal(prefix + 'Bic', tval('AnyBIC', orgId));
+                            setVal(prefix + 'Lei', tval('LEI', orgId));
+                            const othr = getT('Othr', orgId);
+                            if (othr) {
+                                setVal(prefix + 'OrgOthrId', tval('Id', othr));
+                                const schmeNm = getT('SchmeNm', othr);
+                                if (schmeNm) setVal(prefix + 'OrgOthrSchme', tval('Cd', schmeNm));
+                                setVal(prefix + 'OrgOthrIssr', tval('Issr', othr));
+                            }
+                        }
+                        const ctctDtls = getT('CtctDtls', p);
+                        if (ctctDtls) {
+                            setVal(prefix + 'CtctNm', tval('Nm', ctctDtls));
+                            setVal(prefix + 'CtctPhne', tval('PhneNb', ctctDtls));
+                            setVal(prefix + 'CtctEmail', tval('EmailAdr', ctctDtls));
+                        }
+                    }
+                    const pstlAdr = getT('PstlAdr', p);
+                    if (pstlAdr) {
+                        setVal(prefix + 'StrtNm', tval('StrtNm', pstlAdr));
+                        setVal(prefix + 'BldgNb', tval('BldgNb', pstlAdr));
+                        setVal(prefix + 'PstCd', tval('PstCd', pstlAdr));
+                        setVal(prefix + 'TwnNm', tval('TwnNm', pstlAdr));
+                        setVal(prefix + 'CtrySubDvsn', tval('CtrySubDvsn', pstlAdr));
+                        setVal(prefix + 'Ctry', tval('Ctry', pstlAdr));
+                        const adrLines = pstlAdr.getElementsByTagName('AdrLine');
+                        if (adrLines.length > 0) setVal(prefix + 'AdrLine1', adrLines[0]?.textContent?.trim() || '');
+                        if (adrLines.length > 1) setVal(prefix + 'AdrLine2', adrLines[1]?.textContent?.trim() || '');
                     }
                 };
                 mapPartyHead(getT('Fr', appHdr), 'from');
@@ -1381,7 +1419,10 @@ export class Camt052Component implements OnInit, OnDestroy {
                     const bal0Tp = getT('CdOrPrtry', getT('Tp', bal0) || bal0);
                     if (bal0Tp) setVal('balType', tval('Cd', bal0Tp));
                     const bal0AmtEl = getT('Amt', bal0);
-                    if (bal0AmtEl) setVal('balanceAmt', bal0AmtEl.textContent?.trim() || '');
+                    if (bal0AmtEl) {
+                        setVal('balanceAmt', bal0AmtEl.textContent?.trim() || '');
+                        setVal('currency', bal0AmtEl.getAttribute('Ccy') || '');
+                    }
                     setVal('balInd', tval('CdtDbtInd', bal0));
                     const bal0DtEl = getT('Dt', bal0);
                     if (bal0DtEl) setVal('balDt', tval('Dt', bal0DtEl));

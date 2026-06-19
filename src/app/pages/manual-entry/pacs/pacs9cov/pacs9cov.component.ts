@@ -1826,6 +1826,7 @@ ${tx}\t\t\t</CdtTrfTxInf>
                     const uInstrN = undrl.querySelectorAll(':scope > InstrForNxtAgt');
                     uInstrN.forEach((el, i) => {
                         if (i < 6) {
+                            patch[`covInstrForNxtAgt${i+1}Cd`] = tval('Cd', el);
                             patch[`covInstrForNxtAgt${i+1}InfTxt`] = tval('InstrInf', el);
                         }
                     });

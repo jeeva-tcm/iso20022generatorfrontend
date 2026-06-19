@@ -1225,6 +1225,12 @@ ${this.rmtInf(v)}
                 ?.getElementsByTagName('BICFI')[0]?.textContent?.trim() || '';
             patch['toBic'] = doc.getElementsByTagName('To')[0]
                 ?.getElementsByTagName('BICFI')[0]?.textContent?.trim() || '';
+            const appHdrEl = doc.getElementsByTagName('AppHdr')[0];
+            if (appHdrEl) {
+                patch['copyDplct'] = tval(appHdrEl, 'CpyDplct');
+                patch['pssblDplct'] = tval(appHdrEl, 'PssblDplct');
+                patch['prty'] = tval(appHdrEl, 'Prty');
+            }
             patch['bizMsgId'] = tval(doc, 'BizMsgIdr');
             patch['msgDefIdr'] = tval(doc, 'MsgDefIdr');
             patch['bizSvc'] = tval(doc, 'BizSvc');

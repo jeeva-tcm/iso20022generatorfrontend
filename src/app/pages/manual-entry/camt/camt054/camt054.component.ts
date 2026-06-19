@@ -495,8 +495,9 @@ export class Camt054Component implements OnInit, OnDestroy {
     if (v.electronicSequenceNumber) xml += t(4) + `<ElctrncSeqNb>${this.e(v.electronicSequenceNumber)}</ElctrncSeqNb>\n`;
     if (v.reportingSequence) xml += t(4) + `<RptgSeq>${this.e(v.reportingSequence)}</RptgSeq>\n`;
     if (v.legalSeqNb) xml += t(4) + `<LglSeqNb>${this.e(v.legalSeqNb)}</LglSeqNb>\n`;
-    
-    
+    if (v.creationDateTimeNtf) xml += t(4) + `<CreDtTm>${this.e(v.creationDateTimeNtf).replace('Z', '+00:00')}</CreDtTm>\n`;
+
+
     if (v.fromDateTm || v.toDateTm) {
       xml += t(4) + `<FrToDt>\n`;
       if (v.fromDateTm) xml += t(5) + `<FrDtTm>${this.e(v.fromDateTm).replace('Z', '+00:00')}</FrDtTm>\n`;
@@ -1136,9 +1137,15 @@ export class Camt054Component implements OnInit, OnDestroy {
                     const pties = getT('RltdPties', txDtls);
                     if (pties) {
                         sv('dbtrNm', tv('Nm', getT('Pty', getT('Dbtr', pties) || pties) || pties));
-                        sv('ultmtDbtrNm', tv('Nm', getT('Pty', getT('UltmtDbtr', pties) || pties) || pties));
+                        const ultmtDbtrPty = getT('Pty', getT('UltmtDbtr', pties) || pties) || pties;
+                        sv('ultmtDbtrNm', tv('Nm', ultmtDbtrPty));
+                        sv('ultmtDbtrTwnNm', tv('TwnNm', getT('PstlAdr', ultmtDbtrPty) || ultmtDbtrPty));
+                        sv('ultmtDbtrCtry', tv('Ctry', getT('PstlAdr', ultmtDbtrPty) || ultmtDbtrPty));
                         sv('cdtrNm', tv('Nm', getT('Pty', getT('Cdtr', pties) || pties) || pties));
-                        sv('ultmtCdtrNm', tv('Nm', getT('Pty', getT('UltmtCdtr', pties) || pties) || pties));
+                        const ultmtCdtrPty = getT('Pty', getT('UltmtCdtr', pties) || pties) || pties;
+                        sv('ultmtCdtrNm', tv('Nm', ultmtCdtrPty));
+                        sv('ultmtCdtrTwnNm', tv('TwnNm', getT('PstlAdr', ultmtCdtrPty) || ultmtCdtrPty));
+                        sv('ultmtCdtrCtry', tv('Ctry', getT('PstlAdr', ultmtCdtrPty) || ultmtCdtrPty));
                     }
                     const agts = getT('RltdAgts', txDtls);
                     if (agts) {

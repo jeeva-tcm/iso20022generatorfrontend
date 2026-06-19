@@ -1974,12 +1974,14 @@ ${tx}\t\t\t</DrctDbtTxInf>
           if (sttlmAcct) {
             const sttlmAcctId = getT('Id', sttlmAcct);
             if (sttlmAcctId) {
-              const sttlmIban = tval('IBAN', sttlmAcctId);
-              const sttlmOthr = tval('Id', getT('Othr', sttlmAcctId) || sttlmAcctId);
-              patch.sttlmAcctId = sttlmIban || sttlmOthr;
+              patch.sttlmAcctId = tval('IBAN', sttlmAcctId);
+              const sttlmOthrEl = getT('Othr', sttlmAcctId);
+              patch.sttlmAcctOthrId = sttlmOthrEl ? tval('Id', sttlmOthrEl) : '';
             }
             const sttlmTp = getT('Tp', sttlmAcct);
             if (sttlmTp) patch.sttlmAcctTpCd = tval('Cd', sttlmTp);
+            patch.sttlmAcctCcy = tval('Ccy', sttlmAcct);
+            patch.sttlmAcctNm = tval('Nm', sttlmAcct);
             const sttlmPrxy = getT('Prxy', sttlmAcct);
             if (sttlmPrxy) patch.sttlmAcctPrxyTpCd = tval('Cd', getT('Tp', sttlmPrxy) || sttlmPrxy);
           }
@@ -2307,6 +2309,10 @@ ${tx}\t\t\t</DrctDbtTxInf>
               if (rfrd) {
                 patch.rmtInfStrdRfrdDocNb = tval('Nb', rfrd);
                 patch.rmtInfStrdRfrdDocCd = tval('Cd', getT('Tp', rfrd) || rfrd);
+              }
+              const rfrdAmt = getT('RfrdDocAmt', strd);
+              if (rfrdAmt) {
+                patch.rmtInfStrdRfrdDocAmt = tval('DuePyblAmt', getT('RmtAmt', rfrdAmt) || rfrdAmt);
               }
               // Group H — Remittance Strd extras
               const invcrEl = getT('Invcr', strd);

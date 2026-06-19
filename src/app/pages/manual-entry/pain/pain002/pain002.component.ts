@@ -916,6 +916,7 @@ ${doc.trimEnd()}
         };
         parseFI('Fr', 'head_from', head);
         parseFI('To', 'head_to', head);
+        setIf('head_charSet', tval('CharSet', head));
         setIf('head_bizMsgIdr', tval('BizMsgIdr', head));
         setIf('head_bizSvc', tval('BizSvc', head));
         const dt = (tval('CreDt', head) || tval('CreDtTm', head));
@@ -928,9 +929,11 @@ ${doc.trimEnd()}
         const rltd = getT('Rltd', head);
         if (rltd) {
           patch['head_rltd_enabled'] = true;
+          setIf('head_rltd_charSet', tval('CharSet', rltd));
           parseFI('Fr', 'head_rltd_from', rltd);
           parseFI('To', 'head_rltd_to', rltd);
           setIf('head_rltd_bizMsgIdr', tval('BizMsgIdr', rltd));
+          setIf('head_rltd_msgDefIdr', tval('MsgDefIdr', rltd));
           setIf('head_rltd_bizSvc', tval('BizSvc', rltd));
           setIf('head_rltd_creDt', tval('CreDt', rltd));
           setIf('head_rltd_cpyDplct', tval('CpyDplct', rltd));
@@ -1047,6 +1050,7 @@ ${doc.trimEnd()}
       const sp = (k: string, t: string) => { const v = tval(t, pstl); if (v && addrType === 'structured') postalPatch[k] = v; };
       sp('dept', 'Dept'); sp('subDept', 'SubDept'); sp('street', 'StrtNm');
       sp('bldgNb', 'BldgNb'); sp('bldgNm', 'BldgNm'); sp('floor', 'Flr');
+      sp('pstBx', 'PstBx'); sp('room', 'Room'); sp('pstCd', 'PstCd');
       sp('town', 'TwnNm'); sp('townLctn', 'TwnLctnNm'); sp('district', 'DstrctNm');
       sp('ctrySub', 'CtrySubDvsn'); sp('ctry', 'Ctry');
 

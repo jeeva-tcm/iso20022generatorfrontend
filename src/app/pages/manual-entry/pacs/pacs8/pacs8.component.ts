@@ -1605,8 +1605,17 @@ export class Pacs8Component implements OnInit, OnDestroy {
     if (v.initgPtyName?.trim() || v.initgPtyOrgAnyBIC?.trim() || v.initgPtyOrgOthrId?.trim() || v.initgPtyPrvtOthrId?.trim()) {
         let initgContent = '';
         if (v.initgPtyName?.trim()) initgContent += `${this.tabs(5)}<Nm>${this.e(v.initgPtyName)}</Nm>\n`;
-        // Identification
-        if (v.initgPtyOrgAnyBIC?.trim() || v.initgPtyOrgLEI?.trim() || v.initgPtyOrgOthrId?.trim()) {
+        // Identification — honor explicit initgPtyIdType selection; fall back to field-presence
+        // inference (legacy behavior) only when the type selector is unset/'none'.
+        let initgIdType = v.initgPtyIdType;
+        if (!initgIdType || initgIdType === 'none') {
+          if (v.initgPtyOrgAnyBIC?.trim() || v.initgPtyOrgLEI?.trim() || v.initgPtyOrgOthrId?.trim()) {
+            initgIdType = 'org';
+          } else if (v.initgPtyPrvtOthrId?.trim()) {
+            initgIdType = 'prvt';
+          }
+        }
+        if (initgIdType === 'org') {
             let orgId = '';
             if (v.initgPtyOrgAnyBIC?.trim()) orgId += `${this.tabs(7)}<AnyBIC>${this.e(v.initgPtyOrgAnyBIC)}</AnyBIC>\n`;
             if (v.initgPtyOrgLEI?.trim()) orgId += `${this.tabs(7)}<LEI>${this.e(v.initgPtyOrgLEI)}</LEI>\n`;
@@ -1615,8 +1624,8 @@ export class Pacs8Component implements OnInit, OnDestroy {
                 if (v.initgPtyOrgOthrSchmeNmCd?.trim()) orgId += `${this.tabs(8)}<SchmeNm>\n${this.tabs(9)}<Cd>${this.e(v.initgPtyOrgOthrSchmeNmCd)}</Cd>\n${this.tabs(8)}</SchmeNm>\n`;
                 orgId += `${this.tabs(7)}</Othr>\n`;
             }
-            initgContent += `${this.tabs(5)}<Id>\n${this.tabs(6)}<OrgId>\n${orgId}${this.tabs(6)}</OrgId>\n${this.tabs(5)}</Id>\n`;
-        } else if (v.initgPtyPrvtOthrId?.trim()) {
+            if (orgId) initgContent += `${this.tabs(5)}<Id>\n${this.tabs(6)}<OrgId>\n${orgId}${this.tabs(6)}</OrgId>\n${this.tabs(5)}</Id>\n`;
+        } else if (initgIdType === 'prvt' && v.initgPtyPrvtOthrId?.trim()) {
             let prvtId = `${this.tabs(7)}<Othr>\n${this.tabs(8)}<Id>${this.e(v.initgPtyPrvtOthrId)}</Id>\n`;
             if (v.initgPtyPrvtOthrSchmeNmCd?.trim()) prvtId += `${this.tabs(8)}<SchmeNm>\n${this.tabs(9)}<Cd>${this.e(v.initgPtyPrvtOthrSchmeNmCd)}</Cd>\n${this.tabs(8)}</SchmeNm>\n`;
             prvtId += `${this.tabs(7)}</Othr>\n`;

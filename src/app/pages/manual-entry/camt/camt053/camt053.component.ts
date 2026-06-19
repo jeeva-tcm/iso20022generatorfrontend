@@ -1269,6 +1269,8 @@ export class Camt053Component implements OnInit, OnDestroy {
               setVal(prefix + 'ClrSysMmbId', tval('MmbId', clr));
               setVal(prefix + 'ClrSysCd', tval('Cd', getT('ClrSysId', clr) || clr));
             }
+            const brnchId = getT('BrnchId', p);
+            if (brnchId) setVal(prefix + 'BrnchId', tval('Id', brnchId));
           } else {
             const org = getT('OrgId', p);
             if (org) {
@@ -1288,7 +1290,25 @@ export class Camt053Component implements OnInit, OnDestroy {
                   }
                 }
               }
+              const ctctDtls = getT('CtctDtls', org);
+              if (ctctDtls) {
+                setVal(prefix + 'CtctNm', tval('Nm', ctctDtls));
+                setVal(prefix + 'CtctPhne', tval('PhneNb', ctctDtls));
+                setVal(prefix + 'CtctEmail', tval('EmailAdr', ctctDtls));
+              }
             }
+          }
+          const pstlAdr = getT('PstlAdr', p);
+          if (pstlAdr) {
+            setVal(prefix + 'StrtNm', tval('StrtNm', pstlAdr));
+            setVal(prefix + 'BldgNb', tval('BldgNb', pstlAdr));
+            setVal(prefix + 'PstCd', tval('PstCd', pstlAdr));
+            setVal(prefix + 'TwnNm', tval('TwnNm', pstlAdr));
+            setVal(prefix + 'CtrySubDvsn', tval('CtrySubDvsn', pstlAdr));
+            setVal(prefix + 'Ctry', tval('Ctry', pstlAdr));
+            const adrLines = pstlAdr.getElementsByTagName('AdrLine');
+            if (adrLines.length > 0) setVal(prefix + 'AdrLine1', adrLines[0]?.textContent?.trim() || '');
+            if (adrLines.length > 1) setVal(prefix + 'AdrLine2', adrLines[1]?.textContent?.trim() || '');
           }
         };
         mapPartyHead(getT('Fr', appHdr), 'from');

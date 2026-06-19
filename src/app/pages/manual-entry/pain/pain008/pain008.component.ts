@@ -766,7 +766,7 @@ export class Pain008Component implements OnInit, OnDestroy {
           + (tx.rgltryRptgAuthrtyNm || tx.rgltryRptgAuthrtyCtry ? this.tag('Authrty', this.el('Nm', tx.rgltryRptgAuthrtyNm, 7) + this.el('Ctry', tx.rgltryRptgAuthrtyCtry, 7), 6) : '')
           + (tx.rgltryRptgDtlsTp || tx.rgltryRptgDtlsCd || tx.rgltryRptgDtlsCtry || tx.rgltryRptgDtlsInf || tx.rgltryRptgDtlsDt || tx.rgltryRptgDtlsAmt ?
             this.tag('Dtls', this.el('Tp', tx.rgltryRptgDtlsTp, 7) + this.el('Dt', tx.rgltryRptgDtlsDt, 7) + this.el('Ctry', tx.rgltryRptgDtlsCtry, 7) + (tx.rgltryRptgDtlsCd ? this.el('Cd', tx.rgltryRptgDtlsCd, 7) : '')
-            + (tx.rgltryRptgDtlsAmt ? `${this.tabs(7)}<Amt Ccy="${this.e(tx.currency)}">${this.e(tx.rgltryRptgDtlsAmt)}</Amt>\n` : '')
+            + (tx.rgltryRptgDtlsAmt ? `${this.tabs(7)}<Amt Ccy="${this.e(tx.rgltryRptgDtlsAmtCcy || tx.currency)}">${this.e(tx.rgltryRptgDtlsAmt)}</Amt>\n` : '')
             + this.el('Inf', tx.rgltryRptgDtlsInf, 7), 6) : ''), 5) : '';
 
       // Tax
@@ -777,8 +777,8 @@ export class Pain008Component implements OnInit, OnDestroy {
           + ((v.taxAuthsnTitl || v.taxAuthsnNm) ? this.tag('UltmtDbtr', this.el('Titl', v.taxAuthsnTitl, 7) + this.el('Nm', v.taxAuthsnNm, 7), 6) : '')
           + this.el('AdmstnZone', tx.taxAdmstnZone, 6)
           + this.el('RefNb', tx.taxRefNb, 6) + this.el('Mtd', tx.taxMtd, 6)
-          + (tx.taxTtlTaxblBaseAmt ? `${this.tabs(6)}<TtlTaxblBaseAmt Ccy="${this.e(tx.currency)}">${this.e(tx.taxTtlTaxblBaseAmt)}</TtlTaxblBaseAmt>\n` : '')
-          + (tx.taxTtlTaxAmt ? `${this.tabs(6)}<TtlTaxAmt Ccy="${this.e(tx.currency)}">${this.e(tx.taxTtlTaxAmt)}</TtlTaxAmt>\n` : '')
+          + (tx.taxTtlTaxblBaseAmt ? `${this.tabs(6)}<TtlTaxblBaseAmt Ccy="${this.e(tx.taxTtlTaxblBaseAmtCcy || tx.currency)}">${this.e(tx.taxTtlTaxblBaseAmt)}</TtlTaxblBaseAmt>\n` : '')
+          + (tx.taxTtlTaxAmt ? `${this.tabs(6)}<TtlTaxAmt Ccy="${this.e(tx.taxTtlTaxAmtCcy || tx.currency)}">${this.e(tx.taxTtlTaxAmt)}</TtlTaxAmt>\n` : '')
           + this.el('Dt', tx.taxDt, 6) + this.el('SeqNb', tx.taxSeqNb, 6), 5) : '';
 
       // RltdRmtInf
@@ -799,9 +799,9 @@ export class Pain008Component implements OnInit, OnDestroy {
           let rfrdLineDtls = '';
           if (tx.rmtInfStrdRfrdDocLineDtlsDesc || tx.rmtInfStrdRfrdDocLineDtlsDuePyblAmt || tx.rmtInfStrdRfrdDocLineDtlsRmtdAmt) {
             let lineAmt = '';
-            if (tx.rmtInfStrdRfrdDocLineDtlsDuePyblAmt) lineAmt += `${this.tabs(9)}<DuePyblAmt Ccy="${this.e(tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocLineDtlsDuePyblAmt)}</DuePyblAmt>\n`;
-            if (tx.rmtInfStrdRfrdDocLineDtlsCdtNoteAmt) lineAmt += `${this.tabs(9)}<CdtNoteAmt Ccy="${this.e(tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocLineDtlsCdtNoteAmt)}</CdtNoteAmt>\n`;
-            if (tx.rmtInfStrdRfrdDocLineDtlsRmtdAmt) lineAmt += `${this.tabs(9)}<RmtdAmt Ccy="${this.e(tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocLineDtlsRmtdAmt)}</RmtdAmt>\n`;
+            if (tx.rmtInfStrdRfrdDocLineDtlsDuePyblAmt) lineAmt += `${this.tabs(9)}<DuePyblAmt Ccy="${this.e(tx.rmtInfStrdRfrdDocLineDtlsDuePyblAmtCcy || tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocLineDtlsDuePyblAmt)}</DuePyblAmt>\n`;
+            if (tx.rmtInfStrdRfrdDocLineDtlsCdtNoteAmt) lineAmt += `${this.tabs(9)}<CdtNoteAmt Ccy="${this.e(tx.rmtInfStrdRfrdDocLineDtlsCdtNoteAmtCcy || tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocLineDtlsCdtNoteAmt)}</CdtNoteAmt>\n`;
+            if (tx.rmtInfStrdRfrdDocLineDtlsRmtdAmt) lineAmt += `${this.tabs(9)}<RmtdAmt Ccy="${this.e(tx.rmtInfStrdRfrdDocLineDtlsRmtdAmtCcy || tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocLineDtlsRmtdAmt)}</RmtdAmt>\n`;
             rfrdLineDtls = this.tag('LineDtls', this.el('Desc', tx.rmtInfStrdRfrdDocLineDtlsDesc, 8) + (lineAmt ? this.tag('Amt', lineAmt, 8) : ''), 7);
           }
           strd += this.tag('RfrdDocInf',
@@ -811,12 +811,12 @@ export class Pain008Component implements OnInit, OnDestroy {
         // RfrdDocAmt
         if (tx.rmtInfStrdRfrdDocAmtDuePyblAmt || tx.rmtInfStrdRfrdDocAmtCdtNoteAmt || tx.rmtInfStrdRfrdDocAmtRmtdAmt || tx.rmtInfStrdRfrdDocAmtDscntApldAmt || tx.rmtInfStrdRfrdDocAmtTaxAmt || tx.rmtInfStrdRfrdDocAmtAdjAmt) {
           let rda = '';
-          if (tx.rmtInfStrdRfrdDocAmtDuePyblAmt) rda += `${this.tabs(7)}<DuePyblAmt Ccy="${this.e(tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocAmtDuePyblAmt)}</DuePyblAmt>\n`;
-          if (tx.rmtInfStrdRfrdDocAmtDscntApldAmt) rda += this.tag('DscntApldAmt', (tx.rmtInfStrdRfrdDocAmtDscntApldAmtTpCd ? this.tag('Tp', this.el('Cd', tx.rmtInfStrdRfrdDocAmtDscntApldAmtTpCd, 9), 8) : '') + `${this.tabs(8)}<Amt Ccy="${this.e(tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocAmtDscntApldAmt)}</Amt>\n`, 7);
-          if (tx.rmtInfStrdRfrdDocAmtCdtNoteAmt) rda += `${this.tabs(7)}<CdtNoteAmt Ccy="${this.e(tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocAmtCdtNoteAmt)}</CdtNoteAmt>\n`;
-          if (tx.rmtInfStrdRfrdDocAmtTaxAmt) rda += this.tag('TaxAmt', (tx.rmtInfStrdRfrdDocAmtTaxAmtTpCd ? this.tag('Tp', this.el('Cd', tx.rmtInfStrdRfrdDocAmtTaxAmtTpCd, 9), 8) : '') + `${this.tabs(8)}<Amt Ccy="${this.e(tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocAmtTaxAmt)}</Amt>\n`, 7);
-          if (tx.rmtInfStrdRfrdDocAmtAdjAmt) rda += this.tag('AdjstmntAmtAndRsn', `${this.tabs(8)}<Amt Ccy="${this.e(tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocAmtAdjAmt)}</Amt>\n` + this.el('CdtDbtInd', tx.rmtInfStrdRfrdDocAmtAdjCdtDbtInd, 8) + this.el('Rsn', tx.rmtInfStrdRfrdDocAmtAdjRsn, 8) + this.el('AddtlInf', tx.rmtInfStrdRfrdDocAmtAdjAddtlInf, 8), 7);
-          if (tx.rmtInfStrdRfrdDocAmtRmtdAmt) rda += `${this.tabs(7)}<RmtdAmt Ccy="${this.e(tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocAmtRmtdAmt)}</RmtdAmt>\n`;
+          if (tx.rmtInfStrdRfrdDocAmtDuePyblAmt) rda += `${this.tabs(7)}<DuePyblAmt Ccy="${this.e(tx.rmtInfStrdRfrdDocAmtDuePyblAmtCcy || tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocAmtDuePyblAmt)}</DuePyblAmt>\n`;
+          if (tx.rmtInfStrdRfrdDocAmtDscntApldAmt) rda += this.tag('DscntApldAmt', (tx.rmtInfStrdRfrdDocAmtDscntApldAmtTpCd ? this.tag('Tp', this.el('Cd', tx.rmtInfStrdRfrdDocAmtDscntApldAmtTpCd, 9), 8) : '') + `${this.tabs(8)}<Amt Ccy="${this.e(tx.rmtInfStrdRfrdDocAmtDscntApldAmtCcy || tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocAmtDscntApldAmt)}</Amt>\n`, 7);
+          if (tx.rmtInfStrdRfrdDocAmtCdtNoteAmt) rda += `${this.tabs(7)}<CdtNoteAmt Ccy="${this.e(tx.rmtInfStrdRfrdDocAmtCdtNoteAmtCcy || tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocAmtCdtNoteAmt)}</CdtNoteAmt>\n`;
+          if (tx.rmtInfStrdRfrdDocAmtTaxAmt) rda += this.tag('TaxAmt', (tx.rmtInfStrdRfrdDocAmtTaxAmtTpCd ? this.tag('Tp', this.el('Cd', tx.rmtInfStrdRfrdDocAmtTaxAmtTpCd, 9), 8) : '') + `${this.tabs(8)}<Amt Ccy="${this.e(tx.rmtInfStrdRfrdDocAmtTaxAmtCcy || tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocAmtTaxAmt)}</Amt>\n`, 7);
+          if (tx.rmtInfStrdRfrdDocAmtAdjAmt) rda += this.tag('AdjstmntAmtAndRsn', `${this.tabs(8)}<Amt Ccy="${this.e(tx.rmtInfStrdRfrdDocAmtAdjAmtCcy || tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocAmtAdjAmt)}</Amt>\n` + this.el('CdtDbtInd', tx.rmtInfStrdRfrdDocAmtAdjCdtDbtInd, 8) + this.el('Rsn', tx.rmtInfStrdRfrdDocAmtAdjRsn, 8) + this.el('AddtlInf', tx.rmtInfStrdRfrdDocAmtAdjAddtlInf, 8), 7);
+          if (tx.rmtInfStrdRfrdDocAmtRmtdAmt) rda += `${this.tabs(7)}<RmtdAmt Ccy="${this.e(tx.rmtInfStrdRfrdDocAmtRmtdAmtCcy || tx.currency)}">${this.e(tx.rmtInfStrdRfrdDocAmtRmtdAmt)}</RmtdAmt>\n`;
           strd += this.tag('RfrdDocAmt', rda, 6);
         }
         // CdtrRefInf
@@ -841,7 +841,7 @@ export class Pain008Component implements OnInit, OnDestroy {
             + (tx.rmtInfStrdTaxRmtDbtrTaxId || tx.rmtInfStrdTaxRmtDbtrRegnId ? this.tag('Dbtr', this.el('TaxId', tx.rmtInfStrdTaxRmtDbtrTaxId, 8) + this.el('RegnId', tx.rmtInfStrdTaxRmtDbtrRegnId, 8) + this.el('TaxTp', tx.rmtInfStrdTaxRmtDbtrTaxTp, 8), 7) : '')
             + (tx.rmtInfStrdTaxRmtUltmtDbtrTaxId ? this.tag('UltmtDbtr', this.el('TaxId', tx.rmtInfStrdTaxRmtUltmtDbtrTaxId, 8) + this.el('RegnId', tx.rmtInfStrdTaxRmtUltmtDbtrRegnId, 8) + this.el('TaxTp', tx.rmtInfStrdTaxRmtUltmtDbtrTaxTp, 8), 7) : '')
             + this.el('AdmstnZone', tx.rmtInfStrdTaxRmtAdmstnZone, 7) + this.el('RefNb', tx.rmtInfStrdTaxRmtRefNb, 7)
-            + (tx.rmtInfStrdTaxRmtTtlTaxAmt ? `${this.tabs(7)}<TtlTaxAmt Ccy="${this.e(tx.currency)}">${this.e(tx.rmtInfStrdTaxRmtTtlTaxAmt)}</TtlTaxAmt>\n` : ''), 6);
+            + (tx.rmtInfStrdTaxRmtTtlTaxAmt ? `${this.tabs(7)}<TtlTaxAmt Ccy="${this.e(tx.rmtInfStrdTaxRmtTtlTaxAmtCcy || tx.currency)}">${this.e(tx.rmtInfStrdTaxRmtTtlTaxAmt)}</TtlTaxAmt>\n` : ''), 6);
         }
         // GrnshmtRmt
         if (tx.rmtInfStrdGrnshmtTpCd || tx.rmtInfStrdGrnshmtGrnsheeNm || tx.rmtInfStrdGrnshmtGrnshmtAdmstrNm || tx.rmtInfStrdGrnshmtRefNb) {
@@ -850,7 +850,7 @@ export class Pain008Component implements OnInit, OnDestroy {
             + (tx.rmtInfStrdGrnshmtGrnsheeNm ? this.tag('Grnshee', this.el('Nm', tx.rmtInfStrdGrnshmtGrnsheeNm, 8), 7) : '')
             + (tx.rmtInfStrdGrnshmtGrnshmtAdmstrNm ? this.tag('GrnshmtAdmstr', this.el('Nm', tx.rmtInfStrdGrnshmtGrnshmtAdmstrNm, 8), 7) : '')
             + this.el('RefNb', tx.rmtInfStrdGrnshmtRefNb, 7) + this.el('Dt', tx.rmtInfStrdGrnshmtDt, 7)
-            + (tx.rmtInfStrdGrnshmtRmtdAmt ? `${this.tabs(7)}<RmtdAmt Ccy="${this.e(tx.currency)}">${this.e(tx.rmtInfStrdGrnshmtRmtdAmt)}</RmtdAmt>\n` : '')
+            + (tx.rmtInfStrdGrnshmtRmtdAmt ? `${this.tabs(7)}<RmtdAmt Ccy="${this.e(tx.rmtInfStrdGrnshmtRmtdAmtCcy || tx.currency)}">${this.e(tx.rmtInfStrdGrnshmtRmtdAmt)}</RmtdAmt>\n` : '')
             + this.el('FmlyMdclInsrncInd', tx.rmtInfStrdGrnshmtFmlyMdclInsrncInd, 7)
             + this.el('MplyeeTermntnInd', tx.rmtInfStrdGrnshmtMplyeeTermntnInd, 7), 6);
         }
@@ -1027,19 +1027,62 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
 
       const appHdr = getT('AppHdr');
       if (appHdr) {
-        setV('fromBic', tval('BICFI', getT('Fr', appHdr) || appHdr));
-        setV('toBic', tval('BICFI', getT('To', appHdr) || appHdr));
+        setV('charSet', tval('CharSet', appHdr));
+        const frHdr = getT('Fr', appHdr);
+        if (frHdr) {
+          setV('fromBic', tval('BICFI', frHdr));
+          setV('fromLei', tval('LEI', frHdr));
+          const frClrSysMmbId = getT('ClrSysMmbId', frHdr);
+          if (frClrSysMmbId) {
+            setV('fromClrSysCd', tval('Cd', getT('ClrSysId', frClrSysMmbId) || frClrSysMmbId));
+            setV('fromMmbId', tval('MmbId', frClrSysMmbId));
+          }
+        }
+        const toHdr = getT('To', appHdr);
+        if (toHdr) {
+          setV('toBic', tval('BICFI', toHdr));
+          setV('toLei', tval('LEI', toHdr));
+          const toClrSysMmbId = getT('ClrSysMmbId', toHdr);
+          if (toClrSysMmbId) {
+            setV('toClrSysCd', tval('Cd', getT('ClrSysId', toClrSysMmbId) || toClrSysMmbId));
+            setV('toMmbId', tval('MmbId', toClrSysMmbId));
+          }
+        }
         setV('bizMsgId', tval('BizMsgIdr', appHdr));
         setV('msgDefIdr', tval('MsgDefIdr', appHdr));
         setV('bizSvc', tval('BizSvc', appHdr));
+        const mktPrctc = getT('MktPrctc', appHdr);
+        if (mktPrctc) {
+          setV('mktPrctcRegy', tval('Regy', mktPrctc));
+          setV('mktPrctcId', tval('Id', mktPrctc));
+        }
         setV('creDt', tval('CreDt', appHdr));
         setV('prty', tval('Prty', appHdr));
         setV('cpyDplct', tval('CpyDplct', appHdr));
         setV('pssblDplct', tval('PssblDplct', appHdr));
         const rltdHdr = getT('Rltd', appHdr);
         if (rltdHdr) {
-          setV('rltdFrBic', tval('BICFI', getT('Fr', rltdHdr) || rltdHdr));
-          setV('rltdToBic', tval('BICFI', getT('To', rltdHdr) || rltdHdr));
+          setV('rltdCharSet', tval('CharSet', rltdHdr));
+          const rFrHdr = getT('Fr', rltdHdr);
+          if (rFrHdr) {
+            setV('rltdFrBic', tval('BICFI', rFrHdr));
+            setV('rltdFrLei', tval('LEI', rFrHdr));
+            const rFrClrSysMmbId = getT('ClrSysMmbId', rFrHdr);
+            if (rFrClrSysMmbId) {
+              setV('rltdFrClrSysCd', tval('Cd', getT('ClrSysId', rFrClrSysMmbId) || rFrClrSysMmbId));
+              setV('rltdFrMmbId', tval('MmbId', rFrClrSysMmbId));
+            }
+          }
+          const rToHdr = getT('To', rltdHdr);
+          if (rToHdr) {
+            setV('rltdToBic', tval('BICFI', rToHdr));
+            setV('rltdToLei', tval('LEI', rToHdr));
+            const rToClrSysMmbId = getT('ClrSysMmbId', rToHdr);
+            if (rToClrSysMmbId) {
+              setV('rltdToClrSysCd', tval('Cd', getT('ClrSysId', rToClrSysMmbId) || rToClrSysMmbId));
+              setV('rltdToMmbId', tval('MmbId', rToClrSysMmbId));
+            }
+          }
           setV('rltdBizMsgIdr', tval('BizMsgIdr', rltdHdr));
           setV('rltdMsgDefIdr', tval('MsgDefIdr', rltdHdr));
           setV('rltdBizSvc', tval('BizSvc', rltdHdr));
@@ -1070,33 +1113,67 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
             if (_u !== this.generatedXml) { const _ta = document.querySelector('.code-editor') as HTMLTextAreaElement; const _p = _ta ? _ta.selectionStart : 0, _q = _ta ? _ta.selectionEnd : 0; const _d = patch['msgId'].length - _cb.length; if (_ta) { _ta.value = _u; _ta.setSelectionRange(Math.max(0, _p + _d), Math.max(0, _q + _d)); } this.generatedXml = _u; }
           } }
         setV('creDtTm', tval('CreDtTm', gh));
+        const authsn = getT('Authstn', gh);
+        if (authsn) {
+          setV('authsnCd', tval('Cd', authsn));
+          setV('authsnPrtry', tval('Prtry', authsn));
+        }
         setV('nbOfTxs', tval('NbOfTxs', gh));
-        this.mapAddrToForm(getT('InitgPty', gh), 'initgPty', patch);
+        const initgPty = getT('InitgPty', gh);
+        if (initgPty) {
+          this.mapAddrToForm(initgPty, 'initgPty', patch);
+          setV('initgPtyCtryOfRes', tval('CtryOfRes', initgPty));
+          const initgPtyOthr = getT('Othr', initgPty);
+          if (initgPtyOthr) setV('initgPtyId', tval('Id', initgPtyOthr));
+        }
         const fwdg = getT('FwdgAgt', gh);
-        if (fwdg) setV('fwdgAgtBic', tval('BICFI', getT('FinInstnId', fwdg) || fwdg));
+        if (fwdg) {
+          const fwdgFinInstnId = getT('FinInstnId', fwdg) || fwdg;
+          setV('fwdgAgtBic', tval('BICFI', fwdgFinInstnId));
+          setV('fwdgAgtLei', tval('LEI', fwdgFinInstnId));
+          const fwdgClrSysMmbId = getT('ClrSysMmbId', fwdgFinInstnId);
+          if (fwdgClrSysMmbId) {
+            setV('fwdgAgtClrSysCd', tval('Cd', getT('ClrSysId', fwdgClrSysMmbId) || fwdgClrSysMmbId));
+            setV('fwdgAgtMmbId', tval('MmbId', fwdgClrSysMmbId));
+          }
+        }
       }
 
       const pi = getT('PmtInf', root);
       if (pi) {
         setV('pmtInfId', tval('PmtInfId', pi));
         setV('pmtMtd', tval('PmtMtd', pi));
+        setV('btchBookg', tval('BtchBookg', pi));
         setV('reqdColltnDt', tval('Dt', getT('ReqdColltnDt', pi) || pi).substring(0, 10));
-        this.mapAddrToForm(getT('Cdtr', pi), 'cdtr', patch);
+        const cdtrEl = getT('Cdtr', pi);
+        this.mapAddrToForm(cdtrEl, 'cdtr', patch);
+        if (cdtrEl) setV('cdtrCtryOfRes', tval('CtryOfRes', cdtrEl));
         const cdtrAcct = getT('CdtrAcct', pi);
         if (cdtrAcct) {
           const cdtrIban = tval('IBAN', cdtrAcct);
           if (cdtrIban) { patch['cdtrAcctType'] = 'IBAN'; setV('cdtrIban', cdtrIban); }
           else { const othrId = tval('Id', getT('Othr', cdtrAcct) || cdtrAcct); if (othrId) { patch['cdtrAcctType'] = 'Othr'; setV('cdtrAcctOthrId', othrId); } else { patch['cdtrAcctType'] = 'none'; } }
+          setV('cdtrAcctCcy', tval('Ccy', cdtrAcct));
+          setV('cdtrAcctNm', tval('Nm', cdtrAcct));
+          setV('cdtrAcctTpCd', tval('Cd', getT('Tp', cdtrAcct) || cdtrAcct));
         }
         const cdtrAgtAcctEl = getT('CdtrAgtAcct', pi);
         if (cdtrAgtAcctEl) {
           const iban = tval('IBAN', cdtrAgtAcctEl);
           if (iban) { patch['cdtrAgtAcctType'] = 'IBAN'; setV('cdtrAgtAcctIban', iban); }
           else { const othrId = tval('Id', getT('Othr', cdtrAgtAcctEl) || cdtrAgtAcctEl); if (othrId) { patch['cdtrAgtAcctType'] = 'Othr'; setV('cdtrAgtAcctOthrId', othrId); } else { patch['cdtrAgtAcctType'] = 'none'; } }
+          setV('cdtrAgtAcctCcy', tval('Ccy', cdtrAgtAcctEl));
         }
         const cdtrAgt = getT('CdtrAgt', pi);
         if (cdtrAgt) {
-          setV('cdtrAgtBic', tval('BICFI', getT('FinInstnId', cdtrAgt) || cdtrAgt));
+          const cdtrAgtFinInstnId = getT('FinInstnId', cdtrAgt) || cdtrAgt;
+          setV('cdtrAgtBic', tval('BICFI', cdtrAgtFinInstnId));
+          setV('cdtrAgtLei', tval('LEI', cdtrAgtFinInstnId));
+          const cdtrAgtClrSysMmbId = getT('ClrSysMmbId', cdtrAgtFinInstnId);
+          if (cdtrAgtClrSysMmbId) {
+            setV('cdtrAgtClrSysCd', tval('Cd', getT('ClrSysId', cdtrAgtClrSysMmbId) || cdtrAgtClrSysMmbId));
+            setV('cdtrAgtMmbId', tval('MmbId', cdtrAgtClrSysMmbId));
+          }
           setV('cdtrAgtNm', tval('Nm', cdtrAgt));
         }
         const chrgsAcct = getT('ChrgsAcct', pi);
@@ -1104,9 +1181,16 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
           const iban = tval('IBAN', chrgsAcct);
           if (iban) { patch['chrgsAcctType'] = 'IBAN'; setV('chrgsAcctIban', iban); }
           else { const othrId = tval('Id', getT('Othr', chrgsAcct) || chrgsAcct); if (othrId) { patch['chrgsAcctType'] = 'Othr'; setV('chrgsAcctOthrId', othrId); } else { patch['chrgsAcctType'] = 'none'; } }
+          setV('chrgsAcctCcy', tval('Ccy', chrgsAcct));
         }
         const chrgsAgt = getT('ChrgsAcctAgt', pi);
-        if (chrgsAgt) setV('chrgsAcctAgtBic', tval('BICFI', getT('FinInstnId', chrgsAgt) || chrgsAgt));
+        if (chrgsAgt) {
+          const chrgsAgtFinInstnId = getT('FinInstnId', chrgsAgt) || chrgsAgt;
+          setV('chrgsAcctAgtBic', tval('BICFI', chrgsAgtFinInstnId));
+          setV('chrgsAcctAgtLei', tval('LEI', chrgsAgtFinInstnId));
+          const chrgsAgtClrSysMmbId = getT('ClrSysMmbId', chrgsAgtFinInstnId);
+          if (chrgsAgtClrSysMmbId) setV('chrgsAcctAgtMmbId', tval('MmbId', chrgsAgtClrSysMmbId));
+        }
 
         const txs = Array.from(root.getElementsByTagName('DrctDbtTxInf'));
         if (txs.length) {
@@ -1121,6 +1205,17 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
               sv('instrId', tval('InstrId', pmtId));
               sv('endToEndId', tval('EndToEndId', pmtId));
               sv('uetr', tval('UETR', pmtId));
+            }
+            const pmtTpInf = getT('PmtTpInf', txEl);
+            if (pmtTpInf) {
+              sv('instrPrty', tval('InstrPrty', pmtTpInf));
+              const svcLvl = getT('SvcLvl', pmtTpInf);
+              if (svcLvl) { sv('svcLvlCd', tval('Cd', svcLvl)); sv('svcLvlPrtry', tval('Prtry', svcLvl)); }
+              const lclInstrm = getT('LclInstrm', pmtTpInf);
+              if (lclInstrm) { sv('lclInstrmCd', tval('Cd', lclInstrm)); sv('lclInstrmPrtry', tval('Prtry', lclInstrm)); }
+              sv('seqTp', tval('SeqTp', pmtTpInf));
+              const ctgyPurp = getT('CtgyPurp', pmtTpInf);
+              if (ctgyPurp) { sv('ctgyPurpCd', tval('Cd', ctgyPurp)); sv('ctgyPurpPrtry', tval('Prtry', ctgyPurp)); }
             }
             const instd = getT('InstdAmt', txEl);
             if (instd) {
@@ -1137,30 +1232,122 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
               sv('amdmntInd', tval('AmdmntInd', mndt));
               const amdInfDtls = getT('AmdmntInfDtls', mndt);
               if (amdInfDtls) {
+                sv('orgnlMndtId', tval('OrgnlMndtId', amdInfDtls));
+                const orgnlCdtrSchmeId = getT('OrgnlCdtrSchmeId', amdInfDtls);
+                if (orgnlCdtrSchmeId) {
+                  sv('orgnlCdtrSchmeIdNm', tval('Nm', orgnlCdtrSchmeId));
+                  sv('orgnlCdtrSchmeIdBic', tval('AnyBIC', getT('OrgId', orgnlCdtrSchmeId) || orgnlCdtrSchmeId));
+                }
+                const orgnlCdtrAgt = getT('OrgnlCdtrAgt', amdInfDtls);
+                if (orgnlCdtrAgt) sv('orgnlCdtrAgtBic', tval('BICFI', getT('FinInstnId', orgnlCdtrAgt) || orgnlCdtrAgt));
+                const orgnlDbtr = getT('OrgnlDbtr', amdInfDtls);
+                if (orgnlDbtr) sv('orgnlDbtrNm', tval('Nm', orgnlDbtr));
                 const orgnlDbtrAcctEl = getT('OrgnlDbtrAcct', amdInfDtls);
                 if (orgnlDbtrAcctEl) {
                   const iban = tval('IBAN', orgnlDbtrAcctEl);
                   if (iban) { tp['orgnlDbtrAcctType'] = 'IBAN'; sv('orgnlDbtrAcctIban', iban); }
                   else { const othrId = tval('Id', getT('Othr', orgnlDbtrAcctEl) || orgnlDbtrAcctEl); if (othrId) { tp['orgnlDbtrAcctType'] = 'Othr'; sv('orgnlDbtrAcctOthrId', othrId); } else { tp['orgnlDbtrAcctType'] = 'none'; } }
                 }
+                const orgnlDbtrAgt = getT('OrgnlDbtrAgt', amdInfDtls);
+                if (orgnlDbtrAgt) sv('orgnlDbtrAgtBic', tval('BICFI', getT('FinInstnId', orgnlDbtrAgt) || orgnlDbtrAgt));
+                sv('orgnlFnlColltnDt', tval('OrgnlFnlColltnDt', amdInfDtls).substring(0, 10));
+                const orgnlFrqcy = getT('OrgnlFrqcy', amdInfDtls);
+                if (orgnlFrqcy) sv('orgnlFrqcyTp', tval('Tp', orgnlFrqcy));
+                const orgnlRsn = getT('OrgnlRsn', amdInfDtls);
+                if (orgnlRsn) { sv('orgnlRsnCd', tval('Cd', orgnlRsn)); sv('orgnlRsnPrtry', tval('Prtry', orgnlRsn)); }
+                sv('orgnlTrckgDays', tval('OrgnlTrckgDays', amdInfDtls));
               }
+              sv('elctrncSgntr', tval('ElctrncSgntr', mndt));
+              sv('frstColltnDt', tval('FrstColltnDt', mndt).substring(0, 10));
+              sv('fnlColltnDt', tval('FnlColltnDt', mndt).substring(0, 10));
+              const frqcy = getT('Frqcy', mndt);
+              if (frqcy) {
+                const frqcyPrd = getT('Prd', frqcy);
+                if (frqcyPrd) { sv('frqcyPrdTp', tval('Tp', frqcyPrd)); sv('frqcyPrdCntPerPrd', tval('CntPerPrd', frqcyPrd)); }
+                else sv('frqcyTp', tval('Cd', getT('Tp', frqcy) || frqcy));
+              }
+              const mndtRsn = getT('Rsn', mndt);
+              if (mndtRsn) { sv('rsnCd', tval('Cd', mndtRsn)); sv('rsnPrtry', tval('Prtry', mndtRsn)); }
+              sv('trckgDays', tval('TrckgDays', mndt));
             }
+            if (drctDbt) {
+              const cdtrSchmeId = getT('CdtrSchmeId', drctDbt);
+              if (cdtrSchmeId) {
+                sv('cdtrSchmeIdNm', tval('Nm', cdtrSchmeId));
+                const cdtrSchmeOthr = getT('Othr', cdtrSchmeId);
+                if (cdtrSchmeOthr) {
+                  sv('cdtrSchmeIdOthrId', tval('Id', cdtrSchmeOthr));
+                  const schmeNm = getT('SchmeNm', cdtrSchmeOthr);
+                  if (schmeNm) { sv('cdtrSchmeIdOthrSchmeNmCd', tval('Cd', schmeNm)); sv('cdtrSchmeIdOthrSchmeNmPrtry', tval('Prtry', schmeNm)); }
+                  sv('cdtrSchmeIdOthrIssr', tval('Issr', cdtrSchmeOthr));
+                }
+              }
+              sv('preNtfctnId', tval('PreNtfctnId', drctDbt));
+              sv('preNtfctnDt', tval('PreNtfctnDt', drctDbt).substring(0, 10));
+            }
+            const ultmtCdtr = getT('UltmtCdtr', txEl);
+            if (ultmtCdtr) sv('ultmtCdtrName', tval('Nm', ultmtCdtr));
 
             const dbtrAgt = getT('DbtrAgt', txEl);
-            if (dbtrAgt) sv('dbtrAgtBic', tval('BICFI', getT('FinInstnId', dbtrAgt) || dbtrAgt));
+            if (dbtrAgt) {
+              const dbtrAgtFinInstnId = getT('FinInstnId', dbtrAgt) || dbtrAgt;
+              sv('dbtrAgtBic', tval('BICFI', dbtrAgtFinInstnId));
+              sv('dbtrAgtLei', tval('LEI', dbtrAgtFinInstnId));
+              const dbtrAgtClrSysMmbId = getT('ClrSysMmbId', dbtrAgtFinInstnId);
+              if (dbtrAgtClrSysMmbId) {
+                sv('dbtrAgtClrSysCd', tval('Cd', getT('ClrSysId', dbtrAgtClrSysMmbId) || dbtrAgtClrSysMmbId));
+                sv('dbtrAgtMmbId', tval('MmbId', dbtrAgtClrSysMmbId));
+              }
+            }
             const dbtrAgtAcctEl = getT('DbtrAgtAcct', txEl);
             if (dbtrAgtAcctEl) {
               const iban = tval('IBAN', dbtrAgtAcctEl);
               if (iban) { tp['dbtrAgtAcctType'] = 'IBAN'; sv('dbtrAgtAcctIban', iban); }
               else { const othrId = tval('Id', getT('Othr', dbtrAgtAcctEl) || dbtrAgtAcctEl); if (othrId) { tp['dbtrAgtAcctType'] = 'Othr'; sv('dbtrAgtAcctOthrId', othrId); } else { tp['dbtrAgtAcctType'] = 'none'; } }
             }
-            this.mapAddrToForm(getT('Dbtr', txEl), 'dbtr', tp);
+            const dbtrEl = getT('Dbtr', txEl);
+            this.mapAddrToForm(dbtrEl, 'dbtr', tp);
+            if (dbtrEl) {
+              sv('dbtrCtryOfRes', tval('CtryOfRes', dbtrEl));
+              const dbtrOrgId = getT('OrgId', dbtrEl);
+              if (dbtrOrgId) {
+                sv('dbtrOrgIdAnyBic', tval('AnyBIC', dbtrOrgId));
+                sv('dbtrOrgIdLei', tval('LEI', dbtrOrgId));
+                const dbtrOrgIdOthr = getT('Othr', dbtrOrgId);
+                if (dbtrOrgIdOthr) {
+                  sv('dbtrOrgIdOthrId', tval('Id', dbtrOrgIdOthr));
+                  sv('dbtrOrgIdOthrSchmeNmCd', tval('Cd', getT('SchmeNm', dbtrOrgIdOthr) || dbtrOrgIdOthr));
+                  sv('dbtrOrgIdOthrIssr', tval('Issr', dbtrOrgIdOthr));
+                }
+              }
+              const dbtrPrvtId = getT('PrvtId', dbtrEl);
+              if (dbtrPrvtId) {
+                const dtAndPlcOfBirth = getT('DtAndPlcOfBirth', dbtrPrvtId);
+                if (dtAndPlcOfBirth) {
+                  sv('dbtrPrvtIdBirthDt', tval('BirthDt', dtAndPlcOfBirth).substring(0, 10));
+                  sv('dbtrPrvtIdCityOfBirth', tval('CityOfBirth', dtAndPlcOfBirth));
+                  sv('dbtrPrvtIdCtryOfBirth', tval('CtryOfBirth', dtAndPlcOfBirth));
+                }
+                const dbtrPrvtIdOthr = getT('Othr', dbtrPrvtId);
+                if (dbtrPrvtIdOthr) {
+                  sv('dbtrPrvtIdOthrId', tval('Id', dbtrPrvtIdOthr));
+                  sv('dbtrPrvtIdOthrSchmeNmCd', tval('Cd', getT('SchmeNm', dbtrPrvtIdOthr) || dbtrPrvtIdOthr));
+                  sv('dbtrPrvtIdOthrIssr', tval('Issr', dbtrPrvtIdOthr));
+                }
+              }
+            }
             const dbtrAcct = getT('DbtrAcct', txEl);
             if (dbtrAcct) {
               const iban = tval('IBAN', dbtrAcct);
               if (iban) { tp['dbtrAcctType'] = 'IBAN'; sv('dbtrIban', iban); }
               else { const othrId = tval('Id', getT('Othr', dbtrAcct) || dbtrAcct); if (othrId) { tp['dbtrAcctType'] = 'Othr'; sv('dbtrAcctOthrId', othrId); } else { tp['dbtrAcctType'] = 'none'; } }
+              sv('dbtrAcctCcy', tval('Ccy', dbtrAcct));
+              sv('dbtrAcctNm', tval('Nm', dbtrAcct));
+              const dbtrAcctTp = getT('Tp', dbtrAcct);
+              if (dbtrAcctTp) sv('dbtrAcctTpCd', tval('Cd', dbtrAcctTp) || tval('Prtry', dbtrAcctTp));
             }
+            const ultmtDbtr = getT('UltmtDbtr', txEl);
+            if (ultmtDbtr) sv('ultmtDbtrName', tval('Nm', ultmtDbtr));
 
             sv('purpCd', tval('Cd', getT('Purp', txEl) || txEl));
             sv('purpPrtry', tval('Prtry', getT('Purp', txEl) || txEl));
@@ -1177,24 +1364,161 @@ ${grpHdr}${pmtInf}\t\t</CstmrDrctDbtInitn>
               const dtls = getT('Dtls', rgltry);
               if (dtls) {
                 sv('rgltryRptgDtlsTp', tval('Tp', dtls));
+                sv('rgltryRptgDtlsDt', tval('Dt', dtls).substring(0, 10));
+                sv('rgltryRptgDtlsCtry', tval('Ctry', dtls));
                 sv('rgltryRptgDtlsCd', tval('Cd', dtls));
+                const dtlsAmt = getT('Amt', dtls);
+                if (dtlsAmt) { sv('rgltryRptgDtlsAmt', dtlsAmt.textContent?.trim() || ''); sv('rgltryRptgDtlsAmtCcy', dtlsAmt.getAttribute('Ccy') || ''); }
                 sv('rgltryRptgDtlsInf', tval('Inf', dtls));
               }
             }
 
             const tax = getT('Tax', txEl);
             if (tax) {
+              const taxCdtr = getT('Cdtr', tax);
+              if (taxCdtr) { sv('taxCdtrTaxId', tval('TaxId', taxCdtr)); sv('taxCdtrRegnId', tval('RegnId', taxCdtr)); sv('taxCdtrTaxTp', tval('TaxTp', taxCdtr)); }
+              const taxDbtr = getT('Dbtr', tax);
+              if (taxDbtr) { sv('taxDbtrTaxId', tval('TaxId', taxDbtr)); sv('taxDbtrRegnId', tval('RegnId', taxDbtr)); sv('taxDbtrTaxTp', tval('TaxTp', taxDbtr)); }
+              const taxUltmtDbtr = getT('UltmtDbtr', tax);
+              if (taxUltmtDbtr) { setV('taxAuthsnTitl', tval('Titl', taxUltmtDbtr)); setV('taxAuthsnNm', tval('Nm', taxUltmtDbtr)); }
+              sv('taxAdmstnZone', tval('AdmstnZone', tax));
               sv('taxRefNb', tval('RefNb', tax));
               sv('taxMtd', tval('Mtd', tax));
+              const taxTtlBase = getT('TtlTaxblBaseAmt', tax);
+              if (taxTtlBase) { sv('taxTtlTaxblBaseAmt', taxTtlBase.textContent?.trim() || ''); sv('taxTtlTaxblBaseAmtCcy', taxTtlBase.getAttribute('Ccy') || ''); }
               const ttl = getT('TtlTaxAmt', tax);
               if (ttl) {
                 sv('taxTtlTaxAmt', ttl.textContent?.trim() || '');
                 sv('taxTtlTaxAmtCcy', ttl.getAttribute('Ccy') || '');
               }
+              sv('taxDt', tval('Dt', tax).substring(0, 10));
+              sv('taxSeqNb', tval('SeqNb', tax));
+            }
+
+            const rltdRmt = getT('RltdRmtInf', txEl);
+            if (rltdRmt) {
+              sv('rltdRmtInfRmtId', tval('RmtId', rltdRmt));
+              const rmtLctnDtls = getT('RmtLctnDtls', rltdRmt);
+              if (rmtLctnDtls) { sv('rltdRmtInfMtd', tval('Mtd', rmtLctnDtls)); sv('rltdRmtInfElctrncAdr', tval('ElctrncAdr', rmtLctnDtls)); }
             }
 
             const rmt = getT('RmtInf', txEl);
-            if (rmt) sv('rmtInfUstrd', tval('Ustrd', rmt));
+            if (rmt) {
+              sv('rmtInfUstrd', tval('Ustrd', rmt));
+              const strd = getT('Strd', rmt);
+              if (strd) {
+                const rfrdDocInf = getT('RfrdDocInf', strd);
+                if (rfrdDocInf) {
+                  const rfrdTp = getT('Tp', rfrdDocInf);
+                  if (rfrdTp) {
+                    const cdOrPrtry = getT('CdOrPrtry', rfrdTp) || rfrdTp;
+                    sv('rmtInfStrdRfrdDocCd', tval('Cd', cdOrPrtry));
+                    sv('rmtInfStrdRfrdDocPrtry', tval('Prtry', cdOrPrtry));
+                    sv('rmtInfStrdRfrdDocIssr', tval('Issr', rfrdTp));
+                  }
+                  sv('rmtInfStrdRfrdDocNb', tval('Nb', rfrdDocInf));
+                  sv('rmtInfStrdRfrdDocRltdDt', tval('RltdDt', rfrdDocInf).substring(0, 10));
+                  const lineDtls = getT('LineDtls', rfrdDocInf);
+                  if (lineDtls) {
+                    sv('rmtInfStrdRfrdDocLineDtlsDesc', tval('Desc', lineDtls));
+                    const lineAmt = getT('Amt', lineDtls);
+                    if (lineAmt) {
+                      const dpa = getT('DuePyblAmt', lineAmt);
+                      if (dpa) { sv('rmtInfStrdRfrdDocLineDtlsDuePyblAmt', dpa.textContent?.trim() || ''); sv('rmtInfStrdRfrdDocLineDtlsDuePyblAmtCcy', dpa.getAttribute('Ccy') || ''); }
+                      const cna = getT('CdtNoteAmt', lineAmt);
+                      if (cna) { sv('rmtInfStrdRfrdDocLineDtlsCdtNoteAmt', cna.textContent?.trim() || ''); sv('rmtInfStrdRfrdDocLineDtlsCdtNoteAmtCcy', cna.getAttribute('Ccy') || ''); }
+                      const rda = getT('RmtdAmt', lineAmt);
+                      if (rda) { sv('rmtInfStrdRfrdDocLineDtlsRmtdAmt', rda.textContent?.trim() || ''); sv('rmtInfStrdRfrdDocLineDtlsRmtdAmtCcy', rda.getAttribute('Ccy') || ''); }
+                    }
+                  }
+                }
+                const rfrdDocAmt = getT('RfrdDocAmt', strd);
+                if (rfrdDocAmt) {
+                  const dpa = getT('DuePyblAmt', rfrdDocAmt);
+                  if (dpa) { sv('rmtInfStrdRfrdDocAmtDuePyblAmt', dpa.textContent?.trim() || ''); sv('rmtInfStrdRfrdDocAmtDuePyblAmtCcy', dpa.getAttribute('Ccy') || ''); }
+                  const dscntApldAmt = getT('DscntApldAmt', rfrdDocAmt);
+                  if (dscntApldAmt) {
+                    sv('rmtInfStrdRfrdDocAmtDscntApldAmtTpCd', tval('Cd', getT('Tp', dscntApldAmt) || dscntApldAmt));
+                    const dAmt = getT('Amt', dscntApldAmt);
+                    if (dAmt) { sv('rmtInfStrdRfrdDocAmtDscntApldAmt', dAmt.textContent?.trim() || ''); sv('rmtInfStrdRfrdDocAmtDscntApldAmtCcy', dAmt.getAttribute('Ccy') || ''); }
+                  }
+                  const cna = getT('CdtNoteAmt', rfrdDocAmt);
+                  if (cna) { sv('rmtInfStrdRfrdDocAmtCdtNoteAmt', cna.textContent?.trim() || ''); sv('rmtInfStrdRfrdDocAmtCdtNoteAmtCcy', cna.getAttribute('Ccy') || ''); }
+                  const taxAmt = getT('TaxAmt', rfrdDocAmt);
+                  if (taxAmt) {
+                    sv('rmtInfStrdRfrdDocAmtTaxAmtTpCd', tval('Cd', getT('Tp', taxAmt) || taxAmt));
+                    const tAmt = getT('Amt', taxAmt);
+                    if (tAmt) { sv('rmtInfStrdRfrdDocAmtTaxAmt', tAmt.textContent?.trim() || ''); sv('rmtInfStrdRfrdDocAmtTaxAmtCcy', tAmt.getAttribute('Ccy') || ''); }
+                  }
+                  const adjAmtRsn = getT('AdjstmntAmtAndRsn', rfrdDocAmt);
+                  if (adjAmtRsn) {
+                    const aAmt = getT('Amt', adjAmtRsn);
+                    if (aAmt) { sv('rmtInfStrdRfrdDocAmtAdjAmt', aAmt.textContent?.trim() || ''); sv('rmtInfStrdRfrdDocAmtAdjAmtCcy', aAmt.getAttribute('Ccy') || ''); }
+                    sv('rmtInfStrdRfrdDocAmtAdjCdtDbtInd', tval('CdtDbtInd', adjAmtRsn));
+                    sv('rmtInfStrdRfrdDocAmtAdjRsn', tval('Rsn', adjAmtRsn));
+                    sv('rmtInfStrdRfrdDocAmtAdjAddtlInf', tval('AddtlInf', adjAmtRsn));
+                  }
+                  const rda2 = getT('RmtdAmt', rfrdDocAmt);
+                  if (rda2) { sv('rmtInfStrdRfrdDocAmtRmtdAmt', rda2.textContent?.trim() || ''); sv('rmtInfStrdRfrdDocAmtRmtdAmtCcy', rda2.getAttribute('Ccy') || ''); }
+                }
+                const cdtrRefInf = getT('CdtrRefInf', strd);
+                if (cdtrRefInf) {
+                  const cdtrRefTp = getT('Tp', cdtrRefInf);
+                  if (cdtrRefTp) {
+                    const cdOrPrtry = getT('CdOrPrtry', cdtrRefTp) || cdtrRefTp;
+                    sv('rmtInfStrdCdtrRefCd', tval('Cd', cdOrPrtry));
+                    sv('rmtInfStrdCdtrRefPrtry', tval('Prtry', cdOrPrtry));
+                    sv('rmtInfStrdCdtrRefIssr', tval('Issr', cdtrRefTp));
+                  }
+                  sv('rmtInfStrdCdtrRefRef', tval('Ref', cdtrRefInf));
+                }
+                const invcr = getT('Invcr', strd);
+                if (invcr) {
+                  sv('rmtInfStrdInvcrNm', tval('Nm', invcr));
+                  const invcrPstl = getT('PstlAdr', invcr);
+                  if (invcrPstl) { sv('rmtInfStrdInvcrTwnNm', tval('TwnNm', invcrPstl)); sv('rmtInfStrdInvcrCtry', tval('Ctry', invcrPstl)); }
+                }
+                const invcee = getT('Invcee', strd);
+                if (invcee) {
+                  sv('rmtInfStrdInvceeNm', tval('Nm', invcee));
+                  const invceePstl = getT('PstlAdr', invcee);
+                  if (invceePstl) { sv('rmtInfStrdInvceeTwnNm', tval('TwnNm', invceePstl)); sv('rmtInfStrdInvceeCtry', tval('Ctry', invceePstl)); }
+                }
+                const taxRmt = getT('TaxRmt', strd);
+                if (taxRmt) {
+                  const trCdtr = getT('Cdtr', taxRmt);
+                  if (trCdtr) { sv('rmtInfStrdTaxRmtCdtrTaxId', tval('TaxId', trCdtr)); sv('rmtInfStrdTaxRmtCdtrRegnId', tval('RegnId', trCdtr)); sv('rmtInfStrdTaxRmtCdtrTaxTp', tval('TaxTp', trCdtr)); }
+                  const trDbtr = getT('Dbtr', taxRmt);
+                  if (trDbtr) { sv('rmtInfStrdTaxRmtDbtrTaxId', tval('TaxId', trDbtr)); sv('rmtInfStrdTaxRmtDbtrRegnId', tval('RegnId', trDbtr)); sv('rmtInfStrdTaxRmtDbtrTaxTp', tval('TaxTp', trDbtr)); }
+                  const trUltmtDbtr = getT('UltmtDbtr', taxRmt);
+                  if (trUltmtDbtr) { sv('rmtInfStrdTaxRmtUltmtDbtrTaxId', tval('TaxId', trUltmtDbtr)); sv('rmtInfStrdTaxRmtUltmtDbtrRegnId', tval('RegnId', trUltmtDbtr)); sv('rmtInfStrdTaxRmtUltmtDbtrTaxTp', tval('TaxTp', trUltmtDbtr)); }
+                  sv('rmtInfStrdTaxRmtAdmstnZone', tval('AdmstnZone', taxRmt));
+                  sv('rmtInfStrdTaxRmtRefNb', tval('RefNb', taxRmt));
+                  const trTtl = getT('TtlTaxAmt', taxRmt);
+                  if (trTtl) { sv('rmtInfStrdTaxRmtTtlTaxAmt', trTtl.textContent?.trim() || ''); sv('rmtInfStrdTaxRmtTtlTaxAmtCcy', trTtl.getAttribute('Ccy') || ''); }
+                }
+                const grnshmtRmt = getT('GrnshmtRmt', strd);
+                if (grnshmtRmt) {
+                  const grnshmtTp = getT('Tp', grnshmtRmt);
+                  if (grnshmtTp) {
+                    const cdOrPrtry = getT('CdOrPrtry', grnshmtTp) || grnshmtTp;
+                    sv('rmtInfStrdGrnshmtTpCd', tval('Cd', cdOrPrtry));
+                    sv('rmtInfStrdGrnshmtTpPrtry', tval('Prtry', cdOrPrtry));
+                  }
+                  const grnshee = getT('Grnshee', grnshmtRmt);
+                  if (grnshee) sv('rmtInfStrdGrnshmtGrnsheeNm', tval('Nm', grnshee));
+                  const grnshmtAdmstr = getT('GrnshmtAdmstr', grnshmtRmt);
+                  if (grnshmtAdmstr) sv('rmtInfStrdGrnshmtGrnshmtAdmstrNm', tval('Nm', grnshmtAdmstr));
+                  sv('rmtInfStrdGrnshmtRefNb', tval('RefNb', grnshmtRmt));
+                  sv('rmtInfStrdGrnshmtDt', tval('Dt', grnshmtRmt).substring(0, 10));
+                  const grnshmtRmtdAmt = getT('RmtdAmt', grnshmtRmt);
+                  if (grnshmtRmtdAmt) { sv('rmtInfStrdGrnshmtRmtdAmt', grnshmtRmtdAmt.textContent?.trim() || ''); sv('rmtInfStrdGrnshmtRmtdAmtCcy', grnshmtRmtdAmt.getAttribute('Ccy') || ''); }
+                  sv('rmtInfStrdGrnshmtFmlyMdclInsrncInd', tval('FmlyMdclInsrncInd', grnshmtRmt));
+                  sv('rmtInfStrdGrnshmtMplyeeTermntnInd', tval('MplyeeTermntnInd', grnshmtRmt));
+                }
+                sv('rmtInfStrdAddtlRmtInf', tval('AddtlRmtInf', strd));
+              }
+            }
 
             g.patchValue(tp, { emitEvent: false });
             this.transactions.push(g);

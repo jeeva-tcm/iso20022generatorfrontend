@@ -424,6 +424,7 @@ export class Camt056Component implements OnInit, OnDestroy {
         patch['toBIC'] = to.bic; patch['toLEI'] = to.lei;
         patch['toClrSysId'] = to.clrSysId; patch['toMmbId'] = to.mmbId;
         patch['businessMsgId'] = tval('BizMsgIdr', head);
+        patch['msgDefId'] = tval('MsgDefIdr', head);
         patch['bizSvc'] = tval('BizSvc', head);
         patch['creationDate'] = tval('CreDt', head) || tval('CreDtTm', head);
         patch['cpyDplct'] = tval('CpyDplct', head);
