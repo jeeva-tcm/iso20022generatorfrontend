@@ -15,10 +15,11 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
 import { debounceTime } from 'rxjs/operators';
 
+import { DatePickerToggleDirective } from '../../../../directives/date-picker-toggle.directive';
 @Component({
   selector: 'app-pacs2',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatDialogModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatDialogModule, DatePickerToggleDirective],
   templateUrl: './pacs2.component.html',
   styleUrls: ['./pacs2.component.css']
 })

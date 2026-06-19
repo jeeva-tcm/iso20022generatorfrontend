@@ -13,10 +13,11 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
 import { debounceTime } from 'rxjs/operators';
 
+import { DatePickerToggleDirective } from '../../../../directives/date-picker-toggle.directive';
 @Component({
   selector: 'app-camt055',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatDialogModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatDialogModule, DatePickerToggleDirective],
   templateUrl: './camt055.component.html',
   styleUrls: ['./camt055.component.css']
 })

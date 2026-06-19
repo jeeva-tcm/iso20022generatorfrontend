@@ -14,10 +14,11 @@ import { Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { getValidationErrorMessage } from '../../../../utils/validation-utils';
 
+import { DatePickerToggleDirective } from '../../../../directives/date-picker-toggle.directive';
 @Component({
   selector: 'app-pain002',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, DatePickerToggleDirective],
   templateUrl: './pain002.component.html',
   styleUrls: ['./pain002.component.css']
 })

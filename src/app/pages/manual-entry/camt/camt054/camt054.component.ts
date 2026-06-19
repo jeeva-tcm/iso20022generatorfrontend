@@ -14,12 +14,13 @@ import { SrVersionService } from '../../../../services/sr-version.service';
 import { Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
+import { DatePickerToggleDirective } from '../../../../directives/date-picker-toggle.directive';
 @Component({
   selector: 'app-camt054',
   templateUrl: './camt054.component.html',
   styleUrls: ['./camt054.component.css'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, MatDialogModule]
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, MatDialogModule, DatePickerToggleDirective]
 })
 export class Camt054Component implements OnInit, OnDestroy {
   form!: FormGroup;
