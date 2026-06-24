@@ -15,12 +15,13 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dialog.component';
 import { debounceTime } from 'rxjs/operators';
 
+import { DatePickerToggleDirective } from '../../../../directives/date-picker-toggle.directive';
 @Component({
   selector: 'app-camt056',
   templateUrl: './camt056.component.html',
   styleUrls: ['./camt056.component.css'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, MatDialogModule]
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, MatDialogModule, DatePickerToggleDirective]
 })
 export class Camt056Component implements OnInit, OnDestroy {
   form!: FormGroup;

@@ -13,12 +13,13 @@ import { SrVersionService } from '../../../../services/sr-version.service';
 import { Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
+import { DatePickerToggleDirective } from '../../../../directives/date-picker-toggle.directive';
 @Component({
   selector: 'app-pain008',
   templateUrl: './pain008.component.html',
   styleUrls: ['./pain008.component.css'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule]
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, DatePickerToggleDirective]
 })
 export class Pain008Component implements OnInit, OnDestroy {
   form!: FormGroup;

@@ -14,12 +14,13 @@ import { BicSearchDialogComponent } from '../../bic-search-dialog/bic-search-dia
 import { debounceTime } from 'rxjs/operators';
 import { getValidationErrorMessage } from '../../../../utils/validation-utils';
 
+import { DatePickerToggleDirective } from '../../../../directives/date-picker-toggle.directive';
 @Component({
   selector: 'app-pain001',
   templateUrl: './pain001.component.html',
   styleUrls: ['./pain001.component.css'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, MatDialogModule]
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule, MatSnackBarModule, MatTooltipModule, MatDialogModule, DatePickerToggleDirective]
 })
 export class Pain001Component implements OnInit, OnDestroy {
   form!: FormGroup;
