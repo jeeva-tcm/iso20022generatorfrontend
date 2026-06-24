@@ -2991,3 +2991,80 @@ a:not(.mat-mdc-button):not(.btn-primary):not(.btn-ghost):not([class*="btn-"]):no
 /* ════════════════════════════════════════════════════════════════════════════
    END SENIOR-CRAFT POLISH LAYER
    ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── MatSnackBar / Toast Alerts ───────────────────────────────────────────── */
+
+/* Base snackbar — dark glass */
+.mat-mdc-snack-bar-container {
+    --mdc-snackbar-container-color: #1a1a1e !important;
+    --mdc-snackbar-supporting-text-color: #e2e8f0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+}
+
+/* Action button */
+.mat-mdc-snack-bar-container .mat-mdc-button {
+    color: var(--accent-text, #93c5fd) !important;
+    font-weight: 700 !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* Success variant */
+.success-snackbar .mat-mdc-snack-bar-container,
+.mat-mdc-snack-bar-container.success-snackbar {
+    --mdc-snackbar-container-color: rgba(16, 185, 129, 0.12) !important;
+    --mdc-snackbar-supporting-text-color: #6ee7b7 !important;
+    border-color: rgba(16, 185, 129, 0.35) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(16, 185, 129, 0.15) !important;
+}
+
+/* Error variant */
+.error-snackbar .mat-mdc-snack-bar-container,
+.mat-mdc-snack-bar-container.error-snackbar {
+    --mdc-snackbar-container-color: rgba(239, 68, 68, 0.12) !important;
+    --mdc-snackbar-supporting-text-color: #fca5a5 !important;
+    border-color: rgba(239, 68, 68, 0.35) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(239, 68, 68, 0.15) !important;
+}
+
+/* Warning variant */
+.warning-snackbar .mat-mdc-snack-bar-container,
+.mat-mdc-snack-bar-container.warning-snackbar {
+    --mdc-snackbar-container-color: rgba(245, 158, 11, 0.12) !important;
+    --mdc-snackbar-supporting-text-color: #fcd34d !important;
+    border-color: rgba(245, 158, 11, 0.35) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(245, 158, 11, 0.15) !important;
+}
+
+/* Light theme snackbar overrides */
+body.light-theme .mat-mdc-snack-bar-container {
+    --mdc-snackbar-container-color: #ffffff !important;
+    --mdc-snackbar-supporting-text-color: #1e293b !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+body.light-theme .success-snackbar .mat-mdc-snack-bar-container,
+body.light-theme .mat-mdc-snack-bar-container.success-snackbar {
+    --mdc-snackbar-container-color: #ecfdf5 !important;
+    --mdc-snackbar-supporting-text-color: #065f46 !important;
+    border-color: #a7f3d0 !important;
+}
+
+body.light-theme .error-snackbar .mat-mdc-snack-bar-container,
+body.light-theme .mat-mdc-snack-bar-container.error-snackbar {
+    --mdc-snackbar-container-color: #fef2f2 !important;
+    --mdc-snackbar-supporting-text-color: #991b1b !important;
+    border-color: #fecaca !important;
+}
+
+body.light-theme .warning-snackbar .mat-mdc-snack-bar-container,
+body.light-theme .mat-mdc-snack-bar-container.warning-snackbar {
+    --mdc-snackbar-container-color: #fffbeb !important;
+    --mdc-snackbar-supporting-text-color: #92400e !important;
+    border-color: #fde68a !important;
+}

@@ -272,14 +272,14 @@ mat-card-content {
 }
 
 .email-link {
-    color: #ffffff;
+    color: #ffffff !important;
     text-decoration: none;
     font-weight: 800;
     font-size: 0.95rem;
 }
 
 .email-link:hover {
-    color: #e0f2fe;
+    color: #e0f2fe !important;
     /* text-decoration: underline; */
 }
 

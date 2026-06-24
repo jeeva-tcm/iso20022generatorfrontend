@@ -1,16 +1,18 @@
-<mat-toolbar color="primary" class="header">
+<mat-toolbar color="primary" class="header" [class.is-home]="isHomePage">
     <span class="logo-container" routerLink="/">
         <div class="logo-nova-brand" style="display: flex; align-items: center; gap: 0; user-select: none;margin-left: -6px;">
             <span style="font-family: 'Outfit', 'Inter', system-ui, sans-serif; font-size: 1.55rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; letter-spacing: -0.3px; line-height: 1;">
                 IS<span style="position: relative; display: inline-flex; align-items: center; justify-content: center; color: var(--text-main);">O<span style="position: absolute; width: 38px; height: 38px; background: radial-gradient(circle, rgba(0, 210, 255, 0.95) 0%, rgba(0, 130, 255, 0.65) 30%, rgba(0, 70, 255, 0.15) 50%, rgba(0, 70, 255, 0) 75%); filter: blur(6px); z-index: -1; pointer-events: none; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); overflow: visible;"></span></span>
             </span>
             <span style="font-family: 'Outfit', 'Inter', system-ui, sans-serif; font-size: 1.55rem; font-weight: 600; color: var(--text-main); letter-spacing: -0.3px; line-height: 1; margin-left: 4.5px;">Nova</span>
+            <sup class="logo-ai-chip">AI</sup>
         </div>
     </span>
 
     <span class="spacer"></span>
 
     <nav class="nav-links">
+      <ng-container *ngIf="!isHomePage">
         <a mat-button routerLink="/" routerLinkActive="active-link"
             [routerLinkActiveOptions]="{exact: true}">DASHBOARD</a>
         <a mat-button routerLink="/validate" routerLinkActive="active-link"
@@ -223,6 +225,7 @@
                 </button>
             </div>
         </div>
+      </ng-container>
 
         <button mat-icon-button (click)="toggleTheme()"
             [matTooltip]="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'" class="theme-toggle">
@@ -232,7 +235,8 @@
 
     <div class="user-info">
 
-        <img src="assets/logo.png" alt="Ticking Minds">
+        <img src="assets/logo.png" alt="Ticking Minds" class="logo-light">
+        <img src="assets/logo-dark.png" alt="Ticking Minds" class="logo-dark">
 
         <!-- <button mat-icon-button>
             <mat-icon>account_circle</mat-icon>

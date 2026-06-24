@@ -5,7 +5,7 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?logo=fastapi)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-A premium, enterprise-grade suite for generating, validating, and converting ISO 20022 financial messages. Built for compliance teams, developers, and financial institutions to streamline CBPR+ and SWIFT message management.
+A premium, enterprise-grade suite for generating, validating, and converting ISO 20022 financial messages — with AI-assisted auto-fix. Built for compliance teams, developers, and financial institutions to streamline CBPR+ and SWIFT message management.
 
 ---
 
@@ -22,6 +22,7 @@ A premium, enterprise-grade suite for generating, validating, and converting ISO
   - **L2 (Schema)**: Strict XSD compliance.
   - **L3 (Business Rules)**: Complex cross-field validation, BIC validation, and network-specific rules.
 - **Visual Error Navigator**: A professional, card-based interface with severity-coded errors and fix suggestions.
+- **AI-Powered Auto-Fix**: Deterministic, schema-driven fixes first; GPT-4o-mini fills the gap when no rule matches, with every suggestion labelled High/Low confidence.
 
 ### 🔄 Conversion & Integration
 - **MT to MX Converter**: Seamlessly translate legacy SWIFT MT messages into modern ISO 20022 MX equivalents.
@@ -43,7 +44,7 @@ A premium, enterprise-grade suite for generating, validating, and converting ISO
 - **Validation Engine**: `lxml` with custom Python logic
 - **Scheduling**: APScheduler (Weekly BIC refreshes)
 - **Database**: SQLAlchemy (for local state) & Firebase (Global history)
-- **AI**: OpenAI GPT-4 Integration for Chatbot
+- **AI**: OpenAI GPT-4o-mini for auto-fix suggestions and chatbot
 
 ---
 

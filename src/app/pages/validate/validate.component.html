@@ -45,7 +45,7 @@
         <p class="drop-title" [class.hidden-while-dragging]="isDragging">Drop Files Here (.xml, .zip)</p>
         <p class="drop-sub" [class.hidden-while-dragging]="isDragging">or click to browse · Supports .xml, .zip, .xsd,
           .txt files</p>
-        <p class="drop-limit" [class.hidden-while-dragging]="isDragging">MAX 100KB PER FILE · NO FILE LIMIT</p>
+        <p class="drop-limit" [class.hidden-while-dragging]="isDragging">MAX 3MB PER FILE · NO FILE LIMIT</p>
         <input #fileInput type="file" multiple accept=".xml,.xsd,.txt,.zip" (change)="onFileSelected($event)"
           style="position: absolute; width: 0; height: 0; opacity: 0; z-index: -1;">
       </div>
@@ -523,7 +523,7 @@
       <p>Click <strong>Keep Both</strong> to merge the new files with your existing ones.</p>
     </div>
     <div class="modal-actions">
-      <button class="btn-cancel" (click)="confirmReplace(false)">Keep Both</button>
+      <button class="btn-secondary" (click)="confirmReplace(false)">Keep Both</button>
       <button class="btn-replace" (click)="confirmReplace(true)">Replace</button>
     </div>
   </div>

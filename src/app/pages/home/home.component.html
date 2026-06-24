@@ -1,0 +1,269 @@
+<div class="lp">
+
+    <!-- ══ HERO ══ -->
+    <section class="lp-hero">
+        <div class="lp-aurora"></div>
+        <div class="lp-grid"></div>
+        <div class="lp-blob lp-blob-1"></div>
+        <div class="lp-blob lp-blob-2"></div>
+
+        <div class="lp-hero-inner">
+
+            <!-- Left: copy -->
+            <div class="lp-hero-copy">
+                <div class="lp-badge">
+                    <span class="lp-dot"></span>
+                    <span>AI-Powered · ISO 20022 · SR2025 &amp; SR2026 · CBPR+</span>
+                </div>
+
+                <h1 class="lp-title">
+                    <span class="lp-line lp-reveal-word" style="--d:0ms">AI that doesn't just</span>
+                    <span class="lp-line lp-reveal-word" style="--d:90ms"><em>flag</em> errors —</span>
+                    <span class="lp-line lp-accent lp-reveal-word" style="--d:180ms">it fixes them.</span>
+                </h1>
+
+                <p class="lp-sub">
+                    The payments message workbench for ISO 20022. Validate against the schema
+                    <em>and</em> the rulebook, then let the AI fix suggester rewrite what's
+                    broken — across every PACS, PAIN and CAMT message your back office handles.
+                </p>
+
+                <div class="lp-cta-row">
+                    <a class="lp-btn primary" routerLink="/validate">
+                        <mat-icon>auto_fix_high</mat-icon> Try the AI fix
+                    </a>
+                    <a class="lp-btn ghost" routerLink="/">
+                        <mat-icon>grid_view</mat-icon> Open dashboard
+                    </a>
+                </div>
+
+                <div class="lp-trust">
+                    <mat-icon>shield</mat-icon>
+                    <span>3-layer validation · confidence-scored fixes · zero manual re-keying</span>
+                </div>
+            </div>
+
+            <!-- Right: live "AI fix" panel (mirrors the real fix-suggester) -->
+            <div class="lp-fixcard" aria-hidden="true">
+                <div class="lp-fixcard-glow"></div>
+                <div class="lp-fix-head">
+                    <span class="lp-fix-ai"><mat-icon>auto_fix_high</mat-icon> AI Fix All Issues</span>
+                    <span class="lp-fix-meta"><span class="lp-think-dot"></span><span class="lp-think-dot"></span><span class="lp-think-dot"></span> analysing</span>
+                </div>
+
+                <div class="lp-fix-rows">
+                    <div class="lp-fix-row" *ngFor="let f of fixDemo; let i = index"
+                         [style.--row-delay]="(i * 700 + 400) + 'ms'">
+                        <div class="lp-fix-row-top">
+                            <span class="lp-fix-code">{{ f.code }}</span>
+                            <span class="lp-fix-conf" [class.high]="f.conf === 'high'" [class.low]="f.conf === 'low'">
+                                <span class="lp-conf-dot"></span>{{ f.conf }}
+                            </span>
+                        </div>
+                        <div class="lp-fix-diff">
+                            <code class="was">{{ f.was }}</code>
+                            <mat-icon class="lp-fix-arrow">east</mat-icon>
+                            <code class="now">{{ f.now }}</code>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lp-fix-foot">
+                    <mat-icon class="lp-fix-check">check_circle</mat-icon>
+                    <span>Auto-fixed in <strong>1 click</strong></span>
+                    <span class="lp-fix-pill">3 / 3 resolved</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Stat band -->
+        <div class="lp-stats" #reveal>
+            <div class="lp-stat" *ngFor="let s of stats">
+                <strong><span #counter [attr.data-to]="s.value">0</span><span class="lp-stat-suffix">{{ s.suffix }}</span></strong>
+                <span>{{ s.label }}</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ TRUST MARQUEE ══ -->
+    <section class="lp-marquee" aria-label="Supported standards">
+        <div class="lp-marquee-track">
+            <span class="lp-marquee-item" *ngFor="let m of marquee">{{ m }}</span>
+            <!-- duplicate set for a seamless loop -->
+            <span class="lp-marquee-item" *ngFor="let m of marquee" aria-hidden="true">{{ m }}</span>
+        </div>
+    </section>
+
+    <!-- ══ LIVE TERMINAL DEMO ══ -->
+    <section class="lp-section lp-reveal" #reveal>
+        <div class="lp-section-head">
+            <span class="lp-eyebrow">See it run</span>
+            <h2>Broken in, compliant out</h2>
+        </div>
+
+        <div class="lp-term">
+            <div class="lp-term-bar">
+                <span class="lp-term-dot r"></span>
+                <span class="lp-term-dot y"></span>
+                <span class="lp-term-dot g"></span>
+                <span class="lp-term-title">iso-nova · validator</span>
+            </div>
+            <div class="lp-term-body">
+                <div class="lp-term-line" *ngFor="let l of termLines; let i = index"
+                     [ngClass]="'t-' + l.t" [style.--line]="i">
+                    <span class="lp-term-text">{{ l.text }}</span>
+                </div>
+                <span class="lp-term-cursor"></span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ AI SPOTLIGHT ══ -->
+    <section class="lp-spotlight lp-reveal" #reveal>
+        <div class="lp-spot-glow"></div>
+        <span class="lp-eyebrow center">The intelligence inside</span>
+        <h2 class="lp-spot-title">From rejected to compliant — automatically</h2>
+        <p class="lp-spot-sub">
+            Validation finds what's wrong. The AI fix suggester decides what's <em>right</em>,
+            scores its own confidence, and rewrites the document for you.
+        </p>
+
+        <div class="lp-spot-flow">
+            <div class="lp-spot-node bad">
+                <mat-icon>error</mat-icon>
+                <strong>Broken message</strong>
+                <span>Schema + rule violations</span>
+            </div>
+            <div class="lp-spot-arrow">
+                <span class="lp-spot-track"></span>
+                <span class="lp-spot-chip"><mat-icon>psychology</mat-icon> AI reasoning</span>
+            </div>
+            <div class="lp-spot-node good">
+                <mat-icon>verified</mat-icon>
+                <strong>Compliant message</strong>
+                <span>Auto-fixed, ready to send</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ FEATURES ══ -->
+    <section class="lp-section lp-reveal" #reveal>
+        <div class="lp-section-head">
+            <span class="lp-eyebrow">What it does</span>
+            <h2>Everything in one validator</h2>
+        </div>
+
+        <div class="lp-cards">
+            <a class="lp-card lp-stagger" *ngFor="let f of features; let i = index"
+               [routerLink]="f.link" [attr.data-accent]="f.accent" [style.--i]="i">
+                <div class="lp-card-ico"><mat-icon>{{ f.icon }}</mat-icon></div>
+                <span class="lp-card-tag">{{ f.tag }}</span>
+                <h3>{{ f.title }}</h3>
+                <p>{{ f.desc }}</p>
+                <span class="lp-card-link">{{ f.cta }} <mat-icon>arrow_forward</mat-icon></span>
+            </a>
+        </div>
+    </section>
+
+    <!-- ══ HOW IT WORKS ══ -->
+    <section class="lp-section lp-reveal" #reveal>
+        <div class="lp-section-head">
+            <span class="lp-eyebrow">How it works</span>
+            <h2>Four steps to a clean message</h2>
+        </div>
+
+        <div class="lp-steps">
+            <div class="lp-step lp-stagger" *ngFor="let s of steps; let i = index" [style.--i]="i">
+                <span class="lp-step-n">{{ s.n }}</span>
+                <div class="lp-step-ico"><mat-icon>{{ s.icon }}</mat-icon></div>
+                <strong>{{ s.title }}</strong>
+                <p>{{ s.desc }}</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ COVERAGE ══ -->
+    <section class="lp-section lp-reveal" #reveal>
+        <div class="lp-section-head">
+            <span class="lp-eyebrow">Coverage</span>
+            <h2>Built for the full message catalogue</h2>
+        </div>
+
+        <div class="lp-fam-grid">
+            <div class="lp-fam lp-stagger" *ngFor="let fam of families; let i = index" [style.--i]="i">
+                <span class="lp-fam-tag" [ngClass]="fam.cls">{{ fam.tag }}</span>
+                <div class="lp-fam-body">
+                    <strong>{{ fam.label }}</strong>
+                    <span class="lp-fam-items">{{ fam.items }}</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ FAQ ══ -->
+    <section class="lp-section lp-reveal" #reveal>
+        <div class="lp-section-head">
+            <span class="lp-eyebrow">Good to know</span>
+            <h2>Frequently asked</h2>
+        </div>
+
+        <div class="lp-faq">
+            <div class="lp-faq-item" *ngFor="let f of faqs; let i = index" [class.open]="openFaq === i">
+                <button class="lp-faq-q" (click)="toggleFaq(i)" [attr.aria-expanded]="openFaq === i">
+                    <span>{{ f.q }}</span>
+                    <mat-icon class="lp-faq-chevron">expand_more</mat-icon>
+                </button>
+                <div class="lp-faq-a"><p>{{ f.a }}</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ FINAL CTA ══ -->
+    <section class="lp-final lp-reveal" #reveal>
+        <div class="lp-final-glow"></div>
+        <span class="lp-eyebrow center">Ready when you are</span>
+        <h2>Stop guessing why a message bounced.</h2>
+        <p>Paste it, validate it, and let the AI fix suggester do the rest.</p>
+        <a class="lp-btn primary lg" routerLink="/validate">
+            <mat-icon>auto_fix_high</mat-icon> Validate &amp; auto-fix now
+        </a>
+    </section>
+
+    <!-- ══ FOOTER ══ -->
+    <footer class="lp-footer">
+        <div class="lp-footer-top">
+            <div class="lp-footer-brand">
+                <span class="lp-footer-logo">IS<span class="lp-footer-o">O<pre></pre></span> Nova<sup class="lp-footer-ai"> AI</sup></span>
+                <p>AI-powered ISO 20022 validation, auto-fix and message generation for modern payments infrastructure.</p>
+            </div>
+            <div class="lp-footer-cols">
+                <div class="lp-footer-col">
+                    <h4>Product</h4>
+                    <a routerLink="/validate">Validate</a>
+                    <a routerLink="/generate">Manual Entry</a>
+                    <a routerLink="/mt-to-mx">MT → MX</a>
+                    <a routerLink="/bulk-generate">Bulk Generate</a>
+                </div>
+                <div class="lp-footer-col">
+                    <h4>Resources</h4>
+                    <a routerLink="/help">Documentation</a>
+                    <a routerLink="/rules">Rules</a>
+                    <a routerLink="/history">History</a>
+                    <a routerLink="/">Dashboard</a>
+                </div>
+                <div class="lp-footer-col">
+                    <h4>Standards</h4>
+                    <span class="lp-footer-tag">ISO 20022</span>
+                    <span class="lp-footer-tag">CBPR+</span>
+                    <span class="lp-footer-tag">SR2025 / SR2026</span>
+                </div>
+            </div>
+        </div>
+        <div class="lp-footer-bottom">
+            <span>© 2026 Ticking Minds · ISO Nova</span>
+            <span class="lp-footer-made">Built for payments teams</span>
+        </div>
+    </footer>
+
+</div>

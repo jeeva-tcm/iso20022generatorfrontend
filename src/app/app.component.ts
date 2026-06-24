@@ -38,6 +38,7 @@ import { ChatbotComponent } from './chatbot/chatbot.component';
 export class AppComponent implements OnInit {
     title = 'ISO 20022 Validator';
     isValidatePage = false;
+    isHomePage = false;
     isManualEntryActive = false;
     isMtToMxActive = false;
     isBulkGenerateActive = false;
@@ -154,6 +155,8 @@ export class AppComponent implements OnInit {
 
     private updateState(url: string) {
         this.isValidatePage = url.includes('/validate');
+        // /home is the marketing landing — strip the nav links (logo/SR/theme stay).
+        this.isHomePage = url === '/home' || url.startsWith('/home?') || url.startsWith('/home#');
         this.isManualEntryActive = url.includes('/generate');
         this.isMtToMxActive = url.includes('/mt-to-mx');
         this.isBulkGenerateActive = url.includes('/bulk-generate');

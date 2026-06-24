@@ -462,10 +462,12 @@ body.light-theme .hero-desc { color: #4a6558; }
 .tag-blue { background: transparent; color: #2563EB; border: none; }
 .tag-purple { background: transparent; color: #7C3AED; border: none; }
 .tag-cyan { background: transparent; color: #0E7490; border: none; }
+.tag-green { background: transparent; color: #16A34A; border: none; }
 
 body.light-theme .tag-blue { background: transparent; color: #1D4ED8; border: none; }
 body.light-theme .tag-purple { background: transparent; color: #6D28D9; border: none; }
 body.light-theme .tag-cyan { background: transparent; color: #0F766E; border: none; }
+body.light-theme .tag-green { background: transparent; color: #15803D; border: none; }
 
 /* ─── Terminal Window ─── */
 /* ─────────────────────────────────────────────

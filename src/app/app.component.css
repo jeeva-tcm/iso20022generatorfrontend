@@ -36,6 +36,24 @@
     flex-shrink: 0;
 }
 
+.logo-ai-chip {
+    font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    line-height: 1;
+    margin-left: 3px;
+    top: -0.9em;
+    color: #a855f7;
+    margin-top: -5px;
+    text-shadow: 0 0 8px rgba(168, 85, 247, 0.55);
+}
+
+body.light-theme .logo-ai-chip {
+    color: #7e22ce;
+    text-shadow: 0 0 5px rgba(126, 34, 206, 0.3);
+}
+
 .logo-mark svg {
     display: block;
 }
@@ -87,6 +105,20 @@ body.light-theme .logo-secondary {
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border-light);
+}
+
+/* ── /home: nav links + SR dropdown are hidden; only the theme toggle remains.
+   Drop the absolute centering + pill chrome so the toggle sits flush right. */
+.header.is-home .nav-links {
+    position: static;
+    transform: none;
+    left: auto;
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+.header.is-home .theme-toggle {
+    margin-left: 0;
 }
 
 :host-context(.light-theme) .nav-links {
@@ -567,11 +599,17 @@ body.light-theme .msg-tag.pain {
     max-width: 200px;
     object-fit: contain;
     display: block;
-    /* logo.png has a transparent background, so no chip/box needed — clean on any theme. */
     background: transparent;
     border: none;
     box-shadow: none;
 }
+
+/* Two logo variants swapped by theme: the original reads on the light header,
+   and logo-dark.png keeps the same brand colors but relights the navy wordmark
+   so it stays legible on the black header. Only one shows at a time. */
+.user-info .logo-dark { display: none; }
+:host-context(body:not(.light-theme)) .user-info .logo-light { display: none; }
+:host-context(body:not(.light-theme)) .user-info .logo-dark { display: block; }
 
 
 .main-content {
